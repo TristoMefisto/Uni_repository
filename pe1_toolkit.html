@@ -74,9 +74,9 @@
 
   /* ── Tax incidence module ── */
   .ti-layout { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap-reverse; }
-  .ti-canvas-wrap { flex:2 1 400px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:8px; min-width:280px; max-width:1020px; }
+  .ti-canvas-wrap { flex:1 1 400px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:8px; min-width:280px; }
   canvas { display:block; margin:0 auto; }
-  .ti-panel { flex:1 1 320px; display:flex; flex-direction:column; gap:14px; min-width:280px; max-width:400px; }
+  .ti-panel { flex:0 1 360px; display:flex; flex-direction:column; gap:14px; min-width:280px; max-width:360px; }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:15px 16px; }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
 
@@ -1524,7 +1524,7 @@ const plotW=LW-padL-padR, plotH=LH-padT-padB;
 
 function setupCanvas(){
   const dpr=window.devicePixelRatio||1, avail=Math.max(300,cv.parentElement.clientWidth-16);
-  const cssW=Math.min(avail,1000), cssH=cssW*LH/LW;
+  const cssW=Math.min(avail,1600), cssH=cssW*LH/LW;
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   const s=(cssW/LW)*dpr; ctx.setTransform(s,0,0,s,0,0);
