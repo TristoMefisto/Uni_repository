@@ -38,7 +38,10 @@
   .mode-panel { display:none; height:100vh; }
   .mode-panel.active { display:flex; }
 
-  .app { display:flex; height:100vh; }
+  /* .app is a flex CHILD of .mode-panel.active (display:flex): without flex:1 it
+     shrinks to max-content width instead of filling the viewport — this was the
+     root cause of every "graph doesn't fill the width" symptom. */
+  .app { display:flex; height:100vh; flex:1; min-width:0; }
 
   /* ── Sidebar ── */
   .sidebar { width:238px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
@@ -72,11 +75,25 @@
   .stub-panel h2 { font-size:17px; color:var(--text); margin-bottom:8px; }
   .stub-panel p { font-size:13px; line-height:1.6; }
 
-  /* ── Tax incidence module ── */
-  .ti-layout { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap-reverse; }
-  .ti-canvas-wrap { flex:1 1 400px; background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:8px; min-width:280px; }
+  /* ── Tax incidence module ──
+     NOTE: no flex-wrap:wrap-reverse here. wrap-reverse flips the cross axis, so
+     align-items:flex-start becomes BOTTOM alignment — the canvas was being pushed
+     to the bottom of a flex line as tall as the controls column. Stacking on
+     narrow viewports is handled by the media query below instead. */
+  .ti-layout { display:flex; gap:20px; align-items:flex-start; }
+  .ti-panel { flex:1 1 320px; max-width:400px; max-height:78vh; overflow-y:auto; padding-right:4px;
+              display:flex; flex-direction:column; gap:14px; min-width:280px; }
+  .ti-canvas-wrap { flex:2 1 520px; min-width:320px; background:var(--surface); border:1px solid var(--border);
+                    border-radius:6px; padding:8px 8px 12px; }
   canvas { display:block; margin:0 auto; }
-  .ti-panel { flex:0 1 360px; display:flex; flex-direction:column; gap:14px; min-width:280px; max-width:360px; }
+  .ti-chart-head { text-align:center; padding:10px 12px 4px; }
+  .ti-chart-title { font-size:17px; font-weight:bold; color:var(--text); }
+  .ti-chart-sub { font-size:12.5px; color:var(--muted); font-style:italic; margin-top:2px; }
+  .ti-chart-sub b { color:var(--accent); font-style:normal; }
+  @media (max-width:840px){
+    .ti-layout { flex-direction:column-reverse; }   /* graph above controls when stacked */
+    .ti-panel { max-width:none; max-height:none; overflow:visible; }
+  }
   .card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:15px 16px; }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
 
@@ -118,7 +135,9 @@
           border:1.5px solid var(--border2); background:var(--surface); color:var(--text); transition:all .15s; }
   .gtab:hover { border-color:var(--accent); }
   .gtab.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:bold; }
-  .module-layout { display:flex; gap:18px; align-items:flex-start; flex-wrap:wrap-reverse; }
+  /* wrap-reverse flips the cross axis: flex-end here = visual TOP alignment.
+     (flex-start would bottom-align columns whenever their heights differ.) */
+  .module-layout { display:flex; gap:18px; align-items:flex-end; flex-wrap:wrap-reverse; }
   .formulas-col { flex:1 1 320px; max-width:400px; max-height:78vh; overflow-y:auto; padding-right:4px; }
   .iframe-col { flex:2 1 400px; min-width:280px; max-width:1100px; }
   .module-iframe { width:100%; height:78vh; min-height:560px; border:1px solid var(--border); border-radius:8px;
@@ -403,7 +422,13 @@
             </div>
           </div>
 
-          <div class="ti-canvas-wrap"><canvas id="cv"></canvas></div>
+          <div class="ti-canvas-wrap">
+            <div class="ti-chart-head" id="chart-head">
+              <div class="ti-chart-title" id="chart-title"></div>
+              <div class="ti-chart-sub" id="chart-sub"></div>
+            </div>
+            <canvas id="cv"></canvas>
+          </div>
         </div>
       </div>
 
@@ -1524,7 +1549,9 @@ const plotW=LW-padL-padR, plotH=LH-padT-padB;
 
 function setupCanvas(){
   const dpr=window.devicePixelRatio||1, avail=Math.max(300,cv.parentElement.clientWidth-16);
-  const cssW=Math.min(avail,1600), cssH=cssW*LH/LW;
+  const headH=(document.getElementById('chart-head')||{}).offsetHeight||0;
+  const maxH=Math.max(340, window.innerHeight*0.78 - headH - 60); // fit within ~78vh incl. title + card padding
+  const cssW=Math.min(avail,1600, maxH*LW/LH), cssH=cssW*LH/LW;
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   const s=(cssW/LW)*dpr; ctx.setTransform(s,0,0,s,0,0);
@@ -1689,7 +1716,23 @@ function drawMonopoly(){
   updateLegendMonopoly();
 }
 
+function updateChartHead(){
+  const t=document.getElementById('chart-title'), s=document.getElementById('chart-sub');
+  if(!t||!s) return;
+  if(state.mode==='competitive'){
+    t.textContent='Excise Tax in a Competitive Market — Levied on '+(state.side==='buyer'?'Buyers':'Sellers');
+    s.innerHTML = state.side==='buyer'
+      ? 'Demand shifts down by t · the split is set by relative elasticities, not by statute'
+      : 'Supply shifts up by t · same equilibrium and same split as the buyer-side tax';
+  } else {
+    t.textContent='Excise Tax under Monopoly — '+(state.shape==='linear'?'Linear Demand':'Isoelastic Demand');
+    s.innerHTML = state.shape==='linear'
+      ? 'Pass-through dP/dt = 1/2 — the price rises by half the tax'
+      : 'Pass-through ε/(ε−1) &gt; 1 — <b>overshifting</b>: the price rises by more than the tax';
+  }
+}
 function draw(){
+  updateChartHead();
   ctx.clearRect(0,0,LW,LH);
   if(state.mode==='competitive') drawCompetitive(); else drawMonopoly();
 }
@@ -1775,7 +1818,7 @@ document.getElementById('s-eps').addEventListener('input',e=>{state.eps=parseFlo
 document.getElementById('s-mc0').addEventListener('input',e=>{state.mc0=parseFloat(e.target.value);document.getElementById('v-mc0').textContent=state.mc0.toFixed(1);draw();});
 document.getElementById('s-tm').addEventListener('input',e=>{state.tm=parseFloat(e.target.value);document.getElementById('v-tm').textContent=state.tm.toFixed(1);draw();});
 
-setupCanvas(); draw();
+updateChartHead(); setupCanvas(); draw();
 
 const TESTING_DATA = [
   {
