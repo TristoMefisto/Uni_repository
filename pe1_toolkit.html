@@ -75,59 +75,9 @@
   .stub-panel h2 { font-size:17px; color:var(--text); margin-bottom:8px; }
   .stub-panel p { font-size:13px; line-height:1.6; }
 
-  /* ── Tax incidence module ──
-     NOTE: no flex-wrap:wrap-reverse here. wrap-reverse flips the cross axis, so
-     align-items:flex-start becomes BOTTOM alignment — the canvas was being pushed
-     to the bottom of a flex line as tall as the controls column. Stacking on
-     narrow viewports is handled by the media query below instead. */
-  .ti-layout { display:flex; gap:20px; align-items:flex-start; }
-  .ti-panel { flex:1 1 320px; max-width:400px; max-height:78vh; overflow-y:auto; padding-right:4px;
-              display:flex; flex-direction:column; gap:14px; min-width:280px; }
-  .ti-canvas-wrap { flex:2 1 520px; min-width:320px; background:var(--surface); border:1px solid var(--border);
-                    border-radius:6px; padding:8px 8px 12px; }
-  canvas { display:block; margin:0 auto; }
-  .ti-chart-head { text-align:center; padding:10px 12px 4px; }
-  .ti-chart-title { font-size:17px; font-weight:bold; color:var(--text); }
-  .ti-chart-sub { font-size:12.5px; color:var(--muted); font-style:italic; margin-top:2px; }
-  .ti-chart-sub b { color:var(--accent); font-style:normal; }
-  @media (max-width:840px){
-    .ti-layout { flex-direction:column-reverse; }   /* graph above controls when stacked */
-    .ti-panel { max-width:none; max-height:none; overflow:visible; }
-  }
+  /* ── Shared card styles (used by cheat-sheet-scope cards as base) ── */
   .card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:15px 16px; }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
-
-  .toggle-row { display:flex; gap:6px; margin-bottom:10px; }
-  .toggle-row:last-child { margin-bottom:0; }
-  .tbtn { flex:1; font-family:'Georgia',serif; font-size:12.5px; padding:9px 4px; border-radius:5px; cursor:pointer;
-          border:1.5px solid var(--border2); background:var(--surface); color:var(--text); transition:all .15s; text-align:center; }
-  .tbtn:hover { background:var(--bg); }
-  .tbtn.active { background:var(--accent); color:#fff; border-color:var(--accent); font-weight:bold; }
-  .sub-toggle { max-height:0; overflow:hidden; transition:max-height .2s ease; }
-  .sub-toggle.open { max-height:60px; margin-top:10px; }
-
-  .slider-label { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px; margin-top:12px; }
-  .slider-label:first-of-type { margin-top:0; }
-  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; }
-  input[type=range] { width:100%; height:4px; cursor:pointer; accent-color:var(--accent); }
-
-  .results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-  .res-box { border-radius:5px; padding:10px 12px; font-size:12px; line-height:1.5; }
-  .res-box.buyer { background:color-mix(in srgb,var(--buyer) 13%,transparent); border-left:3px solid var(--buyer); }
-  .res-box.seller { background:color-mix(in srgb,var(--seller) 13%,transparent); border-left:3px solid var(--seller); }
-  .res-box.wide { grid-column:1/3; border-left:3px solid var(--accent); background:color-mix(in srgb,var(--accent) 10%,transparent); }
-  .res-box .lbl { font-size:10px; font-weight:bold; margin-bottom:3px; text-transform:uppercase; letter-spacing:.04em; }
-  .res-box.buyer .lbl { color:var(--buyer); } .res-box.seller .lbl { color:var(--seller); } .res-box.wide .lbl { color:var(--accent); }
-  .res-box .big { font-family:'Courier New',monospace; font-weight:bold; font-size:14.5px; }
-
-  .insight { font-size:12.5px; line-height:1.6; color:var(--text); background:var(--bg); border-radius:5px; padding:11px 13px; border:1px solid var(--border); }
-  .insight b { color:var(--accent); }
-
-  .legend { font-size:11.5px; line-height:1.85; }
-  .legend .item { display:flex; align-items:center; gap:8px; }
-  .legend .sw { width:22px; height:3px; border-radius:2px; flex-shrink:0; }
-  .legend .sw.dash { height:0; border-top:2px dashed var(--muted); }
-  .legend .dt { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
 
   /* ── Generic module layout: formulas (left) + graph iframe (right) ── */
   .graph-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
@@ -358,76 +308,122 @@
 
       <!-- ═══════════ TAX INCIDENCE PANEL ═══════════ -->
       <div class="panel active" id="panel-tax-incidence">
-        <div class="ti-layout">
-          <div class="ti-panel">
-            <div class="card">
-              <div class="card-title">Market structure</div>
-              <div class="toggle-row">
-                <button class="tbtn active" id="mode-competitive" onclick="setMode('competitive')">Competitive</button>
-                <button class="tbtn" id="mode-monopoly" onclick="setMode('monopoly')">Monopoly</button>
-              </div>
+        <div class="graph-tabs">
+            <button class="gtab active" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/PE1_graphs/excise_tax_buyers.html',this)">Tax on Buyers</button>
+            <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/PE1_graphs/excise_tax_producers.html',this)">Tax on Producers</button>
+            <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/PE1_graphs/tax_incidence_elasticity.html',this)">Elasticity &amp; Incidence</button>
+            <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/PE1_graphs/monopoly_tax_linear.html',this)">Monopoly: Linear</button>
+            <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/PE1_graphs/monopoly_tax_isoelastic.html',this)">Monopoly: Isoelastic</button>
+        </div>
+<div class="module-note">Statutory incidence is irrelevant in competitive markets — the burden split is set by relative elasticities alone. Under monopoly, pass-through depends on demand curvature: exactly &frac12; with linear demand, ε/(ε−1) &gt; 1 (overshifting) with isoelastic demand.</div>
+        <div class="module-layout">
+          <div class="formulas-col">
+            <div class="cheatsheet-scope"><div class="board">
+  <!-- 2. Tax incidence - competitive markets -->
+  <div class="card" style="--c-accent:var(--cs-orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20 L21 4" stroke-linecap="round"/><path d="M3 4 L21 20" stroke-linecap="round"/></svg> Tax Incidence — Competitive Markets</h2>
+    <div class="sub-lbl">Equilibrium condition (either side): $Q = S(P) = D(P)$</div>
+    <div class="twocol">
+      <div class="half">
+        <div class="h">Consumer-imposed (t on buyers)</div>
+        $$Q = S(P) = D(P+t)$$
+        <hr class="div">
+        <div class="lbl" style="font-size:12px">PRE</div>
+        $\max\, U(x)+y \text{ s.t. } Px+y=Z$<br>FOC: $P = U_x'$
+        <div class="lbl" style="font-size:12px;margin-top:7px">POST</div>
+        $\max\, U(x)+y \text{ s.t. } (P+t)x+y=Z$<br>FOC: $P = U_x' - t$
+      </div>
+      <div class="half">
+        <div class="h">Producer-imposed (t on sellers)</div>
+        $$Q = S(P-t) = D(P)$$
+        <hr class="div">
+        <div class="lbl" style="font-size:12px">PRE</div>
+        $\max\, \pi(s) = Ps - C(s)$<br>FOC: $P = C'(s)$
+        <div class="lbl" style="font-size:12px;margin-top:7px">POST</div>
+        $\max\, \pi(s) = (P-t)s - C(s)$<br>FOC: $P-t = C'(s)$
+      </div>
+    </div>
+    <div class="eq-block">
+      $$U_x' - t = C'(s) \quad\equiv\quad C'(s) + t = U_x'$$
+    </div>
+    <div class="note">Statutory incidence (who the tax is levied on) doesn't determine economic incidence — same equilibrium either way.</div>
+  </div>
 
-              <div class="sub-toggle open" id="sub-competitive">
-                <div class="toggle-row">
-                  <button class="tbtn active" id="side-buyer" onclick="setSide('buyer')">Levied on buyers</button>
-                  <button class="tbtn" id="side-seller" onclick="setSide('seller')">Levied on sellers</button>
-                </div>
-              </div>
-              <div class="sub-toggle" id="sub-monopoly">
-                <div class="toggle-row">
-                  <button class="tbtn active" id="shape-linear" onclick="setShape('linear')">Linear demand</button>
-                  <button class="tbtn" id="shape-isoelastic" onclick="setShape('isoelastic')">Isoelastic demand</button>
-                </div>
-              </div>
-            </div>
+  <!-- 3. Elasticity + elasticity-based incidence -->
+  <div class="card" style="--c-accent:var(--cs-orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 Q 10 20 14 10 Q 17 3 20 3" stroke-linecap="round"/><path d="M20 3 l-4 0 M20 3 l0 4" stroke-linecap="round"/></svg> Elasticity</h2>
+    <div class="block">
+      $$\varepsilon = \frac{dx}{dy}\cdot\frac{y}{x} \qquad \left(\text{log form: } \varepsilon = \frac{d\log y}{d\log x}\right)$$
+    </div>
+    <hr class="div">
+    <div class="twocol">
+      <div class="half">
+        <div class="h">Demand</div>
+        $$\varepsilon_D = \frac{dD}{dQ}\cdot\frac{Q}{D}$$
+      </div>
+      <div class="half">
+        <div class="h">Supply</div>
+        $$\varepsilon_S = \frac{dS}{dP}\cdot\frac{P}{S(P)}$$
+      </div>
+    </div>
+    <hr class="div">
+    <div class="sub-lbl">Elasticity-based incidence (who bears the tax)</div>
+    <div class="twocol">
+      <div class="half">
+        <div class="h">Sellers (price drop)</div>
+        $$\frac{dP}{dt} = \frac{\varepsilon_D}{\varepsilon_S - \varepsilon_D}$$
+      </div>
+      <div class="half">
+        <div class="h">Buyers (quantity drop)</div>
+        $$\frac{dQ}{dt} = \frac{\varepsilon_S}{\varepsilon_S - \varepsilon_D}$$
+      </div>
+    </div>
+    <div class="note">The more inelastic side bears more of the tax — its ε dominates the ratio.</div>
+  </div>
 
-            <div class="card" id="results-card">
-              <div class="card-title">Incidence</div>
-              <div class="results" id="results-grid"></div>
-            </div>
+  <!-- 4. Monopoly - linear demand -->
+  <div class="card" style="--c-accent:var(--cs-orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 5 L21 19 M3 19 L21 5" stroke-linecap="round"/></svg> Tax Incidence — Monopoly, Linear Demand</h2>
+    <div class="eq-stack">
+      <div class="eq-block">$$P = a - bS$$</div>
+      <div class="eq-block">$$R = PS = aS - bS^2$$</div>
+      <div class="eq-block">$$MR = \frac{dR}{dS} = a - 2bS$$</div>
+    </div>
+    <hr class="div">
+    <div class="sub-lbl">EQ: MR = MC</div>
+    $$a - 2bS = C'(S) + t$$
+    <div class="note">Add a to both sides → $2(a-bS) = a + C'(S) + t$ → $2P = a + C'(S) + t$:</div>
+    <div class="eq-block">
+      $$P = \frac{a + C'(S) + t}{2} \qquad\implies\qquad \frac{dP}{dt} = \frac{1}{2}$$
+    </div>
+    <div class="note">Pass-through of <b>½</b> — identical to the competitive-market benchmark. Linear demand has no curvature, so the markup doesn't react to the tax.</div>
+  </div>
 
-            <div class="card">
-              <div class="card-title">Adjust the model</div>
-              <div id="sliders-competitive">
-                <div class="slider-label"><span>Demand elasticity |ε_D|</span><span class="val" id="v-epsD">0.83</span></div>
-                <input type="range" id="s-epsD" min="0.3" max="2.5" step="0.01" value="0.83">
-                <div class="slider-label"><span>Supply elasticity ε_S</span><span class="val" id="v-epsS">1.25</span></div>
-                <input type="range" id="s-epsS" min="0.3" max="2.5" step="0.01" value="1.25">
-                <div class="slider-label"><span>Tax t ($)</span><span class="val" id="v-t">7.5</span></div>
-                <input type="range" id="s-t" min="1" max="15" step="0.5" value="7.5">
-              </div>
-              <div id="sliders-monopoly" style="display:none">
-                <div class="slider-label"><span>Demand elasticity ε (isoelastic only)</span><span class="val" id="v-eps">2.0</span></div>
-                <input type="range" id="s-eps" min="1.2" max="4" step="0.1" value="2.0">
-                <div class="slider-label"><span>Marginal cost c'</span><span class="val" id="v-mc0">10</span></div>
-                <input type="range" id="s-mc0" min="4" max="20" step="0.5" value="10">
-                <div class="slider-label"><span>Tax t ($)</span><span class="val" id="v-tm">5.0</span></div>
-                <input type="range" id="s-tm" min="1" max="12" step="0.5" value="5.0">
-              </div>
-            </div>
+  <!-- 5. Monopoly - isoelastic demand -->
+  <div class="card" style="--c-accent:var(--cs-orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20 Q 6 7 21 4" stroke-linecap="round"/></svg> Tax Incidence — Monopoly, Isoelastic Demand</h2>
+    <div class="sub-lbl">EQ: MR = MC</div>
+    $$P\left(1 - \frac{1}{\varepsilon_D}\right) = C'(S) + t$$
+    <div class="twocol" style="margin-top:9px">
+      <div class="half">
+        <div class="h">Pre-tax</div>
+        $$P = \frac{C'(S)}{1 - 1/\varepsilon_D}$$
+      </div>
+      <div class="half">
+        <div class="h">Post-tax</div>
+        $$P = \frac{C'(S) + t}{1 - 1/\varepsilon_D}$$
+      </div>
+    </div>
+    <div class="eq-block">
+      $$\Delta P = \frac{t}{1 - 1/\varepsilon_D}$$
+    </div>
+  </div>
 
-            <div class="card">
-              <div class="card-title">Key insight</div>
-              <div class="insight" id="insight-box">—</div>
-            </div>
-
-            <div class="card">
-              <div class="card-title">Formulas <span style="font-weight:normal;text-transform:none;letter-spacing:0;color:var(--muted2)">(from cheat sheet)</span></div>
-              <div class="formula-box" id="formula-box">—</div>
-            </div>
-
-            <div class="card">
-              <div class="card-title">Legend</div>
-              <div class="legend" id="legend-box"></div>
-            </div>
+            </div></div>
           </div>
-
-          <div class="ti-canvas-wrap">
-            <div class="ti-chart-head" id="chart-head">
-              <div class="ti-chart-title" id="chart-title"></div>
-              <div class="ti-chart-sub" id="chart-sub"></div>
-            </div>
-            <canvas id="cv"></canvas>
+          <div class="iframe-col">
+            <iframe class="module-iframe" id="iframe-tax-incidence" src="https://tristomefisto.github.io/PE1_graphs/excise_tax_buyers.html"
+                    title="Tax incidence graph" loading="eager"></iframe>
           </div>
         </div>
       </div>
@@ -1464,6 +1460,7 @@
 <script>
 /* ══════════════ SHELL: sidebar navigation ══════════════ */
 const MODULE_TITLES = {
+  'tax-incidence':'Tax Incidence & Pass-Through',
   'efficiency-cost':'Efficiency Cost of Taxes','externality-policy':'Externality Policy Comparison',
   'abatement-efficiency':'Abatement Efficiency Framework','private-remedies':'Private Remedies',
   'uncertainty':'Taxes vs. Standards under Uncertainty',
@@ -1493,12 +1490,7 @@ function switchPanel(name, el){
   if(el) el.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
 
-  if(name==='tax-incidence'){
-    document.getElementById('panel-tax-incidence').classList.add('active');
-    document.getElementById('topbar-title').textContent='Tax Incidence & Pass-Through';
-    document.getElementById('topbar-meta').textContent=TOPBAR_META['tax-incidence'];
-    setupCanvas(); draw();
-  } else if(name==='formulas'){
+  if(name==='formulas'){
     document.getElementById('panel-formulas').classList.add('active');
     document.getElementById('topbar-title').textContent='Formula Cheat Sheet';
     document.getElementById('topbar-meta').textContent=TOPBAR_META['formulas'];
@@ -1532,293 +1524,13 @@ function setGraphTab(iframeId, src, el){
   el.classList.add('active');
 }
 
-/* ══════════════ TAX INCIDENCE MODULE ══════════════ */
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-function cssvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
-let T={};
-function loadTheme(){
-  T={ plotBg:cssvar('--plot-bg'),grid:cssvar('--grid'),border:cssvar('--border'),text:cssvar('--text'),muted:cssvar('--muted'),
-      buyer:cssvar('--buyer'),seller:cssvar('--seller'),demand:cssvar('--demand'),supply:cssvar('--supply'),
-      mr:cssvar('--mr'),mc:cssvar('--mc'),eq:cssvar('--eq'),eqStroke:cssvar('--eq-stroke'),accent:cssvar('--accent') };
+/* Tax incidence is now a standard iframe module (5 original graphs via tabs).
+   The default-active panel needs its KaTeX rendered at load, since switchPanel's
+   lazy render only fires on navigation: */
+if(window.renderMathInElement){
+  renderMathInElement(document.getElementById('panel-tax-incidence'), KATEX_OPTS);
+  moduleRendered['tax-incidence'] = true;
 }
-loadTheme();
-if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{loadTheme();draw();});
-
-const LW=600,LH=460,padL=54,padR=26,padT=26,padB=50;
-const plotW=LW-padL-padR, plotH=LH-padT-padB;
-
-function setupCanvas(){
-  const dpr=window.devicePixelRatio||1, avail=Math.max(300,cv.parentElement.clientWidth-16);
-  const headH=(document.getElementById('chart-head')||{}).offsetHeight||0;
-  const maxH=Math.max(340, window.innerHeight*0.78 - headH - 60); // fit within ~78vh incl. title + card padding
-  const cssW=Math.min(avail,1600, maxH*LW/LH), cssH=cssW*LH/LW;
-  cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
-  cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
-  const s=(cssW/LW)*dpr; ctx.setTransform(s,0,0,s,0,0);
-}
-let resizeTO; window.addEventListener('resize',()=>{clearTimeout(resizeTO);resizeTO=setTimeout(()=>{if(state.mode)setupCanvas();draw();},120);});
-
-// ---- state ----
-let state = { mode:'competitive', side:'buyer', shape:'linear',
-  epsD:0.83, epsS:1.25, t:7.5,
-  eps:2.0, mc0:10, tm:5.0 };
-
-function setMode(m){
-  state.mode=m;
-  document.getElementById('mode-competitive').classList.toggle('active',m==='competitive');
-  document.getElementById('mode-monopoly').classList.toggle('active',m==='monopoly');
-  document.getElementById('sub-competitive').classList.toggle('open',m==='competitive');
-  document.getElementById('sub-monopoly').classList.toggle('open',m==='monopoly');
-  document.getElementById('sliders-competitive').style.display = m==='competitive'?'block':'none';
-  document.getElementById('sliders-monopoly').style.display = m==='monopoly'?'block':'none';
-  draw();
-}
-function setSide(s){ state.side=s;
-  document.getElementById('side-buyer').classList.toggle('active',s==='buyer');
-  document.getElementById('side-seller').classList.toggle('active',s==='seller');
-  draw();
-}
-function setShape(s){ state.shape=s;
-  document.getElementById('shape-linear').classList.toggle('active',s==='linear');
-  document.getElementById('shape-isoelastic').classList.toggle('active',s==='isoelastic');
-  draw();
-}
-
-// ---- economics ----
-const Q0=1500, P0=22.5; // competitive reference equilibrium
-function competitiveModel(){
-  const {epsD,epsS,t}=state;
-  const md=P0/(epsD*Q0), ms=P0/(epsS*Q0);
-  const Qe = Q0 - t/(md+ms);
-  const Pb = P0 - md*(Qe-Q0);
-  const Ps = P0 + ms*(Qe-Q0);
-  const buyerShare=(Pb-P0)/t, sellerShare=(P0-Ps)/t;
-  return {md,ms,Qe,Pb,Ps,buyerShare,sellerShare};
-}
-function monopolyModel(){
-  if(state.shape==='linear'){
-    const a=50,b=3,mc0=state.mc0,t=state.tm;
-    const Sbefore=(a-mc0)/(2*b), Pbefore=a-b*Sbefore;
-    const Safter=(a-mc0-t)/(2*b), Pafter=a-b*Safter;
-    return {a,b,mc0,t,Sbefore,Pbefore,Safter,Pafter,passthrough:(Pafter-Pbefore)/t,
-            Bp:q=>a-b*q, MRp:q=>a-2*b*q};
-  } else {
-    const A=50, eps=state.eps, mc0=state.mc0, t=state.tm;
-    const Sbefore=Math.pow(A*(1-1/eps)/mc0,eps), Pbefore=A*Math.pow(Sbefore,-1/eps);
-    const Safter=Math.pow(A*(1-1/eps)/(mc0+t),eps), Pafter=A*Math.pow(Safter,-1/eps);
-    return {A,eps,mc0,t,Sbefore,Pbefore,Safter,Pafter,passthrough:(Pafter-Pbefore)/t,
-            Bp:q=>A*Math.pow(Math.max(q,0.05),-1/eps), MRp:q=>A*(1-1/eps)*Math.pow(Math.max(q,0.05),-1/eps)};
-  }
-}
-
-// ---- drawing primitives (axis-agnostic, set per draw call) ----
-let qx,py, Q_MAX,P_MAX;
-function setAxes(qmax,pmax){ Q_MAX=qmax; P_MAX=pmax;
-  qx=q=>padL+(q/Q_MAX)*plotW; py=p=>padT+plotH-(p/P_MAX)*plotH; }
-function seg(q1,p1,q2,p2,color,w,dash,alpha){ ctx.save(); ctx.globalAlpha=alpha===undefined?1:alpha; ctx.setLineDash(dash||[]);
-  ctx.strokeStyle=color; ctx.lineWidth=w; ctx.beginPath(); ctx.moveTo(qx(q1),py(p1)); ctx.lineTo(qx(q2),py(p2)); ctx.stroke(); ctx.restore(); }
-function curveFn(fn,qa,qb,color,w,dash,alpha){ ctx.save(); ctx.globalAlpha=alpha===undefined?1:alpha; ctx.setLineDash(dash||[]);
-  ctx.strokeStyle=color; ctx.lineWidth=w; ctx.beginPath(); let pen=false;
-  for(let q=qa;q<=qb;q+=(qb-qa)/300){ const p=fn(q); if(!isFinite(p)||p<0||p>P_MAX*1.15){pen=false;continue;}
-    const X=qx(q),Y=py(p); if(!pen){ctx.moveTo(X,Y);pen=true;} else ctx.lineTo(X,Y); }
-  ctx.stroke(); ctx.restore(); }
-function dot(q,p,r,fill){ ctx.beginPath(); ctx.arc(qx(q),py(p),r,0,7); ctx.fillStyle=fill; ctx.fill();
-  ctx.lineWidth=2; ctx.strokeStyle=T.plotBg; ctx.stroke(); }
-function rect(q1,q2,p1,p2,color,alpha){ ctx.save(); ctx.globalAlpha=alpha; ctx.fillStyle=color;
-  const X1=qx(q1),X2=qx(q2),Y1=py(p1),Y2=py(p2); ctx.fillRect(Math.min(X1,X2),Math.min(Y1,Y2),Math.abs(X2-X1),Math.abs(Y2-Y1)); ctx.restore(); }
-function lab(txt,q,p,dx,dy,color,size,align,halo){ ctx.save(); size=size||12; ctx.font='bold '+size+'px Georgia'; ctx.textAlign=align||'left';
-  const X=qx(q)+dx,Y=py(p)+dy;
-  if(halo){ const w=ctx.measureText(txt).width; let lx=X; if(align==='right')lx=X-w; else if(align==='center')lx=X-w/2;
-    ctx.fillStyle=T.plotBg; ctx.globalAlpha=.85; ctx.fillRect(lx-3,Y-size+2,w+6,size+4); ctx.globalAlpha=1; }
-  ctx.fillStyle=color; ctx.fillText(txt,X,Y); ctx.restore(); }
-
-function drawFrame(qLabel,pLabel){
-  ctx.fillStyle=T.plotBg; ctx.fillRect(padL,padT,plotW,plotH);
-  ctx.strokeStyle=T.grid; ctx.lineWidth=1;
-  for(let i=1;i<6;i++){ const p=P_MAX*i/6; ctx.beginPath();ctx.moveTo(padL,py(p));ctx.lineTo(padL+plotW,py(p));ctx.stroke(); }
-  for(let i=1;i<6;i++){ const q=Q_MAX*i/6; ctx.beginPath();ctx.moveTo(qx(q),padT);ctx.lineTo(qx(q),padT+plotH);ctx.stroke(); }
-  ctx.strokeStyle=T.text; ctx.lineWidth=1.6;
-  ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
-  ctx.fillStyle=T.text;
-  ctx.beginPath(); ctx.moveTo(padL,padT-2); ctx.lineTo(padL-4,padT+8); ctx.lineTo(padL+4,padT+8); ctx.fill();
-  ctx.beginPath(); ctx.moveTo(padL+plotW,padT+plotH); ctx.lineTo(padL+plotW-8,padT+plotH-4); ctx.lineTo(padL+plotW-8,padT+plotH+4); ctx.fill();
-  lab(pLabel,0,P_MAX,-padL+6,-2,T.text,13,'left');
-  ctx.save(); ctx.font='12px Georgia'; ctx.fillStyle=T.muted; ctx.textAlign='right'; ctx.fillText(qLabel,padL+plotW-2,padT+plotH+30); ctx.restore();
-}
-
-function drawCompetitive(){
-  setAxes(2200,45);
-  drawFrame('Q','$');
-  const m=competitiveModel();
-  const {epsD,epsS,t,side}=state;
-  const Dfn=q=>P0 - m.md*(q-Q0), Sfn=q=>P0 + m.ms*(q-Q0);
-
-  ctx.save(); ctx.beginPath(); ctx.rect(padL,padT,plotW,plotH); ctx.clip();
-  // incidence rectangles
-  rect(0,m.Qe,P0,m.Pb,T.buyer,0.14);
-  rect(0,m.Qe,m.Ps,P0,T.seller,0.14);
-  // original curves
-  curveFn(Dfn,20,2150,T.demand,2.4);
-  curveFn(Sfn,20,2150,T.supply,2.4);
-  // shifted curve for the statutory side selected (visualizes mechanism; equilibrium is identical either way)
-  if(side==='buyer'){ curveFn(q=>Dfn(q)-t,20,2150,T.demand,1.6,[5,4],0.55); }
-  else { curveFn(q=>Sfn(q)+t,20,2150,T.supply,1.6,[5,4],0.55); }
-  ctx.restore();
-
-  lab('D',2130,Dfn(2130),4,4,T.demand,13,'left',true);
-  lab('S',2130,Sfn(2130),4,-4,T.supply,13,'left',true);
-  lab(side==='buyer'?"D(p+t)":"S(p−t)",2130,(side==='buyer'?Dfn(2130)-t:Sfn(2130)+t),4,4,T.muted,11,'left',true);
-
-  // tax wedge + prices
-  seg(m.Qe,0,m.Qe,Math.max(m.Pb,P0),T.eqStroke,1.3,[3,3]);
-  seg(0,m.Pb,m.Qe,m.Pb,T.buyer,1.4,[2,3]);
-  seg(0,m.Ps,m.Qe,m.Ps,T.seller,1.4,[2,3]);
-  seg(0,P0,Q0,P0,T.muted,1,[2,3],0.5);
-  dot(m.Qe,m.Pb,5.5,T.buyer); dot(m.Qe,m.Ps,5.5,T.seller); dot(Q0,P0,4.5,T.muted);
-  lab('P_b='+m.Pb.toFixed(1),0,m.Pb,4,-6,T.buyer,11.5,'left',true);
-  lab('P_s='+m.Ps.toFixed(1),0,m.Ps,4,14,T.seller,11.5,'left',true);
-  lab('Q_e='+m.Qe.toFixed(0),m.Qe,0,0,16,T.eqStroke,11.5,'center');
-
-  updateResultsCompetitive(m);
-  updateInsightCompetitive(m);
-  updateLegendCompetitive();
-}
-
-function drawMonopoly(){
-  const mm=monopolyModel();
-  const qmax = state.shape==='linear' ? 20 : 14;
-  const pmax = state.shape==='linear' ? 60 : 60;
-  setAxes(qmax,pmax);
-  drawFrame('S','$');
-
-  ctx.save(); ctx.beginPath(); ctx.rect(padL,padT,plotW,plotH); ctx.clip();
-  curveFn(mm.Bp,0.2,qmax*0.98,T.demand,2.4);
-  curveFn(mm.MRp,0.2,qmax*0.98,T.mr,2,[6,3]);
-  seg(0,mm.mc0,qmax,mm.mc0,T.mc,2.2);
-  seg(0,mm.mc0+mm.t,qmax,mm.mc0+mm.t,T.mc,2.2,[5,4]);
-  ctx.restore();
-
-  lab('Demand',qmax*0.86,mm.Bp(qmax*0.86),4,-4,T.demand,12,'left',true);
-  lab('MR',qmax*0.5,mm.MRp(qmax*0.5),4,-4,T.mr,12,'left',true);
-  lab("MC",qmax*0.9,mm.mc0,4,-6,T.mc,11.5,'left',true);
-  lab("MC+t",qmax*0.9,mm.mc0+mm.t,4,14,T.mc,11.5,'left',true);
-
-  // before/after equilibria
-  seg(mm.Sbefore,0,mm.Sbefore,mm.Pbefore,T.muted,1.2,[2,3],0.6);
-  seg(mm.Safter,0,mm.Safter,mm.Pafter,T.eqStroke,1.4,[2,3]);
-  dot(mm.Sbefore,mm.Pbefore,5,T.muted);
-  dot(mm.Safter,mm.Pafter,6,T.eq);
-  lab('before: P='+mm.Pbefore.toFixed(1),mm.Sbefore,mm.Pbefore,6,-8,T.muted,11,'left',true);
-  lab('after: P='+mm.Pafter.toFixed(1),mm.Safter,mm.Pafter,6,-8,T.eqStroke,11,'left',true);
-
-  updateResultsMonopoly(mm);
-  updateInsightMonopoly(mm);
-  updateLegendMonopoly();
-}
-
-function updateChartHead(){
-  const t=document.getElementById('chart-title'), s=document.getElementById('chart-sub');
-  if(!t||!s) return;
-  if(state.mode==='competitive'){
-    t.textContent='Excise Tax in a Competitive Market — Levied on '+(state.side==='buyer'?'Buyers':'Sellers');
-    s.innerHTML = state.side==='buyer'
-      ? 'Demand shifts down by t · the split is set by relative elasticities, not by statute'
-      : 'Supply shifts up by t · same equilibrium and same split as the buyer-side tax';
-  } else {
-    t.textContent='Excise Tax under Monopoly — '+(state.shape==='linear'?'Linear Demand':'Isoelastic Demand');
-    s.innerHTML = state.shape==='linear'
-      ? 'Pass-through dP/dt = 1/2 — the price rises by half the tax'
-      : 'Pass-through ε/(ε−1) &gt; 1 — <b>overshifting</b>: the price rises by more than the tax';
-  }
-}
-function draw(){
-  updateChartHead();
-  ctx.clearRect(0,0,LW,LH);
-  if(state.mode==='competitive') drawCompetitive(); else drawMonopoly();
-}
-
-// ---- results / insight / legend panels ----
-function updateResultsCompetitive(m){
-  document.getElementById('results-grid').innerHTML = `
-    <div class="res-box buyer"><div class="lbl">Buyers bear</div><div class="big">${(m.buyerShare*100).toFixed(0)}%</div></div>
-    <div class="res-box seller"><div class="lbl">Sellers bear</div><div class="big">${(m.sellerShare*100).toFixed(0)}%</div></div>
-    <div class="res-box wide"><div class="lbl">Tax wedge P_b − P_s</div><div class="big">$${(m.Pb-m.Ps).toFixed(2)} = t</div></div>`;
-}
-function updateInsightCompetitive(m){
-  document.getElementById('insight-box').innerHTML =
-    `Buyer share = ε_S/(ε_S+ε_D) = <b>${(state.epsS/(state.epsS+state.epsD)).toFixed(2)}</b>. Switch "levied on buyers/sellers" — the split is <b>identical</b> either way: statutory incidence doesn't affect economic incidence.`;
-  setFormulaBox(`
-    $$\\frac{dP}{dt} = \\frac{\\varepsilon_D}{\\varepsilon_S - \\varepsilon_D}\\ \\text{(sellers)} \\qquad \\frac{dQ}{dt} = \\frac{\\varepsilon_S}{\\varepsilon_S - \\varepsilon_D}\\ \\text{(buyers)}$$
-    <hr class="fdiv">
-    <div class="fnote">Statutory equivalence — same equilibrium either way:</div>
-    $$U_x' - t = C'(s) \\;\\equiv\\; C'(s) + t = U_x'$$
-  `);
-}
-function updateLegendCompetitive(){
-  document.getElementById('legend-box').innerHTML = `
-    <div class="item"><span class="sw" style="background:var(--demand)"></span> Demand D(p)</div>
-    <div class="item"><span class="sw" style="background:var(--supply)"></span> Supply S(p)</div>
-    <div class="item"><span class="sw dash"></span> Shifted curve (statutory side)</div>
-    <div class="item"><span class="dt" style="background:var(--buyer)"></span> P_b (buyer price)</div>
-    <div class="item"><span class="dt" style="background:var(--seller)"></span> P_s (seller price)</div>`;
-}
-function updateResultsMonopoly(mm){
-  const overshift = mm.passthrough>1;
-  document.getElementById('results-grid').innerHTML = `
-    <div class="res-box wide"><div class="lbl">Pass-through dP/dt</div><div class="big">${mm.passthrough.toFixed(2)}</div></div>
-    <div class="res-box buyer"><div class="lbl">ΔP</div><div class="big">$${(mm.Pafter-mm.Pbefore).toFixed(2)}</div></div>
-    <div class="res-box seller"><div class="lbl">ΔS</div><div class="big">${(mm.Safter-mm.Sbefore).toFixed(2)}</div></div>`;
-}
-function updateInsightMonopoly(mm){
-  const txt = state.shape==='linear'
-    ? `Linear demand pins pass-through at exactly <b>1/2</b>, regardless of the tax size or marginal cost — the monopolist absorbs half the tax.`
-    : `Isoelastic demand gives pass-through = ε/(ε−1) = <b>${(state.eps/(state.eps-1)).toFixed(2)}</b>. With ε=${state.eps.toFixed(1)} &gt; 1 this exceeds 1: <b>overshifting</b> — price rises by more than the tax.`;
-  document.getElementById('insight-box').innerHTML = txt;
-  if(state.shape==='linear'){
-    setFormulaBox(`
-      $$P = a - bS \\qquad MR = a - 2bS$$
-      <hr class="fdiv">
-      <div class="fnote">MR = MC: $\\;a-2bS=C'(S)+t\\;$ → add $a$ to both sides:</div>
-      $$P = \\frac{a + C'(S) + t}{2} \\qquad \\frac{dP}{dt} = \\frac{1}{2}$$
-    `);
-  } else {
-    setFormulaBox(`
-      $$P\\left(1-\\frac{1}{\\varepsilon_D}\\right) = C'(S) + t$$
-      <hr class="fdiv">
-      <div class="fnote">Pre-tax vs. post-tax price:</div>
-      $$P_0=\\frac{C'(S)}{1-1/\\varepsilon_D} \\qquad P_1=\\frac{C'(S)+t}{1-1/\\varepsilon_D}$$
-      $$\\Delta P = \\frac{t}{1-1/\\varepsilon_D}$$
-    `);
-  }
-}
-function setFormulaBox(html){
-  const el = document.getElementById('formula-box');
-  el.innerHTML = html;
-  if(window.renderMathInElement){
-    renderMathInElement(el, {
-      delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}],
-      trust:true, throwOnError:false, strict:false
-    });
-  }
-}
-function updateLegendMonopoly(){
-  document.getElementById('legend-box').innerHTML = `
-    <div class="item"><span class="sw" style="background:var(--demand)"></span> Demand (= average revenue)</div>
-    <div class="item"><span class="sw dash" style="border-top-color:var(--mr)"></span> Marginal revenue MR</div>
-    <div class="item"><span class="sw" style="background:var(--mc)"></span> MC (before tax)</div>
-    <div class="item"><span class="sw dash" style="border-top-color:var(--mc)"></span> MC + t (after tax)</div>
-    <div class="item"><span class="dt" style="background:var(--eq)"></span> Post-tax equilibrium</div>`;
-}
-
-// ---- slider wiring ----
-document.getElementById('s-epsD').addEventListener('input',e=>{state.epsD=parseFloat(e.target.value);document.getElementById('v-epsD').textContent=state.epsD.toFixed(2);draw();});
-document.getElementById('s-epsS').addEventListener('input',e=>{state.epsS=parseFloat(e.target.value);document.getElementById('v-epsS').textContent=state.epsS.toFixed(2);draw();});
-document.getElementById('s-t').addEventListener('input',e=>{state.t=parseFloat(e.target.value);document.getElementById('v-t').textContent=state.t.toFixed(1);draw();});
-document.getElementById('s-eps').addEventListener('input',e=>{state.eps=parseFloat(e.target.value);document.getElementById('v-eps').textContent=state.eps.toFixed(1);draw();});
-document.getElementById('s-mc0').addEventListener('input',e=>{state.mc0=parseFloat(e.target.value);document.getElementById('v-mc0').textContent=state.mc0.toFixed(1);draw();});
-document.getElementById('s-tm').addEventListener('input',e=>{state.tm=parseFloat(e.target.value);document.getElementById('v-tm').textContent=state.tm.toFixed(1);draw();});
-
-updateChartHead(); setupCanvas(); draw();
 
 const TESTING_DATA = [
   {
