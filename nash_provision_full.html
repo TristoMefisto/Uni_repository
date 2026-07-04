@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Private Provision of Public Goods — Best Response, Adjustment & Nash</title>
+<style>
+  :root {
+    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#E8E6DF;
+    --text:#1A1A2E; --muted:#75736B;
+    --ic1:#1565C0; --ic1-light:#9CC2ED;   /* individual 1 */
+    --ic2:#C62828; --ic2-light:#EFA8A8;   /* individual 2 */
+    --budget:#6A1B9A; --xbracket:#00838F;
+    --eq:#F9A825; --eq-stroke:#4A3000; --accent:#1565C0;
+    --path:#455A64;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#33333A;
+      --text:#ECECEC; --muted:#9A9A9A;
+      --ic1:#5B9BE8; --ic1-light:#3E5A80; --ic2:#EF6C6C; --ic2-light:#7A3E3E;
+      --budget:#B57BE0; --xbracket:#4DD0E1;
+      --eq:#FFD54F; --eq-stroke:#1A1A1E; --accent:#5B9BE8; --path:#90A4AE;
+    }
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  header { text-align:center; margin-bottom:6px; }
+  header h1 { font-size:19px; font-weight:bold; color:var(--accent); }
+  header .relation { font-size:14px; color:var(--muted); font-style:italic; margin-top:4px; line-height:1.5; }
+  header .relation b.a { color:var(--ic1); } header .relation b.b { color:var(--ic2); }
+  .layout { display:flex; gap:20px; max-width:1060px; margin:18px auto 0; align-items:flex-start; flex-wrap:wrap; }
+  .canvas-wrap { flex:1 1 580px; background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:8px; min-width:300px; }
+  canvas { display:block; margin:0 auto; }
+  .panel { flex:1 1 270px; display:flex; flex-direction:column; gap:14px; min-width:258px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:15px 16px; }
+  .stepper-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .step-dots { display:flex; gap:6px; }
+  .step-dot { width:9px; height:9px; border-radius:50%; background:var(--grid); border:1.5px solid var(--border); transition:all .2s; }
+  .step-dot.active { background:var(--accent); border-color:var(--accent); transform:scale(1.25); }
+  .step-dot.done { background:var(--accent); border-color:var(--accent); opacity:.45; }
+  .step-counter { font-size:11px; color:var(--muted); letter-spacing:.04em; }
+  .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
+  .step-body { font-size:13px; line-height:1.62; }
+  .step-body .num { font-family:'Courier New',monospace; font-weight:bold; }
+  .nav-row { display:flex; gap:8px; margin-top:14px; }
+  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
+  button:hover:not(:disabled) { background:var(--bg); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary:hover:not(:disabled) { filter:brightness(.9); }
+  .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
+  .slider-label { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:6px; }
+  .slider-label .name { font-weight:bold; }
+  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; color:var(--ic1); }
+  input[type=range] { width:100%; height:4px; cursor:pointer; accent-color:var(--accent); }
+  .slider-ticks { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); margin-top:3px; }
+  .slider-note { font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.5; }
+  .results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .res-box { border-radius:4px; padding:9px 11px; font-size:12px; line-height:1.45; }
+  .res-box.a { background:color-mix(in srgb,var(--ic1) 13%,transparent); border-left:3px solid var(--ic1); }
+  .res-box.b { background:color-mix(in srgb,var(--ic2) 13%,transparent); border-left:3px solid var(--ic2); }
+  .res-box .lbl { font-size:10.5px; font-weight:bold; margin-bottom:3px; }
+  .res-box.a .lbl { color:var(--ic1); } .res-box.b .lbl { color:var(--ic2); }
+  .res-box .big { font-size:15px; font-weight:bold; font-family:'Courier New',monospace; }
+  .legend { font-size:11.5px; line-height:1.85; }
+  .legend .item { display:flex; align-items:center; gap:8px; }
+  .legend .sw { width:22px; height:3px; border-radius:2px; flex-shrink:0; }
+  .legend .sw.dash { height:0; border-top:2px dashed var(--ic1); }
+  .legend .sw.dash2 { height:0; border-top:2px dashed var(--ic2); }
+  .legend .dt { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Private Provision of a Public Good — Best Response, Adjustment & Nash</h1>
+  <div class="relation"><b class="a">Individual 1</b> and <b class="b">individual 2</b> each choose their own contribution; the best responses are the tangencies of their indifference curves, and the reaction functions are the loci of those tangencies.</div>
+</header>
+
+<div class="layout">
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+
+  <div class="panel">
+    <div class="card">
+      <div class="stepper-head">
+        <div class="step-dots" id="dots"></div>
+        <div class="step-counter" id="counter">Step 0 / 5</div>
+      </div>
+      <div class="step-title" id="stitle">—</div>
+      <div class="step-body" id="sbody">—</div>
+      <div class="nav-row">
+        <button id="back" disabled>◀ Back</button>
+        <button id="next" class="primary">Next ▶</button>
+      </div>
+    </div>
+
+    <div class="card" id="slider-card">
+      <div class="card-title" id="slider-title">Fix individual 2's contribution</div>
+      <div class="slider-label"><span class="name" id="slider-name">g² (other's contribution)</span><span class="val" id="slider-val">2.0</span></div>
+      <input type="range" id="slider" min="0" max="4.0" step="0.1" value="2">
+      <div class="slider-ticks"><span>0</span><span id="slider-max">4.0</span></div>
+      <div class="slider-note" id="slider-note">Drag to change the fixed contribution of the other individual; individual 1's best response ĝ¹ shifts along the reaction function.</div>
+    </div>
+
+    <div class="results">
+      <div class="res-box a"><div class="lbl">1's best response ĝ¹</div><div class="big" id="r-g1">—</div></div>
+      <div class="res-box b"><div class="lbl">2's best response ĝ²</div><div class="big" id="r-g2">—</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Legend</div>
+      <div class="legend" id="legend"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+function cssvar(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+let T={};
+function loadTheme(){
+  T={ plotBg:cssvar('--plot-bg'),grid:cssvar('--grid'),border:cssvar('--border'),text:cssvar('--text'),muted:cssvar('--muted'),
+      ic1:cssvar('--ic1'),ic1Light:cssvar('--ic1-light'),ic2:cssvar('--ic2'),ic2Light:cssvar('--ic2-light'),
+      budget:cssvar('--budget'),xbracket:cssvar('--xbracket'),eq:cssvar('--eq'),eqStroke:cssvar('--eq-stroke'),
+      accent:cssvar('--accent'),path:cssvar('--path') };
+}
+loadTheme();
+if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{loadTheme();draw();});
+
+const LW=580,LH=520,padL=52,padR=26,padT=26,padB=52;
+const plotW=LW-padL-padR, plotH=LH-padT-padB;
+const AXIS_MAX=5.6;
+// U^h(x^h,G) = (x^h)^alpha * G^(1-alpha), G = g1+g2, budget M^h = x^h + g^h
+const ALPHA=0.5, M1=5, M2=5;              // slide setup: budget corner at g=5, Nash centred
+const R1=g2=>Math.max(0,(1-ALPHA)*M1-ALPHA*g2);   // 1's reaction function g1(g2)
+const R2=g1=>Math.max(0,(1-ALPHA)*M2-ALPHA*g1);   // 2's reaction function g2(g1)
+const U1=(g1,g2)=>Math.pow(M1-g1,ALPHA)*Math.pow(g1+g2,1-ALPHA);
+const U2=(g1,g2)=>Math.pow(M2-g2,ALPHA)*Math.pow(g1+g2,1-ALPHA);
+const GN1=(1-ALPHA)*M1/(1+ALPHA), GN2=(1-ALPHA)*M2/(1+ALPHA); // Nash: solve g1=R1(R2(g1))
+
+function qx(g1){ return padL+(g1/AXIS_MAX)*plotW; }
+function py(g2){ return padT+plotH-(g2/AXIS_MAX)*plotH; }
+function setupCanvas(){
+  const dpr=window.devicePixelRatio||1, avail=Math.max(300,cv.parentElement.clientWidth-16);
+  const cssW=Math.min(avail,720), cssH=cssW*LH/LW;
+  cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
+  cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
+  const s=(cssW/LW)*dpr; ctx.setTransform(s,0,0,s,0,0);
+}
+let resizeTO; window.addEventListener('resize',()=>{clearTimeout(resizeTO);resizeTO=setTimeout(()=>{setupCanvas();draw();},120);});
+
+/* ── indifference-curve generators ──
+   Individual 1's IC through its best response to a fixed g2 (bowl tangent to the
+   horizontal line g2). Returns [g1,g2] points. */
+function curve1(g2fix){
+  const g1t=R1(g2fix), ubar=U1(g1t,g2fix), pts=[];
+  for(let g1=0.02; g1<M1-0.02; g1+=M1/600){
+    const g2=Math.pow(ubar*Math.pow(M1-g1,-ALPHA),1/(1-ALPHA))-g1;
+    if(g2>-0.35 && g2<AXIS_MAX*1.2) pts.push([g1,g2]); else if(pts.length) break;
+  }
+  return pts;
+}
+/* Individual 2's IC through its best response to a fixed g1 (bowl tangent to the
+   vertical line g1). */
+function curve2(g1fix){
+  const g2t=R2(g1fix), ubar=U2(g1fix,g2t), pts=[];
+  for(let g2=0.02; g2<M2-0.02; g2+=M2/600){
+    const g1=Math.pow(ubar*Math.pow(M2-g2,-ALPHA),1/(1-ALPHA))-g2;
+    if(g1>-0.35 && g1<AXIS_MAX*1.2) pts.push([g1,g2]); else if(pts.length) break;
+  }
+  return pts;
+}
+
+function poly(pts,color,w,dash,alpha){
+  if(pts.length<2) return;
+  ctx.save();ctx.globalAlpha=alpha===undefined?1:alpha;ctx.strokeStyle=color;ctx.lineWidth=w;ctx.setLineDash(dash||[]);ctx.lineJoin='round';
+  ctx.beginPath();pts.forEach((p,i)=>{const X=qx(p[0]),Y=py(p[1]);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});ctx.stroke();ctx.restore();
+}
+function seg(x1,y1,x2,y2,color,w,dash,alpha){ctx.save();ctx.globalAlpha=alpha===undefined?1:alpha;ctx.strokeStyle=color;ctx.lineWidth=w;ctx.setLineDash(dash||[]);ctx.beginPath();ctx.moveTo(qx(x1),py(y1));ctx.lineTo(qx(x2),py(y2));ctx.stroke();ctx.restore();}
+function dot(g1,g2,r,fill){ctx.beginPath();ctx.arc(qx(g1),py(g2),r,0,7);ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=T.plotBg;ctx.stroke();}
+function lab(txt,g1,g2,dx,dy,color,size,align,halo,alpha){
+  ctx.save();ctx.globalAlpha=alpha===undefined?1:alpha;size=size||12;ctx.font='bold '+size+'px Georgia';ctx.textAlign=align||'left';
+  const X=qx(g1)+dx,Y=py(g2)+dy;
+  if(halo){const w=ctx.measureText(txt).width;let lx=X;if(align==='right')lx=X-w;else if(align==='center')lx=X-w/2;ctx.fillStyle=T.plotBg;ctx.globalAlpha=(alpha===undefined?1:alpha)*0.85;ctx.fillRect(lx-3,Y-size+2,w+6,size+4);ctx.globalAlpha=alpha===undefined?1:alpha;}
+  ctx.fillStyle=color;ctx.fillText(txt,X,Y);ctx.restore();
+}
+function bracket(gx0,gx1,gy,color,label){ // horizontal brace on the g1 axis between gx0 and gx1
+  const y=py(gy), x0=qx(gx0), x1=qx(gx1), mid=(x0+x1)/2;
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(x0,y-4);ctx.lineTo(x0,y+2);ctx.lineTo(mid-4,y+2);ctx.lineTo(mid,y+7);
+  ctx.lineTo(mid+4,y+2);ctx.lineTo(x1,y+2);ctx.lineTo(x1,y-4);ctx.stroke();ctx.restore();
+  lab(label,(gx0+gx1)/2,gy,0,26,color,12.5,'center',false);
+}
+
+/* ── stepper state ──
+   Steps 0-2: derivation of individual 1's best response (slide 1 setup).
+   Step  3  : adjustment process (cobweb) converging to Nash — both ICs move.
+   Steps 4-5: reaction functions with ICs faded, then the Nash equilibrium. */
+let step=0;
+let g2fix=2.0;           // slider value for the derivation steps (fixed g2); ĝ¹=1.5 at start
+let iter=0;              // number of best-response rounds shown in the adjustment step
+const ITER_MAX=7, ITER_START_G1=0.5;
+
+// Build the cobweb path of alternating best responses from an asymmetric start.
+function cobweb(n){
+  const pts=[]; let g1=ITER_START_G1, g2=R2(g1);
+  pts.push({g1,g2:0,type:'axis'});            // start on the g1 axis
+  pts.push({g1,g2,type:'v'});                 // up to 2's reaction (vertical)
+  for(let i=0;i<n;i++){
+    const ng1=R1(g2); pts.push({g1:ng1,g2,type:'h'});  // across to 1's reaction (horizontal)
+    const ng2=R2(ng1); pts.push({g1:ng1,g2:ng2,type:'v'}); // up/down to 2's reaction (vertical)
+    g1=ng1; g2=ng2;
+  }
+  return pts;
+}
+
+function drawAxes(){
+  ctx.strokeStyle=T.text;ctx.lineWidth=1.6;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(padL,padT);ctx.lineTo(padL,padT+plotH);ctx.lineTo(padL+plotW,padT+plotH);ctx.stroke();
+  ctx.fillStyle=T.text;
+  ctx.beginPath();ctx.moveTo(padL,padT-2);ctx.lineTo(padL-4,padT+8);ctx.lineTo(padL+4,padT+8);ctx.fill();
+  ctx.beginPath();ctx.moveTo(padL+plotW,padT+plotH);ctx.lineTo(padL+plotW-8,padT+plotH-4);ctx.lineTo(padL+plotW-8,padT+plotH+4);ctx.fill();
+  lab('g²',0,AXIS_MAX,-padL+8,-4,T.text,14,'left');
+  ctx.save();ctx.font='bold 14px Georgia';ctx.fillStyle=T.text;ctx.textAlign='right';ctx.fillText('g¹',padL+plotW-2,padT+plotH+32);ctx.restore();
+}
+function drawGrid(){
+  ctx.fillStyle=T.plotBg; ctx.fillRect(padL,padT,plotW,plotH);
+  ctx.strokeStyle=T.grid; ctx.lineWidth=1;
+  for(let v=1;v<AXIS_MAX;v++){ ctx.beginPath();ctx.moveTo(padL,py(v));ctx.lineTo(padL+plotW,py(v));ctx.stroke();
+                               ctx.beginPath();ctx.moveTo(qx(v),padT);ctx.lineTo(qx(v),padT+plotH);ctx.stroke(); }
+}
+
+function draw(){
+  ctx.clearRect(0,0,LW,LH);
+  drawGrid();
+  ctx.save();ctx.beginPath();ctx.rect(padL,padT,plotW,plotH);ctx.clip();
+
+  if(step<=2){
+    /* ── DERIVATION: individual 1's best response to a fixed g2 ── */
+    // faint neighbouring ICs for context (higher / lower utility)
+    poly(curve1(g2fix+1.1), T.ic1Light, 1.6, [], .55);
+    poly(curve1(Math.max(0.2,g2fix-1.1)), T.ic1Light, 1.6, [], .55);
+    // the tangent IC (highlighted) appears from step 1
+    if(step>=1) poly(curve1(g2fix), T.ic1, 2.6);
+    ctx.restore();
+
+    // budget constraint: vertical line g1 = M1 (slide's "Budget constraint")
+    seg(M1,0,M1,AXIS_MAX,T.budget,1.8);
+    lab('Budget',M1,AXIS_MAX,-6,-16,T.budget,12,'right',true);
+    lab('constraint',M1,AXIS_MAX,-6,-2,T.budget,12,'right',true);
+
+    // reference line g2 = g2fix (the horizontal the bowl is tangent to)
+    seg(0,g2fix,AXIS_MAX,g2fix,T.ic1,1.1,[2,3],0.85);
+    lab('ḡ² = '+g2fix.toFixed(1),0,g2fix,6,-6,T.ic1,11,'left',true);
+
+    if(step>=2){
+      const gh=R1(g2fix);
+      // drop line to the axis + tangency dot
+      seg(gh,0,gh,g2fix,T.muted,1,[2,3]);
+      dot(gh,g2fix,5.5,T.ic1);
+      lab('ĝ¹',gh,0,0,18,T.ic1,12.5,'center',false);
+      // x¹ bracket = private good left over = M1 - ĝ¹
+      bracket(gh,M1,0.34,T.xbracket,'x¹');
+      lab('M¹',M1,0,0,18,T.budget,12,'center',false);
+    }
+  } else {
+    /* ── ADJUSTMENT + REACTION FUNCTIONS ── */
+    const faded = step>=4;                 // ICs fade once reaction functions take over
+    const icA = faded?0.30:1;
+    // Draw a family of faint context ICs for both individuals
+    if(!faded){
+      poly(curve1(3.6), T.ic1Light, 1.5, [], .5);
+      poly(curve1(0.7), T.ic1Light, 1.5, [], .5);
+      poly(curve2(3.6), T.ic2Light, 1.5, [], .5);
+      poly(curve2(0.7), T.ic2Light, 1.5, [], .5);
+    }
+    if(step===3){
+      // The two ICs currently in play during the cobweb: 1's tangent to current g2,
+      // 2's tangent to current g1 — both move together as iterations advance.
+      const path=cobweb(iter);
+      const last=path[path.length-1];
+      poly(curve1(last.g2), T.ic1, 2.4, [], icA);
+      poly(curve2(last.g1), T.ic2, 2.4, [], icA);
+    } else if(faded){
+      // faded ICs through the Nash point, dashed, sitting under the reaction functions
+      poly(curve1(GN2), T.ic1, 1.8, [5,4], icA);
+      poly(curve2(GN1), T.ic2, 1.8, [5,4], icA);
+    }
+    ctx.restore();
+
+    // reaction functions (drawn unclipped so the full lines show)
+    if(step>=4){
+      const a1=R1(0), a2=R1(AXIS_MAX);
+      seg(a1,0,a2,AXIS_MAX,T.ic1,2.2,[7,4]);
+      const b1=R2(0), b2=R2(AXIS_MAX);
+      seg(0,b1,AXIS_MAX,b2,T.ic2,2.2,[7,4]);
+      lab('g¹(g²)',R1(4.4),4.4,7,-2,T.ic1,12,'left',true);
+      lab('g²(g¹)',4.4,R2(4.4),6,14,T.ic2,12,'left',true);
+    }
+
+    if(step===3){
+      // draw the cobweb path
+      const path=cobweb(iter);
+      ctx.save();ctx.strokeStyle=T.path;ctx.lineWidth=1.8;ctx.setLineDash([]);ctx.globalAlpha=.9;
+      ctx.beginPath();
+      path.forEach((p,i)=>{const X=qx(p.g1),Y=py(p.g2);i?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});
+      ctx.stroke();ctx.restore();
+      // also draw both reaction functions faintly so the cobweb visibly bounces between them
+      const a1=R1(0), a2=R1(AXIS_MAX); seg(a1,0,a2,AXIS_MAX,T.ic1,1.4,[7,4],.5);
+      const b1=R2(0), b2=R2(AXIS_MAX); seg(0,b1,AXIS_MAX,b2,T.ic2,1.4,[7,4],.5);
+      // current best-response dots
+      const last=path[path.length-1];
+      dot(last.g1,R2(last.g1),5,T.ic2);
+      dot(last.g1,last.g2,5,T.ic1);
+    }
+
+    // Nash equilibrium marker (from the adjustment step onward)
+    if(step>=3){
+      seg(GN1,0,GN1,GN2,T.muted,1,[2,3]); seg(0,GN2,GN1,GN2,T.muted,1,[2,3]);
+      lab('ĝ¹',GN1,0,0,18,T.muted,11.5,'center',false);
+      lab('ĝ²',0,GN2,-8,4,T.muted,11.5,'right',false);
+    }
+    if(step>=5){
+      dot(GN1,GN2,7,T.eq);
+      lab('Nash eq. (ĝ¹,ĝ²)',GN1,GN2,11,-9,T.eqStroke,12,'left',true);
+    } else if(step>=3){
+      dot(GN1,GN2,5.5,T.muted);
+    }
+    drawAxes();
+    updateReadouts();
+    return;
+  }
+
+  drawAxes();
+  updateReadouts();
+}
+
+function updateReadouts(){
+  const r1=document.getElementById('r-g1'), r2=document.getElementById('r-g2');
+  if(step<=2){ r1.textContent='ĝ¹ = '+R1(g2fix).toFixed(2); r2.textContent='—'; }
+  else if(step===3){ const p=cobweb(iter),l=p[p.length-1]; r1.textContent='g¹ = '+l.g1.toFixed(2); r2.textContent='g² = '+l.g2.toFixed(2); }
+  else { r1.textContent='ĝ¹ = '+GN1.toFixed(2); r2.textContent='ĝ² = '+GN2.toFixed(2); }
+}
+
+/* ── step content, slider config, legend ── */
+function stepContent(){
+  const gh=R1(g2fix).toFixed(2), x1=(M1-R1(g2fix)).toFixed(2);
+  return [
+    {t:"Step 0 · Setup — fix the other's contribution",
+     b:`Individual 1 chooses g¹ to maximise U¹(x¹,G) taking individual 2's contribution as given, at the reference level <span class="num">ḡ² = ${g2fix.toFixed(1)}</span> (horizontal line). Budget: x¹ = M¹ − g¹, with M¹ = <span class="num">${M1}</span>; public good G = g¹ + g². The vertical <b style="color:var(--budget)">budget constraint</b> sits at g¹ = M¹.`},
+    {t:"Step 1 · Draw 1's indifference curves",
+     b:`In (g¹,g²) space each indifference curve is U-shaped: raising g¹ from zero first substitutes cheaply for private consumption, so the curve falls, then — as x¹ runs out toward the budget — g² must rise steeply to hold utility constant. Higher curves (up-right) mean higher U¹.`},
+    {t:"Step 2 · The tangency is the best response",
+     b:`The curve tangent to the line ḡ² = ${g2fix.toFixed(1)} has slope zero there: that flat point is <b style="color:var(--ic1)">ĝ¹ = ${gh}</b>, individual 1's best response. The leftover <b style="color:var(--xbracket)">x¹ = M¹ − ĝ¹ = ${x1}</b> is spent on the private good (teal brace). Drag the slider to trace how ĝ¹ moves — that locus is the reaction function.`},
+    {t:"Step 3 · Adjustment — best responses chase each other",
+     b:`Now let both individuals react. Starting from an asymmetric point, 1 best-responds to 2, then 2 to 1, and so on — the <b style="color:var(--path)">cobweb</b> bounces between the two reaction functions. At each round <b>both</b> tangency curves shift. Drag the slider to advance the rounds and watch them spiral in toward the crossing. Because dg¹/dg² = ${(-ALPHA).toFixed(2)} < 0, more from one means less from the other: <b>free-riding</b>.`},
+    {t:"Step 4 · Reaction functions as loci of tangencies",
+     b:`As the reference level varies continuously, each tangency traces a straight line: <b style="color:var(--ic1)">g¹(g²) = (1−α)M¹ − α·g²</b> and <b style="color:var(--ic2)">g²(g¹) = (1−α)M² − α·g¹</b>. Both are downward-sloping (decreasing) — the graphical signature of free-riding. The indifference curves are faded to dashes underneath.`},
+    {t:"Step 5 · The Nash equilibrium",
+     b:`Where the two reaction functions cross, each contribution is simultaneously a best response to the other: the <b>Nash equilibrium</b> (ĝ¹,ĝ²) = (<span class="num">${GN1.toFixed(2)}</span>,<span class="num">${GN2.toFixed(2)}</span>), total provision G = <span class="num">${(GN1+GN2).toFixed(2)}</span>. Neither wants to deviate unilaterally, but each ignores the benefit its contribution gives the other — so the public good is <b>under-provided</b> relative to the Samuelson (Pareto-efficient) level.`}
+  ];
+}
+function legendContent(){
+  if(step<=2) return `
+    <div class="item"><span class="sw" style="background:var(--ic1)"></span> 1's indifference curve at the tangency</div>
+    <div class="item"><span class="sw" style="background:var(--ic1-light)"></span> neighbouring curves (lower / higher U¹)</div>
+    <div class="item"><span class="sw" style="background:var(--budget)"></span> budget constraint, g¹ = M¹</div>
+    <div class="item"><span class="sw" style="background:var(--xbracket)"></span> x¹ = private good left over</div>`;
+  if(step===3) return `
+    <div class="item"><span class="sw" style="background:var(--ic1)"></span> 1's current indifference curve</div>
+    <div class="item"><span class="sw" style="background:var(--ic2)"></span> 2's current indifference curve</div>
+    <div class="item"><span class="sw" style="background:var(--path)"></span> best-response adjustment path</div>
+    <div class="item"><span class="dt" style="background:var(--muted)"></span> Nash equilibrium (target)</div>`;
+  return `
+    <div class="item"><span class="sw dash"></span> g¹(g²) — 1's reaction function</div>
+    <div class="item"><span class="sw dash2"></span> g²(g¹) — 2's reaction function</div>
+    <div class="item"><span class="sw" style="background:var(--ic1);opacity:.4"></span> indifference curves (faded)</div>
+    <div class="item"><span class="dt" style="background:var(--eq)"></span> Nash equilibrium (ĝ¹,ĝ²)</div>`;
+}
+function configureSlider(){
+  const card=document.getElementById('slider-card'), sl=document.getElementById('slider');
+  if(step<=2){
+    card.style.display='';
+    document.getElementById('slider-title').textContent="Fix individual 2's contribution";
+    document.getElementById('slider-name').textContent='ḡ² (other\u2019s contribution)';
+    document.getElementById('slider-note').textContent="Drag to change the fixed contribution of the other individual; individual 1's best response ĝ¹ shifts along the reaction function.";
+    sl.min=0; sl.max=4.0; sl.step=0.1; sl.value=g2fix;
+    document.getElementById('slider-val').textContent=g2fix.toFixed(1);
+    document.getElementById('slider-max').textContent='4.0';
+  } else if(step===3){
+    card.style.display='';
+    document.getElementById('slider-title').textContent='Adjustment rounds';
+    document.getElementById('slider-name').textContent='Best-response iterations';
+    document.getElementById('slider-note').textContent='Each round: one individual best-responds to the other. Drag to advance and watch the cobweb converge to the Nash equilibrium.';
+    sl.min=0; sl.max=ITER_MAX; sl.step=1; sl.value=iter;
+    document.getElementById('slider-val').textContent=iter.toString();
+    document.getElementById('slider-max').textContent=ITER_MAX+' rounds';
+  } else {
+    card.style.display='none';
+  }
+}
+
+function render(){
+  const c=stepContent()[step];
+  document.getElementById('stitle').innerHTML=c.t;
+  document.getElementById('sbody').innerHTML=c.b;
+  document.getElementById('counter').textContent=`Step ${step} / 5`;
+  const dots=document.getElementById('dots');dots.innerHTML='';
+  for(let i=0;i<=5;i++){const d=document.createElement('div');d.className='step-dot'+(i===step?' active':(i<step?' done':''));dots.appendChild(d);}
+  document.getElementById('back').disabled=(step===0);
+  document.getElementById('next').disabled=(step===5);
+  document.getElementById('next').textContent=step===5?'Done':'Next ▶';
+  document.getElementById('legend').innerHTML=legendContent();
+  configureSlider();
+  draw();
+}
+
+document.getElementById('next').addEventListener('click',()=>{ if(step<5){ step++; render(); } });
+document.getElementById('back').addEventListener('click',()=>{ if(step>0){ step--; render(); } });
+document.getElementById('slider').addEventListener('input',e=>{
+  if(step<=2){ g2fix=parseFloat(e.target.value); document.getElementById('slider-val').textContent=g2fix.toFixed(1); }
+  else if(step===3){ iter=parseInt(e.target.value); document.getElementById('slider-val').textContent=iter.toString(); }
+  draw();
+});
+
+setupCanvas();render();
+</script>
+</body>
+</html>
