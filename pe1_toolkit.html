@@ -11,7 +11,7 @@
   :root {
     --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --border2:#CFCABE; --grid:#E8E6DF;
     --text:#1A1A2E; --muted:#75736B; --muted2:#9A968A;
-    --accent:#1565C0; --accent2:#0D47A1; --pe3-accent:#7B3A8C;
+    --accent:#1565C0; --accent2:#0D47A1; --pe3-accent:#2E7D32;
     --buyer:#C62828; --seller:#E67E22; --demand:#1565C0; --supply:#2E7D32; --mr:#6A1B9A; --mc:#C62828;
     --eq:#F9A825; --eq-stroke:#4A3000;
     --green:#2E7D32; --amber:#B8860B; --red:#C62828;
@@ -20,7 +20,7 @@
     :root {
       --bg:#17171A; --surface:#212126; --plot-bg:#1B1B1F; --border:#33333A; --border2:#3E3E46; --grid:#2A2A30;
       --text:#ECECEC; --muted:#9A9A9A; --muted2:#77776F;
-      --accent:#5B9BE8; --accent2:#8FC1F2; --pe3-accent:#C79AD6;
+      --accent:#5B9BE8; --accent2:#8FC1F2; --pe3-accent:#7CC47F;
       --buyer:#EF6C6C; --seller:#F0A860; --demand:#5B9BE8; --supply:#66BB6A; --mr:#B57BE0; --mc:#EF6C6C;
       --eq:#FFD54F; --eq-stroke:#1A1A1E;
       --green:#66BB6A; --amber:#E0B84D; --red:#EF6C6C;
@@ -37,12 +37,20 @@
                     font-size:11.5px; font-weight:bold; letter-spacing:.02em; cursor:pointer; text-align:left;
                     border:1px solid var(--border2); border-radius:7px; background:var(--surface); color:var(--muted);
                     transition:all .15s; }
-  .subject-switch:hover { border-color:var(--pe3-accent); color:var(--pe3-accent); background:rgba(123,58,140,.06); }
+  .subject-switch:hover { border-color:var(--pe3-accent); color:var(--pe3-accent); background:rgba(46,125,50,.06); }
   .subject-switch.pe3 { border-color:var(--pe3-accent); color:var(--pe3-accent); }
-  .subject-switch.pe3:hover { background:rgba(123,58,140,.10); }
+  .subject-switch.pe3:hover { background:rgba(46,125,50,.10); }
   /* PE3 uses a purple accent to distinguish it from the blue PE1 toolkit */
   .test-tab.pe3.active { background:var(--pe3-accent); border-color:var(--pe3-accent); color:#fff; }
   #mode-pe3 .test-nav-item.active { border-left-color:var(--pe3-accent); }
+  #mode-pe3 .test-nav-item.exam.pe3 { color:var(--pe3-accent); font-weight:bold; }
+  #mode-pe3 .test-nav-item.exam.pe3.active, #mode-pe3 .test-nav-item.exam.pe3:hover { background:rgba(46,125,50,.08); color:var(--pe3-accent); }
+  #mode-pe3 .test-nav-item.pe3-pool.active { background:rgba(46,125,50,.08); color:var(--pe3-accent); border-left-color:var(--pe3-accent); font-weight:bold; }
+  .fc-topic-tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--pe3-accent);
+                  font-weight:bold; margin-top:10px; }
+  .exam-intro { font-size:13px; color:var(--muted); font-style:italic; line-height:1.6; margin-bottom:22px;
+                padding:12px 16px; background:rgba(46,125,50,.06); border-left:3px solid var(--pe3-accent); border-radius:4px; }
+  .exam-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
   .mode-btn { flex:1; border:none; background:transparent; font-family:'Georgia',serif; font-size:11.5px; font-weight:bold;
               padding:6px 4px; border-radius:5px; cursor:pointer; color:var(--muted); letter-spacing:.02em; }
   .mode-btn.active { background:var(--accent); color:#fff; }
@@ -1490,6 +1498,17 @@
         <button class="subject-switch pe3" onclick="switchSubject('pe1')">← Back to PE1 Toolkit</button>
       </div>
       <nav class="test-nav" id="pe3-nav"></nav>
+      <div class="test-sidebar-footer">
+        <div class="test-nav-item pe3-pool" id="pe3-pool-fc-nav" onclick="openPe3Pool('flashcards')">
+          <span class="test-nav-icon">🎲</span>All flashcards (pooled)
+        </div>
+        <div class="test-nav-item pe3-pool" id="pe3-pool-open-nav" onclick="openPe3Pool('open')">
+          <span class="test-nav-icon">🎲</span>All open questions (pooled)
+        </div>
+        <div class="test-nav-item exam pe3" id="pe3-mock-nav" onclick="openPe3Mock()">
+          <span class="test-nav-icon">📝</span>Mock Exam
+        </div>
+      </div>
     </aside>
     <div class="test-main">
       <div class="test-topbar">
@@ -2479,6 +2498,14 @@ let pe3Type = 'flashcards';
 let pe3FcIdx = 0;
 let pe3FcAnswer = false;
 const pe3Answers = {};   // {topicIdx: {qIdx: text}} — retains typed answers across navigation
+// Pool + mock state. pe3View ∈ {'topic','pool','mock'} controls what pe3-inner shows.
+let pe3View = 'topic';
+let pe3Pool = [];        // flattened [{topicIdx, item}] for the active pool
+let pe3PoolIdx = 0;      // pointer into pe3Pool for the flashcard pool
+const pe3PoolAnswers = {}; // pooled-open typed answers, keyed by pool position
+let pe3Mock = [];        // 3 {topicIdx, qIdx, q} drawn for the current mock
+const pe3MockAnswers = {}; // mock typed answers, keyed by mock position
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
 /* Switch between the PE1 toolkit (theory/testing) and the PE3 competition module.
    PE3 remembers which PE1 mode was active so returning restores it. */
@@ -2505,7 +2532,10 @@ function initPe3(){
      </div>`).join('');
   renderPe3Topic();
 }
+function clearPe3Footer(){ document.querySelectorAll('#mode-pe3 .test-sidebar-footer .test-nav-item').forEach(n=>n.classList.remove('active')); }
 function setPe3Topic(i, el){
+  pe3View='topic'; clearPe3Footer();
+  document.getElementById('pe3-tabs').style.display='';
   pe3TopicIdx=i; pe3FcIdx=0; pe3FcAnswer=false;
   document.querySelectorAll('#pe3-nav .test-nav-item').forEach(n=>n.classList.remove('active'));
   if(el) el.classList.add('active');
@@ -2586,6 +2616,129 @@ function fallbackCopy(text, done){
   const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
   document.body.appendChild(ta); ta.select();
   try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+}
+
+/* ── Pooled sections (flashcards / open questions across all topics) ── */
+function openPe3Pool(type){
+  pe3View='pool'; pe3Type=type;
+  document.querySelectorAll('#pe3-nav .test-nav-item').forEach(n=>n.classList.remove('active'));
+  clearPe3Footer();
+  document.getElementById(type==='flashcards'?'pe3-pool-fc-nav':'pe3-pool-open-nav').classList.add('active');
+  document.getElementById('pe3-tabs').style.display='none';
+  // build a shuffled pool of {topicIdx, item} across every topic
+  pe3Pool = [];
+  PE3_DATA.forEach((t,ti)=>(t[type]||[]).forEach(item=>pe3Pool.push({ti, item})));
+  pe3Pool = shuffle(pe3Pool);
+  pe3PoolIdx = 0; pe3FcAnswer = false;
+  if(type==='flashcards'){
+    document.getElementById('pe3-topic-title').textContent = '🎲 All flashcards — pooled ('+pe3Pool.length+')';
+    renderPe3PoolFlashcard();
+  } else {
+    document.getElementById('pe3-topic-title').textContent = '🎲 All open questions — pooled ('+pe3Pool.length+')';
+    renderPe3PoolOpen();
+  }
+}
+/* Blind pool card: the source topic is hidden until the answer is revealed. */
+function renderPe3PoolFlashcard(){
+  const inner = document.getElementById('pe3-inner');
+  const {ti, item} = pe3Pool[pe3PoolIdx];
+  inner.innerHTML = `
+    <div class="fc-wrap">
+      <div class="fc-progress">Card ${pe3PoolIdx+1} / ${pe3Pool.length} · random order</div>
+      <div class="fc-card${pe3FcAnswer?' answer':''}" onclick="flipPe3PoolCard()">
+        ${pe3FcAnswer ? item.a : item.q}
+      </div>
+      ${pe3FcAnswer ? `<div class="fc-topic-tag">${PE3_DATA[ti].icon} ${PE3_DATA[ti].title}</div>` : ''}
+      <div class="fc-hint">Click the card to ${pe3FcAnswer?'see the question':'reveal the answer & topic'}</div>
+      <div class="fc-controls">
+        <button class="fc-btn" onclick="prevPe3PoolCard()">← Prev</button>
+        <button class="fc-btn primary" onclick="flipPe3PoolCard()">Flip</button>
+        <button class="fc-btn" onclick="nextPe3PoolCard()">Next →</button>
+        <button class="fc-btn" onclick="reshufflePe3Pool()">🎲 Shuffle</button>
+      </div>
+    </div>`;
+  if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+function flipPe3PoolCard(){ pe3FcAnswer=!pe3FcAnswer; renderPe3PoolFlashcard(); }
+function nextPe3PoolCard(){ pe3PoolIdx=(pe3PoolIdx+1)%pe3Pool.length; pe3FcAnswer=false; renderPe3PoolFlashcard(); }
+function prevPe3PoolCard(){ pe3PoolIdx=(pe3PoolIdx-1+pe3Pool.length)%pe3Pool.length; pe3FcAnswer=false; renderPe3PoolFlashcard(); }
+function reshufflePe3Pool(){ pe3Pool=shuffle(pe3Pool); pe3PoolIdx=0; pe3FcAnswer=false; renderPe3PoolFlashcard(); }
+
+function renderPe3PoolOpen(){
+  const inner = document.getElementById('pe3-inner');
+  inner.innerHTML = pe3Pool.map((p,i)=>`
+    <div class="oq-block">
+      <div class="oq-q">${i+1}. ${p.item.q}</div>
+      <div class="fc-topic-tag" style="margin-top:0;margin-bottom:10px">${PE3_DATA[p.ti].icon} ${PE3_DATA[p.ti].title}</div>
+      <textarea class="oq-input" id="pool-oq-${i}" placeholder="Write your answer here…"
+                oninput="pe3PoolAnswers[${i}]=this.value">${(pe3PoolAnswers[i]||'').replace(/</g,'&lt;')}</textarea>
+      <button class="oq-copy" onclick="copyPe3PoolAnswer(${i},this)">📋 Copy answer</button>
+    </div>`).join('');
+  if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+function copyPe3PoolAnswer(i, btn){
+  const p = pe3Pool[i];
+  const a = document.getElementById('pool-oq-'+i).value;
+  const payload = `PE3 — ${PE3_DATA[p.ti].title}\n\nQuestion: ${p.item.q}\n\nMy answer:\n${a}`;
+  copyText(payload, btn);
+}
+
+/* ── Mock exam: 3 open questions, one each from 3 distinct random topics ── */
+function openPe3Mock(){
+  pe3View='mock';
+  document.querySelectorAll('#pe3-nav .test-nav-item').forEach(n=>n.classList.remove('active'));
+  clearPe3Footer();
+  document.getElementById('pe3-mock-nav').classList.add('active');
+  document.getElementById('pe3-tabs').style.display='none';
+  drawPe3Mock();
+}
+function drawPe3Mock(){
+  const topics = shuffle(PE3_DATA.map((_,i)=>i)).slice(0,3);   // 3 distinct topics
+  pe3Mock = topics.map(ti=>{
+    const qi = Math.floor(Math.random()*PE3_DATA[ti].open.length);
+    return {ti, qi, q: PE3_DATA[ti].open[qi].q};
+  });
+  for(const k in pe3MockAnswers) delete pe3MockAnswers[k];
+  document.getElementById('pe3-topic-title').textContent = '📝 Mock Exam — 3 open questions';
+  renderPe3Mock();
+}
+function renderPe3Mock(){
+  const inner = document.getElementById('pe3-inner');
+  inner.innerHTML = `
+    <div class="exam-intro">Exam simulation · answer all three questions in your own words, then copy each (or all) for feedback. Each question is drawn from a different topic.</div>
+    ${pe3Mock.map((m,i)=>`
+      <div class="oq-block">
+        <div class="oq-q"><b>Question ${i+1}.</b> ${m.q}</div>
+        <textarea class="oq-input" id="mock-oq-${i}" placeholder="Write your answer here…"
+                  oninput="pe3MockAnswers[${i}]=this.value">${(pe3MockAnswers[i]||'').replace(/</g,'&lt;')}</textarea>
+        <button class="oq-copy" onclick="copyPe3MockAnswer(${i},this)">📋 Copy this answer</button>
+      </div>`).join('')}
+    <div class="exam-actions">
+      <button class="fc-btn primary" onclick="copyPe3MockAll(this)">📋 Copy all 3 answers</button>
+      <button class="fc-btn" onclick="drawPe3Mock()">🎲 New mock</button>
+    </div>`;
+  if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+function copyPe3MockAnswer(i, btn){
+  const m = pe3Mock[i];
+  const a = document.getElementById('mock-oq-'+i).value;
+  const payload = `PE3 Mock — ${PE3_DATA[m.ti].title}\n\nQuestion: ${m.q}\n\nMy answer:\n${a}`;
+  copyText(payload, btn, '📋 Copy this answer');
+}
+function copyPe3MockAll(btn){
+  const payload = 'PE3 MOCK EXAM — my answers\n\n' + pe3Mock.map((m,i)=>{
+    const a = document.getElementById('mock-oq-'+i).value;
+    return `Question ${i+1} (${PE3_DATA[m.ti].title}): ${m.q}\n\nMy answer:\n${a}`;
+  }).join('\n\n──────────\n\n');
+  copyText(payload, btn, '📋 Copy all 3 answers');
+}
+/* shared copy helper */
+function copyText(text, btn, restore){
+  const label = restore || btn.textContent;
+  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent=label,1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text, done);
 }
 
 </script>
