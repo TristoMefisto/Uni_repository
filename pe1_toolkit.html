@@ -188,10 +188,22 @@
   .test-sidebar-sub { font-size:11px; color:var(--muted); line-height:1.5; font-style:italic; }
   .test-nav { padding:12px 8px; flex:1; overflow-y:auto; }
   .test-sidebar-footer { padding:8px; border-top:1px solid var(--border); }
-  .pe3-map-wrap { padding:20px 26px; overflow:auto; height:100%; }
+  .pe3-map-wrap { padding:16px 20px 20px; flex:1; width:100%; display:flex; flex-direction:column; min-height:0; }
   .pe3-map-title { font-size:19px; font-weight:bold; color:var(--pe3-accent); margin-bottom:4px; font-family:'Georgia',serif; }
-  .pe3-map-sub { font-size:12.5px; color:var(--muted); font-style:italic; margin-bottom:18px; }
-  .pe3-map-wrap svg { max-width:100%; height:auto; border:1px solid var(--border); border-radius:8px; background:var(--plot-bg,var(--surface)); padding:12px; }
+  .pe3-map-sub { font-size:12.5px; color:var(--muted); font-style:italic; margin-bottom:12px; }
+  .pe3-map-toolbar { display:flex; gap:6px; align-items:center; margin-bottom:10px; flex:0 0 auto; }
+  .pe3-map-toolbar button { font-family:'Georgia',serif; font-size:14px; width:32px; height:30px; border-radius:6px;
+     border:1.5px solid var(--border2); background:var(--surface); color:var(--text); cursor:pointer; transition:all .15s; }
+  .pe3-map-toolbar button:hover { border-color:var(--pe3-accent); color:var(--pe3-accent); }
+  .pe3-map-toolbar .zlabel { font-size:11px; color:var(--muted); margin-left:2px; min-width:44px; }
+  .pe3-map-toolbar .hint { font-size:11px; color:var(--muted); font-style:italic; margin-left:auto; }
+  .pe3-map-viewport { flex:1 1 auto; min-height:500px; overflow:hidden; position:relative;
+     border:1px solid var(--border); border-radius:8px; background:var(--plot-bg,var(--surface));
+     cursor:grab; }
+  .pe3-map-viewport.grabbing { cursor:grabbing; }
+  #pe3-theory-content { justify-content:stretch; align-items:stretch; padding:0; }
+  .pe3-map-stage { position:absolute; top:0; left:0; transform-origin:0 0; will-change:transform; padding:16px; }
+  .pe3-map-stage svg { display:block; height:auto; }
   .test-nav-item.exam { color:var(--accent); font-weight:bold; }
   .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(21,101,192,.08); color:var(--accent); }
   .test-nav-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:5px; cursor:pointer;
@@ -2578,7 +2590,77 @@ function renderPe3Map(){
   document.getElementById('pe3-map-wrap').innerHTML =
     `<div class="pe3-map-title">${t.icon} ${t.title}</div>
      <div class="pe3-map-sub">${t.sub}</div>
-     ${PE3_MAPS[t.key]}`;
+     <div class="pe3-map-toolbar">
+       <button onclick="pe3MapZoom(1.2)" title="Zoom in">+</button>
+       <button onclick="pe3MapZoom(1/1.2)" title="Zoom out">−</button>
+       <button onclick="pe3MapFit()" title="Fit to width" style="width:auto;padding:0 10px;font-size:12px">Fit</button>
+       <span class="zlabel" id="pe3-zoom-label">100%</span>
+       <span class="hint">drag to pan · scroll to zoom</span>
+     </div>
+     <div class="pe3-map-viewport" id="pe3-map-viewport">
+       <div class="pe3-map-stage" id="pe3-map-stage">${PE3_MAPS[t.key]}</div>
+     </div>`;
+  pe3MapSetup();
+}
+
+/* ── zoom/pan controller ── */
+let pe3MapScale=1, pe3MapTx=0, pe3MapTy=0, pe3MapNativeW=1000;
+function pe3MapApply(){
+  const stage=document.getElementById('pe3-map-stage');
+  if(!stage) return;
+  stage.style.transform=`translate(${pe3MapTx}px,${pe3MapTy}px) scale(${pe3MapScale})`;
+  const lbl=document.getElementById('pe3-zoom-label');
+  if(lbl) lbl.textContent=Math.round(pe3MapScale*100)+'%';
+}
+function pe3MapFit(){
+  const vp=document.getElementById('pe3-map-viewport'), svg=document.querySelector('#pe3-map-stage svg');
+  if(!vp||!svg) return;
+  const vb=svg.getAttribute('viewBox').split(/\s+/).map(Number); // [0,0,w,h]
+  pe3MapNativeW=vb[2];
+  const avail=vp.clientWidth-32;
+  // Normalize apparent text size across maps: fit relative to a common reference
+  // width (REF), so a 1960-wide map and a 1560-wide map render text at the same
+  // pixel height. Wider maps then overflow horizontally and are panned/zoomed —
+  // which is fine and expected for the dense ones (Vertical).
+  const REF=1560;
+  pe3MapScale=Math.max(0.2, avail/REF);
+  // if the whole map fits within REF, center-fit to its own width instead (no wasted scale)
+  if(pe3MapNativeW<=REF) pe3MapScale=Math.max(0.2, avail/pe3MapNativeW);
+  pe3MapTx=16; pe3MapTy=16;
+  pe3MapApply();
+}
+function pe3MapZoom(factor){
+  const vp=document.getElementById('pe3-map-viewport'); if(!vp) return;
+  // zoom around the viewport centre
+  const cx=vp.clientWidth/2, cy=vp.clientHeight/2;
+  const ns=Math.min(6,Math.max(0.2,pe3MapScale*factor));
+  pe3MapTx = cx-(cx-pe3MapTx)*(ns/pe3MapScale);
+  pe3MapTy = cy-(cy-pe3MapTy)*(ns/pe3MapScale);
+  pe3MapScale=ns; pe3MapApply();
+}
+function pe3MapSetup(){
+  const vp=document.getElementById('pe3-map-viewport'), stage=document.getElementById('pe3-map-stage');
+  if(!vp||!stage) return;
+  // ensure the SVG fills its native width so scaling is predictable
+  const svg=stage.querySelector('svg');
+  if(svg){ const vb=svg.getAttribute('viewBox').split(/\s+/).map(Number); svg.style.width=vb[2]+'px'; }
+  // fit after layout settles
+  requestAnimationFrame(()=>{ pe3MapFit(); });
+  // drag to pan
+  let dragging=false, sx=0, sy=0, ox=0, oy=0;
+  vp.onmousedown=e=>{ dragging=true; vp.classList.add('grabbing'); sx=e.clientX; sy=e.clientY; ox=pe3MapTx; oy=pe3MapTy; };
+  window.onmousemove=e=>{ if(!dragging) return; pe3MapTx=ox+(e.clientX-sx); pe3MapTy=oy+(e.clientY-sy); pe3MapApply(); };
+  window.onmouseup=()=>{ if(dragging){ dragging=false; vp.classList.remove('grabbing'); } };
+  // scroll to zoom (centred on cursor)
+  vp.onwheel=e=>{
+    e.preventDefault();
+    const r=vp.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
+    const factor = e.deltaY<0 ? 1.12 : 1/1.12;
+    const ns=Math.min(6,Math.max(0.2,pe3MapScale*factor));
+    pe3MapTx = mx-(mx-pe3MapTx)*(ns/pe3MapScale);
+    pe3MapTy = my-(my-pe3MapTy)*(ns/pe3MapScale);
+    pe3MapScale=ns; pe3MapApply();
+  };
 }
 
 let pe3Initialized = false;
@@ -2608,7 +2690,15 @@ function switchSubject(subject){
     document.getElementById('mode-pe3').classList.add('active');
     if(!pe3Initialized){ initPe3(); pe3Initialized=true; }
     // default to theory mode on first open
-    if(!pe3TheoryInit){ initPe3Theory(); pe3TheoryInit=true; renderPe3Map(); }
+    if(!pe3TheoryInit){ initPe3Theory(); pe3TheoryInit=true; }
+    // ensure theory view is visible and testing view hidden on open
+    document.getElementById('pe3-theory-content').style.display='';
+    document.querySelector('#mode-pe3 .test-content:not(#pe3-theory-content)').style.display='none';
+    document.getElementById('pe3-tabs').style.display='none';
+    document.getElementById('pe3-nav').style.display='none';
+    document.getElementById('pe3-testing-footer').style.display='none';
+    document.getElementById('pe3-theory-nav').style.display='';
+    renderPe3Map();
   } else {
     document.getElementById('mode-pe3').classList.remove('active');
     switchMode(lastPe1Mode);
