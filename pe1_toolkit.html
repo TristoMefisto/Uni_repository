@@ -670,6 +670,20 @@
       <div class="lbl" style="font-size:12px">Still needs h — exploit the Slutsky equation</div>
       $$\frac{\partial h(P,U)}{\partial P} = \frac{\partial x(P,m)}{\partial P} + \frac{\partial x(P,m)}{\partial m}\,x(P,m)$$
     </div>
+    <hr class="div">
+    <div class="block">
+      <div class="lbl" style="font-size:12px">Closed-form summary (Slutsky-substituted, fully elastic supply)</div>
+      <div class="sub-lbl">Level excess burden EB(t) — the ½·(slope)·t² form</div>
+      $$EB^{CV}(t) \cong \tfrac12\tfrac{dh}{dt}t^2 \cong \tfrac12\Big(\tfrac{dx}{dt}-\tfrac{dx}{dm}x\Big)t^2, \qquad EB^{EV}(t) \cong \tfrac12\Big(\tfrac{dx}{dt}+\tfrac{dx}{dm}x\Big)t^2$$
+      <div class="sub-lbl">Marginal excess burden MEB(t) — the incremental t·Δt + ½Δt² form</div>
+      $$MEB^{CV}(t) \cong \Big(\tfrac{dx}{dt}-\tfrac{dx}{dm}x\Big)\!\Big(t\,\Delta t+\tfrac12\Delta t^2\Big), \qquad MEB^{EV}(t) \cong \Big(\tfrac{dx}{dt}+\tfrac{dx}{dm}x\Big)\!\Big(t\,\Delta t+\tfrac12\Delta t^2\Big)$$
+      <hr class="div">
+      <div class="sub-lbl">Quasilinear u (no income effects) — CV, EV and Marshallian all coincide</div>
+      $$MEB(t) \cong t\,\Delta t\,\tfrac{dx}{dt}+\tfrac12\tfrac{dx}{dt}\Delta t^2, \qquad EB(t) \cong \tfrac12\tfrac{dx}{dt}t^2 \cong \tfrac12\tfrac{Q}{P}|\varepsilon_D|\,t^2$$
+      <div class="sub-lbl">Quasilinear u, partly inelastic supply</div>
+      $$EB(t) \cong \tfrac12\tfrac{x}{P}\,\frac{|\varepsilon_D|\,\varepsilon_S}{\varepsilon_S+|\varepsilon_D|}\,t^2$$
+      <div class="note">Only the substitution part of the Slutsky slope is a real efficiency loss; the income term $\tfrac{dx}{dm}x$ is what separates the CV and EV measures. Under quasilinear u the income term vanishes and all three (Marshallian, CV, EV) collapse to one.</div>
+    </div>
   </div>
 
   <!-- 10. Ramsey Model -->
@@ -995,6 +1009,20 @@
       <div class="lbl" style="font-size:12px">Still needs h — exploit the Slutsky equation</div>
       $$\frac{\partial h(P,U)}{\partial P} = \frac{\partial x(P,m)}{\partial P} + \frac{\partial x(P,m)}{\partial m}\,x(P,m)$$
     </div>
+    <hr class="div">
+    <div class="block">
+      <div class="lbl" style="font-size:12px">Closed-form summary (Slutsky-substituted, fully elastic supply)</div>
+      <div class="sub-lbl">Level excess burden EB(t) — the ½·(slope)·t² form</div>
+      $$EB^{CV}(t) \cong \tfrac12\tfrac{dh}{dt}t^2 \cong \tfrac12\Big(\tfrac{dx}{dt}-\tfrac{dx}{dm}x\Big)t^2, \qquad EB^{EV}(t) \cong \tfrac12\Big(\tfrac{dx}{dt}+\tfrac{dx}{dm}x\Big)t^2$$
+      <div class="sub-lbl">Marginal excess burden MEB(t) — the incremental t·Δt + ½Δt² form</div>
+      $$MEB^{CV}(t) \cong \Big(\tfrac{dx}{dt}-\tfrac{dx}{dm}x\Big)\!\Big(t\,\Delta t+\tfrac12\Delta t^2\Big), \qquad MEB^{EV}(t) \cong \Big(\tfrac{dx}{dt}+\tfrac{dx}{dm}x\Big)\!\Big(t\,\Delta t+\tfrac12\Delta t^2\Big)$$
+      <hr class="div">
+      <div class="sub-lbl">Quasilinear u (no income effects) — CV, EV and Marshallian all coincide</div>
+      $$MEB(t) \cong t\,\Delta t\,\tfrac{dx}{dt}+\tfrac12\tfrac{dx}{dt}\Delta t^2, \qquad EB(t) \cong \tfrac12\tfrac{dx}{dt}t^2 \cong \tfrac12\tfrac{Q}{P}|\varepsilon_D|\,t^2$$
+      <div class="sub-lbl">Quasilinear u, partly inelastic supply</div>
+      $$EB(t) \cong \tfrac12\tfrac{x}{P}\,\frac{|\varepsilon_D|\,\varepsilon_S}{\varepsilon_S+|\varepsilon_D|}\,t^2$$
+      <div class="note">Only the substitution part of the Slutsky slope is a real efficiency loss; the income term $\tfrac{dx}{dm}x$ is what separates the CV and EV measures. Under quasilinear u the income term vanishes and all three (Marshallian, CV, EV) collapse to one.</div>
+    </div>
   </div>
 
             </div></div>
@@ -1198,8 +1226,7 @@
       <!-- ═══════════ PRIVATE PROVISION OF PUBLIC GOODS PANEL ═══════════ -->
       <div class="panel" id="panel-public-goods">
         <div class="graph-tabs">
-            <button class="gtab active" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/PE1_graphs/best_response_derivation.html',this)">Best-Response Derivation</button>
-            <button class="gtab" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/PE1_graphs/nash_reaction_functions.html',this)">Reaction Functions & Nash</button>
+            <button class="gtab active" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/PE1_graphs/nash_provision_full.html',this)">Best Response, Adjustment & Nash</button>
             <button class="gtab" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/PE1_graphs/pareto_lens.html',this)">Pareto Lens</button>
             <button class="gtab" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/PE1_graphs/planner_optimal_provision.html',this)">Planner's Optimum</button>
         </div>
@@ -1294,7 +1321,7 @@
 
             </div></div>
           </div>
-          <div class="iframe-col"><iframe class="module-iframe" id="iframe-public-goods" src="https://tristomefisto.github.io/PE1_graphs/best_response_derivation.html"></iframe></div>
+          <div class="iframe-col"><iframe class="module-iframe" id="iframe-public-goods" src="https://tristomefisto.github.io/PE1_graphs/nash_provision_full.html"></iframe></div>
         </div>
       </div>
 
@@ -1541,7 +1568,7 @@ const TOPBAR_META = {
   'abatement-efficiency':"Merges 3 graphs: full information, static efficiency, dynamic efficiency",
   'private-remedies':"Coasian bargaining and the tragedy of the commons",
   'uncertainty':"Weitzman (1974) — prices vs. quantities when abatement cost is uncertain",
-  'public-goods':"Merges 4 graphs: best-response derivation, reaction functions & Nash, Pareto lens, planner's optimum",
+  'public-goods':"Merges 3 graphs: best response + adjustment + Nash, Pareto lens, planner's optimum",
   'social-insurance':"Merges 5 graphs: full-insurance benchmark through Rothschild-Stiglitz government intervention",
   'moral-hazard':"Over-consumption of care under full insurance",
   'edgeworth':"Contract curve / Pareto efficiency, and the Walrasian price-adjustment mechanism"
