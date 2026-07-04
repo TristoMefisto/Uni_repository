@@ -55,6 +55,11 @@
   button.nav.primary:hover:not(:disabled) { filter:brightness(.9); }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
   .slider-label { display:flex; justify-content:space-between; align-items:baseline; font-size:12.5px; margin-bottom:6px; }
+  .indiv-toggle { display:flex; gap:2px; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:2px; margin-bottom:12px; }
+  .indiv-toggle button { flex:1; font-family:'Georgia',serif; font-size:12.5px; padding:7px 0; border:none; border-radius:5px; cursor:pointer; background:transparent; color:var(--muted); transition:all .15s; }
+  .indiv-toggle button.active { color:#fff; font-weight:bold; }
+  .indiv-toggle button.active.i1 { background:var(--ic1); }
+  .indiv-toggle button.active.i2 { background:var(--ic2); }
   .slider-label .name { font-weight:bold; }
   .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; color:var(--ic1); }
   input[type=range] { width:100%; height:4px; cursor:pointer; accent-color:var(--accent); }
@@ -96,6 +101,10 @@
   <div class="canvas-wrap"><canvas id="cv"></canvas></div>
 
   <div class="panel" id="panel-A">
+    <div class="indiv-toggle">
+      <button class="i1 active" id="ind-1" onclick="setIndiv(1)">Individual 1 · chooses g¹</button>
+      <button class="i2" id="ind-2" onclick="setIndiv(2)">Individual 2 · chooses g²</button>
+    </div>
     <div class="card">
       <div class="stepper-head">
         <div class="step-dots" id="dots"></div>
@@ -110,16 +119,16 @@
     </div>
 
     <div class="card">
-      <div class="card-title">Fix individual 2's contribution</div>
-      <div class="slider-label"><span class="name">ḡ² (other's contribution)</span><span class="val" id="slider-val">1.5</span></div>
+      <div class="card-title" id="slider-card-title">Fix individual 2's contribution</div>
+      <div class="slider-label"><span class="name" id="slider-name">ḡ² (other's contribution)</span><span class="val" id="slider-val">1.5</span></div>
       <input type="range" id="slider" min="0" max="2.2" step="0.1" value="1.5">
       <div class="slider-ticks"><span>0</span><span>2.2</span></div>
-      <div class="slider-note">Drag to change the fixed contribution of the other individual; individual 1's best response ĝ¹ slides along its reaction function. The locus of tangencies <em>is</em> that reaction function.</div>
+      <div class="slider-note" id="slider-note">Drag to change the fixed contribution of the other individual; individual 1's best response ĝ¹ slides along its reaction function. The locus of tangencies <em>is</em> that reaction function.</div>
     </div>
 
     <div class="results">
-      <div class="res-box a"><div class="lbl">1's best response ĝ¹</div><div class="big" id="rA">—</div></div>
-      <div class="res-box a" style="background:color-mix(in srgb,var(--xbracket) 13%,transparent);border-left-color:var(--xbracket)"><div class="lbl" style="color:var(--xbracket)">private good x¹ = M¹−ĝ¹</div><div class="big" id="rX">—</div></div>
+      <div class="res-box a" id="resBR"><div class="lbl" id="resBR-lbl">1's best response ĝ¹</div><div class="big" id="rA">—</div></div>
+      <div class="res-box a" id="resX" style="background:color-mix(in srgb,var(--xbracket) 13%,transparent);border-left-color:var(--xbracket)"><div class="lbl" id="resX-lbl" style="color:var(--xbracket)">private good x¹ = M¹−ĝ¹</div><div class="big" id="rX">—</div></div>
     </div>
 
     <div class="card">
@@ -253,58 +262,128 @@ function axes(){
   ctx.save();ctx.font='bold 14px Georgia';ctx.fillStyle=T.text;ctx.textAlign='right';ctx.fillText('g¹',g.padL+plotW()-2,g.padT+plotH()+32);ctx.restore();
 }
 
-/* ══════════ TAB A — best-response stepper ══════════ */
-let stepA=0, g2fix=1.5;
-function drawA(){
+/* ══════════ TAB A — best-response stepper (per-individual) ══════════ */
+let stepA=0, indiv=1;
+let fixVal=1.5;   // the OTHER individual's fixed contribution (ḡ² when indiv=1, ḡ¹ when indiv=2)
+
+/* Draw individual 1's derivation: chooses g¹ (x-axis), fixes g²=fixVal (horizontal line),
+   ICs are bowls opening up (curve1), budget is vertical at g¹=M¹, x¹ brace runs along x-axis. */
+function drawIndiv1(){
   const g=G();
-  grid();
   ctx.save();ctx.beginPath();ctx.rect(g.padL,g.padT,plotW(),plotH());ctx.clip();
-  poly(curve1(Math.min(2.4,g2fix+1.0)), T.ic1Light, 1.6, [], .55);
-  poly(curve1(Math.max(0.15,g2fix-1.0)), T.ic1Light, 1.6, [], .55);
-  if(stepA>=1) poly(curve1(g2fix), T.ic1, 2.6);
+  poly(curve1(Math.min(2.4,fixVal+1.0)), T.ic1Light, 1.6, [], .55);
+  poly(curve1(Math.max(0.15,fixVal-1.0)), T.ic1Light, 1.6, [], .55);
+  if(stepA>=1) poly(curve1(fixVal), T.ic1, 2.6);
   ctx.restore();
 
   seg(M1,0,M1,g.AXIS,T.budget,1.8);
   lab('Budget',M1,g.AXIS,-6,-16,T.budget,12,'right',true);
   lab('constraint',M1,g.AXIS,-6,-2,T.budget,12,'right',true);
-  seg(0,g2fix,g.AXIS,g2fix,T.ic1,1.1,[2,3],0.85);
-  lab('ḡ² = '+g2fix.toFixed(1),0,g2fix,6,-6,T.ic1,11,'left',true);
+  seg(0,fixVal,g.AXIS,fixVal,T.ic1,1.1,[2,3],0.85);
+  lab('ḡ² = '+fixVal.toFixed(1),0,fixVal,6,-6,T.ic1,11,'left',true);
 
+  const gh=Math.max(0,R1(fixVal));
   if(stepA>=2){
-    const gh=Math.max(0,R1(g2fix));
-    seg(gh,0,gh,g2fix,T.muted,1,[2,3]);
-    dot(gh,g2fix,5.5,T.ic1);
-    lab('ĝ¹',gh,0,0,18,T.ic1,12.5,'center',false);
+    seg(gh,0,gh,fixVal,T.muted,1,[2,3]);
+    dot(gh,fixVal,5.5,T.ic1);
+    lab('ĝ¹',gh,0,0,20,T.ic1,12.5,'center',true);
   }
   if(stepA>=3){
-    const gh=Math.max(0,R1(g2fix));
-    bracket(gh,M1,0.34,T.xbracket,'x¹');
-    lab('M¹',M1,0,0,18,T.budget,12,'center',false);
+    bracket(gh,M1,0.30,T.xbracket,'x¹');
+    lab('M¹',M1,0,0,20,T.budget,12,'center',true);
   }
-  axes();
-  const gh=Math.max(0,R1(g2fix));
-  document.getElementById('rA').textContent='ĝ¹ = '+gh.toFixed(2);
-  document.getElementById('rX').textContent='x¹ = '+(M1-gh).toFixed(2);
 }
-const STEPS_A=[
-  {t:"Step 0 · Setup — fix the other's contribution",
-   b:()=>`Individual 1 chooses g¹ to maximise U¹(x¹,G) taking individual 2's contribution as given, at the reference level <span class="num">ḡ² = ${g2fix.toFixed(1)}</span> (horizontal line). Budget: x¹ = M¹ − g¹, with M¹ = <span class="num">${M1}</span>; public good G = g¹ + g². The vertical <b style="color:var(--budget)">budget constraint</b> sits at g¹ = M¹.`},
-  {t:"Step 1 · Draw 1's indifference curves",
-   b:()=>`Each indifference curve is U-shaped in (g¹,g²): raising g¹ from zero first substitutes cheaply for private consumption (curve falls), then — as x¹ runs out toward the budget — g² must rise steeply to hold utility constant. Higher curves (up-right) mean higher U¹.`},
-  {t:"Step 2 · The tangency is the best response",
-   b:()=>`The curve tangent to the line ḡ² = ${g2fix.toFixed(1)} is flat there: that point is <b style="color:var(--ic1)">ĝ¹ = ${Math.max(0,R1(g2fix)).toFixed(2)}</b>, individual 1's best response. Drag the slider and watch ĝ¹ move — the locus of these tangencies is exactly the reaction function g¹(g²), which you'll see whole in tab 2.`},
-  {t:"Step 3 · Read off the private good left over",
-   b:()=>`Whatever isn't contributed is kept as private consumption: <b style="color:var(--xbracket)">x¹ = M¹ − ĝ¹ = ${(M1-Math.max(0,R1(g2fix))).toFixed(2)}</b> (teal brace, from ĝ¹ out to M¹). Because dg¹/dg² = ${(-ALPHA).toFixed(2)} < 0, a higher ḡ² makes individual 1 free-ride more (contribute less, keep more x¹).`}
-];
+/* Individual 2's derivation, mirrored: chooses g² (y-axis), fixes g¹=fixVal (vertical line),
+   ICs are curve2 (bowls opening sideways), budget is horizontal at g²=M², x² brace runs up y-axis. */
+function drawIndiv2(){
+  const g=G();
+  ctx.save();ctx.beginPath();ctx.rect(g.padL,g.padT,plotW(),plotH());ctx.clip();
+  poly(curve2(Math.min(2.4,fixVal+1.0)), T.ic2Light, 1.6, [], .55);
+  poly(curve2(Math.max(0.15,fixVal-1.0)), T.ic2Light, 1.6, [], .55);
+  if(stepA>=1) poly(curve2(fixVal), T.ic2, 2.6);
+  ctx.restore();
+
+  seg(0,M2,g.AXIS,M2,T.budget,1.8);
+  lab('Budget constraint',0,M2,6,-8,T.budget,12,'left',true);
+  seg(fixVal,0,fixVal,g.AXIS,T.ic2,1.1,[2,3],0.85);
+  lab('ḡ¹ = '+fixVal.toFixed(1),fixVal,g.AXIS,4,-6,T.ic2,11,'left',true);
+
+  const gh=Math.max(0,R2(fixVal));
+  if(stepA>=2){
+    seg(0,gh,fixVal,gh,T.muted,1,[2,3]);
+    dot(fixVal,gh,5.5,T.ic2);
+    lab('ĝ²',0,gh,-8,4,T.ic2,12.5,'right',true);
+  }
+  if(stepA>=3){
+    vbracket(gh,M2,0.30,T.xbracket,'x²');
+    lab('M²',0,M2,-8,4,T.budget,12,'right',true);
+  }
+}
+function drawA(){
+  grid();
+  if(indiv===1) drawIndiv1(); else drawIndiv2();
+  axes();
+  const gh = indiv===1 ? Math.max(0,R1(fixVal)) : Math.max(0,R2(fixVal));
+  const Mown = indiv===1 ? M1 : M2;
+  document.getElementById('rA').textContent = (indiv===1?'ĝ¹ = ':'ĝ² = ')+gh.toFixed(2);
+  document.getElementById('rX').textContent = (indiv===1?'x¹ = ':'x² = ')+(Mown-gh).toFixed(2);
+}
+
+/* vertical brace on the g2 axis (for individual 2's x²), mirror of bracket() */
+function vbracket(gy0,gy1,gx,color,label){
+  const x=qx(gx), y0=py(gy0), y1=py(gy1), mid=(y0+y1)/2;
+  ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(x+4,y0);ctx.lineTo(x-2,y0);ctx.lineTo(x-2,mid+4);ctx.lineTo(x-7,mid);
+  ctx.lineTo(x-2,mid-4);ctx.lineTo(x-2,y1);ctx.lineTo(x+4,y1);ctx.stroke();ctx.restore();
+  lab(label,gx,(gy0+gy1)/2,-26,4,color,12.5,'right',false);
+}
+
+const STEPS_A={
+  1:[
+    {t:"Step 0 · Setup — fix the other's contribution",
+     b:()=>`Individual 1 chooses g¹ to maximise U¹(x¹,G) taking individual 2's contribution as given, at the reference level <span class="num">ḡ² = ${fixVal.toFixed(1)}</span> (horizontal line). Budget: x¹ = M¹ − g¹, with M¹ = <span class="num">${M1}</span>; public good G = g¹ + g². The vertical <b style="color:var(--budget)">budget constraint</b> sits at g¹ = M¹.`},
+    {t:"Step 1 · Draw 1's indifference curves",
+     b:()=>`Each indifference curve is U-shaped in (g¹,g²): raising g¹ from zero first substitutes cheaply for private consumption (curve falls), then — as x¹ runs out toward the budget — g² must rise steeply to hold utility constant. Higher curves (up-right) mean higher U¹.`},
+    {t:"Step 2 · The tangency is the best response",
+     b:()=>`The curve tangent to the line ḡ² = ${fixVal.toFixed(1)} is flat there: that point is <b style="color:var(--ic1)">ĝ¹ = ${Math.max(0,R1(fixVal)).toFixed(2)}</b>, individual 1's best response. Drag the slider and watch ĝ¹ move — the locus of these tangencies is exactly the reaction function g¹(g²), which you'll see whole in tab 2.`},
+    {t:"Step 3 · Read off the private good left over",
+     b:()=>`Whatever isn't contributed is kept as private consumption: <b style="color:var(--xbracket)">x¹ = M¹ − ĝ¹ = ${(M1-Math.max(0,R1(fixVal))).toFixed(2)}</b> (teal brace, from ĝ¹ out to M¹). Because dg¹/dg² = ${(-ALPHA).toFixed(2)} < 0, a higher ḡ² makes individual 1 free-ride more (contribute less, keep more x¹).`}
+  ],
+  2:[
+    {t:"Step 0 · Setup — the mirror problem",
+     b:()=>`Now individual 2 chooses g² to maximise U²(x²,G), taking individual 1's contribution as given at <span class="num">ḡ¹ = ${fixVal.toFixed(1)}</span> (vertical line). Everything is the mirror image of individual 1's problem across the diagonal: the choice variable is on the <em>vertical</em> axis, and the <b style="color:var(--budget)">budget constraint</b> is now horizontal at g² = M².`},
+    {t:"Step 1 · Draw 2's indifference curves",
+     b:()=>`Individual 2's indifference curves open <em>sideways</em>: raising g² from zero first substitutes cheaply for x², then g¹ must rise to hold utility constant as x² runs out. Curves further up-right mean higher U².`},
+    {t:"Step 2 · The tangency is the best response",
+     b:()=>`The curve tangent to the vertical line ḡ¹ = ${fixVal.toFixed(1)} is vertical there: that point is <b style="color:var(--ic2)">ĝ² = ${Math.max(0,R2(fixVal)).toFixed(2)}</b>, individual 2's best response. Dragging the slider traces the reaction function g²(g¹).`},
+    {t:"Step 3 · Read off the private good left over",
+     b:()=>`The rest of 2's endowment is private consumption: <b style="color:var(--xbracket)">x² = M² − ĝ² = ${(M2-Math.max(0,R2(fixVal))).toFixed(2)}</b> (teal brace up the g² axis). Same free-riding logic: dg²/dg¹ = ${(-ALPHA).toFixed(2)} < 0.`}
+  ]
+};
 function legendA(){
-  return `
+  if(indiv===1) return `
     <div class="item"><span class="sw" style="background:var(--ic1)"></span> 1's indifference curve at the tangency</div>
     <div class="item"><span class="sw" style="background:var(--ic1-light)"></span> neighbouring curves (lower / higher U¹)</div>
     <div class="item"><span class="sw" style="background:var(--budget)"></span> budget constraint, g¹ = M¹</div>
     <div class="item"><span class="sw" style="background:var(--xbracket)"></span> x¹ = private good left over</div>`;
+  return `
+    <div class="item"><span class="sw" style="background:var(--ic2)"></span> 2's indifference curve at the tangency</div>
+    <div class="item"><span class="sw" style="background:var(--ic2-light)"></span> neighbouring curves (lower / higher U²)</div>
+    <div class="item"><span class="sw" style="background:var(--budget)"></span> budget constraint, g² = M²</div>
+    <div class="item"><span class="sw" style="background:var(--xbracket)"></span> x² = private good left over</div>`;
+}
+function setIndiv(who){
+  if(who===indiv) return;
+  indiv=who; stepA=0;
+  document.getElementById('ind-1').classList.toggle('active',who===1);
+  document.getElementById('ind-2').classList.toggle('active',who===2);
+  // recolor the best-response result box to match the active individual
+  const br=document.getElementById('resBR');
+  br.classList.toggle('a',who===1); br.classList.toggle('b',who===2);
+  renderA();
 }
 function renderA(){
-  const s=STEPS_A[stepA];
+  const s=STEPS_A[indiv][stepA];
   document.getElementById('stitle').innerHTML=s.t;
   document.getElementById('sbody').innerHTML=s.b();
   document.getElementById('counter').textContent=`Step ${stepA} / 3`;
@@ -313,6 +392,16 @@ function renderA(){
   document.getElementById('back').disabled=(stepA===0);
   document.getElementById('next').disabled=(stepA===3);
   document.getElementById('next').textContent=stepA===3?'Done':'Next ▶';
+  // slider + result labels adapt to the active individual
+  const other=indiv===1?2:1, ownM=indiv===1?'M¹':'M²';
+  document.getElementById('slider-card-title').textContent=`Fix individual ${other}'s contribution`;
+  document.getElementById('slider-name').innerHTML = indiv===1 ? 'ḡ² (other\u2019s contribution)' : 'ḡ¹ (other\u2019s contribution)';
+  document.getElementById('slider-val').textContent=fixVal.toFixed(1);
+  document.getElementById('slider').value=fixVal;
+  document.getElementById('slider-note').innerHTML =
+    `Drag to change the fixed contribution of the other individual; individual ${indiv}'s best response ${indiv===1?'ĝ¹':'ĝ²'} slides along its reaction function. The locus of tangencies <em>is</em> that reaction function.`;
+  document.getElementById('resBR-lbl').textContent = `${indiv}'s best response ${indiv===1?'ĝ¹':'ĝ²'}`;
+  document.getElementById('resX-lbl').innerHTML = indiv===1 ? 'private good x¹ = M¹−ĝ¹' : 'private good x² = M²−ĝ²';
   document.getElementById('legendA').innerHTML=legendA();
   draw();
 }
@@ -374,7 +463,7 @@ function setTab(which){
 document.getElementById('next').addEventListener('click',()=>{ if(stepA<3){ stepA++; renderA(); } });
 document.getElementById('back').addEventListener('click',()=>{ if(stepA>0){ stepA--; renderA(); } });
 document.getElementById('slider').addEventListener('input',e=>{
-  g2fix=parseFloat(e.target.value); document.getElementById('slider-val').textContent=g2fix.toFixed(1); drawA();
+  fixVal=parseFloat(e.target.value); document.getElementById('slider-val').textContent=fixVal.toFixed(1); draw();
 });
 
 setupCanvas(); renderA();
