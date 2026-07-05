@@ -282,6 +282,15 @@
   .oq-copy { margin-top:12px; border:1px solid var(--pe3-accent); background:transparent; color:var(--pe3-accent);
              font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
   .oq-copy:hover { background:var(--pe3-accent); color:#fff; }
+  /* PE1 write-in answer field (blue accent) — added to exercises & exam questions */
+  .aw-input { width:100%; min-height:130px; box-sizing:border-box; resize:vertical; font-family:'Georgia',serif;
+              font-size:13.5px; line-height:1.6; color:var(--text); background:var(--bg);
+              border:1px solid var(--border2); border-radius:8px; padding:12px 14px; margin-top:12px; }
+  .aw-input:focus { outline:none; border-color:var(--accent); }
+  .aw-row { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  .aw-copy { border:1px solid var(--accent); background:transparent; color:var(--accent);
+             font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
+  .aw-copy:hover { background:var(--accent); color:#fff; }
 </style>
 </head>
 <body>
@@ -2408,9 +2417,11 @@ function answerMCQ(qi, chosen, correct){
 }
 
 function renderExercises(inner, items){
+  const topic = TESTING_DATA[currentTopicIdx].title;
   inner.innerHTML = items.map((e,ei)=>`
     <div class="ex-block">
       <div class="ex-q">${ei+1}. ${e.q}</div>
+      ${pe1AnswerField(`ex-ans-${currentTopicIdx}-${ei}`, topic, e.q)}
       <button class="ex-toggle" onclick="toggleSolution(${ei})">Show solution</button>
       <div class="ex-sol" id="ex-sol-${ei}">${e.solution.replace(/\n\n/g,'<br><br>')}</div>
     </div>`).join('');
@@ -2492,6 +2503,7 @@ function renderMockExam(){
     <div class="ex-block">
       <div class="exam-tag">B${ei+1} · ${ex.topic}</div>
       <div class="ex-q">${ex.q}</div>
+      ${pe1AnswerField(`exam-open-ans-${ei}`, ex.topic, ex.q)}
       <button class="ex-toggle" onclick="toggleExamSolution('open',${ei})">Show solution</button>
       <div class="ex-sol" id="exam-open-sol-${ei}">${ex.solution.replace(/\n\n/g,'<br><br>')}</div>
     </div>`;
@@ -2503,6 +2515,7 @@ function renderMockExam(){
     <div class="ex-block">
       <div class="exam-tag">C · ${ex.topic}</div>
       <div class="ex-q">${ex.q}</div>
+      ${pe1AnswerField(`exam-paper-ans-${ei}`, ex.topic, ex.q)}
       <button class="ex-toggle" onclick="toggleExamSolution('paper',${ei})">Show solution</button>
       <div class="ex-sol" id="exam-paper-sol-${ei}">${ex.solution.replace(/\n\n/g,'<br><br>')}</div>
     </div>`;
@@ -2513,6 +2526,7 @@ function renderMockExam(){
     html += `
     <div class="ex-block">
       <div class="ex-q">${ex.q}</div>
+      ${pe1AnswerField(`exam-bonus-ans-${ei}`, 'Bonus (theory)', ex.q)}
       <button class="ex-toggle" onclick="toggleExamSolution('bonus',${ei})">Show solution</button>
       <div class="ex-sol" id="exam-bonus-sol-${ei}">${ex.solution.replace(/\n\n/g,'<br><br>')}</div>
     </div>`;
@@ -2970,6 +2984,29 @@ function fallbackCopy(text, done){
   const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
   document.body.appendChild(ta); ta.select();
   try{ document.execCommand('copy'); done(); }catch(e){} document.body.removeChild(ta);
+}
+
+/* ── PE1 write-in answers (exercises + exam open/paper/bonus) ── */
+const pe1Answers = {};   // keyed by a stable id string, so answers survive re-render
+function savePe1Answer(id, val){ pe1Answers[id]=val; }
+function copyPe1Answer(id, topic, question, btn){
+  const a = (document.getElementById(id)||{}).value || '';
+  const payload = `PE1 — ${topic}\n\nQuestion: ${question}\n\nMy answer:\n${a}`;
+  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent='📋 Copy answer',1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(payload).then(done).catch(()=>fallbackCopy(payload,done));
+  } else fallbackCopy(payload, done);
+}
+/* Build the answer field + copy row. `id` must be unique & stable; topic/question
+   are escaped for safe embedding in the onclick handler. */
+function pe1AnswerField(id, topic, question){
+  const esc = s => String(s).replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' ');
+  const saved = (pe1Answers[id]||'').replace(/</g,'&lt;');
+  return `<textarea class="aw-input" id="${id}" placeholder="Write your answer here…"
+            oninput="savePe1Answer('${id}',this.value)">${saved}</textarea>
+          <div class="aw-row">
+            <button class="aw-copy" onclick="copyPe1Answer('${id}','${esc(topic)}','${esc(question)}',this)">📋 Copy answer</button>
+          </div>`;
 }
 
 /* ── Pooled sections (flashcards / open questions across all topics) ── */
