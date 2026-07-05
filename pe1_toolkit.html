@@ -46,6 +46,9 @@
   #mode-pe3 .test-nav-item.exam.pe3 { color:var(--pe3-accent); font-weight:bold; }
   #mode-pe3 .test-nav-item.exam.pe3.active, #mode-pe3 .test-nav-item.exam.pe3:hover { background:rgba(46,125,50,.08); color:var(--pe3-accent); }
   #mode-pe3 .test-nav-item.pe3-pool.active { background:rgba(46,125,50,.08); color:var(--pe3-accent); border-left-color:var(--pe3-accent); font-weight:bold; }
+  #mode-testing .test-nav-item.pe1-pool { color:var(--accent); }
+  #mode-testing .test-nav-item.pe1-pool.active { background:rgba(21,101,192,.08); color:var(--accent); border-left-color:var(--accent); font-weight:bold; }
+  #mode-testing .fc-topic-tag { color:var(--accent); }
   .fc-topic-tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--pe3-accent);
                   font-weight:bold; margin-top:10px; }
   .exam-intro { font-size:13px; color:var(--muted); font-style:italic; line-height:1.6; margin-bottom:22px;
@@ -1526,6 +1529,15 @@
       </div>
       <nav class="test-nav" id="test-nav"></nav>
       <div class="test-sidebar-footer">
+        <div class="test-nav-item pe1-pool" id="pe1-pool-flashcards-nav" onclick="openPe1Pool('flashcards')">
+          <span class="test-nav-icon">🎲</span>All flashcards (pooled)
+        </div>
+        <div class="test-nav-item pe1-pool" id="pe1-pool-mcq-nav" onclick="openPe1Pool('mcq')">
+          <span class="test-nav-icon">🎲</span>All MCQ (pooled)
+        </div>
+        <div class="test-nav-item pe1-pool" id="pe1-pool-exercises-nav" onclick="openPe1Pool('exercises')">
+          <span class="test-nav-icon">🎲</span>All exercises (pooled)
+        </div>
         <div class="test-nav-item exam" id="mock-exam-nav" onclick="openMockExam()">
           <span class="test-nav-icon">📝</span>Mock Exam
         </div>
@@ -1742,6 +1754,61 @@ const TESTING_DATA = [
         ],
         "correct": 3,
         "rationale": "The First Welfare Theorem's classic conditions are no externalities, perfect information, and perfect competition (sometimes + no behavioral fallacies). A balanced government budget isn't one of them — it isn't even a precondition for a competitive equilibrium to exist."
+      },
+      {
+        "q": "The Second Welfare Theorem says any Pareto-efficient allocation can be decentralised as a competitive equilibrium. Operationally, what does implementing it require?",
+        "options": [
+          "Nothing beyond convex preferences — the market reaches it unaided",
+          "A suitable lump-sum redistribution of initial endowments before trading",
+          "Distortionary commodity taxes to correct relative prices",
+          "The planner directly assigning the final allocation to each agent"
+        ],
+        "correct": 1,
+        "rationale": "SWT2 works by moving the <i>starting point</i>: a lump-sum transfer of the numeraire places the endowment so the market's price-adjustment algorithm converges to the desired efficient allocation. Convexity is needed but the operative act is the lump-sum redistribution. Distortionary taxes would themselves destroy efficiency; a planner directly assigning the allocation is the <i>alternative</i> to the market, not the theorem."
+      },
+      {
+        "q": "In the two-good exchange economy we normalise $p_y=1$. Which pairing is correct?",
+        "options": [
+          "y is untaxed, so Walras' law pins $p_x$ to 1 as well",
+          "Only relative prices matter, so one price is normalised; Walras' law then implies that if one market clears, so does the other",
+          "y is the public good; Walras' law implies aggregate excess demand is positive",
+          "It makes the budget bind; Walras' law implies both prices equal 1"
+        ],
+        "correct": 1,
+        "rationale": "With two goods only the price ratio is determined, so we fix a numeraire ($p_y=1$). Walras' law states the value of aggregate excess demand is identically zero, so market-1 clearing forces market-2 clearing — the two clearing conditions are interdependent, not independent."
+      },
+      {
+        "q": "Which is a valid criticism of using a social welfare function $W(U_A,U_B)$ to pick an allocation?",
+        "options": [
+          "It cannot rank Pareto improvements",
+          "It requires interpersonal comparisons of utility and is a 'black box' in how it aggregates individual preferences",
+          "It necessarily produces a Rawlsian (maximin) outcome",
+          "It contradicts the First Welfare Theorem"
+        ],
+        "correct": 1,
+        "rationale": "The summary's two caveats: a SWF presupposes that utilities of different people are comparable (explicit when Bentham sums them), and the aggregation of preferences into $W$ is opaque. A SWF <i>can</i> rank Pareto improvements (it is increasing in each $U_i$); it is not inherently Rawlsian; and it does not conflict with the FWT."
+      },
+      {
+        "q": "A perfectly competitive equilibrium is reached with no externalities and full information. Which statement is correct?",
+        "options": [
+          "It is Pareto efficient and therefore equitable",
+          "It is Pareto efficient but may be highly inequitable",
+          "It maximises the utilitarian social welfare function",
+          "It needs the planner's intervention to become efficient"
+        ],
+        "correct": 1,
+        "rationale": "The First Welfare Theorem delivers efficiency, not fairness: a competitive equilibrium can be Pareto efficient yet extremely unequal (efficiency and equity are separate questions). It does not in general maximise any particular SWF — that would require the right endowment (SWT2). And no planner is needed for efficiency; that is precisely the content of the FWT."
+      },
+      {
+        "q": "According to Adam Smith's 'market test', a new commodity that is currently not produced will be brought to market when…",
+        "options": [
+          "a government agency certifies its social value",
+          "consumers' willingness to pay for it exceeds its production cost",
+          "producing it would raise measured GDP",
+          "a planner's cost-benefit analysis approves it"
+        ],
+        "correct": 1,
+        "rationale": "Smith's test: if what individuals are willing to pay exceeds production cost, there is potential profit and an entrepreneur will supply it — no government judgement about whether the good 'should' exist is required, and competition drives out inefficient producers."
       }
     ],
     "exercises": [
@@ -1752,6 +1819,14 @@ const TESTING_DATA = [
       {
         "q": "Consider a simple economy with only two individuals, Alice and Bruno. (a) Let $W=U_A+U_B$. Graph the social indifference curves and describe the relative importance assigned to their well-being. (b) Repeat for $W=U_A+2U_B$. (c) How would the optimal point on the utility possibility frontier change under a Rawlsian SWF?",
         "solution": "**(a)** $W=U_A+U_B$ gives straight-line social indifference curves with slope $-1$: a util to Alice is worth exactly as much as a util to Bruno — perfectly egalitarian in *utility* terms (not in outcomes). **(b)** $W=U_A+2U_B$ gives straight lines with slope $-2$ (steeper): Bruno's utility is weighted twice as heavily, so the optimum on the utility-possibility frontier shifts toward higher $U_B$. **(c)** A Rawlsian SWF has L-shaped (maximin) social indifference curves; the optimum is where the utility-possibility frontier meets the 45° line from the origin (or wherever the frontier is tangent to the corner of the L) — i.e. wherever it maximizes the *minimum* of the two utilities, regardless of the trade-off rate available."
+      },
+      {
+        "q": "Pure exchange economy, goods 1 and 2, two consumers $A,B$, both with Cobb–Douglas utility $u(x_1,x_2)=x_1 x_2$. Aggregate endowment is $(10,10)$. (a) Derive the contract curve. (b) Is the symmetric split $x^A=(5,5),\\,x^B=(5,5)$ Pareto efficient?",
+        "solution": "**(a)** For $u=x_1x_2$, $MRS=\\dfrac{\\partial u/\\partial x_1}{\\partial u/\\partial x_2}=\\dfrac{x_2}{x_1}$. Pareto efficiency (interior) requires $MRS^A=MRS^B$: $\\dfrac{x_2^A}{x_1^A}=\\dfrac{x_2^B}{x_1^B}=\\dfrac{10-x_2^A}{10-x_1^A}$. Cross-multiplying, $x_2^A(10-x_1^A)=x_1^A(10-x_2^A)\\Rightarrow 10x_2^A=10x_1^A\\Rightarrow x_2^A=x_1^A$. So the contract curve is the **main diagonal** of the Edgeworth box, $x_1^A=x_2^A$ (equivalently $x_1^B=x_2^B$) — the locus where both consume the two goods in the same 1:1 ratio.\n**(b)** At $(5,5),(5,5)$ we have $x_1^A=x_2^A=5$, which satisfies $x_1^A=x_2^A$, so the allocation lies on the contract curve and **is Pareto efficient**. (Both agents have $MRS=1$, so no mutually beneficial trade remains.)"
+      },
+      {
+        "q": "A utility-possibility frontier is $U_B = 100 - \\dfrac{U_A^2}{100}$ for $U_A\\in[0,100]$. (a) Find the utilitarian optimum $\\max\\,(U_A+U_B)$. (b) Find the Rawlsian optimum $\\max\\,\\min(U_A,U_B)$. (c) Comment on why they differ.",
+        "solution": "**(a)** Maximise $W=U_A+U_B=U_A+100-\\dfrac{U_A^2}{100}$. FOC: $1-\\dfrac{2U_A}{100}=0\\Rightarrow U_A=50$, giving $U_B=100-\\dfrac{2500}{100}=75$. Utilitarian optimum $(U_A,U_B)=(50,75)$, with $W=125$. Geometrically this is where the frontier's slope equals $-1$ (the slope of the linear utilitarian iso-welfare lines).\n**(b)** Maximin is reached on the $45°$ line $U_A=U_B$ (for a concave frontier): set $U_A=100-\\dfrac{U_A^2}{100}\\Rightarrow U_A^2+100U_A-10000=0\\Rightarrow U_A=\\dfrac{-100+\\sqrt{10000+40000}}{2}=\\dfrac{-100+\\sqrt{50000}}{2}\\approx 61.8$. Rawlsian optimum $\\approx(61.8,\\,61.8)$.\n**(c)** The utilitarian criterion only cares about the *sum*, so it tolerates inequality (75 vs 50) to reach a larger total; the Rawlsian criterion only cares about the *worst-off*, so it equalises utilities even though the total ($\\approx123.6$) is lower than $125$. Same efficient frontier, different distributional judgement."
       }
     ]
   },
@@ -1831,6 +1906,61 @@ const TESTING_DATA = [
         ],
         "correct": 0,
         "rationale": "Plug $\\varepsilon_D=0$ into the incidence formula: $dp_D/dt=\\varepsilon_S/(\\varepsilon_S-\\varepsilon_D)=\\varepsilon_S/\\varepsilon_S=1$. The full tax shows up in the buyer's price no matter how elastic supply is — the statutory target (sellers) is irrelevant."
+      },
+      {
+        "q": "The government levies a specific tax and makes sellers legally responsible for remitting it. Which statement is correct?",
+        "options": [
+          "Sellers bear the economic burden because they send the money to the government",
+          "The economic incidence is independent of who legally remits the tax and depends on relative elasticities",
+          "Consumers always bear the entire burden regardless of elasticities",
+          "Statutory and economic incidence always coincide"
+        ],
+        "correct": 1,
+        "rationale": "Statutory incidence (who is legally liable to remit) is distinct from economic incidence (who actually loses resources, via induced price changes). The economic burden is pinned down by relative elasticities and is invariant to the statutory side — remitting the cheque is not the same as bearing the cost."
+      },
+      {
+        "q": "A specific tax is imposed in a competitive market. As demand becomes more inelastic relative to supply, the share of the tax borne by consumers…",
+        "options": [
+          "falls",
+          "rises",
+          "is unchanged",
+          "becomes negative"
+        ],
+        "correct": 1,
+        "rationale": "Consumer-price pass-through is $\\dfrac{dp_D}{dt}=\\dfrac{\\varepsilon_S}{\\varepsilon_S-\\varepsilon_D}$ (with $\\varepsilon_D<0$). As demand becomes more inelastic ($\\varepsilon_D\\to 0$), this ratio rises toward $1$ — the more inelastic side cannot escape the tax and therefore bears more of it."
+      },
+      {
+        "q": "If, after a tax is introduced, the consumer price rises by <i>more</i> than the tax, the tax is said to be…",
+        "options": [
+          "fully shifted",
+          "undershifted",
+          "overshifted",
+          "evaded"
+        ],
+        "correct": 2,
+        "rationale": "By definition, a price rise larger than the tax is <b>over-shifting</b> ($dp/dt>1$). It cannot occur in a competitive market with ordinary curves, but it can arise under monopoly with sufficiently convex demand (e.g. isoelastic), where the markup amplifies the tax. 'Evasion' is non-payment with no transfer — a different concept."
+      },
+      {
+        "q": "Partial-equilibrium analysis is an acceptable approximation of tax incidence provided that…",
+        "options": [
+          "the taxed market is large relative to the whole economy",
+          "the taxed market is small (negligible income effects), there are no close substitutes/complements, the revenue is not spent on the taxed good, and producers are perfectly competitive",
+          "the government spends the revenue buying back the taxed good",
+          "there are strong spill-over effects to closely related markets"
+        ],
+        "correct": 1,
+        "rationale": "These are exactly the summary's conditions for the two-good/partial-equilibrium shortcut: a small market (no income effects), no strong substitution/complementarity links (else spill-overs), revenue not recycled into the taxed good, and price-taking producers. A large market or spill-overs would break the approximation."
+      },
+      {
+        "q": "A firm passes a tax on to its customers by raising its output price. This is an instance of…",
+        "options": [
+          "tax evasion",
+          "forward tax shifting",
+          "backward tax shifting",
+          "lump-sum taxation"
+        ],
+        "correct": 1,
+        "rationale": "Raising the output price shifts the burden <i>forward</i> to consumers. Backward shifting would mean pushing it to an earlier stage (e.g. lower wages to a factor). Evasion is non-payment without any transfer; a lump-sum tax is unrelated (its size is independent of behaviour)."
       }
     ],
     "exercises": [
@@ -1845,6 +1975,18 @@ const TESTING_DATA = [
       {
         "q": "Assuming a quasilinear utility function, analyse the effects of raising a per-unit tax on purchases in a competitive market. (1) What happens to the equilibrium? (2) What is the incidence on consumers and suppliers? (3) Present and derive the excess burden.",
         "solution": "**(1)** The tax drives a wedge $t$ between the price buyers pay $p_D$ and the price sellers receive $p_S=p_D-t$. Quantity traded falls from $Q_0$ (where $D=S$) to $Q_1$ (where $D(p_S+t)=S(p_S)$); $p_D$ rises and $p_S$ falls relative to the pre-tax price $p_0$.\n**(2)** Incidence splits by elasticities: $\\Delta p_D = \\dfrac{\\varepsilon_S}{\\varepsilon_S-\\varepsilon_D}t$, $\\Delta p_S = \\dfrac{\\varepsilon_D}{\\varepsilon_S-\\varepsilon_D}t$ — the more inelastic side bears more of the burden, regardless of statutory incidence.\n**(3)** Since utility is quasilinear, Marshallian = Hicksian demand (no income effects), so the excess burden is exactly the Harberger triangle: $EB\\approx\\tfrac12(Q_0-Q_1)\\,t$ — the lost surplus on the $(Q_0-Q_1)$ units that no longer trade, bounded above by demand and below by supply, sitting strictly beyond the tax revenue rectangle $t\\cdot Q_1$."
+      },
+      {
+        "q": "Competitive market with demand $Q_D=100-2p$ and supply $Q_S=-20+4p$ (here $p$ is the price sellers receive). A specific tax $t=6$ is imposed on buyers. (a) Pre-tax equilibrium. (b) Post-tax prices and quantity. (c) Incidence split. (d) Deadweight loss.",
+        "solution": "**(a)** Set $Q_D=Q_S$: $100-2p=-20+4p\\Rightarrow 120=6p\\Rightarrow p=20$, $Q=60$.\n**(b)** Tax on buyers: they pay $p_S+t$, so demand in terms of the seller price is $Q_D=100-2(p_S+6)=88-2p_S$. Clearing: $88-2p_S=-20+4p_S\\Rightarrow 108=6p_S\\Rightarrow p_S=18$. Buyer price $p_D=p_S+6=24$; quantity $Q=-20+4(18)=52$.\n**(c)** Buyer price rose $20\\to24$ ($+4$); seller price fell $20\\to18$ ($-2$); the two add to the tax, $4+2=6$. Consumers bear $\\tfrac{4}{6}=\\tfrac23$, sellers $\\tfrac13$. Check with elasticities at the initial equilibrium: $\\varepsilon_D=2\\cdot\\tfrac{20}{60}=0.67$, $\\varepsilon_S=4\\cdot\\tfrac{20}{60}=1.33$; consumer share $=\\dfrac{\\varepsilon_S}{\\varepsilon_S+|\\varepsilon_D|}=\\dfrac{1.33}{2}=\\tfrac23$. ✓\n**(d)** $\\text{DWL}=\\tfrac12\\,\\Delta Q\\cdot t=\\tfrac12(60-52)(6)=\\tfrac12(8)(6)=\\mathbf{24}$."
+      },
+      {
+        "q": "A monopolist faces demand $p=100-Q$ with constant marginal cost $MC=20$. A specific tax $t=10$ per unit is then imposed. (a) Pre-tax price and quantity. (b) Post-tax price and quantity. (c) Compute the pass-through $\\Delta p/t$ and interpret it.",
+        "solution": "**(a)** $MR=100-2Q$. Set $MR=MC$: $100-2Q=20\\Rightarrow Q=40$, $p=100-40=60$.\n**(b)** The tax raises the effective marginal cost to $30$: $100-2Q=30\\Rightarrow Q=35$, $p=100-35=65$.\n**(c)** Pass-through $=\\dfrac{\\Delta p}{t}=\\dfrac{65-60}{10}=\\tfrac12$. With **linear** demand and constant $MC$, a monopolist passes through exactly half the specific tax (under-shifting) — the same $1/2$ as a competitive market with linear curves. Over-shifting ($>1$) would instead require sufficiently convex demand (e.g. isoelastic, where pass-through is $\\varepsilon/(\\varepsilon-1)>1$)."
+      },
+      {
+        "q": "Distinguish statutory from economic incidence. Using the competitive-market elasticity formula, explain what determines who bears a specific tax, and give the two limiting cases.",
+        "solution": "**Statutory incidence** is the legal obligation to remit the tax; **economic incidence** is the actual loss of real resources, measured by the tax-induced change in the prices agents face. They generally differ.\n\nIn a competitive market the consumer-side burden is $\\Delta p_D=\\dfrac{\\varepsilon_S}{\\varepsilon_S-\\varepsilon_D}\\,t$ and the producer-side burden $\\Delta p_S=\\dfrac{\\varepsilon_D}{\\varepsilon_S-\\varepsilon_D}\\,t$ (with $\\varepsilon_D<0$). The **relatively inelastic side bears more**, because it is less able to substitute away. Limiting cases: (i) **perfectly inelastic demand** ($\\varepsilon_D=0$) $\\Rightarrow \\Delta p_D=t$: consumers bear the whole tax. (ii) **perfectly inelastic supply** ($\\varepsilon_S=0$) $\\Rightarrow \\Delta p_S=-t$: producers bear the whole tax and quantity (hence DWL) is unchanged — the fixed-supply mineral case."
       }
     ]
   },
@@ -2351,7 +2493,7 @@ function initTesting(){
   renderTestTopic();
 }
 function setTestTopic(i, el){
-  inExamMode = false;
+  inExamMode = false; inPoolMode = false;
   document.getElementById('test-tabs').style.display = '';
   currentTopicIdx = i; fcIdx = 0; fcShowingAnswer = false;
   document.querySelectorAll('.test-nav-item').forEach(n=>n.classList.remove('active'));
@@ -2387,6 +2529,101 @@ function renderTestContent(){
   else if(currentType==='mcq') renderMCQ(inner, items);
   else renderExercises(inner, items);
   if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+
+/* ══════════ PE1 pooled review (blind draw across every topic, mirrors PE3) ══════════ */
+let inPoolMode = false;
+let pe1Pool = [];
+let pe1PoolIdx = 0;
+let pe1PoolType = 'flashcards';
+let pe1PoolFcAnswer = false;
+
+function openPe1Pool(type){
+  inExamMode = false; inPoolMode = true; pe1PoolType = type;
+  document.querySelectorAll('#mode-testing .test-nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('pe1-pool-'+type+'-nav').classList.add('active');
+  document.getElementById('test-tabs').style.display = 'none';
+  // build a shuffled pool of {ti, item} across every topic
+  pe1Pool = [];
+  TESTING_DATA.forEach((t,ti)=>(t[type]||[]).forEach(item=>pe1Pool.push({ti, item})));
+  pe1Pool = shuffle(pe1Pool);
+  pe1PoolIdx = 0; pe1PoolFcAnswer = false;
+  const label = {flashcards:'🗂️ All flashcards', mcq:'☑️ All MCQ', exercises:'✍️ All exercises'}[type];
+  document.getElementById('test-topic-title').textContent = '🎲 '+label+' — pooled ('+pe1Pool.length+')';
+  if(type==='flashcards') renderPe1PoolFlashcard();
+  else if(type==='mcq') renderPe1PoolMCQ();
+  else renderPe1PoolExercises();
+}
+
+/* Blind pool card: source topic hidden until the answer is revealed. */
+function renderPe1PoolFlashcard(){
+  const inner = document.getElementById('test-inner');
+  const {ti, item} = pe1Pool[pe1PoolIdx];
+  inner.innerHTML = `
+    <div class="fc-wrap">
+      <div class="fc-progress">Card ${pe1PoolIdx+1} / ${pe1Pool.length} · random order</div>
+      <div class="fc-card${pe1PoolFcAnswer?' answer':''}" onclick="flipPe1PoolCard()">
+        <div class="fc-content">${pe1PoolFcAnswer ? item.a : item.q}</div>
+      </div>
+      ${pe1PoolFcAnswer ? `<div class="fc-topic-tag">${TESTING_DATA[ti].icon} ${TESTING_DATA[ti].title}</div>` : ''}
+      <div class="fc-hint">Click the card to ${pe1PoolFcAnswer?'see the question':'reveal the answer &amp; topic'}</div>
+      <div class="fc-controls">
+        <button class="fc-btn" onclick="prevPe1PoolCard()">← Prev</button>
+        <button class="fc-btn primary" onclick="flipPe1PoolCard()">Flip</button>
+        <button class="fc-btn" onclick="nextPe1PoolCard()">Next →</button>
+        <button class="fc-btn" onclick="reshufflePe1Pool()">🎲 Shuffle</button>
+      </div>
+    </div>`;
+  if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+function flipPe1PoolCard(){ pe1PoolFcAnswer=!pe1PoolFcAnswer; renderPe1PoolFlashcard(); }
+function nextPe1PoolCard(){ pe1PoolIdx=(pe1PoolIdx+1)%pe1Pool.length; pe1PoolFcAnswer=false; renderPe1PoolFlashcard(); }
+function prevPe1PoolCard(){ pe1PoolIdx=(pe1PoolIdx-1+pe1Pool.length)%pe1Pool.length; pe1PoolFcAnswer=false; renderPe1PoolFlashcard(); }
+function reshufflePe1Pool(){ pe1Pool=shuffle(pe1Pool); pe1PoolIdx=0; pe1PoolFcAnswer=false; renderPe1PoolFlashcard(); }
+
+function renderPe1PoolMCQ(){
+  const inner = document.getElementById('test-inner');
+  inner.innerHTML = pe1Pool.map((p,qi)=>{
+    const m = p.item;
+    return `<div class="mcq-block">
+      <div class="mcq-q">${qi+1}. ${m.q}</div>
+      ${m.options.map((opt,oi)=>
+        `<button class="mcq-opt" id="pmcq-${qi}-${oi}" onclick="answerPe1PoolMCQ(${qi},${oi})">${String.fromCharCode(97+oi)}. ${opt}</button>`
+      ).join('')}
+      <div class="mcq-rationale" id="pmcq-rat-${qi}"><div class="fc-topic-tag" style="margin:0 0 8px">${TESTING_DATA[p.ti].icon} ${TESTING_DATA[p.ti].title}</div>${mdInline(m.rationale)}</div>
+    </div>`;
+  }).join('');
+  if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+function answerPe1PoolMCQ(qi, chosen){
+  const m = pe1Pool[qi].item, correct = m.correct;
+  m.options.forEach((_,oi)=>{
+    const el = document.getElementById(`pmcq-${qi}-${oi}`);
+    el.disabled = true;
+    if(oi===correct) el.classList.add('correct');
+    else if(oi===chosen) el.classList.add('wrong');
+  });
+  document.getElementById(`pmcq-rat-${qi}`).classList.add('shown');
+}
+
+function renderPe1PoolExercises(){
+  const inner = document.getElementById('test-inner');
+  inner.innerHTML = pe1Pool.map((p,ei)=>{
+    const e = p.item, topic = TESTING_DATA[p.ti].title;
+    return `<div class="ex-block">
+      <div class="fc-topic-tag" style="margin:0 0 8px">${TESTING_DATA[p.ti].icon} ${topic}</div>
+      <div class="ex-q">${ei+1}. ${e.q}</div>
+      ${pe1AnswerField(`pool-ex-ans-${ei}`, topic, e.q)}
+      <button class="ex-toggle" onclick="togglePe1PoolSolution(${ei})">Show solution</button>
+      <div class="ex-sol" id="pool-ex-sol-${ei}">${mdInline(e.solution)}</div>
+    </div>`;
+  }).join('');
+  if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
+}
+function togglePe1PoolSolution(ei){
+  const el = document.getElementById(`pool-ex-sol-${ei}`);
+  el.classList.toggle('shown');
+  if(el.classList.contains('shown') && window.renderMathInElement) renderMathInElement(el, KATEX_OPTS);
 }
 
 function renderFlashcards(inner, items){
