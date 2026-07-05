@@ -243,6 +243,11 @@
   .fc-card .fc-tag { position:absolute; margin-top:-160px; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
                       color:var(--muted2); font-family:Georgia,serif; font-style:italic; }
   .fc-card.answer { background:var(--bg); }
+  /* single flex child: keeps text + inline $math$ on one flowing line instead of
+     splitting each text node / KaTeX span into its own flex item (which tore
+     mid-sentence math like "Slope $=-1$ everywhere" apart). */
+  .fc-content { max-width:100%; }
+  .fc-content .katex-display { margin:0.45em 0; }
   .fc-hint { font-size:11px; color:var(--muted2); font-style:italic; }
   .fc-controls { display:flex; gap:10px; }
   .fc-btn { border:1px solid var(--border2); background:var(--surface); color:var(--text); font-family:'Georgia',serif;
@@ -1606,6 +1611,21 @@ const TOPBAR_META = {
 };
 const KATEX_OPTS = { delimiters:[{left:"$$",right:"$$",display:true},{left:"$",right:"$",display:false}],
                       trust:true, throwOnError:false, strict:false };
+/* Minimal markdown for solution/rationale strings: **bold**, *italic*, and
+   newlines — while PROTECTING $…$/$$…$$ math (so tokens like \delta^* are never
+   mangled by the italic rule). Math is stashed, markdown applied, then restored,
+   after which KaTeX auto-render processes the (untouched) delimiters. */
+function mdInline(s){
+  if(!s) return s;
+  const math=[];
+  s=s.replace(/\$\$[\s\S]*?\$\$/g,m=>{math.push(m);return `\u0000${math.length-1}\u0000`;});
+  s=s.replace(/\$[^$\n]*?\$/g,m=>{math.push(m);return `\u0000${math.length-1}\u0000`;});
+  s=s.replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+  s=s.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+  s=s.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+  s=s.replace(/\u0000(\d+)\u0000/g,(_,i)=>math[+i]);
+  return s;
+}
 let formulasRendered = false;
 const moduleRendered = {};
 
@@ -2375,7 +2395,7 @@ function renderFlashcards(inner, items){
     <div class="fc-wrap">
       <div class="fc-progress">Card ${fcIdx+1} / ${items.length}</div>
       <div class="fc-card${fcShowingAnswer?' answer':''}" onclick="flipCard()">
-        ${fcShowingAnswer ? card.a : card.q}
+        <div class="fc-content">${fcShowingAnswer ? card.a : card.q}</div>
       </div>
       <div class="fc-hint">Click the card to ${fcShowingAnswer?'see the question':'reveal the answer'}</div>
       <div class="fc-controls">
@@ -2402,7 +2422,7 @@ function renderMCQ(inner, items){
       ${m.options.map((opt,oi)=>
         `<button class="mcq-opt" id="mcq-${qi}-${oi}" onclick="answerMCQ(${qi},${oi},${m.correct})">${String.fromCharCode(97+oi)}. ${opt}</button>`
       ).join('')}
-      <div class="mcq-rationale" id="mcq-rat-${qi}">${m.rationale}</div>
+      <div class="mcq-rationale" id="mcq-rat-${qi}">${mdInline(m.rationale)}</div>
     </div>`).join('');
 }
 function answerMCQ(qi, chosen, correct){
@@ -2423,7 +2443,7 @@ function renderExercises(inner, items){
       <div class="ex-q">${ei+1}. ${e.q}</div>
       ${pe1AnswerField(`ex-ans-${currentTopicIdx}-${ei}`, topic, e.q)}
       <button class="ex-toggle" onclick="toggleSolution(${ei})">Show solution</button>
-      <div class="ex-sol" id="ex-sol-${ei}">${e.solution.replace(/\n\n/g,'<br><br>')}</div>
+      <div class="ex-sol" id="ex-sol-${ei}">${mdInline(e.solution)}</div>
     </div>`).join('');
 }
 function toggleSolution(ei){
@@ -2492,7 +2512,7 @@ function renderMockExam(){
       ${m.options.map((opt,oi)=>
         `<button class="mcq-opt" id="exam-mcq-${qi}-${oi}" onclick="answerExamMCQ(${qi},${oi},${m.correct})">${String.fromCharCode(97+oi)}. ${opt}</button>`
       ).join('')}
-      <div class="mcq-rationale" id="exam-mcq-rat-${qi}">${m.rationale}</div>
+      <div class="mcq-rationale" id="exam-mcq-rat-${qi}">${mdInline(m.rationale)}</div>
     </div>`;
   });
 
@@ -2505,7 +2525,7 @@ function renderMockExam(){
       <div class="ex-q">${ex.q}</div>
       ${pe1AnswerField(`exam-open-ans-${ei}`, ex.topic, ex.q)}
       <button class="ex-toggle" onclick="toggleExamSolution('open',${ei})">Show solution</button>
-      <div class="ex-sol" id="exam-open-sol-${ei}">${ex.solution.replace(/\n\n/g,'<br><br>')}</div>
+      <div class="ex-sol" id="exam-open-sol-${ei}">${mdInline(ex.solution)}</div>
     </div>`;
   });
 
@@ -2517,7 +2537,7 @@ function renderMockExam(){
       <div class="ex-q">${ex.q}</div>
       ${pe1AnswerField(`exam-paper-ans-${ei}`, ex.topic, ex.q)}
       <button class="ex-toggle" onclick="toggleExamSolution('paper',${ei})">Show solution</button>
-      <div class="ex-sol" id="exam-paper-sol-${ei}">${ex.solution.replace(/\n\n/g,'<br><br>')}</div>
+      <div class="ex-sol" id="exam-paper-sol-${ei}">${mdInline(ex.solution)}</div>
     </div>`;
   });
 
@@ -2528,7 +2548,7 @@ function renderMockExam(){
       <div class="ex-q">${ex.q}</div>
       ${pe1AnswerField(`exam-bonus-ans-${ei}`, 'Bonus (theory)', ex.q)}
       <button class="ex-toggle" onclick="toggleExamSolution('bonus',${ei})">Show solution</button>
-      <div class="ex-sol" id="exam-bonus-sol-${ei}">${ex.solution.replace(/\n\n/g,'<br><br>')}</div>
+      <div class="ex-sol" id="exam-bonus-sol-${ei}">${mdInline(ex.solution)}</div>
     </div>`;
   });
 
@@ -2941,7 +2961,7 @@ function renderPe3Flashcards(inner, items){
     <div class="fc-wrap">
       <div class="fc-progress">Card ${pe3FcIdx+1} / ${items.length}</div>
       <div class="fc-card${pe3FcAnswer?' answer':''}" onclick="flipPe3Card()">
-        ${pe3FcAnswer ? card.a : card.q}
+        <div class="fc-content">${pe3FcAnswer ? card.a : card.q}</div>
       </div>
       <div class="fc-hint">Click the card to ${pe3FcAnswer?'see the question':'reveal the answer'}</div>
       <div class="fc-controls">
@@ -3037,7 +3057,7 @@ function renderPe3PoolFlashcard(){
     <div class="fc-wrap">
       <div class="fc-progress">Card ${pe3PoolIdx+1} / ${pe3Pool.length} · random order</div>
       <div class="fc-card${pe3FcAnswer?' answer':''}" onclick="flipPe3PoolCard()">
-        ${pe3FcAnswer ? item.a : item.q}
+        <div class="fc-content">${pe3FcAnswer ? item.a : item.q}</div>
       </div>
       ${pe3FcAnswer ? `<div class="fc-topic-tag">${PE3_DATA[ti].icon} ${PE3_DATA[ti].title}</div>` : ''}
       <div class="fc-hint">Click the card to ${pe3FcAnswer?'see the question':'reveal the answer & topic'}</div>
