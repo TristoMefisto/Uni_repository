@@ -2054,6 +2054,50 @@ const TESTING_DATA = [
         ],
         "correct": 0,
         "rationale": "The Harberger triangle's area is $-\\tfrac12\\,dh/d\\tau\\,(\\Delta\\tau)^2$ — quadratic in the tax rate, because both the quantity distortion and the price wedge scale linearly with $t$ and DWL is their product (times $\\tfrac12$)."
+      },
+      {
+        "q": "Why does a lump-sum tax create no excess burden, whereas an excise tax does?",
+        "options": [
+          "A lump-sum tax simply raises less revenue",
+          "A lump-sum tax leaves relative prices unchanged, so it has only an income effect and no substitution effect",
+          "An excise tax has no income effect",
+          "A lump-sum tax cannot be collected from the wealthy"
+        ],
+        "correct": 1,
+        "rationale": "A lump-sum tax cannot be altered by any change in behaviour, so it shifts the budget line inward without changing its slope — a pure income effect, no distortion. An excise tax changes the relative price of the taxed good, inducing a substitution effect (buying less of it) that is the source of the excess burden."
+      },
+      {
+        "q": "The total burden an excise tax places on a consumer decomposes into…",
+        "options": [
+          "only the revenue transferred to the government",
+          "the revenue transferred to the government plus the excess burden from substituting away from the taxed good",
+          "only the excess burden",
+          "the revenue minus the excess burden"
+        ],
+        "correct": 1,
+        "rationale": "The summary splits the burden into two pieces: the direct income reduction (equal to the tax revenue the government collects) and the additional welfare loss from distorting consumption — the excess burden. The second piece is the cost that exceeds the revenue actually raised."
+      },
+      {
+        "q": "Holding revenue roughly fixed, the excess burden of a specific tax is <i>larger</i> when…",
+        "options": [
+          "demand and supply are more inelastic",
+          "demand and supply are more elastic",
+          "the taxed good has no substitutes at all",
+          "the tax is levied lump-sum"
+        ],
+        "correct": 1,
+        "rationale": "Excess burden grows with the elasticities of demand and supply: the more responsive quantities are to the tax wedge, the larger the quantity distortion and hence the Harberger triangle. Inelastic responses shrink the triangle (the perfectly inelastic case has zero EB)."
+      },
+      {
+        "q": "'To minimise deadweight loss, tax inelastic goods more heavily.' What is the key qualification of this efficiency rule?",
+        "options": [
+          "It is unconditionally correct",
+          "It minimises efficiency cost but can worsen equity, because necessities are typically inelastic and weigh more heavily on the poor",
+          "It actually maximises deadweight loss",
+          "It applies only to luxury goods"
+        ],
+        "correct": 1,
+        "rationale": "Taxing inelastic goods is efficient (small quantity distortion), but the goods that are most inelastic — food, fuel, medicine — are necessities that make up a larger budget share for low-income households, so the rule is regressive. This efficiency-equity tension is exactly why real systems exempt or lightly tax necessities."
       }
     ],
     "exercises": [
@@ -2064,6 +2108,14 @@ const TESTING_DATA = [
       {
         "q": "Now allow for income effects (general, non-quasilinear utility). Explain how to measure the excess burden of the tax using EV or CV, and why the choice matters.",
         "solution": "With income effects, Marshallian demand no longer coincides with Hicksian demand, so the naive Marshallian-triangle DWL is only an approximation (and overstates the true burden — it doesn't net out the pure income effect, which isn't a distortion). The rigorous measures use Hicksian demand at either $u^0$ (giving $EB(u^0)$, related to CV) or $u^1$ (giving $EB(u^1)$, related to EV): $EB(u^0)=CV+(p'-p^0)h(p',u^0)$ and $EB(u^1)=EV+(p'-p^0)h(p',u^1)$. These generally differ because $CV\\neq EV$ once there are income effects — the choice matters because CV evaluates welfare loss using the compensated demand at the *original* utility level (relevant if compensating the consumer at new prices), while EV uses the *new*, lower utility level (relevant for WTP-to-avoid comparisons). Graphically, each corresponds to the area under a different Hicksian demand curve (one for $u^0$, one for $u^1$), and the true (unobservable) DWL lies between them, bracketed by $EV < \\text{true EB} < CV$ under normal-good, single-price-change conditions."
+      },
+      {
+        "q": "Demand is $Q=120-2p$; supply is perfectly elastic at $p=20$ (constant marginal cost). A specific tax $t=10$ is imposed. (a) Pre- and post-tax quantity. (b) Tax revenue. (c) Excess burden. (d) EB as a fraction of revenue.",
+        "solution": "**(a)** Perfectly elastic supply pins the seller price at 20, so consumers pay the whole tax. Pre-tax: $Q_0=120-2(20)=80$. Post-tax consumer price $=30$: $Q_1=120-2(30)=60$.\n**(b)** Revenue $=t\\cdot Q_1=10\\times 60=600$.\n**(c)** Excess burden is the Harberger triangle on the lost units: $EB=\\tfrac12\\,\\Delta Q\\cdot t=\\tfrac12(80-60)(10)=\\mathbf{100}$.\n**(d)** $EB/\\text{Revenue}=100/600\\approx \\mathbf{16.7\\%}$ — the efficiency cost is about one-sixth of the revenue raised."
+      },
+      {
+        "q": "With the same demand $Q=120-2p$ and constant marginal cost $=20$, compare the excess burden of a tax $t=10$ versus $t=20$. By what factor does EB change, and why?",
+        "solution": "For $t=10$: consumer price $30$, $Q_1=60$, $\\Delta Q=20$, $EB=\\tfrac12(20)(10)=100$.\nFor $t=20$: consumer price $40$, $Q_1=120-80=40$, $\\Delta Q=40$, $EB=\\tfrac12(40)(20)=400$.\nDoubling the tax multiplies EB by **four**. This is the quadratic property $EB\\propto t^2$: the quantity distortion $\\Delta Q$ grows linearly in $t$, and EB is $\\tfrac12\\,\\Delta Q\\cdot t$ — the product of two terms each linear in $t$. Practical implication: many small taxes are far cheaper than one large tax raising the same revenue."
       }
     ]
   },
@@ -2138,12 +2190,53 @@ const TESTING_DATA = [
         ],
         "correct": 1,
         "rationale": "This is the 'equal proportional reduction' equivalent statement of the inverse elasticity rule: efficient Ramsey taxation shrinks compensated quantity demanded by about the same percentage for every taxed good, not by the same rate or the same absolute amount."
+      },
+      {
+        "q": "A lump-sum tax has zero deadweight loss. Why do governments nonetheless rely on distortionary commodity and income taxes?",
+        "options": [
+          "Lump-sum taxes are legally capped at low amounts",
+          "Lump-sum taxes are regressive and practically/politically infeasible — they cannot be conditioned on ability to pay",
+          "Lump-sum taxes create larger deadweight loss than commodity taxes",
+          "Distortionary taxes generate no deadweight loss"
+        ],
+        "correct": 1,
+        "rationale": "The summary notes lump-sum taxes are efficient but hit everyone equally regardless of income (regressive), face political resistance, and may not raise adequate revenue. The efficiency ideal is sacrificed for equity and feasibility, so second-best distortionary taxes are used."
+      },
+      {
+        "q": "The inverse-elasticity (Ramsey) rule prescribes heavier taxes on inelastic goods. What is the principal equity objection?",
+        "options": [
+          "Inelastic goods are exclusively luxuries",
+          "Necessities tend to be inelastic and represent a larger budget share for the poor, so the rule tends to be regressive",
+          "It raises too little revenue to be useful",
+          "It contradicts the equal-proportional-reduction rule"
+        ],
+        "correct": 1,
+        "rationale": "Efficiency pushes toward taxing inelastic goods, but those are largely necessities (food, fuel, medicine) that the poor spend proportionally more on — so pure Ramsey taxation is regressive. This is why the summary contrasts uniform vs differentiated taxes and defends lighter rates on essentials."
+      },
+      {
+        "q": "The Corlett–Hague result says that, to offset the distortion created by a tax on labour income, the government should tax relatively more heavily those goods that are…",
+        "options": [
+          "close substitutes for leisure",
+          "complements to leisure",
+          "perfectly elastic in supply",
+          "already exempt necessities"
+        ],
+        "correct": 1,
+        "rationale": "Leisure cannot be taxed directly, so a labour-income tax distorts the work-leisure choice toward leisure. Taxing goods that are complementary to leisure indirectly discourages leisure, partly offsetting that distortion — a second-best argument (the reason commodity taxes can 'correct' an income-tax distortion)."
       }
     ],
     "exercises": [
       {
         "q": "Two goods have compensated demand elasticities $\\varepsilon_1=-0.5$ and $\\varepsilon_2=-1.5$. Using the simple inverse elasticity rule, what is the ratio of optimal tax rates $t_1/t_2$?",
         "solution": "The inverse elasticity rule gives $t_i \\propto 1/|\\varepsilon_i|$, so $\\dfrac{t_1}{t_2}=\\dfrac{1/0.5}{1/1.5}=\\dfrac{2}{0.667}=3$. Good 1 (more inelastic) should be taxed at **3 times** the rate of good 2, all else (in particular cross-price effects, which we're assuming away) equal."
+      },
+      {
+        "q": "Two independent goods have compensated demand elasticities $|\\varepsilon_1|=0.25$ and $|\\varepsilon_2|=1$. The Ramsey inverse-elasticity rule sets $t_i\\propto 1/|\\varepsilon_i|$. (a) Find the ratio $t_1/t_2$. (b) If good 2 optimally bears an ad-valorem rate of 5%, what rate should good 1 bear?",
+        "solution": "**(a)** $\\dfrac{t_1}{t_2}=\\dfrac{1/|\\varepsilon_1|}{1/|\\varepsilon_2|}=\\dfrac{1/0.25}{1/1}=\\dfrac{4}{1}=\\mathbf{4}$. The more inelastic good (good 1) should be taxed four times as heavily.\n**(b)** $t_1=4\\times 5\\%=\\mathbf{20\\%}$. Intuition: taxing the inelastic good harder causes little extra quantity distortion, so it is the efficient place to load the burden — subject to the equity caveat if good 1 is a necessity."
+      },
+      {
+        "q": "State the 'equal proportional reduction' form of the Ramsey rule and show why it is equivalent to the inverse-elasticity rule when demands are independent.",
+        "solution": "**Rule.** The Ramsey optimum sets taxes so that the *percentage* reduction in the compensated (Hicksian) quantity is (approximately) the same for every taxed good: $\\dfrac{\\Delta Q_i}{Q_i}\\approx k$ for all $i$.\n\n**Equivalence.** For a small tax, the proportional fall in compensated demand is $\\dfrac{\\Delta Q_i}{Q_i}\\approx |\\varepsilon_i|\\,t_i$ (elasticity times the tax rate). Setting this equal across goods, $|\\varepsilon_i|\\,t_i=k$, gives $t_i\\propto \\dfrac{1}{|\\varepsilon_i|}$ — the inverse-elasticity rule.\n\n**Intuition.** Efficiency requires spreading the distortion evenly, so no single market is pushed disproportionately far from its undistorted quantity; concentrating the shrinkage in one market would raise total deadweight loss."
       }
     ]
   },
@@ -2223,6 +2316,50 @@ const TESTING_DATA = [
         ],
         "correct": 1,
         "rationale": "Mirroring the Pigouvian tax logic: the subsidy should close the gap between private and social marginal benefit exactly at the socially efficient quantity, so the subsidized private incentive lines up with the true social marginal benefit there."
+      },
+      {
+        "q": "In the car/pollution model, the market settles where $u'(x)=c'(x)$, ignoring marginal damage $d$ per unit. The optimal Pigouvian tax is…",
+        "options": [
+          "zero, because the market is already efficient",
+          "equal to the marginal damage $d$, evaluated at the socially optimal quantity",
+          "equal to the average damage over all units",
+          "equal to the total damage caused"
+        ],
+        "correct": 1,
+        "rationale": "The social optimum satisfies $u'(x)=c'(x)+d$. A per-unit tax $\\tau=d$ raises the firm's effective marginal cost to $c'(x)+d$, so the private optimum now coincides with the social optimum and output falls from $x_M$ to $x_O$. The tax equals marginal damage at the efficient quantity, not average or total damage."
+      },
+      {
+        "q": "Which of the following is a PECUNIARY externality that does not, by itself, justify corrective policy?",
+        "options": [
+          "A factory's emissions damaging nearby residents' health",
+          "One firm's higher input demand raising the market price of that input for all other buyers",
+          "Pollution reducing a downstream fishery's catch",
+          "Second-hand smoke harming bystanders"
+        ],
+        "correct": 1,
+        "rationale": "A pecuniary externality operates through market prices and is part of the normal functioning of competitive markets — it redistributes but does not create inefficiency, so it needs no correction. The other three are non-pecuniary (direct, non-price) effects — genuine market failures that can warrant intervention."
+      },
+      {
+        "q": "According to the Coasian view of externalities…",
+        "options": [
+          "externalities can never be resolved without government taxes",
+          "if property rights are clearly assigned and transaction costs are low, the parties can bargain to the efficient quantity regardless of who holds the right",
+          "only a Pigouvian tax can restore efficiency",
+          "the polluter must always be the one to pay"
+        ],
+        "correct": 1,
+        "rationale": "Coase's insight: an externality reflects a missing market. If a property right (e.g. to clean air) is well-defined and bargaining is cheap, the parties internalise the effect and reach the efficient outcome — the initial allocation of the right changes <i>who pays whom</i> (the distribution), not the efficient quantity."
+      },
+      {
+        "q": "With a negative production externality, relative to the social optimum the unregulated market…",
+        "options": [
+          "produces too little",
+          "produces too much ($x_M>x_O$) at a price that understates the true social cost",
+          "produces exactly the efficient quantity",
+          "sets price above marginal social cost"
+        ],
+        "correct": 1,
+        "rationale": "Because the market equates private benefit with private cost and ignores the marginal damage $d$, it overproduces: $x_M>x_O$. The market price reflects only private marginal cost, so it lies below marginal social cost — the price signal understates the good's true cost to society."
       }
     ],
     "exercises": [
@@ -2237,6 +2374,14 @@ const TESTING_DATA = [
       {
         "q": "Two firms face different marginal abatement cost curves, $MAC_1=10+2Q_1$ and $MAC_2=4+Q_2$. The regulator wants total abatement $Q_1+Q_2=30$ at minimum total cost. Find the cost-effective allocation and the resulting permit price if achieved via tradable permits.",
         "solution": "Cost-effectiveness requires $MAC_1=MAC_2=p$ (equalized marginal cost, the essence of a uniform permit price). Set $10+2Q_1=4+Q_2$ with $Q_2=30-Q_1$: $10+2Q_1=4+30-Q_1 \\Rightarrow 3Q_1=24 \\Rightarrow Q_1=8,\\,Q_2=22$. Permit price $p=MAC_1(8)=10+16=26=MAC_2(22)=4+22=26$ ✓. A tradable-permit market decentralizes exactly this allocation: firm 1 (steep MAC) abates less and buys permits; firm 2 (flatter MAC) abates more and sells permits, both facing the same market price $p=26$ — a uniform standard splitting 15/15 would instead cost more in total, since $MAC_1(15)=40\\neq MAC_2(15)=19$."
+      },
+      {
+        "q": "A good has marginal private benefit (inverse demand) $p=100-Q$ and marginal private cost $MPC=10+Q$. Each unit produced imposes marginal external damage $d=20$. (a) Market equilibrium quantity and price. (b) Socially optimal quantity. (c) The Pigouvian tax that restores efficiency. (d) Deadweight loss at the market equilibrium.",
+        "solution": "**(a)** Market: $MPB=MPC\\Rightarrow 100-Q=10+Q\\Rightarrow Q_M=45$, price $=55$.\n**(b)** Social optimum uses $MSC=MPC+d$: $100-Q=10+Q+20\\Rightarrow 70=2Q\\Rightarrow Q_O=35$.\n**(c)** Pigouvian tax $\\tau=d=\\mathbf{20}$: it lifts effective marginal cost to $30+Q$, giving $100-Q=30+Q\\Rightarrow Q=35=Q_O$. ✓\n**(d)** On the over-produced units $Q_O\\to Q_M$ the wedge between $MSC$ and $MPB$ opens from 0 to $d=20$: $DWL=\\tfrac12(Q_M-Q_O)\\,d=\\tfrac12(45-35)(20)=\\mathbf{100}$."
+      },
+      {
+        "q": "A factory's profit rises with output; its pollution damages a neighbouring fishery. At the factory's private optimum it makes 100 units; the social optimum is 60. Over the range 60→100, the factory's marginal profit is 5 per unit and the fishery's marginal damage is 15 per unit. Transaction costs are negligible. (a) If the fishery owns the right to clean water, where do they settle? (b) If the factory owns the right to pollute? (c) What does the comparison illustrate?",
+        "solution": "**(a) Fishery owns the right.** To produce above 60 the factory must compensate the fishery. Each extra unit earns the factory 5 but costs the fishery 15, so the factory will not pay the 15+ the fishery would demand — they settle at **60**.\n**(b) Factory owns the right.** The fishery can pay the factory to cut output. Each unit cut from 100→60 costs the factory 5 in lost profit but saves the fishery 15, so the fishery pays something between 5 and 15 per unit to induce the cut — they again settle at **60**.\n**(c)** This is the **Coase theorem**: with clear property rights and low transaction costs, bargaining reaches the *same efficient quantity* (60) regardless of who holds the right. Only the *distribution* of surplus — who compensates whom — depends on the initial assignment."
       }
     ]
   },
