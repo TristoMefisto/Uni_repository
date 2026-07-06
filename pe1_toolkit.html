@@ -2430,6 +2430,61 @@ const TESTING_DATA = [
         ],
         "correct": 2,
         "rationale": "Each contributor equates their own MRS to the price of the good, ignoring the marginal benefit their contribution generates for everyone else. Summing individual best-responses therefore falls short of the Samuelson condition (which requires the *sum* of MRS to equal MRT) — private provision is systematically undersupplied."
+      },
+      {
+        "q": "A <i>pure</i> public good is defined by which two properties?",
+        "options": [
+          "Excludable and rival",
+          "Non-rival and non-excludable",
+          "Non-rival and excludable",
+          "Rival and non-excludable"
+        ],
+        "correct": 1,
+        "rationale": "A pure public good is <b>non-rival</b> (one person's consumption does not reduce the amount available to others) and <b>non-excludable</b> (it is difficult or impossible to prevent anyone from using it). National defence and a radio broadcast are classic examples."
+      },
+      {
+        "q": "The Samuelson condition for the efficient quantity of a pure public good is:",
+        "options": [
+          "Each consumer's MRS equals the MRT",
+          "The SUM of consumers' MRS equals the MRT",
+          "Provision until one consumer's MRS equals the price",
+          "Marginal cost equals zero"
+        ],
+        "correct": 1,
+        "rationale": "Because the good is jointly (non-rivally) consumed, one extra unit benefits everyone at once, so the marginal benefits are <b>added vertically</b>: $\\sum_i MRS_i = MRT$. This contrasts with a private good, where each consumer's $MRS$ equals the $MRT$ separately."
+      },
+      {
+        "q": "Why does efficiency require $\\sum_i MRS_i = MRT$ for a public good but $MRS_i=MRT$ for each consumer of a private good?",
+        "options": [
+          "Public goods are cheaper to produce",
+          "A public good is jointly (non-rivally) consumed, so a single unit yields benefit to everyone simultaneously — the marginal benefits add up",
+          "Public goods have zero marginal cost",
+          "Private goods are non-excludable"
+        ],
+        "correct": 1,
+        "rationale": "Non-rivalry is the key: the same unit of the public good is consumed by all, so its social marginal benefit is the <i>vertical sum</i> of individual marginal benefits (each $MRS_i$). A private-good unit goes to one person, so we sum quantities horizontally and each buyer equates their own $MRS$ to price/$MRT$."
+      },
+      {
+        "q": "A public road that becomes congested at high usage is best classified as:",
+        "options": [
+          "a pure public good",
+          "a pure private good",
+          "an impure public good (non-excludable but rival once congested)",
+          "a Lindahl good"
+        ],
+        "correct": 2,
+        "rationale": "An impure public good is non-rival and non-excludable only up to a point; beyond that, congestion sets in and one person's use degrades the good for others (it becomes rival). Roads are the textbook case."
+      },
+      {
+        "q": "In a Lindahl equilibrium for a public good, individuals pay personalised prices such that:",
+        "options": [
+          "everyone pays the same per-unit price",
+          "each person's price equals their own marginal benefit (MRS), and the prices sum to the marginal cost",
+          "only the highest-income person pays",
+          "the price is zero for everyone"
+        ],
+        "correct": 1,
+        "rationale": "Lindahl prices are personalised: each consumer pays a price equal to their own $MRS$ at the efficient quantity, and these personalised prices sum to the $MRT$ (marginal cost), financing exactly the Samuelson-efficient level. The catch is that it requires truthful preference revelation, which free-riding undermines."
       }
     ],
     "exercises": [
@@ -2440,6 +2495,14 @@ const TESTING_DATA = [
       {
         "q": "Using the same setup ($U_i=x_iG$, $p_x=1$, $p_G=10$, $G^*=5$), find the Lindahl price for each individual if all three have equal wealth $W_i=100/3$, and verify the prices sum to the true marginal cost.",
         "solution": "Each individual's Lindahl price equals their own $MRS^i=x_i/G$ evaluated at the efficient allocation. With equal wealth and symmetric preferences, each consumer's optimal private-good consumption at their personalized price is $x_i=W_i/2=50/3$ (splitting income evenly between $x$ and the $G$-share, a property of this Cobb–Douglas-like preference), giving $MRS^i=(50/3)/5=10/3$ for each of the three. Summing: $3\\times(10/3)=10=MRT=p_G$ ✓ — the three personalized Lindahl prices exactly cover the true marginal cost of the public good, confirming the allocation is a valid Lindahl (and hence Pareto-efficient) equilibrium."
+      },
+      {
+        "q": "Four identical consumers each have quasilinear utility $U_i = 2\\sqrt{G} + x_i$, where $G$ is a pure public good with marginal cost (MRT) $=1$ and $x_i$ is the numeraire. (a) Each consumer's $MRS$. (b) The Samuelson-efficient $G$. (c) The level a single consumer would choose privately, and the free-riding gap.",
+        "solution": "**(a)** $MRS_i=\\dfrac{\\partial U_i/\\partial G}{\\partial U_i/\\partial x_i}=\\dfrac{1/\\sqrt{G}}{1}=\\dfrac{1}{\\sqrt{G}}$.\n**(b)** Samuelson: $\\sum_{i=1}^4 MRS_i = MRT \\Rightarrow \\dfrac{4}{\\sqrt{G}}=1 \\Rightarrow \\sqrt{G}=4 \\Rightarrow G^*=\\mathbf{16}$.\n**(c)** A lone contributor equates <i>their own</i> $MRS$ to the price of $G$ (=1): $\\dfrac{1}{\\sqrt{G}}=1\\Rightarrow G=1$. So voluntary provision gives $G=1$ versus the efficient $16$ — a sixteen-fold under-provision, because each consumer ignores the benefit their contribution confers on the other three (the free-rider problem)."
+      },
+      {
+        "q": "Two consumers value a public good with marginal benefits $MB_1=10-G$ and $MB_2=14-2G$; the marginal cost of provision is $MC=6$. (a) Derive the social marginal benefit. (b) Find the efficient quantity. (c) Give the Lindahl price each pays at that quantity.",
+        "solution": "**(a)** For a public good the $MB$ curves are summed <b>vertically</b>: $SMB=MB_1+MB_2=(10-G)+(14-2G)=24-3G$ (valid while both are positive, i.e. $G\\le 7$).\n**(b)** Efficiency: $SMB=MC\\Rightarrow 24-3G=6\\Rightarrow G^*=\\mathbf{6}$ (both $MB$ still positive: $MB_1=4$, $MB_2=2$).\n**(c)** Lindahl prices equal each consumer's marginal benefit at $G^*$: $p_1=MB_1(6)=4$ and $p_2=MB_2(6)=2$. They sum to $4+2=6=MC$, financing the efficient quantity."
       }
     ]
   },
@@ -2504,6 +2567,50 @@ const TESTING_DATA = [
         ],
         "correct": 1,
         "rationale": "The classic RS instability result: any pooling contract can be broken by a rival offering a slightly-less-generous contract that only low-risk types prefer, stealing the profitable low-risk customers and leaving the incumbent pooling insurer with a loss-making, high-risk-only pool."
+      },
+      {
+        "q": "What primarily distinguishes <i>social insurance</i> from <i>welfare</i>?",
+        "options": [
+          "Social insurance is means-tested; welfare is not",
+          "Social insurance is self-financed (contributions now, benefits later — transfers across one's own life); welfare is means-tested transfers across individuals",
+          "They are essentially the same thing",
+          "Welfare is funded by payroll taxes, social insurance by general revenue"
+        ],
+        "correct": 1,
+        "rationale": "Social insurance involves self-financed transfers <i>within</i> an individual across life periods (you pay in while working, draw benefits when unemployed/old/ill). Welfare is a means-tested transfer <i>across</i> individuals, targeted at low income regardless of past contributions."
+      },
+      {
+        "q": "Why can adverse selection trigger a 'death spiral' in a competitive insurance market?",
+        "options": [
+          "Insurers know more about risk than buyers do",
+          "High-risk individuals disproportionately buy insurance, so premiums rise, low-risk buyers opt out, premiums rise further, and the market unravels",
+          "Everyone ends up fully insured at the fair price",
+          "Moral hazard removes all buyers from the pool"
+        ],
+        "correct": 1,
+        "rationale": "With asymmetric information, buyers know their own risk but insurers cannot sort types. The high-risk select in, raising the average cost and premium; low-risk types then find insurance overpriced and exit, worsening the pool — a self-reinforcing spiral toward collapse."
+      },
+      {
+        "q": "A worker who is receiving generous unemployment benefits searches less intensively for a new job. This is an example of:",
+        "options": [
+          "adverse selection",
+          "moral hazard",
+          "a death spiral",
+          "experience rating"
+        ],
+        "correct": 1,
+        "rationale": "Moral hazard is the change in behaviour <i>after</i> being insured — reduced job-search effort because benefits cushion the loss. Adverse selection, by contrast, concerns hidden <i>type</i> (private risk information) <i>before</i> contracting."
+      },
+      {
+        "q": "Which of the following is NOT a standard market-failure justification for social (rather than purely private) insurance?",
+        "options": [
+          "Adverse selection can collapse private markets",
+          "Individuals under-insure because of myopia or planning failures",
+          "Correlated macro shocks (e.g. mass unemployment) are hard for private insurers to cover",
+          "Competitive private insurers systematically earn excess profits"
+        ],
+        "correct": 3,
+        "rationale": "The summary's three justifications are adverse selection (market unravelling), individual optimisation failures (myopia, under-saving), and correlated/aggregate risks that private insurers cannot diversify. 'Insurers earn excess profits' is not one — competition drives insurers to break even (zero economic profit)."
       }
     ],
     "exercises": [
@@ -2514,6 +2621,14 @@ const TESTING_DATA = [
       {
         "q": "In the Rothschild–Stiglitz separating equilibrium, write the incentive-compatibility (IC) constraint that pins down the low-risk type's contract, and explain intuitively why it must bind with equality.",
         "solution": "The IC constraint requires the high-risk type to (weakly) prefer their own contract $C_H$ (full insurance, priced at the high-risk actuarially fair rate) over the low-risk contract $C_L$: $EU_H(C_H) \\ge EU_H(C_L)$. In equilibrium this binds with **equality**: if it held with slack, a rival insurer could profitably offer low-risk types a contract with slightly *more* coverage than $C_L$ (still priced fairly for low risk, still unattractive to high-risk types) and steal the low-risk business — profitable entry that breaks the candidate equilibrium. So $C_L$ is pushed out exactly to the point where the high-risk type is indifferent between mimicking and taking their own contract — the maximum coverage low-risk types can get without inducing high-risk types to pool in with them."
+      },
+      {
+        "q": "An individual earns $y=100$. With probability $p=0.2$ she falls ill and must pay $M=75$ for care; utility is $u(c)=\\ln c$. (a) Expected loss and the actuarially fair premium for full coverage. (b) Consumption with full insurance. (c) Show she prefers full insurance at the fair premium to remaining uninsured.",
+        "solution": "**(a)** Expected loss $=pM=0.2\\times75=15$, which is the actuarially fair full-coverage premium $\\pi$.\n**(b)** Full insurance equalises consumption across states at $y-\\pi=100-15=\\mathbf{85}$ in both the healthy and the sick state.\n**(c)** Uninsured: $EU=0.8\\ln(100)+0.2\\ln(25)=0.8(4.605)+0.2(3.219)=4.328$. Insured: $u(85)=\\ln(85)=4.443$. Since $4.443>4.328$, she strictly prefers full insurance. (Her certainty-equivalent uninsured wealth is $e^{4.328}\\approx 75.8<85$: risk aversion means she values the certain 85 above the fair gamble.)"
+      },
+      {
+        "q": "In the indemnity-insurance model an insurer offers coverage $I$ for premium $\\pi$ and competes to break even; a loss occurs with probability $p$. (a) Write the zero-profit (break-even) condition and solve for $\\pi$. (b) What is the 'loading' on the fair premium, and what does competition imply about it?",
+        "solution": "**(a)** Break-even: expected payout net of premium in the loss state equals expected premium kept in the good state: $p\\,(I-\\pi)=(1-p)\\,\\pi \\Rightarrow pI-p\\pi=\\pi-p\\pi \\Rightarrow \\pi=\\mathbf{pI}$. The fair premium is probability times coverage.\n**(b)** The loading is $\\pi-pI=0$. Competition among insurers drives economic profit to zero, so (absent administrative costs) the premium carries no markup over the expected payout — the actuarially fair premium."
       }
     ]
   },
@@ -2573,6 +2688,50 @@ const TESTING_DATA = [
         ],
         "correct": 1,
         "rationale": "Their central argument is about price stability and reduced policy-error risk under uncertainty (plus avoiding wealth transfers to oil-exporting countries) — not about revenue superiority or administrative simplicity, which aren't the paper's key claims."
+      },
+      {
+        "q": "In Cawley & Frisvold's Berkeley SSB-tax study, how did a store's proximity to untaxed jurisdictions affect pass-through?",
+        "options": [
+          "Stores closer to the untaxed border passed through MORE of the tax",
+          "Stores closer to the untaxed border passed through LESS of the tax, to avoid losing customers to cross-border shopping",
+          "Distance to the border had no measurable effect",
+          "All stores passed through 100% regardless of location"
+        ],
+        "correct": 1,
+        "rationale": "Stores nearer the untaxed San Francisco border kept prices lower (lower pass-through) to avoid driving shoppers across the line; pass-through rose with distance from the border, especially for larger, less-portable package sizes."
+      },
+      {
+        "q": "What do the Berkeley pass-through results imply about city-level versus national SSB taxes?",
+        "options": [
+          "City taxes are more effective public-health levers than national ones",
+          "City-level taxes are dampened by partial pass-through and cross-border shopping, making them weaker levers than national-scale taxes",
+          "Pass-through is 100% regardless of the tax's scale",
+          "National taxes suffer more from cross-border leakage than city taxes"
+        ],
+        "correct": 1,
+        "rationale": "Two forces weaken a city tax — incomplete pass-through and cross-border leakage — that vanish at national scale (Mexico and France saw near-100% pass-through). So local SSB taxes are a comparatively weak instrument for changing consumption."
+      },
+      {
+        "q": "Goulder & Schein note that carbon taxes are often perceived as more burdensome to firms than cap-and-trade. The main reason is that:",
+        "options": [
+          "taxes are always legislated at a higher level than permit prices",
+          "cap-and-trade typically distributes free allowances and lets firms trade, cushioning the financial hit, whereas a tax charges a fee on every unit emitted",
+          "cap-and-trade puts no price on emissions at all",
+          "carbon taxes are illegal in most jurisdictions"
+        ],
+        "correct": 1,
+        "rationale": "The perception is a design difference, not an inherent property of price vs quantity instruments: cap-and-trade often hands out free allowances and allows trading, while a tax charges every unit. A carbon tax with targeted exemptions could in principle be made equally accommodating."
+      },
+      {
+        "q": "Why is a <i>hybrid</i> cap-and-trade with a price ceiling and floor significant in the tax-vs-cap debate?",
+        "options": [
+          "it is mathematically identical to a pure quantity instrument",
+          "it behaves like a quantity instrument inside the price band and like a price instrument at the boundaries, muting the price-volatility concern that favours a pure tax",
+          "it guarantees zero emissions",
+          "it removes the need for any cap at all"
+        ],
+        "correct": 1,
+        "rationale": "A price collar makes the scheme act as a quantity cap while the permit price stays within the band, but as a price instrument once the price hits the ceiling or floor. This blends the two designs and blunts the price-volatility advantage that a pure carbon tax would otherwise hold."
       }
     ],
     "exercises": [
@@ -2583,6 +2742,14 @@ const TESTING_DATA = [
       {
         "q": "Explain the concept of 'pass-through rate' in the Cawley & Frisvold paper and summarize their key finding on partial pass-through in Berkeley.",
         "solution": "Pass-through rate is the fraction of a per-unit tax on distributors that ends up reflected in the retail price consumers actually pay. Full (100%) pass-through means the tax is fully shifted onto consumers; 0% means retailers absorb it entirely. Using a difference-in-differences design comparing Berkeley (taxed) to San Francisco (untaxed control), the authors found average pass-through of only about 43%, with meaningful variation by product size and by distance from the untaxed border — retailers closer to untaxed alternatives passed through less, to avoid losing customers to cross-border shopping. The partial pass-through implies the tax's intended deterrent effect on consumption was correspondingly muted, since consumers didn't face the full price increase the tax was designed to generate."
+      },
+      {
+        "q": "A city imposes an SSB tax of 1 cent per ounce on distributors. Consider a 2-litre bottle (about 67.6 oz). (a) The full statutory tax on the bottle. (b) If empirical pass-through is 43%, the retail-price increase. (c) What does incomplete pass-through say about incidence?",
+        "solution": "**(a)** Statutory tax $=1\\text{ cent/oz}\\times 67.6\\text{ oz}\\approx \\mathbf{67.6}$ cents.\n**(b)** At 43% pass-through the retail price rises by $0.43\\times 67.6\\approx \\mathbf{29}$ cents.\n**(c)** Only ~43% of the tax reaches consumers as higher prices; the remaining ~57% is absorbed by distributors and retailers in thinner margins. So a large share of the economic incidence falls on the supply side — consistent with retailers facing elastic demand (nearby untaxed stores), which forces them to eat much of the tax rather than pass it on."
+      },
+      {
+        "q": "Under certainty a carbon tax and a cap-and-trade system can achieve the same emissions. (a) Explain why. (b) Following Goulder & Schein, explain why they diverge under abatement-cost uncertainty and which they favour.",
+        "solution": "**(a)** With the marginal-abatement-cost curve known, the regulator can set a tax equal to marginal damage at the target, or set a cap at that same target quantity — both land on the identical (price, emissions) point. The instruments are duals under certainty.\n**(b)** Under <b>cost</b> uncertainty they separate (Weitzman): a tax fixes the emissions <i>price</i> and lets the quantity vary; a cap fixes the <i>quantity</i> and lets the permit price vary. Goulder & Schein favour exogenous price instruments (a carbon tax, or a price-collared hybrid) because they deliver price stability, cut the risk of costly policy errors, and avoid strategic supply restriction by fossil-fuel exporters that could inflate an endogenous permit price."
       }
     ]
   }
