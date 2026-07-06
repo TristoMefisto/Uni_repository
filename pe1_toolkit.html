@@ -2259,7 +2259,7 @@ const TESTING_DATA = [
       },
       {
         "q": "Weitzman's rule of thumb for choosing price vs. quantity under cost uncertainty.",
-        "a": "If MB is relatively flat compared to MC (steep), prefer a quantity instrument. If MB is relatively steep compared to MC (flat), prefer a price instrument. (Errors are costlier on the steeper curve.)"
+        "a": "Compare slopes and control the dimension where mistakes hurt most. If the marginal benefit (damage) curve is <b>steeper</b> than the marginal cost curve, prefer a <b>quantity</b> instrument (standard/permit) — a wrong quantity is very costly on the steep MB, so lock the quantity. If the marginal cost curve is <b>steeper</b> (MB relatively flat), prefer a <b>price</b> instrument (tax) — forcing a fixed quantity would be costly when costs turn out high, so fix the price and let quantity adjust. (Errors are costlier on the steeper curve, so you pin down the variable tied to it.)"
       },
       {
         "q": "Coase theorem — core claim.",
@@ -2303,8 +2303,8 @@ const TESTING_DATA = [
           "Costs; benefits; not equivalent",
           "Both a. and d. are correct"
         ],
-        "correct": 3,
-        "rationale": "Weitzman's classic result concerns uncertainty about marginal abatement COSTS with known marginal BENEFITS (damages) — that's precisely the case where price and quantity instruments diverge (are NOT equivalent), unlike under full certainty."
+        "correct": 4,
+        "rationale": "Both statements are correct — the full Weitzman result. (d) When marginal abatement <b>costs</b> are uncertain (benefits known), price and quantity instruments are <b>not equivalent</b>: the comparative advantage depends on the relative slopes of marginal benefit and marginal cost. (a) When only the marginal <b>benefit/damage</b> is uncertain (costs known), the instruments <b>are equivalent</b> — firms respond deterministically along the known cost curve, so the comparative-advantage term (which depends on cost-side variance) is zero. Under full certainty they are also equivalent. So the case that breaks equivalence is specifically <i>cost</i> uncertainty."
       },
       {
         "q": "A Pigouvian subsidy correcting a positive externality should be set equal to:",
