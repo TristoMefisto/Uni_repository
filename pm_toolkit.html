@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PM Toolkit — Public Management Testing</title>
+<style>
+  :root {
+    --bg:#F7F6F2; --surface:#FFFFFF; --border:#DDD9D0; --border2:#CFCABE;
+    --text:#1A1A2E; --muted:#75736B; --muted2:#9A968A;
+    --accent:#6A1B9A; --accent2:#4A148C;
+    --green:#2E7D32; --red:#C62828; --amber:#B8860B;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#17171A; --surface:#212126; --border:#33333A; --border2:#3E3E46;
+      --text:#ECECEC; --muted:#9A9A9A; --muted2:#77776F;
+      --accent:#C08BE0; --accent2:#D9B3EE;
+      --green:#66BB6A; --red:#EF6C6C; --amber:#E0B84D;
+    }
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; }
+  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; overflow:hidden; }
+
+  .test-app { display:flex; height:100vh; width:100%; }
+  .test-sidebar { width:264px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
+                  display:flex; flex-direction:column; }
+  .test-sidebar-header { padding:20px 18px 14px; border-bottom:1px solid var(--border); }
+  .test-sidebar-logo { font-size:13px; font-weight:bold; letter-spacing:.08em; text-transform:uppercase;
+                       color:var(--accent); margin-bottom:3px; }
+  .test-sidebar-sub { font-size:11px; color:var(--muted); line-height:1.5; font-style:italic; }
+  .subject-switch { display:block; width:100%; margin-top:10px; padding:7px 10px; font-family:'Georgia',serif;
+                    font-size:11.5px; font-weight:bold; letter-spacing:.02em; cursor:pointer; text-align:left;
+                    border:1px solid var(--border2); border-radius:7px; background:var(--surface);
+                    color:var(--muted); transition:all .15s; text-decoration:none; }
+  .subject-switch:hover { border-color:var(--accent); color:var(--accent); background:rgba(106,27,154,.06); }
+  .test-nav { padding:12px 8px; flex:1; overflow-y:auto; }
+  .test-sidebar-footer { padding:8px; border-top:1px solid var(--border); }
+  .test-nav-item { display:flex; align-items:flex-start; gap:9px; padding:9px 10px; border-radius:5px; cursor:pointer;
+                   font-size:13px; color:var(--muted); transition:all .15s; margin-bottom:1px;
+                   border-left:2.5px solid transparent; line-height:1.35; }
+  .test-nav-item .nav-label { flex:1; min-width:0; }
+  .test-nav-item:hover { background:var(--bg); color:var(--text); }
+  .test-nav-item.active { background:var(--bg); color:var(--text); border-left-color:var(--accent); font-weight:bold; }
+  .test-nav-item.pool { color:var(--accent); }
+  .test-nav-item.pool.active { background:rgba(106,27,154,.08); color:var(--accent); border-left-color:var(--accent); }
+  .test-nav-item.exam { color:var(--accent); font-weight:bold; }
+  .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(106,27,154,.08); color:var(--accent); }
+  .test-nav-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
+  .nav-count { flex-shrink:0; font-size:10px; color:var(--muted2); font-family:'Courier New',monospace;
+               padding-top:2px; letter-spacing:.02em; }
+
+  .test-main { flex:1; overflow:hidden; display:flex; flex-direction:column; min-width:0; }
+  .test-topbar { padding:14px 26px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; }
+  .test-topbar-title { font-size:17px; font-weight:bold; color:var(--accent); margin-bottom:10px; }
+  .test-tabs { display:flex; gap:6px; flex-wrap:wrap; }
+  .test-tab { border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:'Georgia',serif;
+              font-size:12.5px; font-weight:bold; padding:6px 14px; border-radius:16px; cursor:pointer; }
+  .test-tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .test-tab .cnt { opacity:.75; font-weight:normal; margin-left:3px; }
+  .test-content { flex:1; overflow-y:auto; padding:26px; display:flex; justify-content:center; }
+  .test-inner { max-width:730px; width:100%; }
+  .test-empty { color:var(--muted); font-style:italic; font-size:13px; padding:30px 0; text-align:center; }
+
+  /* Flashcards */
+  .fc-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
+  .fc-progress { font-size:12px; color:var(--muted2); font-family:'Courier New',monospace; }
+  .fc-card { width:100%; min-height:230px; background:var(--surface); border:1px solid var(--border2); border-radius:12px;
+             box-shadow:0 3px 14px rgba(0,0,0,.06); padding:30px 34px; display:flex; align-items:center;
+             justify-content:center; text-align:center; cursor:pointer; font-size:16px; line-height:1.6; }
+  .fc-card.answer { background:var(--bg); font-size:15px; text-align:left; }
+  .fc-content { max-width:100%; }
+  .fc-hint { font-size:11px; color:var(--muted2); font-style:italic; }
+  .fc-topic-tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent);
+                  font-weight:bold; }
+  .fc-controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .fc-btn { border:1px solid var(--border2); background:var(--surface); color:var(--text); font-family:'Georgia',serif;
+            font-size:13px; padding:8px 18px; border-radius:6px; cursor:pointer; }
+  .fc-btn:hover { background:var(--bg); }
+  .fc-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  /* MCQ */
+  .mcq-score { font-size:12px; color:var(--muted); font-family:'Courier New',monospace; margin-bottom:16px;
+               padding:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:7px;
+               display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
+  .mcq-score button { border:1px solid var(--border2); background:transparent; color:var(--muted);
+                      font-family:'Georgia',serif; font-size:11.5px; padding:4px 12px; border-radius:14px; cursor:pointer; }
+  .mcq-score button:hover { border-color:var(--accent); color:var(--accent); }
+  .mcq-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:20px; }
+  .mcq-q { font-size:14.5px; line-height:1.55; margin-bottom:14px; }
+  .mcq-opt { display:block; width:100%; text-align:left; padding:9px 13px; margin-bottom:7px; border-radius:7px;
+             border:1px solid var(--border2); background:var(--bg); color:var(--text); font-family:'Georgia',serif;
+             font-size:13.5px; cursor:pointer; line-height:1.45; }
+  .mcq-opt:hover { border-color:var(--accent); }
+  .mcq-opt.correct { background:rgba(46,125,50,.14); border-color:var(--green); font-weight:bold; }
+  .mcq-opt.wrong { background:rgba(198,40,40,.12); border-color:var(--red); }
+  .mcq-opt[disabled] { cursor:default; }
+  .mcq-rationale { margin-top:10px; font-size:13px; color:var(--muted); line-height:1.6;
+                   border-top:1px dashed var(--border); padding-top:10px; display:none; }
+  .mcq-rationale.shown { display:block; }
+
+  /* Open questions */
+  .oq-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:22px; }
+  .oq-q { font-size:14.5px; line-height:1.6; margin-bottom:14px; }
+  .oq-input { width:100%; min-height:150px; box-sizing:border-box; resize:vertical; font-family:'Georgia',serif;
+              font-size:13.5px; line-height:1.6; color:var(--text); background:var(--bg);
+              border:1px solid var(--border2); border-radius:8px; padding:12px 14px; }
+  .oq-input:focus { outline:none; border-color:var(--accent); }
+  .oq-copy { margin-top:12px; border:1px solid var(--accent); background:transparent; color:var(--accent);
+             font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer;
+             transition:all .15s; }
+  .oq-copy:hover { background:var(--accent); color:#fff; }
+
+  /* Mock exam */
+  .exam-intro { font-size:13px; color:var(--muted); font-style:italic; line-height:1.6; margin-bottom:22px;
+                padding:12px 16px; background:rgba(106,27,154,.06); border-left:3px solid var(--accent); border-radius:4px; }
+  .exam-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+
+  @media (max-width:760px) {
+    body { overflow:auto; }
+    .test-app { flex-direction:column; height:auto; }
+    .test-sidebar { width:100%; border-right:none; border-bottom:1px solid var(--border); }
+    .test-nav { max-height:230px; }
+    .test-content { padding:18px 14px 40px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="test-app">
+  <aside class="test-sidebar">
+    <div class="test-sidebar-header">
+      <div class="test-sidebar-logo">PM Testing</div>
+      <div class="test-sidebar-sub">Public Management · UNIBO</div>
+      <a class="subject-switch" href="pe1_toolkit.html">&rarr; PE1 Toolkit (PE1 &amp; PE3)</a>
+    </div>
+    <nav class="test-nav" id="nav"></nav>
+    <div class="test-sidebar-footer">
+      <div class="test-nav-item pool" id="pool-flashcards-nav" onclick="openPool('flashcards')">
+        <span class="test-nav-icon">&#127922;</span><span class="nav-label">All flashcards (pooled)</span>
+      </div>
+      <div class="test-nav-item pool" id="pool-mcq-nav" onclick="openPool('mcq')">
+        <span class="test-nav-icon">&#127922;</span><span class="nav-label">All MCQ (pooled)</span>
+      </div>
+      <div class="test-nav-item pool" id="pool-open-nav" onclick="openPool('open')">
+        <span class="test-nav-icon">&#127922;</span><span class="nav-label">All open questions (pooled)</span>
+      </div>
+      <div class="test-nav-item exam" id="mock-nav" onclick="openMock()">
+        <span class="test-nav-icon">&#128221;</span><span class="nav-label">Mock Exam</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="test-main">
+    <div class="test-topbar">
+      <div class="test-topbar-title" id="topic-title">&mdash;</div>
+      <div class="test-tabs" id="tabs">
+        <button class="test-tab active" data-type="flashcards" onclick="setType('flashcards',this)">&#128451;&#65039; Flashcards</button>
+        <button class="test-tab" data-type="mcq" onclick="setType('mcq',this)">&#9745;&#65039; MCQ</button>
+        <button class="test-tab" data-type="open" onclick="setType('open',this)">&#9997;&#65039; Open Questions</button>
+      </div>
+    </div>
+    <div class="test-content"><div class="test-inner" id="inner"></div></div>
+  </div>
+</div>
+
+<script>
+const PM_DATA = [
+ {
+  "key": "foundations",
+  "icon": "🏛️",
+  "title": "Foundations of Public Management",
+  "flashcards": [
+   {
+    "q": "What are Fayol's five managerial functions?",
+    "a": "Planning, organizing, commanding, coordinating, controlling. Fayol treated management as a <b>generalizable discipline</b> resting on principles and functions transversal to all organizations, not on personal traits. He added 14 principles for efficiency and stability (unity of command, unity of direction, scalar chain, division of work, equity, esprit de corps, and so on)."
+   },
+   {
+    "q": "State Taylor's four principles of Scientific Management, and the main criticism.",
+    "a": "(1) Science instead of rule of thumb; (2) scientific selection and training of workers; (3) management–worker cooperation; (4) division of work and responsibility. Delivered through <b>time-and-motion studies</b>, standardization and performance-based pay. Criticised for overemphasising control and decreasing job satisfaction. Against Fayol: Taylor is about productivity and its measurable side, Fayol about planning and coordination."
+   },
+   {
+    "q": "What did Weber contribute, and what are his three types of authority?",
+    "a": "Bureaucracy as a <b>rational-legal</b> system of authority: rational rules, clear hierarchy, impersonal procedures, division of labour, merit-based employment, structured careers. He was the first to treat organizations as living systems and to make authority and legitimacy core elements of management. The three types are <b>charismatic</b>, <b>traditional</b> and <b>legal-rational</b>. None of them is inherently results-focused, which is exactly why they are distinct from performance management."
+   },
+   {
+    "q": "What are Drucker's five tasks of the manager?",
+    "a": "(1) Setting objectives and communicating effectively; (2) organizing and designing a structure to distribute tasks; (3) motivating and communicating; (4) performance measurement through specific metrics; (5) developing people and their skills. Management is \"the art of getting things done through people\", and <b>Management by Objectives (MBO)</b> sets shared goals, translates them into targets and reviews performance against them."
+   },
+   {
+    "q": "Which five criteria distinguish the public case, and what does each mean?",
+    "a": "<b>Accountability</b> (answering for actions and decisions), <b>transparency</b> (open and accessible information), <b>economicity</b> (goals reached with optimal use of resources), <b>efficiency</b> (maximum output with minimum resources), <b>effectiveness</b> (extent to which objectives are met)."
+   },
+   {
+    "q": "Lay out the production model of performance and the ratios it defines.",
+    "a": "Socio-economic issues create needs; the political system filters them into objectives; inputs are allocated to activities that yield outputs; outputs produce intermediate and then final outcomes.<br><br><b>Economy</b> = monetary input over another input. <b>Efficiency</b> = input over output. <b>Effectiveness</b> = output over outcome. <b>Cost-effectiveness</b> = input over outcome. <b>Relevance</b> = objectives against needs. <b>Utility and sustainability</b> = needs against outcomes."
+   },
+   {
+    "q": "What is the difference between efficiency and productivity in this model, and why is context a problem?",
+    "a": "Efficiency is being <i>on</i> the production frontier: an organization is inefficient if a comparable one produces more output with the same input, or the same output with less. Productivity is the <i>slope</i> of input over output (steeper = more productive). <b>Context</b> (socio-economic trends, other governments' policies, EU regulation) heavily shapes final outcomes and lies outside the organization's control, which is what makes outcome-based judgement unfair."
+   },
+   {
+    "q": "What is the Triple Bottom Line?",
+    "a": "A UN-developed spectrum of three values for measuring organizational success, meant to bridge the public/private divide: <b>profits</b> (lasting economic impact on society, not just financial gain), <b>people</b> (fair practices toward labour and community), <b>planet</b> (sustainable environmental practices). Private efforts framed around TBL may still be superficial and fail to meet genuine public need."
+   },
+   {
+    "q": "What are Hood's three sets of public values?",
+    "a": "(1) Keeping the public sector <b>lean and purposeful</b> — matching resources to tasks; failure is avoidable waste and incompetence. (2) Keeping government <b>fair and honest</b> — preventing distortion, inequity, bias, abuse of office. (3) Keeping the public sector <b>robust and resilient</b> — operating in adverse conditions and adapting in crisis, which is an argument for public over private provision where reliability matters."
+   },
+   {
+    "q": "What are the two ways of relating performance to Hood's values?",
+    "a": "Either performance is <b>one value among others</b> (roughly Hood's first set, in tension with the other two), or performance is <b>the realization of public values as a whole</b>, in which case participation and innovation also count as dimensions of performance, not only efficiency and effectiveness."
+   },
+   {
+    "q": "Give Bouckaert and Halligan's three levels of performance.",
+    "a": "<b>Macro</b>: countries, supranational entities (EU, OECD), local and regional governments. <b>Meso</b>: a policy sector (education) or a governing chain or network (the food chain, an urban development project). <b>Micro</b>: an individual organization and its interface with citizens and other organizations. In reality the configurations are messy: sectors and networks cut across each other, organizations sit in several at once, and macro performance is itself relative to other countries."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "Weber's three types of authority are relevant to performance management because:",
+    "options": [
+     "All three are oriented toward measurable results",
+     "None of them is inherently focused on results, which is why performance management is distinct from them",
+     "Legal-rational authority is a synonym for performance management",
+     "Charismatic authority is the historical origin of MBO"
+    ],
+    "correct": 1,
+    "rationale": "None of the three ideal types (charismatic, traditional, legal-rational) is inherently results-focused. That is precisely what separates them from performance management, and why public management in practice is always a blend of ideal types (performance management \"in its pure form\" does not exist)."
+   },
+   {
+    "q": "In the production model, the ratio of input over outcome is:",
+    "options": [
+     "Efficiency",
+     "Economy",
+     "Cost-effectiveness",
+     "Relevance"
+    ],
+    "correct": 2,
+    "rationale": "Input over **output** is efficiency; input over **outcome** is **cost-effectiveness**. Economy is a monetary input over another input, and relevance confronts objectives with needs."
+   },
+   {
+    "q": "Which statement about efficiency and productivity is correct?",
+    "options": [
+     "Efficiency is the slope of input over output; productivity is being on the frontier",
+     "Efficiency is being on the production frontier; productivity is the slope of input over output",
+     "They are two names for the same ratio",
+     "Productivity applies only to the private sector"
+    ],
+    "correct": 1,
+    "rationale": "**Efficiency** is a position statement: being on the frontier, so that no comparable organization produces more with the same input. **Productivity** is the slope of input over output, and a steeper slope means more productive."
+   },
+   {
+    "q": "Hood's third set of values (robust and resilient) is often used as an argument for:",
+    "options": [
+     "Contracting out to specialised private providers",
+     "Public rather than private provision where reliability matters",
+     "Abolishing performance measurement altogether",
+     "Replacing outcome indicators with output indicators"
+    ],
+    "correct": 1,
+    "rationale": "The third set is about operating even in adverse conditions and adapting rapidly in a crisis, with good value meaning strong regimes to fall back on. That is a standard argument for keeping provision public where reliability is the binding requirement."
+   },
+   {
+    "q": "Determining the optimal output level in the public sector should rest on:",
+    "options": [
+     "Financial profit, as in the private sector",
+     "The number of transactions processed",
+     "Societal profit, which is politically contested and harder to compute",
+     "The size of the approved budget"
+    ],
+    "correct": 2,
+    "rationale": "Public output is harder to define than private output: transaction counts are not a valid proxy, and both the **volume** and the **quality** of services matter. The criterion is societal profit, not financial profit, which makes the calculation much more complex and politically contested."
+   },
+   {
+    "q": "A policy sector such as education, or a chain such as the food chain, sits at which level of performance?",
+    "options": [
+     "Macro",
+     "Meso",
+     "Micro",
+     "It sits outside the framework"
+    ],
+    "correct": 1,
+    "rationale": "**Meso** covers a policy sector or a governing chain of events and networks. Macro is countries and supranational or regional entities; micro is the single organization and its interface with citizens."
+   }
+  ],
+  "open": [
+   {
+    "q": "Fayol, Taylor, Weber and Drucker each isolated a different dimension of organized effort. Set out what each contributed, then explain the split between management styles centred on authority and those centred on measurable output and people, and say why that tension keeps reappearing when performance-based reforms meet bureaucratic tradition."
+   },
+   {
+    "q": "Explain the production model of performance from socio-economic issues through to final outcomes. Define economy, efficiency, effectiveness, cost-effectiveness, relevance and utility in terms of the model, and explain why context makes holding an organization accountable for final outcomes problematic."
+   },
+   {
+    "q": "\"Efficiency is one public value among others, not the objective.\" Present Hood's three sets of public values, then discuss the two ways of relating performance to them, and argue which framing you find more defensible for a public organization."
+   },
+   {
+    "q": "Compare public and private organizations along accountability, transparency, decision-making speed, resource allocation and how performance is measured. Then explain why defining public output is harder than defining private output, and what follows for the choice of indicators."
+   }
+  ]
+ },
+ {
+  "key": "measuring",
+  "icon": "📏",
+  "title": "Measuring Performance",
+  "flashcards": [
+   {
+    "q": "Distinguish measurement, incorporation and use.",
+    "a": "<b>Performance measurement</b> is the bundle of deliberate, intentional activities aimed at systematically collecting data on performance-related issues. <b>Incorporation</b> is importing that data into documents and procedures with the purpose of using it. <b>Use</b> is actually deciding with it. The three are distinct, and an organization can do one without the next."
+   },
+   {
+    "q": "List the five steps of the measurement process.",
+    "a": "(1) Prioritizing what to measure; (2) selecting indicators; (3) collecting data; (4) analyzing results; (5) reporting findings. Throughout, a standing bias is that data availability drives indicator selection rather than the reverse, so measurement skews toward whatever is easiest to measure."
+   },
+   {
+    "q": "What is the Mandelbrot coastline paradox, and what does Bouckaert use it for?",
+    "a": "The length of the British coastline approaches infinity as measurement resolution increases, because ever more bays and inlets are uncovered. Bouckaert (1993) uses it to show that it is epistemologically impossible to measure everything: each indicator generates new, still-unmeasured questions, so prioritization is unavoidable."
+   },
+   {
+    "q": "What representations of itself does an organization need before it can prioritize measurement?",
+    "a": "An <b>organizational chart</b> (division of tasks and responsibilities); a <b>management model</b> (Balanced Scorecard, Common Assessment Framework, EFQM, ISO); a <b>tree of objectives</b> running from mission down to strategic and operational goals; or a <b>stakeholder analysis</b>. The measurement object is then delineated by an internal focus, an external focus, or both."
+   },
+   {
+    "q": "Give the seven criteria for prioritizing what to measure.",
+    "a": "Indications of problems (complaints, waiting lists); financial importance; societal visibility; feasibility (quick wins build acceptance); diffusion (some measurement everywhere versus intense measurement of a few areas); cost of measurement; predetermination (an imposed, non-discretionary indicator set)."
+   },
+   {
+    "q": "What makes a good indicator?",
+    "a": "Sensitive to change; precisely defined; understandable to users; documented; relevant and actionable; timely; compliant with coordinated data processes and definitions."
+   },
+   {
+    "q": "What are the alternatives to existing administrative registrations as a data source?",
+    "a": "<b>Additional registrations</b> (main cost is staff time); <b>surveys</b> of customers and citizens (costly, falling response rates); <b>self-assessments</b> (add qualitative judgment but are perceptual and open to gaming); <b>technical measurement</b> (non-intrusive, e.g. air or water quality, but technocratic); <b>external observers</b> (neutral, costly, slow); <b>other organizations' registrations</b> (privacy and definitional issues); <b>statistical institutions</b> (good quality, rarely specific enough)."
+   },
+   {
+    "q": "Contrast DEA and Free Disposal Hull.",
+    "a": "Both are comparative benchmarking techniques used in norm setting. <b>Data Envelopment Analysis (DEA)</b> assumes a convex efficiency frontier with diminishing returns. <b>Free Disposal Hull (FDH)</b> produces a staircase-shaped frontier and makes no assumption about the shape of the frontier."
+   },
+   {
+    "q": "What are the three interpretative strategies in the analysis step?",
+    "a": "<b>Norm and target setting</b> (time-based, comparative, scientific, or symbolic/political norms); <b>breaking out data</b> (disaggregating by where, when and for whom, at whatever level of aggregation suits the purpose); <b>causal analysis</b> (searching for causes of underperformance, statistically plus qualitatively)."
+   },
+   {
+    "q": "What is the attribution problem, and what follows from it?",
+    "a": "Organizations are frequently held accountable for outcomes only partly under their control. Where that is the case it is fairer to hold them accountable for <b>outputs</b> instead. Attribution is a persistent problem in causal analysis and is the main reason outcome-based accountability is hard to run cleanly."
+   },
+   {
+    "q": "Give the three quality dimensions of a measurement system, in order of conditionality.",
+    "a": "(1) <b>Functionality</b> — fitness for use; dysfunctional systems should be abolished or redesigned, and this criterion should always be assessed first. (2) <b>Validity and reliability</b> — validity is measuring what is intended, reliability is yielding the same values on repeated measurement. (3) <b>Legitimacy</b> — those expected to use the information must support the system. High legitimacy can raise reliability, and high validity can raise legitimacy."
+   },
+   {
+    "q": "Name the five performance dimensions and the question each answers.",
+    "a": "<b>Efficiency</b>: how well are inputs turned into outputs (an economic criterion)? <b>Effectiveness</b>: how well are resources spent and how effective are policies (an objective-achievement criterion)? <b>Quality</b>: how well do services meet standards of delivery and user experience? <b>Outcome</b>: what is the policy impact on growth, well-being and sustainability? <b>Public value</b>: are we creating societal value for citizens, communities and future generations?"
+   },
+   {
+    "q": "Give the sub-dimensions of efficiency and of effectiveness.",
+    "a": "<b>Efficiency</b> (four): technical efficiency (maximum output from given inputs), allocative efficiency (how well resources are combined), cost efficiency, operational efficiency (internal processes, timeliness).<br><br><b>Effectiveness</b> (five): output effectiveness, outcome effectiveness, impact or long-term effectiveness, goal achievement, service quality effectiveness."
+   },
+   {
+    "q": "What are the five sub-dimensions of public value, and what shift do value indicators mark?",
+    "a": "Social, economic, environmental, democratic and ethical value. They align with <b>Moore's Public Value</b> framework and the SDGs, and their rise reflects the broader shift from <b>New Public Management to Public Value Governance</b>."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "Which criterion of measurement-system quality should always be assessed first?",
+    "options": [
+     "Validity",
+     "Reliability",
+     "Functionality",
+     "Legitimacy"
+    ],
+    "correct": 2,
+    "rationale": "**Functionality** (fitness for use) comes first: a dysfunctional system should be abolished or redesigned, and there is no point testing the validity or legitimacy of a system that is not fit for use in the first place."
+   },
+   {
+    "q": "Free Disposal Hull differs from Data Envelopment Analysis mainly because:",
+    "options": [
+     "It assumes constant returns to scale",
+     "It makes no assumption about the shape of the frontier, producing a staircase",
+     "It is a time-based rather than a comparative norm",
+     "It requires outcome rather than output data"
+    ],
+    "correct": 1,
+    "rationale": "DEA assumes a **convex** frontier with diminishing returns. FDH imposes no shape assumption at all and yields a **staircase-shaped** frontier. Both are comparative norms used in the analysis step."
+   },
+   {
+    "q": "The Mandelbrot coastline paradox is invoked to make which point?",
+    "options": [
+     "Indicators should always be aggregated into a composite index",
+     "Measuring everything is impossible, because finer resolution keeps producing new dimensions",
+     "Geographic indicators are inherently unreliable",
+     "Surveys are superior to administrative registrations"
+    ],
+    "correct": 1,
+    "rationale": "As resolution increases, the measured coastline approaches infinity. Bouckaert transfers this to indicators: each one generates new, still-unmeasured questions, so an organization must prioritize rather than aspire to completeness."
+   },
+   {
+    "q": "An organization is held accountable for a final outcome largely shaped by factors outside its control. The standard remedy is to:",
+    "options": [
+     "Increase the number of indicators until attribution is solved",
+     "Hold it accountable for outputs instead",
+     "Switch from administrative registrations to surveys",
+     "Move measurement from the meso to the macro level"
+    ],
+    "correct": 1,
+    "rationale": "This is the **attribution problem**. Where the outcome is only partly under the organization's control, it is fairer to hold it accountable for its **outputs**, which it does control."
+   },
+   {
+    "q": "\"Cost per permit issued\" and \"average processing time\" are examples of:",
+    "options": [
+     "Outcome indicators",
+     "Value indicators",
+     "Efficiency indicators",
+     "Equity indicators"
+    ],
+    "correct": 2,
+    "rationale": "Both relate inputs to outputs within public administration, so they are **efficiency** indicators. Efficiency spans technical, allocative, cost and operational sub-dimensions, and processing time falls under operational efficiency."
+   },
+   {
+    "q": "A recurring exam heuristic across the case studies is that, for each sector analysed, you should pair:",
+    "options": [
+     "Three efficiency indicators of different kinds",
+     "One efficiency, one effectiveness and one quality indicator",
+     "One output indicator and one input indicator",
+     "One indicator per level of Bouckaert and Halligan's framework"
+    ],
+    "correct": 1,
+    "rationale": "The heuristic is one efficiency indicator (input to output), one effectiveness indicator (outcome or change) and one quality indicator (user experience, reliability). Never rely on outputs alone, which is exactly the diagnosis the case studies start from."
+   }
+  ],
+  "open": [
+   {
+    "q": "Set out the five-step measurement process. For each step, name the real choices that have to be made rather than describing it as mechanical execution, and identify at each step the bias or failure mode that most often distorts it."
+   },
+   {
+    "q": "An organization asks you to prioritize its measurement effort. Explain which representations of itself it first needs, then apply the seven prioritization criteria, and say how you would trade off feasibility and diffusion against financial importance and societal visibility."
+   },
+   {
+    "q": "Explain the three quality dimensions of a measurement system and their order of conditionality. Then explain the two reinforcing mechanisms between legitimacy, reliability and validity, and why functionality has to be judged before either of the others."
+   },
+   {
+    "q": "A city's waste department reports only tons collected and routes completed. Diagnose which dimensions are over- and under-represented, propose one efficiency, one effectiveness and one quality indicator, name the trade-offs your proposal creates, and set out how you would communicate the change to the mayor, to department managers, to frontline staff and to citizens."
+   }
+  ]
+ },
+ {
+  "key": "using",
+  "icon": "🔁",
+  "title": "Using Performance Information",
+  "flashcards": [
+   {
+    "q": "Distinguish adoption from implementation.",
+    "a": "<b>Adoption</b> is developing the capacity to act on performance information; <b>implementation</b> is actually using that capacity in decisions. The two vary independently: some organizations have many formal tools (performance budgets, scorecards, contracts, benchmarks) and barely decide with them, while others have few tools and use them intensely."
+   },
+   {
+    "q": "Give the four questions of the incorporation cycle, with minimalist and maximalist answers.",
+    "a": "<b>Ex-ante</b> — what shall we do next year? Minimalist covers input and cash; maximalist adds expected outputs and outcomes.<br><b>Ex-nunc</b> — what is happening during implementation? Minimalist is the cash position; maximalist adds benefits and costs.<br><b>Ex-post</b> — how do realizations compare to announcements? Minimalist is compliance and financial correctness; maximalist adds economy, efficiency and effectiveness.<br><b>Feed-forward</b> — how does past information improve the next cycle? Minimalist is incremental budgeting; maximalist is strategy change, performance-based budgets, renegotiated contracts."
+   },
+   {
+    "q": "Name the three cycles of incorporation, and the complication that runs across them.",
+    "a": "<b>Policy</b> (preparation, monitoring, evaluation, feedback); <b>financial</b> (budgeting, accounting, auditing); <b>contract</b> (negotiation, monitoring, evaluation). Ideally policy determines financial which determines contract, but all three run simultaneously, each referencing a different year (in 2016 an organization audits 2015, monitors 2014's contracts and plans 2017), which makes incorporation and use harder over time."
+   },
+   {
+    "q": "What is the range from input budgets to output budgets, and what happens in practice?",
+    "a": "An <b>input budget</b> allocates spending to a line item (spend X on personnel). An <b>output budget</b> allocates spending to a specified output level (spend X to achieve output Y). In practice <b>no OECD country directly links performance to expenditure</b>. Audit, separately, is shifting from compliance and financial audit toward <b>performance audit</b>."
+   },
+   {
+    "q": "What are the three purposes of using performance information?",
+    "a": "<b>To learn</b> — finding out what works and why, through process and outcome evaluation, aiming at improvement. <b>To steer and control</b> — keeping track via management scorecards and policy monitors. <b>To give account</b> — justifying performance to an external significant other. Accountability has shifted historically from a focus on legality to a focus on results."
+   },
+   {
+    "q": "How do the three purposes differ on what to measure and on quality requirements?",
+    "a": "<b>What to measure</b>: to learn, the whole production chain; to steer and control, mainly input and output indicators; to give account, ideally outcomes, though they must be genuinely attributable.<br><br><b>Quality</b>: least strict for learning; for steering and control validity is critical and reliability important; for accountability both are critical, given the stakes."
+   },
+   {
+    "q": "Define hard and soft use, and give the behavioural strategies each produces.",
+    "a": "The distinction rests on tight or loose <b>coupling</b> between measurement and judgement, and on the <b>consequences</b> attached. Hard use presupposes tight coupling (a contract with sanctions) and produces <b>functional compliance</b>, <b>dysfunctional compliance</b> and <b>misrepresentation</b>. Soft use leaves room for scrutiny and dialogue before judgement, and adds a fourth strategy, <b>justification</b>, which reduces pressure for dysfunction and misrepresentation but also for direct functional compliance."
+   },
+   {
+    "q": "When does performance information have most impact?",
+    "a": "When it touches the organization's <b>core identity</b> rather than peripheral issues, and when the indicators attract <b>media attention</b>, which raises the reputational stakes. Organizational context also mediates perceived impact: engineer-heavy organizations tend to be more receptive to measurement than social-worker-heavy ones."
+   },
+   {
+    "q": "Which factors condition managers' use of performance information, and which turned out not to matter?",
+    "a": "Matter: <b>measurability</b> of services (routine-based services show higher incorporation and use), <b>scale</b> (large organizations measure more), and the <b>linkage between goals and indicators</b> (decoupling did not impede incorporation but did impede use, particularly for middle managers). Did <i>not</i> matter: political support (absence of political interference was itself seized as an opportunity) and lack of resources."
+   },
+   {
+    "q": "Why do performance reports fail to reach politicians?",
+    "a": "<b>Lack of credibility</b> (distrust of information produced by the bureaucracies being scrutinized); <b>few rewards for scrutiny</b> (reading reports does not win votes); <b>information overload and time constraints</b>; <b>wrong perspective</b> (reports follow agency logic, not an MP's logic); <b>outcome bias</b> (reports assume MPs mainly want outcomes, which is not borne out). Legislators rely on heuristics and cues from their own experience and staff instead."
+   },
+   {
+    "q": "What did the OECD survey find about parliaments and outcome information?",
+    "a": "24 of 30 countries provide outcome information to parliament, but MPs use it for decision-making in only 5, and budget committees use it for allocation in only 2. Parliaments clearly struggle with output and outcome information, partly because executive-driven reforms rarely engage the legislature."
+   },
+   {
+    "q": "What is the Hawthorne effect and why does it matter for NPM?",
+    "a": "Elton Mayo's 1930s studies at Hawthorne were designed to test the effect of lighting on productivity, but productivity rose under both brighter <i>and</i> dimmer lighting, and under other manipulated variables, simply because workers were being observed. The effect faded over time. The lesson is that the mere fact of being observed changes behaviour, at least short-term, which is the foundational assumption of NPM-style performance management: measurement is valued for its behavioural steering effect rather than for the information it yields."
+   },
+   {
+    "q": "Give the three functional-effect questions and a case for each.",
+    "a": "<b>Learning and innovation</b>: Moynihan (2008) on the Vermont and Virginia Departments of Corrections; the US <b>Programme Assessment and Rating Tool (PART)</b>, whose ambiguity and partisan nature are also its strength since different actors reach their own conclusions from one tool; benchmarking groups.<br><b>Steering and control</b>: NYPD's <b>CompStat</b>, later replicated as parkStat and healthStat.<br><b>Accountability</b>: the weakest prospect. Full accountability (Thomas 2008) needs transparency <i>and</i> sanctions, and ministries of finance almost never eliminate programs for missing targets."
+   },
+   {
+    "q": "Name the seven mechanisms that distort the measurement process.",
+    "a": "Over- and under-representation (citation circles inflate; the obliteration phenomenon undercounts landmark discoveries); the <b>Mandelbrot disease</b> (finer resolution mechanically inflates values); <b>indicator-set inflation</b> (supplying more indicators than can be sense-made, while appearing transparent); terminological pollution; unjustifiable aggregation or disaggregation; <b>misrepresentation</b> (deliberate manipulation); <b>misinterpretation</b> (incorrect inference)."
+   },
+   {
+    "q": "Name the five dysfunctions that distort output.",
+    "a": "<b>Measure fixation</b> — pursuing success as measured rather than as intended (Smith's \"hello nurse\": meeting a five-minute contact target without improving care). <b>Myopia</b> — short-termism, curative over preventive. <b>Sub-optimization</b> — a local optimum undermining the system optimum. <b>Cream skimming</b> — selecting the intake to look good, efficient but inequitable. <b>Complacency</b> — avoiding excellence because it risks budget cuts or a <b>ratchet effect</b>. A sixth related risk is organizational paralysis from excessive rigidity."
+   },
+   {
+    "q": "State the performance target paradox.",
+    "a": "Meyer and Gupta (1994): over time an indicator loses its power to discriminate good from bad performers, because organizations adapt to the target. Underperformers change behaviour (functionally or dysfunctionally) to reach it, overperformers <i>lower</i> performance to avoid the ratchet effect, and some worst cases are simply abandoned (<b>adverse skimming</b>). Performance ends up clustered around the target, with a slight uptick in the worst cases."
+   },
+   {
+    "q": "How can dysfunctions be remedied?",
+    "a": "Following a \"crime requires opportunity and move\" logic. Reduce <b>opportunity</b>: control over intake, service characteristics limiting gaming, peer exposure in administrative and social networks, ICT-enabled process control, spot-checks, qualitative corroboration. Reduce the <b>move</b>: habit formation, the consequential loop of gaming (an organization may later be harmed by its own gaming), intrinsic professional motivation. Structurally: abandon numeric targets for dialogue and learning, set absolute standards (zero tolerance), or phrase targets in general directional terms. Better roughly accurate than precisely wrong."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "An organization has performance budgets, scorecards and benchmarks, but decisions are taken without them. In the adoption/implementation framing this is:",
+    "options": [
+     "Low adoption, low implementation",
+     "High adoption, low implementation",
+     "Low adoption, high implementation",
+     "High adoption, high implementation"
+    ],
+    "correct": 1,
+    "rationale": "The formal tools are the capacity to act on performance information, so **adoption is high**. Since decisions do not actually draw on them, **implementation is low**. The two dimensions vary independently, which is the whole point of the reframing."
+   },
+   {
+    "q": "Under hard use, an organization leaves its daily operations unchanged but reports its results more flatteringly. This is:",
+    "options": [
+     "Functional compliance",
+     "Dysfunctional compliance",
+     "Misrepresentation",
+     "Justification"
+    ],
+    "correct": 2,
+    "rationale": "**Misrepresentation**: behaviour does not change but reporting does, so decisions end up based on flawed information. Dysfunctional compliance would mean behaviour genuinely changes, but in ways that violate the indicator's purpose. Justification only arises under **soft** use."
+   },
+   {
+    "q": "Which was found NOT to explain managers' incorporation and use of performance information?",
+    "options": [
+     "Measurability of the service",
+     "Scale of the organization",
+     "Lack of resources",
+     "Linkage between goals and indicators"
+    ],
+    "correct": 2,
+    "rationale": "Lack of resources did **not** explain incorporation or use. Neither did political support: the absence of political interference was itself seized as an opportunity by middle managers. Measurability, scale and the goal-indicator linkage did matter."
+   },
+   {
+    "q": "A job-training programme improves its measured success rate by enrolling the most employable applicants. This is:",
+    "options": [
+     "Myopia",
+     "Sub-optimization",
+     "Cream skimming",
+     "Measure fixation"
+    ],
+    "correct": 2,
+    "rationale": "**Cream skimming** (or cherry picking) is selecting the intake so the numbers look good. It is efficient on the indicator but inequitable, since the people who most need the programme are the ones excluded."
+   },
+   {
+    "q": "In the performance target paradox, overperformers tend to:",
+    "options": [
+     "Push performance further above the target to secure resources",
+     "Lower performance to avoid the ratchet effect",
+     "Exit the measurement system entirely",
+     "Switch to outcome rather than output indicators"
+    ],
+    "correct": 1,
+    "rationale": "Overperformers hold back, because this year's exceptional result becomes next year's expected baseline (the **ratchet effect**). Combined with underperformers rising toward the target and worst cases being abandoned, performance clusters around the target and the indicator stops discriminating."
+   },
+   {
+    "q": "Which of the three functional effects is described as the weakest prospect?",
+    "options": [
+     "Learning and innovation",
+     "Steering and control",
+     "Accountability",
+     "All three are equally strong"
+    ],
+    "correct": 2,
+    "rationale": "**Accountability**. Full accountability (Thomas 2008) requires transparency *and* sanctions, and OECD surveys found ministries of finance almost never eliminate programmes for missing targets, a trend that if anything declined between 2005 and 2007."
+   },
+   {
+    "q": "An agent supplies its principal with far more indicators than can be sense-made, while appearing fully transparent. This is:",
+    "options": [
+     "Terminological pollution",
+     "The Mandelbrot disease",
+     "Indicator-set inflation",
+     "Unjustifiable aggregation"
+    ],
+    "correct": 2,
+    "rationale": "**Indicator-set inflation** obfuscates performance precisely by supplying more indicators than the principal can process. It also raises the odds of excelling on *some* dimension, which is a particular problem for accountability."
+   }
+  ],
+  "open": [
+   {
+    "q": "Measurement is necessary but not sufficient. Explain the four-question cycle and the three cycles of incorporation, and account for why the fact that all three cycles run simultaneously on different years makes use harder over time."
+   },
+   {
+    "q": "Distinguish hard from soft use along coupling and consequences. Set out the three behavioural strategies hard use produces and the fourth that soft use adds, and discuss whether soft use is preferable given that it also weakens the pressure for functional compliance."
+   },
+   {
+    "q": "Take the three purposes of performance information (to learn, to steer and control, to give account) and trace how each implies a different answer at every stage of the measurement chain: what to measure, data collection, analysis, reporting, and quality requirements."
+   },
+   {
+    "q": "\"Measurement changes behaviour.\" Starting from the Hawthorne studies, explain why NPM values measurement mainly for its behavioural effect. Then set out the dysfunctions that follow, distinguishing distortion of the measurement process from distortion of output, and assess the available remedies."
+   },
+   {
+    "q": "Explain the performance target paradox and its mechanism. Then discuss which of the structural remedies (dialogue instead of numeric targets, absolute standards, directional targets) you would recommend, and what each costs."
+   }
+  ]
+ },
+ {
+  "key": "planning",
+  "icon": "🧭",
+  "title": "Strategic Planning & the SCC",
+  "flashcards": [
+   {
+    "q": "Define strategic planning.",
+    "a": "A deliberative, disciplined approach to producing fundamental decisions and actions that shape and guide what an organization is, what it does, and why it does it. It is an <i>approach</i>, not a rigid step-by-step sequence, and it requires effective deliberation and leadership."
+   },
+   {
+    "q": "What is the hollow state, and why does it make planning matter more?",
+    "a": "Public, private and nonprofit boundaries have blurred: sovereignty has leaked <i>up</i> to multinational and international actors and <i>out</i> to businesses and nonprofits. Brinton Milward calls the result the <b>hollow state</b>: government is just one actor, not necessarily the most important, in networks that do the public's work, where no single organization is fully in charge even though many are affected or partly responsible."
+   },
+   {
+    "q": "What is the A, B, C capsule summary?",
+    "a": "\"A\" is figuring out, via deliberation, where you are; \"B\" is where you want to go; \"C\" is how to get there. Getting from A to C is <b>strategy formulation</b>; getting from B to C is <b>strategy implementation</b>."
+   },
+   {
+    "q": "Contrast the rational planning model with the political decision-making model.",
+    "a": "The <b>rational planning model</b> is deductive: it starts from goals, from which policies, programs and actions are deduced. It assumes either consensus on goals or an actor powerful enough that consensus does not matter, which rarely holds in fragmented shared-power settings. The <b>political model</b> is inductive: it starts from <b>issues</b>, which by definition involve conflict over ends, means, timing, location, reasons or values. Effective planning works <i>with</i> political rationality rather than substituting technocratic rationality for politics."
+   },
+   {
+    "q": "Give the five benefits of strategic planning.",
+    "a": "(1) Strategic thinking, acting and learning; (2) improved decision-making (at least half of strategic decisions reportedly fail on poor decision processes); (3) enhanced organizational effectiveness, responsiveness and resilience; (4) enhanced organizational legitimacy, earning the right to exist; (5) benefits to the people involved, through role clarity, teamwork and morale."
+   },
+   {
+    "q": "What is strategic planning NOT?",
+    "a": "It is not a substitute for strategic thinking or for leadership; it is not synonymous with strategy creation, since strategies have many sources, planned and emergent, and reality is always a blend of intention and emergence; and its ultimate end is not a <i>document</i> but wise strategic thought, action and learning."
+   },
+   {
+    "q": "State Bryson's paradox, and the two situations that call for holding off.",
+    "a": "Strategic planning is <b>most needed where it is least likely to work, and least needed where it is most likely to work</b>. Hold off when the organization's \"roof has fallen\" (an immediate crisis needs immediate action, not a lengthy process), and when the organization lacks the skills, resources or leadership commitment to see the process through to implementation."
+   },
+   {
+    "q": "Define strategic management.",
+    "a": "The ongoing, reasonable integration of strategic planning and implementation across an organization, to enhance mission fulfilment, continuous learning and sustained public-value creation. It links budgeting, performance measurement and performance management, and because purposes and circumstances are situation-specific, effective systems are usually hybrids of several approaches."
+   },
+   {
+    "q": "List the ten steps of the Strategy Change Cycle.",
+    "a": "(1) Initiate and agree on the process; (2) identify organizational mandates; (3) clarify mission and values; (4) assess the external and internal environments; (5) identify the strategic issues; (6) formulate strategies to manage the issues; (7) review and adopt the strategic plan; (8) establish an effective organizational vision of success; (9) develop an effective implementation process; (10) reassess strategies and the planning process itself."
+   },
+   {
+    "q": "What should the SCC do, as a process?",
+    "a": "Focus on the most fundamental issues; address purpose and the competing values behind mission and strategy; emphasize external trends; be politically realistic about internal and especially external stakeholders; rely on active senior and elected involvement; require candid confrontation of critical issues to build commitment; be action-oriented; and position the organization favourably for the future."
+   },
+   {
+    "q": "What does the initial agreement in step 1 cover?",
+    "a": "Purpose of the effort; a statement of desired outcomes, however sketchy; preferred process steps and how feedback and learning will happen; format and timing of reports; role, functions and membership of any oversight committee and of the planning team; how stakeholders will be engaged; how the web will be used; likely requirements for success; important limitations and boundaries; and committed resources."
+   },
+   {
+    "q": "What are the only general requirements of the process?",
+    "a": "A <b>dominant coalition</b> (or at least a coalition of the willing) able to sponsor and follow the process, and a <b>process champion</b> willing to push it. Larger organizations, collaborations and communities need more time and more iteration, since implementation there relies more on consent than on authority."
+   },
+   {
+    "q": "Define a stakeholder, and note the trap in the \"customer\" label.",
+    "a": "Any person, group or organization that can place a claim on the organization's attention, resources or output, or is affected by that output. The \"customer\" label, popular in reinvention-oriented reforms, is useful for customer-service focus but risks narrowing attention away from other stakeholders and undermining active-citizenship values. The public sector typically has many bottom lines."
+   },
+   {
+    "q": "Why is the SCC not linear, and what are the possible starting points?",
+    "a": "It is highly <b>iterative</b>: participants rethink earlier steps repeatedly, the process need not start at step 1, and <b>implementation usually begins before planning is complete</b> (useful actions are taken as soon as identified, as long as they do not foreclose better options). Starting points: a <b>vision statement</b>, <b>goals</b> set by new leadership or mandates, or most commonly a diffuse sense that something is not right, which is <b>issue-driven planning</b>. In issue-driven mode participants need not agree on goals, only on a strategy addressing the issue."
+   },
+   {
+    "q": "What is the Balanced Scorecard's logic, and what is the more common alternative?",
+    "a": "The BSC's logic is that learning and growth outcomes enhance internal processes, which enable financial outcomes, which together produce better customer outcomes. More common than full BSC integration is a <b>strategic issues management system</b>, which manages specific issues without forcing integration across all subunits, since most issues do not touch every part of the organization."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "The rational planning model is characterised as:",
+    "options": [
+     "Inductive, starting from issues",
+     "Deductive, starting from goals",
+     "Iterative, starting from implementation",
+     "Emergent, starting from practice"
+    ],
+    "correct": 1,
+    "rationale": "It is **deductive**: policies, programs and actions are deduced from goals. It assumes either consensus on goals or an actor powerful enough that consensus does not matter, an assumption that rarely holds in fragmented shared-power settings. The political model is the inductive, issue-first one."
+   },
+   {
+    "q": "Bryson's paradox states that strategic planning is:",
+    "options": [
+     "Most needed where it is most likely to work",
+     "Most needed where it is least likely to work",
+     "Equally needed everywhere, but rarely done",
+     "Needed only where a crisis has already occurred"
+    ],
+    "correct": 1,
+    "rationale": "Most needed where least likely to work, and least needed where most likely. The two situations calling for holding off are an organization whose roof has fallen, and one lacking the skills, resources or commitment to reach implementation."
+   },
+   {
+    "q": "Getting from B (where you want to go) to C (how to get there) is:",
+    "options": [
+     "Strategy formulation",
+     "Strategy implementation",
+     "Environmental assessment",
+     "Reassessment"
+    ],
+    "correct": 1,
+    "rationale": "A to C is **formulation**; B to C is **implementation**. A is figuring out where you are, B is where you want to go, C is how to get there."
+   },
+   {
+    "q": "Which is the correct order of SCC steps 7 to 9?",
+    "options": [
+     "Implementation, review and adoption, vision of success",
+     "Vision of success, review and adoption, implementation",
+     "Review and adoption, vision of success, implementation",
+     "Review and adoption, implementation, vision of success"
+    ],
+    "correct": 2,
+    "rationale": "Step 7 is review and adopt, step 8 is the vision of success, step 9 is the implementation process. The vision of success comes this late because most organizations do not actually need one to improve markedly; it matters mainly for holistic, integrative change."
+   },
+   {
+    "q": "Issue-driven planning is the most common starting point because:",
+    "options": [
+     "It produces a vision statement fastest",
+     "Participants need not agree on goals, only on a strategy addressing the issue",
+     "It is the only mode compatible with mandates",
+     "It removes the need for a process champion"
+    ],
+    "correct": 1,
+    "rationale": "Most planning starts with a diffuse sense that something is not right rather than with a vision or goals. Its key feature is that agreement on goals is not required, only agreement on next steps. Goals and vision emerge later and are more strategy-specific."
+   },
+   {
+    "q": "The Balanced Scorecard's causal logic runs:",
+    "options": [
+     "Customer → financial → internal process → learning and growth",
+     "Learning and growth → internal process → financial, together producing customer outcomes",
+     "Financial → customer → learning and growth → internal process",
+     "Internal process → customer → learning and growth → financial"
+    ],
+    "correct": 1,
+    "rationale": "Learning and growth outcomes enhance internal processes, which enable financial outcomes, and together these produce better customer outcomes. Full BSC integration is less common in practice than a lighter strategic issues management system."
+   }
+  ],
+  "open": [
+   {
+    "q": "Explain what strategic planning is for in the public sector, and why the hollow state makes it matter more than before. Then discuss Bryson's paradox and identify the situations in which an organization should hold off from planning altogether."
+   },
+   {
+    "q": "Compare the rational planning model with the political decision-making model. Explain why the rational model's assumptions rarely hold for public and nonprofit organizations, and what it means in practice for strategic planning to work with political rationality rather than against it."
+   },
+   {
+    "q": "Set out the ten steps of the Strategy Change Cycle, then explain in detail what step 1 has to achieve. Address the initial agreement, the role of the dominant coalition and the process champion, and the stakeholder groundwork that precedes the agreement."
+   },
+   {
+    "q": "\"The Strategy Change Cycle is a reference approach, not a checklist.\" Defend this claim with reference to iteration, to the fact that implementation usually begins before planning is complete, and to the three possible starting points, and say how the process should be scaled for a large organization."
+   }
+  ]
+ },
+ {
+  "key": "mandates",
+  "icon": "🎯",
+  "title": "Mandates, Mission & Environment",
+  "flashcards": [
+   {
+    "q": "Why are public and nonprofit organizations described as externally justified?",
+    "a": "They are chartered by the state to pursue public purposes, and their legitimacy is conferred by society rather than generated internally. Losing the ability to show they create public value risks their legitimacy, and for nonprofits their tax-exempt status. Mandates, mission and values together indicate the public value the organization will create and provide its social justification."
+   },
+   {
+    "q": "What are the three tests for 501(c)(3) status?",
+    "a": "The <b>organizational</b> test (chartered to improve public welfare), the <b>political</b> test (barred from campaigning for candidates), and the <b>asset</b> test (barred from distributing assets or income to benefit individuals beyond fair compensation)."
+   },
+   {
+    "q": "Name Salamon's four categories of voluntary failure.",
+    "a": "<b>Philanthropic insufficiency</b> — inability to generate resources at adequate, reliable scale. <b>Philanthropic particularism</b> — focus on particular subgroups, leaving coverage gaps. <b>Philanthropic paternalism</b> — the sector shaped by wealthy donors' preferences rather than the community's. <b>Philanthropic amateurism</b> — care needing professional training entrusted to well-meaning amateurs. Each is also an area where public value can be created by avoiding it."
+   },
+   {
+    "q": "Define mandates, and give the three common errors organizations make about them.",
+    "a": "Mandates are the \"musts\" an organization confronts: requirements, restrictions, expectations and constraints, formal (laws, regulations, charters, contracts) or informal (norms, key-stakeholder expectations). The three errors: not doing what they must because they do not know it; believing they are more tightly constrained than they are; and assuming that anything not explicitly permitted is forbidden."
+   },
+   {
+    "q": "What four outcomes does step 2 seek?",
+    "a": "Identifying formal and informal mandates (who mandates what, with what force); interpreting what is required; clarifying what is forbidden; and clarifying what is <b>not ruled out</b>. The last point matters most, because organizations that only know their limits cannot see the room for legitimate discretion and creativity within them."
+   },
+   {
+    "q": "What is a mission statement, and what should it not be confused with?",
+    "a": "A declaration of organizational purpose, typically short (a page or less, often a slogan), targeted, activist in tone, inspiring, and leading to measures of whether the mission is achieved. It should not be confused with mandates, nor with strategy. A common error is assuming the organization <i>is</i> what it <i>does</i>."
+   },
+   {
+    "q": "Give the six questions a mission statement should emerge from.",
+    "a": "(1) Who are we? Identity: what is distinct, central and enduring. (2) What basic social or political needs do we exist to address? The organization is a means, not an end. (3) What do we do to recognize, anticipate and respond to these needs? (4) How should we respond to key stakeholders? (5) What are our philosophy, values and culture? (6) What makes us distinctive or unique? Public organizations without an answer risk privatization; nonprofits risk competitive disadvantage."
+   },
+   {
+    "q": "What is Terry's hierarchy of human action, and why does it matter for mission?",
+    "a": "Fulfilment → meaning → mission → power → structures → resources → givens of existence. Disputes at any level are usually really about the level above, so clarifying mission reduces unnecessary conflict. It also enables premise control over structures and systems, and lets an organization agree on purposes <i>before</i> problems <i>before</i> solutions, rather than fighting over solutions to undefined problems."
+   },
+   {
+    "q": "Describe the Basic Analysis Technique.",
+    "a": "(1) Brainstorm the organization's stakeholders, differentiated at the right level of aggregation, including future generations and distinct employee groups; (2) specify the criteria each stakeholder uses to judge the organization, guessed by the team or asked directly; (3) judge, even roughly (poorly, okay, very well), how the organization performs against each. Optional extensions: how each stakeholder influences the organization, what the organization needs from each, and a rough importance ranking."
+   },
+   {
+    "q": "Give the four quadrants of the Power versus Interest Grid.",
+    "a": "<b>Players</b> (high power, high interest); <b>subjects</b> (high interest, low power); <b>context setters</b> (high power, low interest); <b>the crowd</b> (low on both). It helps identify whose buy-in must be sought, which coalitions to encourage or discourage, and how to shift stakeholder views. A power-versus-<i>identity</i> grid is a variant, since identity as well as interest can motivate stakeholder action."
+   },
+   {
+    "q": "What is a Stakeholder Influence Diagram?",
+    "a": "It is built on top of a power-versus-interest grid by adding arrows indicating lines of influence between stakeholders. It identifies which relationships matter most, and who the most central and influential stakeholders are."
+   },
+   {
+    "q": "What does a SWOC analysis assess, and along which two axes?",
+    "a": "Strengths and weaknesses are <b>internal</b> and <b>present-oriented</b>; opportunities and challenges (or threats) are <b>external</b> and <b>future-oriented</b>. Every effective strategy takes advantage of strengths and opportunities while minimizing weaknesses and challenges. Strategic issues emerge from the fit, or misfit, between the organization inside and its environment outside."
+   },
+   {
+    "q": "What three categories does the external assessment monitor?",
+    "a": "<b>Forces and trends</b> (political, economic, social, technological, environmental, legal); <b>key resource controllers</b>, especially those affecting resource flows; and <b>actual or potential competitors and collaborators</b>. Governing-board members are often better than staff at spotting external opportunities and threats, and scenarios (stories about possible futures) can help."
+   },
+   {
+    "q": "What three categories does the internal assessment mirror, and what is the most valuable thing a planning team can do?",
+    "a": "Resources (inputs), present strategy (process), and performance (outputs). Organizations usually have plentiful quantitative data on inputs and little qualitative information such as culture. The most valuable move is articulating the organization's <b>actual strategy-in-practice</b>, as opposed to official pronouncements, which clarifies the value proposition offered to stakeholders."
+   },
+   {
+    "q": "Define CSFs, competency, distinctive competency, core competency and distinctive core competency.",
+    "a": "<b>Critical success factors</b> are what the organization must do or be good at, because it matters to key stakeholders, to survive and prosper. A <b>competency</b> is an ability or process the organization can manage to perform well against goals or CSFs. A <b>distinctive competency</b> is one very difficult for others to replicate. A <b>core competency</b> is central to organizational success. A <b>distinctive core competency</b> is both central <i>and</i> superior to alternative providers'. A <b>livelihood scheme</b> links competencies to aspirations via CSFs: mission → goals → CSFs → competencies."
+   },
+   {
+    "q": "Describe the snow card technique.",
+    "a": "Brainstorming combined with synthesis. Select a facilitator; form a group of 5–9 (up to 12–15 workable); focus on a single question at a time, running it four times for S, W, O and C; participants silently brainstorm and transcribe their 5–7 best ideas onto individual cards; cards are collected, posted on a wall and clustered by theme, each cluster labelled; items are rearranged until the grouping makes sense; relative importance is visualized with coloured sticky dots (about 7 per person per list); results are typed up and distributed."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "A nonprofit providing addiction counselling staffs it with committed volunteers rather than trained clinicians. In Salamon's terms this is:",
+    "options": [
+     "Philanthropic insufficiency",
+     "Philanthropic particularism",
+     "Philanthropic paternalism",
+     "Philanthropic amateurism"
+    ],
+    "correct": 3,
+    "rationale": "**Philanthropic amateurism**: care that needs professional training is entrusted to well-meaning amateurs. Insufficiency is about scale of resources, particularism about coverage gaps from subgroup focus, and paternalism about donors' preferences displacing the community's."
+   },
+   {
+    "q": "Of the four outcomes step 2 seeks, which does Bryson single out as most consequential?",
+    "options": [
+     "Identifying formal mandates",
+     "Interpreting what is required",
+     "Clarifying what is forbidden",
+     "Clarifying what is not ruled out"
+    ],
+    "correct": 3,
+    "rationale": "Clarifying what is **not ruled out**. Organizations that know only their limits cannot see the room for legitimate discretion and creativity within them, which is where most of the strategic space actually lies."
+   },
+   {
+    "q": "A stakeholder with high power but low interest is:",
+    "options": [
+     "A player",
+     "A subject",
+     "A context setter",
+     "Part of the crowd"
+    ],
+    "correct": 2,
+    "rationale": "**Context setters** have high power and low interest. Players are high on both, subjects have high interest but low power, and the crowd is low on both."
+   },
+   {
+    "q": "In a SWOC analysis, strengths and weaknesses are:",
+    "options": [
+     "External and future-oriented",
+     "Internal and present-oriented",
+     "Internal and future-oriented",
+     "External and present-oriented"
+    ],
+    "correct": 1,
+    "rationale": "Strengths and weaknesses are **internal** and **present**-oriented; opportunities and challenges are **external** and **future**-oriented. Strategic issues emerge from the fit or misfit between the two."
+   },
+   {
+    "q": "A distinctive core competency is one that is:",
+    "options": [
+     "Difficult to replicate, but peripheral to success",
+     "Central to success, but replicable",
+     "Both central to success and superior to alternative providers'",
+     "Mandated by law rather than chosen"
+    ],
+    "correct": 2,
+    "rationale": "A **distinctive** competency is hard for others to replicate; a **core** competency is central to success. A **distinctive core** competency is both central *and* superior to what alternative providers offer."
+   },
+   {
+    "q": "Terry's hierarchy of human action implies that a dispute over resources is usually really about:",
+    "options": [
+     "Resources themselves",
+     "Structures",
+     "Power",
+     "The givens of existence"
+    ],
+    "correct": 1,
+    "rationale": "The hierarchy runs fulfilment → meaning → mission → power → structures → resources → givens of existence, and disputes at any level are usually really about the level **above**. Above resources sits **structures**. This is why clarifying mission reduces unnecessary conflict throughout."
+   }
+  ],
+  "open": [
+   {
+    "q": "Explain why mandates must be identified before mission can be clarified. Set out what mandates are, the three common errors organizations make about them, and the four outcomes step 2 seeks, giving particular attention to why clarifying what is not ruled out matters most."
+   },
+   {
+    "q": "Public value in a democracy is created jointly by government, nonprofits and the market. Explain how governments and nonprofits each create it, then set out Salamon's four voluntary failures and explain why they mean the nonprofit sector alone cannot deliver public value."
+   },
+   {
+    "q": "Compare the Basic Analysis Technique, the Power versus Interest Grid and the Stakeholder Influence Diagram. Explain what each adds over the previous one, and how a stakeholder analysis feeds into both the mission statement and the SWOC analysis."
+   },
+   {
+    "q": "Explain what a SWOC analysis assesses on the external and the internal side. Then explain why articulating the actual strategy-in-practice is described as the most valuable thing a planning team can do, and why the absence of performance information is itself a problem."
+   },
+   {
+    "q": "Define critical success factors, competency, distinctive competency, core competency and distinctive core competency, and set out the livelihood scheme that links them. Then explain how the highs-lows-and-themes exercise and the snow card technique feed into identifying strategic issues."
+   }
+  ]
+ },
+ {
+  "key": "issues",
+  "icon": "⚡",
+  "title": "Strategic Issues & Formulation",
+  "flashcards": [
+   {
+    "q": "Define a strategic issue.",
+    "a": "A fundamental policy question or critical challenge affecting an organization's mandates, mission and values, product or service level and mix, clients or users, cost, financing, organization, or management. Identifying strategic issues is the <b>heart of the strategic planning process</b>, the point where the deliberative process starts constructing a new social reality."
+   },
+   {
+    "q": "What conflict does every strategic issue involve, and what does the process need to handle it?",
+    "a": "Conflict over ends (what), means (how and how much), philosophy (why), location (where), timing (when), and who is advantaged or disadvantaged (who). The conflict is usually necessary and desirable, since it clarifies what the issue actually is, but participants need enough psychological safety, a <b>holding environment</b>, to explore threatening territory constructively."
+   },
+   {
+    "q": "Give the three required elements of an issue statement.",
+    "a": "(1) A succinct description, framed as a question the organization can actually do something about, ideally with more than one plausible answer so the search for strategies stays open; (2) the factors that make it a <i>fundamental</i> challenge; (3) the consequences of failing to address it. If there are no consequences, it is not a strategic issue."
+   },
+   {
+    "q": "How are strategic issues classified?",
+    "a": "By <b>nature of change</b>: adaptive challenges (Heifetz) or developmental issues (Nutt) involve fundamental change to products, clients and identity; technical problems or non-developmental issues involve less ambiguity and are addressed by reprogramming existing strategy rather than by new vision or goals.<br><br>By <b>urgency</b>: issues requiring no present action but continuous monitoring; issues handled within the regular planning cycle; issues requiring an immediate, out-of-cycle response."
+   },
+   {
+    "q": "When is the direct approach best, and why does it suit public organizations?",
+    "a": "It goes straight from mandates, mission and SWOC to issues. Best when there is no usable goal agreement, no pre-existing vision of success, no hierarchical authority able to impose goals, or an environment too turbulent for goal or vision setting. It works in the pluralistic, fragmented worlds typical of public and nonprofit organizations, given a strong-enough dominant coalition."
+   },
+   {
+    "q": "When do the goals approach and the vision of success approach work?",
+    "a": "The <b>goals approach</b> establishes goals and objectives first, then identifies the issues blocking them. It needs broad, specific, agreed-upon goals and works best in hierarchical organizations with few powerful stakeholders. The <b>vision of success approach</b> sketches a best picture of future success and then identifies what must be resolved to reach it. It is useful where holistic integration across boundaries is needed and suits nonprofits better, since public organizations are more tightly bound by mandates and conflicting expectations."
+   },
+   {
+    "q": "Explain the indirect approach.",
+    "a": "It starts from participants' existing ideas, elaborates their action implications, and recombines them into a new shared understanding. Useful when major redirection is needed but people have not yet grasped why, and participation in this social reconstruction builds commitment. Innovation here is recombination, not mutation."
+   },
+   {
+    "q": "What are the remaining three approaches to issue identification?",
+    "a": "<b>Action-oriented strategy mapping</b> — word-and-arrow diagrams linking possible actions by cause-effect or influence; useful under time pressure, in complex issue areas, and where buy-in matters. <b>Alignment approach</b> — surfaces gaps, inconsistencies and conflicts across governance, management, mission, mandates, policies, goals, HR and communications; combines well with any other approach. <b>Systems analysis</b> — formal modelling for issue areas with complex feedback effects, reserved for genuinely complicated systems given the expertise it demands."
+   },
+   {
+    "q": "What is the issue tensions approach?",
+    "a": "Nutt and Backoff: it critiques how an issue is framed against four recurring tensions — human resources and equity, innovation and change, maintenance of tradition, and productivity improvement. Worth the extra cycles when getting the framing wrong is costly or highly uncertain."
+   },
+   {
+    "q": "What second-order effects does step 5 produce?",
+    "a": "It focuses attention on what is genuinely important, breaking the 80–20 rule where key decision-makers spend 80% of their time on the least important 20% of their job; it keeps discussion on issues rather than premature answers; it creates the productive tension organizations need to change; framing the issue also hints at how it might be resolved; and the process starts to feel real once consequences of inaction are spelled out, which can even prompt decision-makers to consider terminating the effort, a crisis-of-trust moment that strengthens organizational character if pushed through."
+   },
+   {
+    "q": "Define a strategy, and distinguish it from tactics.",
+    "a": "A pattern of purposes, policies, programs, projects, actions, decisions or resource allocations that defines what an organization is, does, and why. It is an extension of mission and a purpose-driven bridge between organization and environment. <b>Tactics</b> are short-term adaptive reactions accomplishing limited objectives, while strategy is the continuing basis that orders those adaptations toward broader purposes."
+   },
+   {
+    "q": "Give the five questions of the strategy development process, and note the unconventional ordering.",
+    "a": "(1) What are the practical alternatives, dreams or visions we might pursue? (2) What are the <b>barriers</b> to realizing them? (3) What major proposals might achieve these alternatives directly, or overcome the barriers? (4) What major actions must be taken in the next one to two years? (5) What specific steps, and by whom, in the next six months?<br><br>Unconventionally, <b>barriers are enumerated before proposals</b>, which ensures strategies deal with implementation difficulties directly."
+   },
+   {
+    "q": "What makes a strategy effective, regardless of the method used?",
+    "a": "It must be technically workable and administratively feasible; politically acceptable to key stakeholders; results-oriented; consistent with organizational philosophy and values (or deliberately aimed at changing them); ethical, moral and legal; and it must actually address the issue while creating public value at reasonable cost."
+   },
+   {
+    "q": "Why are innovations called \"failures in the middle\"?",
+    "a": "Kanter's phrase: because innovations by definition have never been tried before, their success can only be judged after implementation. That is why strategy formulation is defined broadly enough to accommodate initial stumbles. Borins (1998) adds that innovation initiators differ by crisis type, and that careful deliberate planning outperformed rushed <b>groping</b> (trying many things fast), which tends to produce disarray."
+   },
+   {
+    "q": "Why does the vision of success come as late as step 8?",
+    "a": "Because for most organizations a vision of success is not actually necessary to produce marked performance improvements. It becomes valuable mainly for holistic, integrative change. Guidelines: turn the drafting over to one individual, since an inspirational document is rarely written by committee; review drafts normatively; accept that full consensus is rarely achievable and widespread general agreement is enough; and disseminate it widely so it becomes a living document, otherwise drafting it was largely wasted effort."
+   },
+   {
+    "q": "What should an action plan detail in step 9, and what is a regime?",
+    "a": "Implementation roles and responsibilities; expected results, objectives and milestones; specific action steps; schedules; resource requirements and sources; a communication process; review, monitoring and mid-course-correction procedures; and accountability procedures. What actually happens is always a blend of the intended and the emergent. Successful, institutionalized implementation produces a new <b>regime</b>: a set of implicit or explicit principles, norms, rules and decision procedures around which actors' expectations converge."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "Which element, if missing, means the issue is not a strategic issue at all?",
+    "options": [
+     "A vision of success",
+     "The consequences of failing to address it",
+     "A quantified target",
+     "A single unambiguous answer"
+    ],
+    "correct": 1,
+    "rationale": "An issue statement needs the question, the factors making it fundamental, and the **consequences of failing to address it**. If there are no consequences, it is not a strategic issue. Note also that a *single* unambiguous answer is undesirable: more than one plausible answer keeps the search for strategies open."
+   },
+   {
+    "q": "An organization has agreed, specific goals, a clear hierarchy and few powerful stakeholders. The best approach to identifying issues is:",
+    "options": [
+     "The direct approach",
+     "The goals approach",
+     "The indirect approach",
+     "Systems analysis"
+    ],
+    "correct": 1,
+    "rationale": "The **goals approach** needs exactly these conditions: broad, specific, agreed-upon goals and a hierarchical organization with few powerful stakeholders. The direct approach is for the opposite case, where there is no usable goal agreement or authority to impose goals."
+   },
+   {
+    "q": "In the five-part strategy development process, barriers are enumerated:",
+    "options": [
+     "After proposals, to test them",
+     "Before proposals, so strategies face implementation directly",
+     "Only if the first round of proposals fails",
+     "Only in the alignment approach"
+    ],
+    "correct": 1,
+    "rationale": "Barriers come at question 2, **before** proposals at question 3. Bryson notes this is unconventional, and the reason is that it forces strategies to deal with implementation difficulties directly rather than discovering them later."
+   },
+   {
+    "q": "Heifetz's adaptive challenges correspond, in Nutt's vocabulary, to:",
+    "options": [
+     "Technical problems",
+     "Non-developmental issues",
+     "Developmental issues",
+     "Urgent out-of-cycle issues"
+    ],
+    "correct": 2,
+    "rationale": "Adaptive challenges (Heifetz) = **developmental issues** (Nutt): both involve fundamental change to products, clients and identity. Technical problems = non-developmental issues, addressed by reprogramming existing strategy."
+   },
+   {
+    "q": "Borins (1998) found that, compared with careful deliberate planning, \"groping\" (trying many things fast):",
+    "options": [
+     "Produced faster and more durable innovation",
+     "Tended to produce disarray",
+     "Was equally effective but cheaper",
+     "Worked only in times of crisis"
+    ],
+    "correct": 1,
+    "rationale": "Careful, deliberate planning outperformed rushed groping, which tends to produce disarray. Borins also found that innovation initiators differ by crisis type: politicians in times of crisis, agency heads during leadership transitions, and middle or frontline staff responding to internal problems or technical opportunity."
+   },
+   {
+    "q": "Step 5 is said to break the 80–20 rule, meaning that:",
+    "options": [
+     "80% of strategies fail and 20% succeed",
+     "Key decision-makers spend 80% of their time on the least important 20% of their job",
+     "80% of stakeholders control 20% of resources",
+     "Only 20% of identified issues warrant a strategy"
+    ],
+    "correct": 1,
+    "rationale": "The 80–20 rule here is about attention: decision-makers spend 80% of their time on the least important 20% of the job. Identifying strategic issues focuses attention on what is genuinely fundamental, which is one of the step's second-order effects."
+   }
+  ],
+  "open": [
+   {
+    "q": "Identifying strategic issues is called the heart of the strategic planning process. Explain what a strategic issue is, set out the anatomy of an issue statement, and explain why the conflict inherent in every issue is desirable and what conditions make it productive rather than destructive."
+   },
+   {
+    "q": "Present the eight approaches to identifying strategic issues. For each, state the conditions under which it is the right choice, and then argue which approach best fits a fragmented public organization with no agreement on goals."
+   },
+   {
+    "q": "Set out the five-part strategy development process, explaining why barriers are enumerated before proposals. Then give the criteria an effective strategy must satisfy, and explain why innovations are called \"failures in the middle\"."
+   },
+   {
+    "q": "Trace steps 7 to 10 of the Strategy Change Cycle. Explain why the vision of success is placed as late as step 8, why implementation is where most failures occur, and what strategic learning contributes at step 10."
+   }
+  ]
+ },
+ {
+  "key": "leadership",
+  "icon": "👥",
+  "title": "Leadership & Local Government",
+  "flashcards": [
+   {
+    "q": "Define leadership, and explain the sense in which it is collective.",
+    "a": "Crosby and Bryson: \"the inspiration and mobilization of others to undertake collective action in pursuit of the common good\". It is a collective enterprise, not a synonym for a formal title: the same people are leaders and followers at different points in a strategy change cycle. Strategic planning \"is in no way a substitute for leadership\"; it is a set of concepts, procedures, tools and practices meant to help people think, act and learn strategically."
+   },
+   {
+    "q": "List the interconnected leadership roles.",
+    "a": "Understanding the context; understanding the people involved, including oneself; sponsoring the process; championing the process; facilitating the process; fostering collective leadership; using dialogue and deliberation; making and implementing policy decisions; enforcing rules, settling disputes and managing residual conflicts; and putting it all together while preparing for ongoing strategic change."
+   },
+   {
+    "q": "What does understanding the context involve?",
+    "a": "Reading the organization's history and its social, political, economic, technological and ecological environment without being captured by that history, and recognizing when major or minor change is in play. Organizational strategies are usually stable for long periods and then shift suddenly in response to cumulative environmental change."
+   },
+   {
+    "q": "Who are process sponsors, and what should they do?",
+    "a": "Typically top positional leaders with the prestige, power and authority to commit the organization to strategic planning and hold people accountable. They set the stage rather than run day-to-day details, and can activate latent supporters who were waiting for a powerful endorsement. Guidelines: articulate purpose and stakes; commit real resources (nothing signals seriousness like resource allocation); make clear early and often that action and change will follow; encourage and reward creative thinking and constructive debate; be open to outside consultants; and be willing to use authority to keep the process on track."
+   },
+   {
+    "q": "What is Gresham's Law of Planning?",
+    "a": "March and Simon's observation that \"daily routine drives out planning\". It is one of the reasons a sponsor must be willing to use authority to keep the process on track, alongside the tendency of people to fight or flee when confronted with tough issues."
+   },
+   {
+    "q": "Who are process champions, and what are their guidelines?",
+    "a": "They manage the process day to day, modelling the reasoned, diligent, enthusiastic pursuit of the common good. Sometimes they are the ones who first see the need and must convince a sponsor. Guidelines: keep planning high on the agenda; attend to <i>process</i>, not specific solutions, or risk being seen as partisan advocates; think like a theatre director about what must converge at each key juncture, since time in strategic planning is <b>junctural</b>, not linear; handle the operational trivia, which are not trivial at all; manage the shared vocabulary; keep rallying participants through the middle-of-the-process \"feels like failure\" stage using early and small wins; develop champions throughout the organization; and stay sensitive to power differences."
+   },
+   {
+    "q": "What do process facilitators bring, and what is the inside/outside trade-off?",
+    "a": "Group-process skill and, especially as outsiders, no stake in the substantive outcome, which frees champions to participate in substantive debate. They help build trust and manage conflict, but need deep knowledge of the organization's politics and culture and the active partnership of sponsors and champions. <b>Inside</b> facilitators know the organization better but may be seen as biased; <b>outside</b> facilitators are seen as impartial but need more ramp-up."
+   },
+   {
+    "q": "Give the ten pieces of advice on getting started.",
+    "a": "(1) Start where you are; (2) have a compelling reason; (3) there is no substitute for leadership; (4) tailor the process design to the situation; (5) the big innovation is simply getting key decision-makers talking about what truly matters, then acting on it; (6) the scarcest resource is not money but the attention and commitment of key decision-makers; (7) the biggest payoffs may be surprising; (8) outside consultation and facilitation can help; (9) keep faith in the potential benefits when the going gets tough; (10) strategic planning is not right for every situation."
+   },
+   {
+    "q": "What are the three most-quoted pieces of that advice, and what does each mean?",
+    "a": "<b>Start where you are</b> — you can always plan for whatever part of the organization you control, but you must bring other affected parties along. <b>Have a compelling reason</b> — otherwise the process will not reach a satisfying conclusion. <b>There is no substitute for leadership</b> — especially the twin roles of sponsoring and championing; facilitation matters but is a notch below."
+   },
+   {
+    "q": "What are the cross-case lessons?",
+    "a": "Evolutionary process can have revolutionary consequences; genuine strategic planning should produce <b>surprises</b> (if everyone already knows the answer, there is nothing to plan); planning can help an organization create its <i>own</i> desirable surprises rather than merely reacting to others'; cross-boundary forums matter; planning must be fitted to other ongoing organizational processes; operational detail can overwhelm strategic attention, so real discipline is required; and sometimes quicker and simpler genuinely is better, especially under serious imminent threat, where an elaborate process can itself be fatal."
+   },
+   {
+    "q": "What are the four phases of strategic planning as territorial governance?",
+    "a": "(1) Organization and environment analysis — defining stakeholders and mandates, drafting a SWOC analysis, from which mission, values and vision follow; (2) setting strategic issues and targets; (3) budgeting and building implementation plans; (4) continuous assessment and monitoring after implementation. The local authority acts as a \"control room\"."
+   },
+   {
+    "q": "Give the six categories of strategic issue at territorial level, and the articulation of strategic thinking.",
+    "a": "Economic development; environmental sustainability; urban development and infrastructure; social inclusion and cohesion; culture and heritage; participation and governance.<br><br>The articulation proceeds from <b>mission</b> (what we do, with and for whom, why) through <b>strategic vision</b> (the desired future state) and <b>strategic objectives</b> (specific, concrete, measurable, challenging) to <b>strategies</b> and <b>operational objectives</b>."
+   },
+   {
+    "q": "Why might strategic planning fail in a local-government setting?",
+    "a": "<b>Lack of support</b> from voters, managers or unions, where more involvement is the usual remedy; <b>organizational size</b>, since both too big and too small breed resistance to change; <b>personnel and individual performance policies</b> used as an excuse to avoid planning, though they can instead be integrated into the strategy; and <b>lack of trust</b>, from feeling lost about how to start, bad past experience, or contentment with the status quo. None of these are fatal: planning can start small and grow gradually."
+   },
+   {
+    "q": "What is the record of strategic planning in Italy?",
+    "a": "Few Italian local entities have practised \"virtuous\" strategic planning, in contrast to other European and especially Anglo-Saxon cities where it is habitual. Adoption has mainly been crisis-driven, or motivated by a need to relaunch a territory's vocation, enhance local assets, or seek organizational synergies. <b>Turin</b> is the pioneer case and Emilia-Romagna adopted the practice more recently. A weak organizational culture and a bias toward short-term decisions remain the main obstacles."
+   },
+   {
+    "q": "What has intensified territorial competition, and over what does it now run?",
+    "a": "Globalization (distances effectively cancelled), growth differentials between territories, integration of physical and virtual communication networks (allowing on-demand choice of \"offer\"), and the tertiarization of the economy. Competition now runs over investment flows, corporate location decisions, and tourist flows and attractions, pitting even very different regions against each other."
+   },
+   {
+    "q": "Define territorial marketing and give its virtuous loop.",
+    "a": "The set of actions aimed at promoting what determines residents' well-being, together with actions to attract businesses and improve a territory's image and competitiveness for investors. It works by strengthening existing and new sustainable economic activities suited to the territory, increasingly via participative planning rather than top-down plans, since it \"listens\" to the environment. It brings an <b>internal community</b> (residents, local businesses) into relation with an <b>external community</b> (potential residents, visitors, investors). The loop: <b>satisfaction → attractiveness → value creation</b>."
+   },
+   {
+    "q": "Give the five phases of stakeholder engagement.",
+    "a": "(1) <i>Think strategically</i> — analyse the current situation's implications, map stakeholders, identify thematic areas and prioritize (based on responsibility toward them, their influence, and their representativeness); (2) <i>analyse and plan</i> — review progress, learn from other organizations, evaluate potential partners, conceive a plan; (3) <i>strengthen engagement skills</i> — build the administration's response capacity; (4) <i>involve stakeholders</i> — identify and design the most effective methods; (5) <i>act, review and report</i> — create an action plan, report back, review the process."
+   },
+   {
+    "q": "Give the three generations of stakeholder engagement and the three prerequisites.",
+    "a": "<b>First generation</b>: reactive, prompted by external pressure, to reduce problems and grant targeted benefits. <b>Second generation</b>: systematic, aimed at risk management and identifying critical stakeholders. <b>Third generation</b>: fully integrated and strategic, aimed at sustainable competitiveness.<br><br>Prerequisites: <b>authentic</b> (aimed at a complete picture of organizational impact); <b>well-informed</b> (participation and feedback from every relevant stakeholder); <b>motivated</b> (clarity about the issues addressed and the benefits brought)."
+   },
+   {
+    "q": "What are the barriers to participation, and what is the most common failure mode?",
+    "a": "No genuinely interested parties to involve; information asymmetry preventing informed engagement; frequent absenteeism among invited participants; and political controversy among councillors that suppresses participation, which is especially damaging since its absence tends to produce \"protest\" behaviour rather than real dialogue. The most common failure mode is not over-involvement but <b>under-involvement</b>: occasional, superficial engagement with no continuity, where stakeholder input has no real influence because decisions were effectively already made."
+   }
+  ],
+  "mcq": [
+   {
+    "q": "\"Daily routine drives out planning\" is:",
+    "options": [
+     "Bryson's paradox",
+     "March and Simon's Gresham's Law of Planning",
+     "Kanter's failures-in-the-middle",
+     "Meyer and Gupta's performance paradox"
+    ],
+    "correct": 1,
+    "rationale": "It is March and Simon's **Gresham's Law of Planning**, and it is one of the reasons a sponsor must be willing to use authority to keep the process on track."
+   },
+   {
+    "q": "Which is a champion's job rather than a sponsor's?",
+    "options": [
+     "Committing the organization's resources and legitimacy",
+     "Handling rooms, notices, minutes and the production of drafts",
+     "Activating latent supporters through a powerful endorsement",
+     "Holding people accountable for the process"
+    ],
+    "correct": 1,
+    "rationale": "The operational trivia belong to the **champion**, and Bryson insists they \"aren't trivial at all\". Committing resources, activating latent supporters and holding people accountable are sponsor functions, which is why sponsors are typically top positional leaders."
+   },
+   {
+    "q": "Time in strategic planning is described as:",
+    "options": [
+     "Linear, so a Gantt chart is the right tool",
+     "Junctural, so the champion must think like a theatre director",
+     "Cyclical, matching the financial year",
+     "Irrelevant, since the process is iterative"
+    ],
+    "correct": 1,
+    "rationale": "Time is **junctural**, not linear: the champion has to think like a theatre director about what needs to converge (people, tasks, information) at each key juncture."
+   },
+   {
+    "q": "According to the advice on getting started, the scarcest resource is:",
+    "options": [
+     "Money",
+     "Skilled facilitators",
+     "The attention and commitment of key decision-makers",
+     "Reliable performance data"
+    ],
+    "correct": 2,
+    "rationale": "Not money but the attention and commitment of key decision-makers, often no more than about 10% of their time. The advice adds that disruptions (elections, crises, personnel changes) should be expected and the process designed for resilience against them."
+   },
+   {
+    "q": "The virtuous loop of territorial marketing runs:",
+    "options": [
+     "Attractiveness → satisfaction → value creation",
+     "Satisfaction → attractiveness → value creation",
+     "Value creation → satisfaction → attractiveness",
+     "Attractiveness → value creation → satisfaction"
+    ],
+    "correct": 1,
+    "rationale": "**Satisfaction → attractiveness → value creation.** Territorial marketing promotes what determines residents' well-being first, and it is that satisfaction which makes the territory attractive to the external community and so creates value."
+   },
+   {
+    "q": "Stakeholder engagement aimed at risk management and identifying critical stakeholders is which generation?",
+    "options": [
+     "First",
+     "Second",
+     "Third",
+     "It falls outside the three generations"
+    ],
+    "correct": 1,
+    "rationale": "The **second generation** is systematic and aimed at risk management. The first is reactive, prompted by external pressure; the third is fully integrated and strategic, aimed at sustainable competitiveness."
+   },
+   {
+    "q": "The most common failure mode in participatory processes is:",
+    "options": [
+     "Over-involvement, which paralyses decisions",
+     "Under-involvement: occasional, superficial engagement with no real influence",
+     "Excessive technical expertise among participants",
+     "Too many genuinely interested parties"
+    ],
+    "correct": 1,
+    "rationale": "Under-involvement, not over-involvement: engagement that is occasional and superficial, with no continuity, where stakeholder input has no real influence because decisions were effectively already made."
+   }
+  ],
+  "open": [
+   {
+    "q": "Distinguish process sponsors, process champions and process facilitators. Explain what each supplies to the process, give the guidelines for sponsors and champions, and explain the inside/outside trade-off for facilitators."
+   },
+   {
+    "q": "Set out the ten pieces of advice on getting started with strategic planning. Explain the three that are most quoted, and discuss what \"the scarcest resource is not money but attention\" implies for how a process should be designed."
+   },
+   {
+    "q": "Explain how strategic planning changes when applied to a territory rather than a single organization. Cover the four phases, the six categories of territorial strategic issue, and the articulation from mission through to operational objectives, then assess the Italian record."
+   },
+   {
+    "q": "Define territorial marketing and explain what has intensified territorial competition. Then explain how the internal and external communities relate to each other, and why participative strategic planning suits territorial marketing better than top-down plans."
+   },
+   {
+    "q": "Set out the five phases and three generations of stakeholder engagement, together with the prerequisites for an effective process. Then explain the barriers to participation, why under-involvement rather than over-involvement is the common failure, and connect this to the four reasons strategic planning fails in local government."
+   }
+  ]
+ }
+];
+
+/* Minimal markdown for rationale strings: **bold**, *italic*, newlines. */
+function mdInline(s){
+  if(!s) return s;
+  s = s.replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+  s = s.replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');
+  return s.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+}
+function esc(s){ return String(s).replace(/</g,'&lt;'); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+
+/* ── state ───────────────────────────────────────────────────────────────── */
+let view = 'topic';          // 'topic' | 'pool' | 'mock'
+let topicIdx = 0;
+let type = 'flashcards';
+let fcIdx = 0, fcAnswer = false;
+
+const answers = {};          // {topicIdx: {qIdx: text}} — typed answers survive navigation
+const mcqState = {};          // {"t-<ti>-<qi>": chosen} so results survive re-render
+
+let pool = [], poolIdx = 0;
+const poolAnswers = {}, poolMcq = {};
+let mock = [];
+const mockAnswers = {};
+
+/* ── sidebar ─────────────────────────────────────────────────────────────── */
+function initNav(){
+  document.getElementById('nav').innerHTML = PM_DATA.map((t,i)=>
+    `<div class="test-nav-item${i===0?' active':''}" data-idx="${i}" onclick="setTopic(${i},this)">
+       <span class="test-nav-icon">${t.icon}</span>
+       <span class="nav-label">${t.title}</span>
+       <span class="nav-count" title="flashcards / MCQ / open">${t.flashcards.length}&middot;${t.mcq.length}&middot;${t.open.length}</span>
+     </div>`).join('');
+}
+function clearFooter(){ document.querySelectorAll('.test-sidebar-footer .test-nav-item').forEach(n=>n.classList.remove('active')); }
+function clearTopics(){ document.querySelectorAll('#nav .test-nav-item').forEach(n=>n.classList.remove('active')); }
+
+function setTopic(i, el){
+  view='topic'; clearFooter();
+  document.getElementById('tabs').style.display='';
+  topicIdx=i; fcIdx=0; fcAnswer=false;
+  clearTopics();
+  if(el) el.classList.add('active');
+  renderTopic();
+}
+/* Keeps the tab strip in step with `type`, which a pooled view can change on its
+   own. Without this, leaving a pool for a topic showed one tab highlighted and a
+   different tab's content. */
+function syncTabs(){
+  document.querySelectorAll('#tabs .test-tab').forEach(n=>n.classList.toggle('active', n.dataset.type===type));
+}
+function setType(t, el){
+  type=t; fcIdx=0; fcAnswer=false;
+  syncTabs();
+  if(view==='pool') openPool(t); else renderContent();
+}
+function renderTopic(){
+  const t = PM_DATA[topicIdx];
+  document.getElementById('topic-title').textContent = t.icon+' '+t.title;
+  document.querySelectorAll('#tabs .test-tab').forEach(tab=>{
+    const k = tab.dataset.type, n = (t[k]||[]).length;
+    const label = {flashcards:'\u{1F5C3}️ Flashcards', mcq:'☑️ MCQ', open:'✍️ Open Questions'}[k];
+    tab.innerHTML = `${label}<span class="cnt">(${n})</span>`;
+  });
+  renderContent();
+}
+function renderContent(){
+  const t = PM_DATA[topicIdx], inner = document.getElementById('inner');
+  const items = t[type] || [];
+  if(!items.length){ inner.innerHTML = `<div class="test-empty">Nothing here yet.</div>`; return; }
+  if(type==='flashcards') renderFlashcards(inner, items);
+  else if(type==='mcq')   renderMCQ(inner, items);
+  else                    renderOpen(inner, items);
+}
+
+/* ── flashcards ──────────────────────────────────────────────────────────── */
+function renderFlashcards(inner, items){
+  const c = items[fcIdx];
+  inner.innerHTML = `
+    <div class="fc-wrap">
+      <div class="fc-progress">Card ${fcIdx+1} / ${items.length}</div>
+      <div class="fc-card${fcAnswer?' answer':''}" onclick="flipCard()">
+        <div class="fc-content">${fcAnswer ? c.a : c.q}</div>
+      </div>
+      <div class="fc-hint">Click the card (or press Space) to ${fcAnswer?'see the question':'reveal the answer'} &middot; &larr; &rarr; to move</div>
+      <div class="fc-controls">
+        <button class="fc-btn" onclick="prevCard()">&larr; Prev</button>
+        <button class="fc-btn primary" onclick="flipCard()">Flip</button>
+        <button class="fc-btn" onclick="nextCard()">Next &rarr;</button>
+      </div>
+    </div>`;
+}
+function flipCard(){ fcAnswer=!fcAnswer; renderContent(); }
+function nextCard(){ const n=PM_DATA[topicIdx].flashcards.length; fcIdx=(fcIdx+1)%n; fcAnswer=false; renderContent(); }
+function prevCard(){ const n=PM_DATA[topicIdx].flashcards.length; fcIdx=(fcIdx-1+n)%n; fcAnswer=false; renderContent(); }
+
+/* ── MCQ ─────────────────────────────────────────────────────────────────── */
+function mcqKey(qi){ return 't-'+topicIdx+'-'+qi; }
+function renderMCQ(inner, items){
+  const answered = items.filter((_,qi)=>mcqState[mcqKey(qi)]!==undefined).length;
+  const correct  = items.filter((m,qi)=>mcqState[mcqKey(qi)]===m.correct).length;
+  inner.innerHTML = `
+    <div class="mcq-score">
+      <span>Answered ${answered} / ${items.length} &middot; correct ${correct}</span>
+      <button onclick="resetMCQ()">Reset this topic</button>
+    </div>` + items.map((m,qi)=>{
+      const chosen = mcqState[mcqKey(qi)];
+      const done = chosen!==undefined;
+      return `
+      <div class="mcq-block">
+        <div class="mcq-q">${qi+1}. ${m.q}</div>
+        ${m.options.map((opt,oi)=>{
+          let cls='mcq-opt';
+          if(done && oi===m.correct) cls+=' correct';
+          else if(done && oi===chosen) cls+=' wrong';
+          return `<button class="${cls}" ${done?'disabled':''} onclick="answerMCQ(${qi},${oi})">${String.fromCharCode(97+oi)}. ${opt}</button>`;
+        }).join('')}
+        <div class="mcq-rationale${done?' shown':''}">${mdInline(m.rationale)}</div>
+      </div>`;
+    }).join('');
+}
+function answerMCQ(qi, chosen){ mcqState[mcqKey(qi)] = chosen; renderContent(); }
+function resetMCQ(){
+  PM_DATA[topicIdx].mcq.forEach((_,qi)=>delete mcqState[mcqKey(qi)]);
+  renderContent();
+}
+
+/* ── open questions ──────────────────────────────────────────────────────────
+   No model answer: write an answer, copy it, paste it into chat for feedback. */
+function renderOpen(inner, items){
+  const saved = answers[topicIdx] || {};
+  inner.innerHTML = items.map((o,i)=>`
+    <div class="oq-block">
+      <div class="oq-q">${i+1}. ${o.q}</div>
+      <textarea class="oq-input" id="oq-${i}" placeholder="Write your answer here…"
+                oninput="saveAnswer(${i},this.value)">${esc(saved[i]||'')}</textarea>
+      <button class="oq-copy" onclick="copyAnswer(${i},this)">&#128203; Copy answer</button>
+    </div>`).join('');
+}
+function saveAnswer(i,val){ (answers[topicIdx] = answers[topicIdx] || {})[i] = val; }
+function copyAnswer(i, btn){
+  const t = PM_DATA[topicIdx];
+  copyText(`Public Management — ${t.title}\n\nQuestion: ${t.open[i].q}\n\nMy answer:\n${document.getElementById('oq-'+i).value}`, btn, '\u{1F4CB} Copy answer');
+}
+
+/* ── pooled views ────────────────────────────────────────────────────────── */
+function openPool(kind){
+  view='pool'; type=kind;
+  clearTopics(); clearFooter();
+  document.getElementById({flashcards:'pool-flashcards-nav',mcq:'pool-mcq-nav',open:'pool-open-nav'}[kind]).classList.add('active');
+  document.getElementById('tabs').style.display='none';
+  pool = [];
+  PM_DATA.forEach((t,ti)=>(t[kind]||[]).forEach((item,qi)=>pool.push({ti,qi,item})));
+  pool = shuffle(pool);
+  poolIdx = 0; fcAnswer = false;
+  syncTabs();
+  const label = {flashcards:'flashcards',mcq:'MCQ',open:'open questions'}[kind];
+  document.getElementById('topic-title').textContent = `\u{1F3B2} All ${label} — pooled (${pool.length})`;
+  if(kind==='flashcards') renderPoolFlashcard();
+  else if(kind==='mcq')   renderPoolMCQ();
+  else                    renderPoolOpen();
+}
+/* Blind pool card: the source topic stays hidden until the answer is revealed. */
+function renderPoolFlashcard(){
+  const inner = document.getElementById('inner');
+  const {ti,item} = pool[poolIdx];
+  inner.innerHTML = `
+    <div class="fc-wrap">
+      <div class="fc-progress">Card ${poolIdx+1} / ${pool.length} &middot; random order</div>
+      <div class="fc-card${fcAnswer?' answer':''}" onclick="flipPoolCard()">
+        <div class="fc-content">${fcAnswer ? item.a : item.q}</div>
+      </div>
+      ${fcAnswer ? `<div class="fc-topic-tag">${PM_DATA[ti].icon} ${PM_DATA[ti].title}</div>` : ''}
+      <div class="fc-hint">Click the card (or press Space) to ${fcAnswer?'see the question':'reveal the answer &amp; topic'}</div>
+      <div class="fc-controls">
+        <button class="fc-btn" onclick="prevPoolCard()">&larr; Prev</button>
+        <button class="fc-btn primary" onclick="flipPoolCard()">Flip</button>
+        <button class="fc-btn" onclick="nextPoolCard()">Next &rarr;</button>
+        <button class="fc-btn" onclick="reshufflePool()">&#127922; Shuffle</button>
+      </div>
+    </div>`;
+}
+function flipPoolCard(){ fcAnswer=!fcAnswer; renderPoolFlashcard(); }
+function nextPoolCard(){ poolIdx=(poolIdx+1)%pool.length; fcAnswer=false; renderPoolFlashcard(); }
+function prevPoolCard(){ poolIdx=(poolIdx-1+pool.length)%pool.length; fcAnswer=false; renderPoolFlashcard(); }
+function reshufflePool(){ pool=shuffle(pool); poolIdx=0; fcAnswer=false; renderPoolFlashcard(); }
+
+function renderPoolMCQ(){
+  const inner = document.getElementById('inner');
+  const answered = pool.filter((_,i)=>poolMcq[i]!==undefined).length;
+  const correct  = pool.filter((p,i)=>poolMcq[i]===p.item.correct).length;
+  inner.innerHTML = `
+    <div class="mcq-score">
+      <span>Answered ${answered} / ${pool.length} &middot; correct ${correct}</span>
+      <button onclick="openPool('mcq')">&#127922; Reshuffle &amp; reset</button>
+    </div>` + pool.map((p,i)=>{
+      const chosen = poolMcq[i], done = chosen!==undefined, m = p.item;
+      return `
+      <div class="mcq-block">
+        <div class="mcq-q">${i+1}. ${m.q}</div>
+        ${m.options.map((opt,oi)=>{
+          let cls='mcq-opt';
+          if(done && oi===m.correct) cls+=' correct';
+          else if(done && oi===chosen) cls+=' wrong';
+          return `<button class="${cls}" ${done?'disabled':''} onclick="answerPoolMCQ(${i},${oi})">${String.fromCharCode(97+oi)}. ${opt}</button>`;
+        }).join('')}
+        <div class="mcq-rationale${done?' shown':''}">
+          <div class="fc-topic-tag" style="margin-bottom:8px">${PM_DATA[p.ti].icon} ${PM_DATA[p.ti].title}</div>
+          ${mdInline(m.rationale)}
+        </div>
+      </div>`;
+    }).join('');
+}
+function answerPoolMCQ(i, chosen){ poolMcq[i]=chosen; renderPoolMCQ(); }
+
+function renderPoolOpen(){
+  document.getElementById('inner').innerHTML = pool.map((p,i)=>`
+    <div class="oq-block">
+      <div class="oq-q">${i+1}. ${p.item.q}</div>
+      <div class="fc-topic-tag" style="margin-bottom:10px">${PM_DATA[p.ti].icon} ${PM_DATA[p.ti].title}</div>
+      <textarea class="oq-input" id="pool-oq-${i}" placeholder="Write your answer here…"
+                oninput="poolAnswers[${i}]=this.value">${esc(poolAnswers[i]||'')}</textarea>
+      <button class="oq-copy" onclick="copyPoolAnswer(${i},this)">&#128203; Copy answer</button>
+    </div>`).join('');
+}
+function copyPoolAnswer(i, btn){
+  const p = pool[i];
+  copyText(`Public Management — ${PM_DATA[p.ti].title}\n\nQuestion: ${p.item.q}\n\nMy answer:\n${document.getElementById('pool-oq-'+i).value}`, btn, '\u{1F4CB} Copy answer');
+}
+
+/* ── mock exam: 3 open questions, one each from 3 distinct random topics ──── */
+function openMock(){
+  view='mock';
+  clearTopics(); clearFooter();
+  document.getElementById('mock-nav').classList.add('active');
+  document.getElementById('tabs').style.display='none';
+  drawMock();
+}
+function drawMock(){
+  const topics = shuffle(PM_DATA.map((_,i)=>i)).slice(0,3);
+  mock = topics.map(ti=>{
+    const qi = Math.floor(Math.random()*PM_DATA[ti].open.length);
+    return {ti, qi, q: PM_DATA[ti].open[qi].q};
+  });
+  for(const k in mockAnswers) delete mockAnswers[k];
+  document.getElementById('topic-title').textContent = '\u{1F4DD} Mock Exam — 3 open questions';
+  renderMock();
+}
+function renderMock(){
+  document.getElementById('inner').innerHTML = `
+    <div class="exam-intro">Exam simulation &middot; answer all three questions in your own words, then copy each (or all) for feedback. Each question is drawn from a different topic.</div>
+    ${mock.map((m,i)=>`
+      <div class="oq-block">
+        <div class="oq-q"><b>Question ${i+1}.</b> ${m.q}</div>
+        <textarea class="oq-input" id="mock-oq-${i}" placeholder="Write your answer here…"
+                  oninput="mockAnswers[${i}]=this.value">${esc(mockAnswers[i]||'')}</textarea>
+        <button class="oq-copy" onclick="copyMockAnswer(${i},this)">&#128203; Copy this answer</button>
+      </div>`).join('')}
+    <div class="exam-actions">
+      <button class="fc-btn primary" onclick="copyMockAll(this)">&#128203; Copy all 3 answers</button>
+      <button class="fc-btn" onclick="drawMock()">&#127922; Draw a new exam</button>
+    </div>`;
+}
+function copyMockAnswer(i, btn){
+  const m = mock[i];
+  copyText(`Public Management Mock — ${PM_DATA[m.ti].title}\n\nQuestion: ${m.q}\n\nMy answer:\n${document.getElementById('mock-oq-'+i).value}`, btn, '\u{1F4CB} Copy this answer');
+}
+function copyMockAll(btn){
+  const payload = 'PUBLIC MANAGEMENT MOCK EXAM — my answers\n\n' + mock.map((m,i)=>
+    `Question ${i+1} (${PM_DATA[m.ti].title}): ${m.q}\n\nMy answer:\n${document.getElementById('mock-oq-'+i).value}`
+  ).join('\n\n──────────\n\n');
+  copyText(payload, btn, '\u{1F4CB} Copy all 3 answers');
+}
+
+/* ── clipboard ───────────────────────────────────────────────────────────── */
+function copyText(text, btn, restore){
+  const label = restore || btn.textContent;
+  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent=label,1400); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>fallbackCopy(text,done));
+  } else fallbackCopy(text, done);
+}
+function fallbackCopy(text, done){
+  const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ── keyboard: only while a flashcard view is showing and nothing is focused ─ */
+document.addEventListener('keydown', e=>{
+  if(type!=='flashcards' || view==='mock') return;
+  const tag = (document.activeElement||{}).tagName;
+  if(tag==='TEXTAREA' || tag==='INPUT') return;
+  const inPool = view==='pool';
+  if(e.key===' '){ e.preventDefault(); inPool?flipPoolCard():flipCard(); }
+  else if(e.key==='ArrowRight'){ inPool?nextPoolCard():nextCard(); }
+  else if(e.key==='ArrowLeft'){ inPool?prevPoolCard():prevCard(); }
+});
+
+initNav();
+renderTopic();
+</script>
+</body>
+</html>
