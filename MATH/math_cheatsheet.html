@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Refresher Cheat Sheet</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  :root {
+    --bg:#F7F6F2; --surface:#FFFFFF; --border:#DDD9D0; --text:#1A1A2E; --muted:#75736B;
+    --accent:#1565C0;
+    --black:#1A1A1E; --orange:#E07B00; --red:#C62828; --blue:#1565C0;
+    --green:#2E7D32; --purple:#6A1B9A; --teal:#00838F;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#1A1A1E; --surface:#242428; --border:#3A3A40; --text:#ECECEC; --muted:#9A9A9A;
+      --accent:#5B9BE8;
+      --black:#ECECEC; --orange:#FFB74D; --red:#EF6C6C; --blue:#5B9BE8;
+      --green:#66BB6A; --purple:#BA68C8; --teal:#4DD0E1;
+    }
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:Georgia,serif; padding:26px 18px 50px; }
+
+  .board {
+    max-width:1700px; margin:0 auto; column-count:3; column-gap:22px;
+  }
+  @media (max-width:1300px){ .board{ column-count:2; } }
+  @media (max-width:760px){ .board{ column-count:1; } }
+
+  .card {
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    box-shadow:0 2px 6px rgba(0,0,0,.06);
+    padding:18px 20px 20px; margin-bottom:22px; break-inside:avoid;
+    border-left:5px solid var(--c-accent);
+  }
+  .card h2 {
+    display:flex; align-items:center; gap:9px;
+    font-size:16.5px; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--c-accent); margin-bottom:13px; padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+  }
+  .card h2 svg { width:22px; height:22px; flex-shrink:0; }
+  .block { margin-bottom:13px; }
+  .block:last-child { margin-bottom:0; }
+  .lbl { font-weight:bold; font-size:13px; margin-bottom:4px; }
+  .sub-lbl { font-size:11.5px; color:var(--muted); font-style:italic; margin-bottom:3px; }
+  .note { font-size:12px; color:var(--muted); margin-top:3px; line-height:1.5; }
+  .twocol { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .twocol .half { font-size:13.5px; }
+  .twocol .half .h { font-weight:bold; font-size:12px; margin-bottom:5px; color:var(--c-accent); }
+  hr.div { border:none; border-top:1px dashed var(--border); margin:12px 0; }
+
+  .eq-block { background:color-mix(in srgb, var(--c-accent) 8%, transparent); border-radius:5px; padding:9px 12px; margin:8px 0; }
+  .eq-stack .eq-block { margin:10px 0; }
+  .katex { font-size:1.04em; }
+  .katex-display { overflow-x:auto; overflow-y:hidden; max-width:100%; padding:3px 0; margin:0.5em 0; }
+  .katex-display > .katex { white-space:nowrap; }
+  .card, .twocol .half { min-width:0; overflow-wrap:break-word; }
+  .tbl { width:100%; border-collapse:collapse; font-size:12.5px; margin:6px 0; }
+  .tbl th, .tbl td { border-bottom:1px solid var(--border); padding:4px 6px; text-align:left; }
+  .tbl th { font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:bold; }
+  .fullscreen-btn {
+    position:fixed; top:14px; right:16px; z-index:999;
+    background:var(--surface); border:1.3px solid var(--accent); color:var(--accent);
+    font-family:Georgia,serif; font-size:12.5px; font-weight:bold;
+    padding:7px 13px; border-radius:20px; text-decoration:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.12); letter-spacing:.02em;
+    transition:transform .15s ease;
+  }
+  .fullscreen-btn:hover { transform:translateY(-1px); }
+</style>
+</head>
+<body>
+
+<a class="fullscreen-btn" href="https://tristomefisto.github.io/Uni_repository/MATH/math_cheatsheet.html" target="_blank" rel="noopener">⤢ Open fullscreen</a>
+
+<div class="board">
+
+  <!-- 1. Limits & asymptotes -->
+  <div class="card" style="--c-accent:var(--black)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20 C 10 20, 12 5, 20 4" stroke-linecap="round"/><path d="M20 4 L20 21" stroke-dasharray="2 2"/></svg> Limits &amp; Asymptotes</h2>
+    <div class="block">
+      $$\lim_{x \to x_0} f(x) = L \qquad \lim_{x \to \pm\infty} f(x) = L$$
+      <div class="twocol">
+        <div class="half">
+          <div class="h">Vertical</div>
+          $\lim_{x\to x_0} f(x) = \pm\infty$ at $x = x_0$
+        </div>
+        <div class="half">
+          <div class="h">Horizontal</div>
+          $\lim_{x\to\infty} f(x) = L$ at $y = L$
+        </div>
+      </div>
+      <hr class="div">
+      <div class="sub-lbl">Oblique asymptote $y = mx + q$</div>
+      <div class="eq-block">
+        $$m = \lim_{x\to\infty}\frac{f(x)}{x}, \qquad q = \lim_{x\to\infty}\,[\,f(x) - mx\,]$$
+      </div>
+      <div class="note">Exists only when $m$ is finite and non zero. Ex. $AC(q)=(F+cq)/q$ diverges as $q\to 0^+$ and tends to $c$ as $q\to\infty$: average cost falls to marginal cost.</div>
+    </div>
+  </div>
+
+  <!-- 2. Indeterminate forms & de l'Hôpital -->
+  <div class="card" style="--c-accent:var(--black)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14" stroke-linecap="round"/><circle cx="12" cy="6.5" r="2.6"/><circle cx="12" cy="17.5" r="2.6"/></svg> Indeterminate Forms</h2>
+    <div class="block">
+      $$\frac{0}{0}, \quad \frac{\infty}{\infty}, \quad 0\cdot\infty, \quad \infty - \infty, \quad 1^{\infty}, \quad 0^0, \quad \infty^0$$
+      <hr class="div">
+      <div class="lbl">De l'Hôpital</div>
+      <div class="eq-block">
+        $$\lim_{x\to x_0}\frac{f(x)}{g(x)} = \lim_{x\to x_0}\frac{f'(x)}{g'(x)}$$
+      </div>
+      <div class="note">Only for $0/0$ and $\infty/\infty$, and only on a ratio: rewrite $0\cdot\infty$ and $\infty-\infty$ as a fraction first. Can be applied again if the new ratio is still indeterminate.</div>
+    </div>
+  </div>
+
+  <!-- 3. Taylor approximation -->
+  <div class="card" style="--c-accent:var(--black)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17 C 8 17, 10 6, 21 6" stroke-linecap="round"/><path d="M4 14 L20 9" stroke-linecap="round" stroke-dasharray="3 2"/></svg> Taylor Approximation</h2>
+    <div class="block">
+      $$f(x) \simeq f(x_0) + f'(x_0)(x - x_0) + \frac{f''(x_0)}{2}(x-x_0)^2 + \dots$$
+      <div class="sub-lbl">First order (the "small change" argument)</div>
+      <div class="eq-block">
+        $$f(x) \simeq f(x_0) + f'(x_0)(x-x_0)$$
+      </div>
+      <hr class="div">
+      <div class="sub-lbl">Maclaurin, around $x_0 = 0$</div>
+      $$\ln(1+x) \simeq x, \qquad e^x \simeq 1 + x$$
+      <div class="note">The second order term carries the sign of $f''$, which is why a welfare loss is quadratic. The Harberger triangle is exactly this: $EB \simeq \tfrac12\eta t^2$, so doubling the tax quadruples the loss.</div>
+    </div>
+  </div>
+
+  <!-- 4. Logs, growth and elasticity -->
+  <div class="card" style="--c-accent:var(--black)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19 C 6 19, 8 5, 20 5" stroke-linecap="round"/></svg> Logs, Growth &amp; Elasticity</h2>
+    <div class="block">
+      $$\ln y_t - \ln y_{t-1} \simeq \frac{y_t - y_{t-1}}{y_{t-1}}$$
+      <div class="eq-block">
+        $$\varepsilon_{y,x} = \frac{d\ln y}{d\ln x} = \frac{dy}{dx}\cdot\frac{x}{y}$$
+      </div>
+      <table class="tbl">
+        <tr><th>Model</th><th>$\beta_1$ reads as</th></tr>
+        <tr><td>$y = \beta_0 + \beta_1 x$</td><td>unit change in $y$ per unit of $x$</td></tr>
+        <tr><td>$\ln y = \beta_0 + \beta_1 x$</td><td>semi-elasticity: $100\beta_1$ % per unit</td></tr>
+        <tr><td>$y = \beta_0 + \beta_1 \ln x$</td><td>$\beta_1/100$ per 1% of $x$</td></tr>
+        <tr><td>$\ln y = \beta_0 + \beta_1 \ln x$</td><td>elasticity: % per %</td></tr>
+      </table>
+      <div class="note">The semi-elasticity reading is an approximation; the exact version is $100\,(e^{\beta_1}-1)$.</div>
+    </div>
+  </div>
+
+  <!-- 5. Derivative rules -->
+  <div class="card" style="--c-accent:var(--orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19 C 9 19, 9 6, 15 6 C 19 6, 20 9, 21 11" stroke-linecap="round"/><path d="M7 17 L17 11" stroke-linecap="round" stroke-dasharray="3 2"/></svg> Derivative Rules</h2>
+    <div class="block">
+      <table class="tbl">
+        <tr><th>$f(x)$</th><th>$f'(x)$</th><th>$f(x)$</th><th>$f'(x)$</th></tr>
+        <tr><td>$k$</td><td>$0$</td><td>$\ln x$</td><td>$1/x$</td></tr>
+        <tr><td>$x^n$</td><td>$nx^{n-1}$</td><td>$\ln f(x)$</td><td>$f'/f$</td></tr>
+        <tr><td>$e^x$</td><td>$e^x$</td><td>$a^x$</td><td>$a^x\ln a$</td></tr>
+      </table>
+      <hr class="div">
+      $$(fg)' = f'g + fg' \qquad \left(\frac{f}{g}\right)' = \frac{f'g - fg'}{g^2}$$
+      <div class="eq-block">
+        $$[\,f(g(x))\,]' = f'(g(x))\;g'(x)$$
+      </div>
+      <div class="note">$f'&gt;0$ increasing, $f''&gt;0$ convex, $f'=0$ stationary, sign change in $f''$ at an inflection. In economics $f'$ is always the marginal quantity.</div>
+    </div>
+  </div>
+
+  <!-- 6. Gradient, Hessian, total differential -->
+  <div class="card" style="--c-accent:var(--orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 C 4 12, 12 4, 20 4" stroke-linecap="round"/><path d="M4 20 C 6 14, 14 6, 20 9" stroke-linecap="round" stroke-dasharray="2 2"/></svg> Gradient &amp; Hessian</h2>
+    <div class="block">
+      $$\nabla f = (\,f_x,\ f_y\,) \qquad H = \begin{pmatrix} f_{xx} & f_{xy} \\ f_{yx} & f_{yy}\end{pmatrix}$$
+      <div class="note">$f_{xy} = f_{yx}$ when the second partials are continuous (Schwarz), so $H$ is symmetric.</div>
+      <hr class="div">
+      <div class="lbl">Total differential</div>
+      $$df = f_x\,dx + f_y\,dy$$
+      <div class="sub-lbl">Set $df = 0$ to stay on a level curve</div>
+      <div class="eq-block">
+        $$\left.\frac{dy}{dx}\right|_{f=\bar f} = -\frac{f_x}{f_y}$$
+      </div>
+      <div class="note">This is the MRS on an indifference curve, and the technical rate of substitution on an isoquant.</div>
+    </div>
+  </div>
+
+  <!-- 7. Comparative statics -->
+  <div class="card" style="--c-accent:var(--orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16 L20 8" stroke-linecap="round"/><path d="M4 8 L20 16" stroke-linecap="round"/><path d="M4 11 L20 3" stroke-linecap="round" stroke-dasharray="3 2"/></svg> Comparative Statics</h2>
+    <div class="block">
+      <div class="sub-lbl">Equilibrium with a tax $t$ on buyers: $S(p) = D(p+t)$</div>
+      $$S'\,dp = D'\,dp + D'\,dt$$
+      <div class="eq-block">
+        $$\frac{dp}{dt} = \frac{D'}{S' - D'} = \frac{\varepsilon_D}{\varepsilon_S - \varepsilon_D}$$
+        $$\frac{dq}{dt} = \frac{dp}{dt} + 1 = \frac{\varepsilon_S}{\varepsilon_S - \varepsilon_D}$$
+      </div>
+      <div class="note">The more inelastic side bears more of the tax. $\varepsilon_D = 0$ gives $dp/dt = 0$ and buyers pay all of it.</div>
+      <hr class="div">
+      <div class="lbl">Implicit function theorem</div>
+      <div class="sub-lbl">$F(x,\alpha) = 0$ with $F_x \neq 0$</div>
+      $$\frac{dx}{d\alpha} = -\frac{F_\alpha}{F_x}$$
+      <div class="note">Signs the response without ever solving for $x$. The condition $F_x \neq 0$ is what makes the equilibrium locally unique.</div>
+    </div>
+  </div>
+
+  <!-- 8. Envelope theorem & Euler -->
+  <div class="card" style="--c-accent:var(--orange)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18 C 8 6, 16 6, 21 18" stroke-linecap="round"/><path d="M3 15 C 9 15, 15 15, 21 15" stroke-linecap="round" stroke-dasharray="2 2"/></svg> Envelope &amp; Euler</h2>
+    <div class="block">
+      <div class="sub-lbl">Value function $V(\alpha) = f(x^*(\alpha), \alpha)$</div>
+      <div class="eq-block">
+        $$\frac{dV}{d\alpha} = \frac{\partial f(x^*(\alpha),\alpha)}{\partial \alpha}$$
+      </div>
+      <div class="note">The indirect effect through $x^*$ vanishes, because the FOC is zero at the optimum. This is why Shephard's lemma works: $h_i(p,u) = \partial e(p,u)/\partial p_i$, with no need to re-solve.</div>
+      <hr class="div">
+      <div class="lbl">Homogeneity of degree $k$</div>
+      $$f(\lambda x, \lambda y) = \lambda^k f(x,y)$$
+      <div class="eq-block">
+        $$x f_x + y f_y = k\,f(x,y)$$
+      </div>
+      <div class="note">$k=1$ constant returns. Cobb-Douglas $Ax^\alpha y^\beta$ is homogeneous of degree $\alpha+\beta$. With $k=1$, paying each factor its marginal product exhausts the product.</div>
+    </div>
+  </div>
+
+  <!-- 9. Unconstrained optimum -->
+  <div class="card" style="--c-accent:var(--red)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18 C 8 18, 9 6, 12 6 C 15 6, 16 18, 21 18" stroke-linecap="round"/><path d="M6 6 L18 6" stroke-dasharray="2 2"/></svg> Unconstrained Optimum</h2>
+    <div class="block">
+      $$f_x(x^*,y^*) = 0, \qquad f_y(x^*,y^*) = 0$$
+      <div class="sub-lbl">Second order test, $|H| = f_{xx}f_{yy} - f_{xy}^2$</div>
+      <table class="tbl">
+        <tr><th></th><th>Condition</th><th>Point</th></tr>
+        <tr><td>$|H| &gt; 0$</td><td>$f_{xx} &lt; 0$</td><td>maximum</td></tr>
+        <tr><td>$|H| &gt; 0$</td><td>$f_{xx} &gt; 0$</td><td>minimum</td></tr>
+        <tr><td>$|H| &lt; 0$</td><td></td><td>saddle</td></tr>
+        <tr><td>$|H| = 0$</td><td></td><td>test fails</td></tr>
+      </table>
+      <div class="note">A globally concave objective makes any stationary point the global max, so the check can be skipped. Ex. $\pi = 48Q - (100+8Q+4Q^2)$ gives $\pi' = 40-8Q = 0$, $Q^*=5$, $\pi''=-8&lt;0$.</div>
+    </div>
+  </div>
+
+  <!-- 10. Lagrange -->
+  <div class="card" style="--c-accent:var(--red)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21 L21 3" stroke-linecap="round"/><path d="M4 16 C 10 16, 16 10, 16 4" stroke-linecap="round"/><circle cx="10.6" cy="13.4" r="1.5" fill="currentColor" stroke="none"/></svg> Lagrange</h2>
+    <div class="block">
+      <div class="sub-lbl">$\max f(x,y)$ subject to $g(x,y) = c$</div>
+      <div class="eq-block">
+        $$\mathcal{L}(x,y,\lambda) = f(x,y) + \lambda\,[\,c - g(x,y)\,]$$
+      </div>
+      $$\mathcal{L}_x = f_x - \lambda g_x = 0$$
+      $$\mathcal{L}_y = f_y - \lambda g_y = 0$$
+      $$\mathcal{L}_\lambda = c - g(x,y) = 0$$
+      <div class="sub-lbl">Dividing the first two gives the tangency condition</div>
+      <div class="eq-block">
+        $$\frac{f_x}{f_y} = \frac{g_x}{g_y} \qquad (\,MRS = \text{price ratio}\,)$$
+      </div>
+      <hr class="div">
+      <div class="lbl">Worked: $\max xy$ s.t. $px+qy=m$</div>
+      $$y = \lambda p, \quad x = \lambda q \;\Rightarrow\; 2\lambda pq = m$$
+      $$\lambda = \frac{m}{2pq}, \qquad x^* = \frac{m}{2p}, \qquad y^* = \frac{m}{2q}$$
+      <div class="note">Half the budget on each good. In general $\max x^\alpha y^\beta$ gives $x^* = \frac{\alpha}{\alpha+\beta}\frac{m}{p}$.</div>
+    </div>
+  </div>
+
+  <!-- 11. Bordered Hessian & shadow price -->
+  <div class="card" style="--c-accent:var(--red)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9 H20 M9 4 V20" /></svg> Bordered Hessian &amp; $\lambda$</h2>
+    <div class="block">
+      $$\bar H = \begin{pmatrix} 0 & g_x & g_y \\ g_x & \mathcal{L}_{xx} & \mathcal{L}_{xy} \\ g_y & \mathcal{L}_{yx} & \mathcal{L}_{yy} \end{pmatrix}$$
+      <div class="note">With one constraint and two variables: $|\bar H| &gt; 0$ maximum, $|\bar H| &lt; 0$ minimum. The sign convention is the opposite of the free case, which is the usual place to slip.</div>
+      <hr class="div">
+      <div class="lbl">The multiplier is a shadow price</div>
+      <div class="eq-block">
+        $$\lambda = \frac{dV(c)}{dc}$$
+      </div>
+      <div class="note">Marginal utility of income in consumer theory, marginal cost in cost minimisation. In the Ramsey problem $\lambda$ sits on the consumer budget and $\alpha$ on the revenue constraint, with $\alpha-\lambda&gt;0$ the marginal cost of public funds. Units are always objective per unit of constraint.</div>
+    </div>
+  </div>
+
+  <!-- 12. Corner solutions & KKT -->
+  <div class="card" style="--c-accent:var(--red)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4 V20 H20" stroke-linecap="round"/><path d="M4 16 L16 4" stroke-linecap="round"/><circle cx="4" cy="16" r="2" fill="currentColor" stroke="none"/></svg> Corner Solutions</h2>
+    <div class="block">
+      <div class="sub-lbl">With $g(x,y) \le c$, the optimum may sit on the boundary</div>
+      <div class="twocol">
+        <div class="half">
+          <div class="h">Binding</div>
+          $g = c$ and $\lambda &gt; 0$
+        </div>
+        <div class="half">
+          <div class="h">Slack</div>
+          $g &lt; c$ and $\lambda = 0$
+        </div>
+      </div>
+      <div class="eq-block">
+        $$\lambda\,[\,c - g(x,y)\,] = 0$$
+      </div>
+      <div class="note">Complementary slackness: one of the two factors is always zero. With perfect substitutes ($U = ax+by$) the MRS is constant, so tangency never holds and the whole budget goes to the good with the higher $a/p$.</div>
+    </div>
+  </div>
+
+  <!-- 13. Integral rules & FTC -->
+  <div class="card" style="--c-accent:var(--green)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 20 C 8 13, 8 4, 13 4 C 15 4, 15.5 5.5, 15.5 6.5" stroke-linecap="round"/><path d="M8 20 C 8 20, 8.5 21.5, 10.5 21.5" stroke-linecap="round" transform="translate(0,-2)"/></svg> Integral Rules &amp; FTC</h2>
+    <div class="block">
+      $$\int f(x)\,dx = F(x) + C \quad\text{with}\quad F'(x) = f(x)$$
+      <table class="tbl">
+        <tr><th>$f(x)$</th><th>$\int f(x)\,dx$</th></tr>
+        <tr><td>$x^n,\ n\neq -1$</td><td>$\dfrac{x^{n+1}}{n+1} + C$</td></tr>
+        <tr><td>$1/x$</td><td>$\ln|x| + C$</td></tr>
+        <tr><td>$e^{kx}$</td><td>$\dfrac{1}{k}e^{kx} + C$</td></tr>
+      </table>
+      <div class="eq-block">
+        $$\int_a^b f(x)\,dx = F(b) - F(a)$$
+      </div>
+      <div class="note">Reversing the limits flips the sign, and area below the axis counts as negative, so a net area is not a total area.</div>
+    </div>
+  </div>
+
+  <!-- 14. Substitution & by parts -->
+  <div class="card" style="--c-accent:var(--green)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8 H16 A4 4 0 0 1 16 16 H4" stroke-linecap="round"/><path d="M7 5 L4 8 L7 11" stroke-linecap="round" stroke-linejoin="round"/></svg> Substitution &amp; By Parts</h2>
+    <div class="block">
+      <div class="sub-lbl">Substitution, the chain rule read backwards: $u = g(x)$</div>
+      $$\int f(g(x))\,g'(x)\,dx = \int f(u)\,du$$
+      <hr class="div">
+      <div class="sub-lbl">By parts, from the product rule</div>
+      <div class="eq-block">
+        $$\int f\,g'\,dx = fg - \int f'\,g\,dx$$
+      </div>
+      <div class="note">Take $f$ as the factor that simplifies when differentiated (a polynomial, a log) and $g'$ as the one that is easy to integrate.</div>
+      <hr class="div">
+      <div class="lbl">Improper integrals</div>
+      $$\int_a^{\infty} f(x)\,dx = \lim_{b\to\infty} \int_a^b f(x)\,dx$$
+      <div class="note">The case that matters: $\int_0^\infty e^{-rt}dt = 1/r$, the continuous perpetuity.</div>
+    </div>
+  </div>
+
+  <!-- 15. Surplus, CV/EV, excess burden -->
+  <div class="card" style="--c-accent:var(--green)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20 H21" stroke-linecap="round"/><path d="M4 4 L18 18" stroke-linecap="round"/><path d="M4 4 L4 20 L18 18 Z" fill="currentColor" fill-opacity=".13" stroke="none"/></svg> Surplus &amp; Welfare Areas</h2>
+    <div class="block">
+      <div class="eq-block">
+        $$CS = \int_0^{x^\circ} p(t)\,dt - p\,x^\circ$$
+      </div>
+      <div class="note">Area under inverse demand minus what is paid. With quasilinear utility the integral is exactly $u(x^\circ)-u(0)$, since $p(t) = u'(t)$ along the demand curve.</div>
+      <div class="sub-lbl">Linear demand $P = a - bq$ at price $p$</div>
+      $$q^* = \frac{a-p}{b}, \qquad CS = \tfrac{1}{2}(a-p)\,q^* = \tfrac{1}{2}b\,(q^*)^2$$
+      <hr class="div">
+      <div class="lbl">Exact measures, on Hicksian demand</div>
+      <div class="twocol">
+        <div class="half">
+          <div class="h">CV</div>
+          $\int_{p^0}^{p^1} h(p;u^0)\,dp$
+        </div>
+        <div class="half">
+          <div class="h">EV</div>
+          $\int_{p^0}^{p^1} h(p;u^1)\,dp$
+        </div>
+      </div>
+      <div class="note">Ordering for a normal good and a price rise: $EV &lt; \Delta CS &lt; CV$.</div>
+      <hr class="div">
+      <div class="lbl">Excess burden (Harberger)</div>
+      <div class="eq-block">
+        $$EB(t) \simeq \frac{1}{2}\,\frac{x}{p}\,\frac{|\varepsilon_D|\,\varepsilon_S}{\varepsilon_S + |\varepsilon_D|}\,t^2$$
+      </div>
+    </div>
+  </div>
+
+  <!-- 16. Densities, expectations, discounting -->
+  <div class="card" style="--c-accent:var(--green)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19 C 7 19, 8 6, 12 6 C 16 6, 17 19, 21 19" stroke-linecap="round"/><path d="M3 19 H21" stroke-linecap="round"/></svg> Integrals in Probability &amp; Time</h2>
+    <div class="block">
+      $$F(x) = \int_{-\infty}^{x} f(u)\,du \qquad f(x) = F'(x)$$
+      <div class="eq-block">
+        $$E[X] = \int_{-\infty}^{\infty} x\,f(x)\,dx$$
+        $$\operatorname{Var}(X) = \int_{-\infty}^{\infty} (x-\mu)^2 f(x)\,dx$$
+      </div>
+      <div class="note">$P(a \le X \le b) = F(b) - F(a)$, so probabilities are areas. The probit link is this object: $\Phi(z) = \int_{-\infty}^z \frac{1}{\sqrt{2\pi}}e^{-u^2/2}du$.</div>
+      <hr class="div">
+      <div class="sub-lbl">Lorenz curve</div>
+      $$L(p) = \frac{1}{\mu_Y}\int_0^{\hat y} y\,f_Y(y)\,dy$$
+      <div class="sub-lbl">Continuous discounting</div>
+      $$PV = \int_0^{T} B(t)\,e^{-rt}\,dt$$
+      <div class="note">Welfare area, probability area, discounted flow: one operation in three disguises.</div>
+    </div>
+  </div>
+
+  <!-- 17. Matrix operations -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="16" rx="1.5"/><rect x="14" y="4" width="7" height="16" rx="1.5"/></svg> Matrix Operations</h2>
+    <div class="block">
+      $$(AB)_{ij} = \sum_{k} a_{ik}\,b_{kj}$$
+      <div class="note">Row by column, so $AB$ exists only when the columns of $A$ match the rows of $B$.</div>
+      <div class="eq-block">
+        $$(AB)' = B'A' \qquad AB \neq BA$$
+      </div>
+      <div class="note">The product is associative and distributive but not commutative. $A'A$ is always square and symmetric, whatever the shape of $A$, which is what makes it usable in regression.</div>
+    </div>
+  </div>
+
+  <!-- 18. Determinant, inverse, rank -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M7 7 L17 17" stroke-linecap="round"/><path d="M17 7 L7 17" stroke-linecap="round" stroke-dasharray="2 2"/></svg> Determinant &amp; Inverse</h2>
+    <div class="block">
+      $$\det A = a_{11}a_{22} - a_{12}a_{21}$$
+      <div class="note">Order three by Sarrus, beyond that Laplace along a row or column.</div>
+      <div class="eq-block">
+        $$A^{-1} = \frac{1}{\det A}\,\operatorname{adj}(A) \qquad (\det A \neq 0)$$
+      </div>
+      <hr class="div">
+      <div class="lbl">Linear systems $Ax = b$</div>
+      $$x = A^{-1}b \qquad\qquad x_i = \frac{\det A_i}{\det A}$$
+      <div class="note">Cramer's rule on the right: $A_i$ is $A$ with column $i$ replaced by $b$. Rank is the number of independent rows, and full rank on a square matrix is the same statement as $\det A \neq 0$.</div>
+    </div>
+  </div>
+
+  <!-- 19. Quadratic forms & definiteness -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 C 8 20, 9 5, 12 5 C 15 5, 16 20, 20 20" stroke-linecap="round"/><path d="M4 4 H20" stroke-dasharray="2 2"/></svg> Quadratic Forms</h2>
+    <div class="block">
+      $$Q(x) = x'Ax = \sum_i \sum_j a_{ij}\,x_i x_j$$
+      <div class="sub-lbl">Test on the leading principal minors $D_1, D_2, \dots, D_n$</div>
+      <table class="tbl">
+        <tr><th></th><th>Minors</th></tr>
+        <tr><td>positive definite</td><td>all $D_k &gt; 0$</td></tr>
+        <tr><td>negative definite</td><td>alternate from negative: $D_1&lt;0$, $D_2&gt;0$, …</td></tr>
+        <tr><td>indefinite</td><td>neither pattern (the saddle case)</td></tr>
+      </table>
+      <div class="note">This is the Hessian test written properly: the two variable rule is the $n=2$ case of the alternating pattern, and a concave objective is one whose Hessian is negative definite everywhere.</div>
+    </div>
+  </div>
+
+  <!-- 20. OLS in matrix form -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20 H21" stroke-linecap="round"/><path d="M4 17 L20 7" stroke-linecap="round"/><circle cx="8" cy="13" r="1.3" fill="currentColor" stroke="none"/><circle cx="13" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="17" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg> OLS in Matrix Form</h2>
+    <div class="block">
+      $$y = X\beta + u$$
+      <div class="sub-lbl">Minimising $u'u$ gives the normal equations $X'X\hat\beta = X'y$</div>
+      <div class="eq-block">
+        $$\hat\beta = (X'X)^{-1}X'y$$
+        $$\operatorname{Var}(\hat\beta \mid X) = \sigma^2 (X'X)^{-1}$$
+      </div>
+      <hr class="div">
+      <div class="lbl">The projection geometry</div>
+      $$P = X(X'X)^{-1}X', \qquad M = I - P$$
+      $$\hat y = Py, \qquad e = My, \qquad X'e = 0$$
+      <div class="note">$P$ and $M$ are symmetric and idempotent, which is the algebra behind $SST = SSE + SSR$. Residuals are orthogonal to every regressor.</div>
+      <hr class="div">
+      <div class="lbl">Multicollinearity</div>
+      <div class="note">Perfect: $X$ loses full column rank, $\det(X'X)=0$, the inverse does not exist and $\hat\beta$ is undefined. Near: the determinant is close to zero, standard errors blow up while the fit stays good.</div>
+    </div>
+  </div>
+
+  <!-- 21. Expectation & variance algebra -->
+  <div class="card" style="--c-accent:var(--purple)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 5 H18 L11 12 L18 19 H6" stroke-linecap="round" stroke-linejoin="round"/></svg> Expectation &amp; Variance</h2>
+    <div class="block">
+      <div class="eq-block">
+        $$E[aX + bY + c] = a\,E[X] + b\,E[Y] + c$$
+      </div>
+      <div class="note">Linear without conditions. Variance is not, because it is quadratic:</div>
+      $$\operatorname{Var}(aX+b) = a^2\operatorname{Var}(X)$$
+      $$\operatorname{Var}(X+Y) = \operatorname{Var}(X) + \operatorname{Var}(Y) + 2\operatorname{Cov}(X,Y)$$
+      <hr class="div">
+      $$\operatorname{Cov}(X,Y) = E[XY] - E[X]E[Y]$$
+      $$\rho = \frac{\operatorname{Cov}(X,Y)}{\sigma_X\,\sigma_Y} \in [-1,1]$$
+      <div class="note">Independence implies zero covariance, but zero covariance does not imply independence. $\operatorname{Var}(X) = E[X^2]-(E[X])^2$ is the same trick with $Y=X$.</div>
+      <div class="sub-lbl">Fair insurance premium</div>
+      $$p(I-\pi) = (1-p)\pi \;\Rightarrow\; \pi = pI$$
+    </div>
+  </div>
+
+  <!-- 22. Conditional expectation & identification -->
+  <div class="card" style="--c-accent:var(--purple)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg> Conditional Expectation</h2>
+    <div class="block">
+      <div class="eq-block">
+        $$E[Y] = E\big[\,E[Y \mid X]\,\big]$$
+      </div>
+      <div class="note">The law of iterated expectations. $E[Y \mid X]$ is itself a random variable, since it varies with $X$.</div>
+      <hr class="div">
+      <div class="lbl">The naive comparison, decomposed</div>
+      $$E[Y_i \mid T_i=1] - E[Y_i \mid T_i=0]$$
+      <div class="eq-stack">
+        <div class="eq-block">
+          $$= \underbrace{E[Y_{1i}-Y_{0i}\mid T_i=1]}_{ATT}$$
+          $$+ \underbrace{E[Y_{0i}\mid T_i=1]-E[Y_{0i}\mid T_i=0]}_{\text{selection bias}}$$
+        </div>
+      </div>
+      <div class="note">The second term is zero exactly when treatment is independent of potential outcomes, which is what randomisation buys. $E[u \mid X]=0$ is the exogeneity assumption, stronger than $\operatorname{Cov}(X,u)=0$.</div>
+      <div class="sub-lbl">IV as a ratio of covariances</div>
+      $$\hat\beta_{IV} = \frac{\operatorname{Cov}(Y,Z)}{\operatorname{Cov}(S,Z)}$$
+    </div>
+  </div>
+
+  <!-- 23. Distributions -->
+  <div class="card" style="--c-accent:var(--purple)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19 H21" stroke-linecap="round"/><rect x="5" y="13" width="3" height="6"/><rect x="9.5" y="8" width="3" height="11"/><rect x="14" y="11" width="3" height="8"/></svg> Distributions</h2>
+    <div class="block">
+      <table class="tbl">
+        <tr><th>Distribution</th><th>$E[X]$</th><th>$\operatorname{Var}(X)$</th></tr>
+        <tr><td>Bernoulli($p$)</td><td>$p$</td><td>$p(1-p)$</td></tr>
+        <tr><td>Binomial($n,p$)</td><td>$np$</td><td>$np(1-p)$</td></tr>
+        <tr><td>Poisson($\lambda$)</td><td>$\lambda$</td><td>$\lambda$</td></tr>
+        <tr><td>Normal($\mu,\sigma^2$)</td><td>$\mu$</td><td>$\sigma^2$</td></tr>
+        <tr><td>$\chi^2_{df}$</td><td>$df$</td><td>$2\,df$</td></tr>
+        <tr><td>$t_{df}$</td><td>$0$</td><td>$df/(df-2)$</td></tr>
+      </table>
+      <div class="eq-block">
+        $$Z = \frac{X-\mu}{\sigma}$$
+      </div>
+      <div class="note">The normal is closed under linear combinations, which is why it survives averaging. The $t$ converges to it as $df$ grows, so the distinction only matters in small samples.</div>
+    </div>
+  </div>
+
+  <!-- 24. LLN, CLT, estimators -->
+  <div class="card" style="--c-accent:var(--purple)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18 C 8 18, 8 7, 13 7 C 18 7, 18 11, 21 11" stroke-linecap="round"/><path d="M13 7 V18" stroke-dasharray="2 2"/></svg> LLN, CLT &amp; Estimators</h2>
+    <div class="block">
+      $$E[\bar X] = \mu, \qquad \operatorname{Var}(\bar X) = \frac{\sigma^2}{n}$$
+      <div class="eq-block">
+        $$\frac{\bar X - \mu}{\sigma/\sqrt{n}} \ \xrightarrow{d}\ N(0,1)$$
+      </div>
+      <div class="note">The CLT holds whatever the parent distribution, which is what makes inference possible without knowing it. The $\sqrt{n}$ is why halving a standard error costs four times the sample, and why a power calculation is a statement about $n$.</div>
+      <hr class="div">
+      <div class="lbl">Three properties</div>
+      <table class="tbl">
+        <tr><td>unbiased</td><td>$E[\hat\theta] = \theta$</td></tr>
+        <tr><td>consistent</td><td>$\operatorname{plim}\hat\theta = \theta$</td></tr>
+        <tr><td>efficient</td><td>smallest variance in its class</td></tr>
+      </table>
+      <div class="eq-block">
+        $$MSE = \text{bias}^2 + \text{variance}$$
+      </div>
+      <div class="note">Independent properties: an estimator can be biased but consistent, or unbiased but inconsistent. The MSE split is what any shrinkage method trades on.</div>
+    </div>
+  </div>
+
+  <!-- 25. Sequences & geometric series -->
+  <div class="card" style="--c-accent:var(--teal)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="18" r="1.6" fill="currentColor" stroke="none"/><circle cx="10" cy="14" r="1.6" fill="currentColor" stroke="none"/><circle cx="15" cy="11" r="1.6" fill="currentColor" stroke="none"/><circle cx="20" cy="9.5" r="1.6" fill="currentColor" stroke="none"/><path d="M3 21 C 8 21, 16 12, 22 7" stroke-dasharray="2 2"/></svg> Sequences &amp; Series</h2>
+    <div class="block">
+      <div class="twocol">
+        <div class="half">
+          <div class="h">Arithmetic</div>
+          $a_n = a_1 + (n-1)d$
+        </div>
+        <div class="half">
+          <div class="h">Geometric</div>
+          $a_n = a_1\,q^{\,n-1}$
+        </div>
+      </div>
+      <div class="sub-lbl">Partial sums</div>
+      $$\sum_{k=1}^{n} a_k = n\,\frac{a_1+a_n}{2}$$
+      $$\sum_{k=1}^{n} a_k = a_1\,\frac{1-q^{\,n}}{1-q}$$
+      <div class="eq-block">
+        $$\sum_{k=0}^{\infty} q^{\,k} = \frac{1}{1-q} \qquad (\,|q| &lt; 1\,)$$
+      </div>
+      <div class="note">One result behind the perpetuity, the macro multiplier, and the repeated game payoff. Divergence for $|q|\ge 1$ is the mathematical content of a discount factor having to be below one.</div>
+      <div class="sub-lbl">Grim trigger collusion</div>
+      $$\frac{\pi^m}{n(1-\delta)} \ge \pi^m \;\Longleftrightarrow\; \delta \ge 1 - \frac{1}{n}$$
+    </div>
+  </div>
+
+  <!-- 26. Discounting & annuities -->
+  <div class="card" style="--c-accent:var(--teal)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8.5"/><path d="M12 7 V12 L15.5 14" stroke-linecap="round"/></svg> Discounting &amp; Annuities</h2>
+    <div class="block">
+      $$M = C\,(1+i)^n \qquad C = \frac{M}{(1+i)^n} = M\,v^{\,n}$$
+      <div class="note">$v = 1/(1+i)$ is the discount factor. Compounding $m$ times a year gives $(1+j/m)^{mn}$.</div>
+      <div class="eq-block">
+        $$M = C\,e^{\,\delta t}, \qquad \delta = \ln(1+i)$$
+      </div>
+      <hr class="div">
+      <div class="lbl">Annuity and perpetuity</div>
+      $$a_{\overline{n}|i} = \frac{1-(1+i)^{-n}}{i}$$
+      <div class="twocol">
+        <div class="half">
+          <div class="h">Perpetuity</div>
+          $R/i$
+        </div>
+        <div class="half">
+          <div class="h">Growing (Gordon)</div>
+          $R/(i-g)$, $g &lt; i$
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 27. NPV, IRR & Bellman -->
+  <div class="card" style="--c-accent:var(--teal)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 20 H21" stroke-linecap="round"/><path d="M5 20 V13 M10 20 V8 M15 20 V15 M20 20 V5" stroke-linecap="round"/></svg> NPV, IRR &amp; Bellman</h2>
+    <div class="block">
+      <div class="eq-block">
+        $$NPV = \sum_{t=0}^{n} \frac{B_t - C_t}{(1+s)^t}$$
+      </div>
+      <div class="sub-lbl">IRR is the rate that zeroes it</div>
+      $$\sum_{t=0}^{n} \frac{B_t - C_t}{(1+r)^t} = 0$$
+      <div class="note">IRR is a polynomial root, so it may have several solutions or none, and is only well defined when the flow changes sign once. Where the two rankings disagree, trust NPV. The choice of $s$ usually matters more than anything else in the appraisal.</div>
+      <hr class="div">
+      <div class="lbl">Bellman equation</div>
+      <div class="eq-block">
+        $$V(W) = \max_{0 \le c \le W}\ \big[\,\ln(c) + \beta\,V(W-c)\,\big]$$
+      </div>
+      <div class="note">$V$ appears on both sides, so the equation defines the value function rather than computing it. Solved numerically by iterating from $V_0=0$. For log utility the closed form is $c^*(W) = (1-\beta)W$, which is the check on the numerical answer.</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false}
+      ],
+      trust: true,
+      throwOnError: false
+    });
+  });
+</script>
+
+</body>
+</html>

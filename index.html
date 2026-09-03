@@ -6,10 +6,10 @@
 <title>Uni repository</title>
 <style>
   :root { --bg:#F7F6F2; --surface:#fff; --border:#DDD9D0; --text:#1A1A2E; --muted:#75736B;
-           --pe1:#1565C0; --pm:#6A1B9A; }
+           --pe1:#1565C0; --pm:#6A1B9A; --math:#2E7D32; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#17171A; --surface:#212126; --border:#33333A; --text:#ECECEC; --muted:#9A9A9A;
-             --pe1:#5B9BE8; --pm:#C08BE0; }
+             --pe1:#5B9BE8; --pm:#C08BE0; --math:#66BB6A; }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--text); font-family:Georgia,serif; line-height:1.6;
@@ -19,13 +19,13 @@
   .sub { color:var(--muted); font-style:italic; font-size:14px; margin-bottom:34px; }
   h2 { font-size:13px; text-transform:uppercase; letter-spacing:.09em; margin:34px 0 12px;
         padding-bottom:7px; border-bottom:1px solid var(--border); }
-  h2.pe1 { color:var(--pe1); } h2.pm { color:var(--pm); }
+  h2.pe1 { color:var(--pe1); } h2.pm { color:var(--pm); } h2.math { color:var(--math); }
   .apps { display:flex; gap:12px; flex-wrap:wrap; }
   .app { flex:1 1 240px; background:var(--surface); border:1px solid var(--border); border-radius:9px;
           padding:15px 18px; text-decoration:none; color:var(--text); display:block; }
   .app:hover { border-color:currentColor; }
   .app .t { font-weight:bold; font-size:15px; margin-bottom:3px; }
-  .app.pe1 .t { color:var(--pe1); } .app.pm .t { color:var(--pm); }
+  .app.pe1 .t { color:var(--pe1); } .app.pm .t { color:var(--pm); } .app.math .t { color:var(--math); }
   .app .d { font-size:12.5px; color:var(--muted); }
   details { margin-top:10px; }
   summary { cursor:pointer; font-size:13.5px; color:var(--muted); }
@@ -99,6 +99,14 @@
     <a class="app pm" href="PM/pm_concept_map.pdf">
       <div class="t">Concept maps (PDF)</div>
       <div class="d">The seven schemes, one per lecture, as a single vector PDF</div>
+    </a>
+  </div>
+
+  <h2 class="math">Mathematics</h2>
+  <div class="apps">
+    <a class="app math" href="MATH/math_cheatsheet.html">
+      <div class="t">Math refresher cheat sheet</div>
+      <div class="d">Calculus, optimisation, linear algebra, probability and discounting, on one page</div>
     </a>
   </div>
 </div>
