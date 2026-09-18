@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Random assignment vs selection</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+figure.tbl{display:flex;flex-direction:column}
+table.data input[type=range]{width:56px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Random assignment vs selection into treatment</h1>
+  <p>Gerber &amp; Green Table 2.1 again: one of the 7 villages gets a female head. If every village has the same chance (1/7), the difference in means is unbiased for the ATE of 5. Give some villages a higher chance and the same difference in means picks up two extra terms: selection on gains and baseline selection.</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="pEq" class="on">Equal probabilities (1/7 each)</button>
+  <button id="pEx">In-class exercise: villages 3 and 4 twice as likely</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><span class="small">ATE = E[Y(1)] − E[Y(0)]</span><span class="big" id="rATE"></span></div>
+  <div class="stat"><span class="small">E[Y(1) | D=1] − E[Y(0) | D=0]</span><span class="big" id="rDelta"></span></div>
+  <div class="stat"><span class="small">Selection on gains, ATT − ATE</span><span class="big" id="rSoG"></span></div>
+  <div class="stat"><span class="small">Baseline selection B₀</span><span class="big" id="rB0"></span></div>
+  <div class="stat"><span class="small">Draws · mean of estimates</span><span class="big" id="rMC"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bRun">Run 1 000 experiments</button>
+  <button id="bOne">One experiment</button>
+  <button id="bStop">Stop</button>
+  <button id="bClear">Clear</button>
+</div>
+
+<div class="panels">
+  <figure class="tbl"><table class="data" id="tbl"></table>
+    <figcaption><strong>Potential outcomes and assignment probabilities.</strong> Drag a weight to change a village's chance of being the treated one (probabilities are the weights divided by their sum). Highlighted row: the village treated in the latest experiment; its Y(1) is compared with the mean Y(0) of the other six.</figcaption></figure>
+  <figure><canvas id="cHist"></canvas>
+    <figcaption><strong>What the difference in means produces.</strong> One bar count per experiment. Red dashed: the ATE. Navy: the expected value of the estimator under these probabilities. With unequal probabilities the histogram centres away from the ATE: the estimator is biased, however many experiments you run.</figcaption></figure>
+  <figure><canvas id="cDec"></canvas>
+    <figcaption><strong>The decomposition.</strong> Δ = ATE + (ATT − ATE) + B₀. Selection on gains: the treated villages gain more or less than average. Baseline selection: the treated villages would have had a different Y(0) anyway. Both vanish under equal probabilities.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>Expected values are computed exactly from the probabilities: E[Y(1) | D=1] = Σᵢ pᵢ Y(1)ᵢ and E[Y(0) | D=0] = Σᵢ (1−pᵢ) Y(0)ᵢ / 6, where pᵢ is village i's chance of being treated. The Monte Carlo mean converges to the same number.</p>
+  <p>This is the critique of non-experimental comparisons: when "nature" assigns the treatment, the probabilities vary with the potential outcomes and nobody knows them. With known unequal probabilities, weighting each observation by the inverse of its assignment probability recovers the ATE.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+
+const Y0=[10,15,20,20,10,15,15],Y1=[15,15,30,15,20,15,30],N=7;
+let wts=[1,1,1,1,1,1,1],draws=[],last=null;const rng=mulberry32(5);
+const probs=()=>{const s=wts.reduce((a,b)=>a+b,0);return wts.map(w=>w/s);};
+function exact(){const p=probs();const ate=mean(Y1)-mean(Y0);const eY1t=p.reduce((s,pi,i)=>s+pi*Y1[i],0);const eY0c=p.reduce((s,pi,i)=>s+(1-pi)*Y0[i],0)/(N-1);const eY0t=p.reduce((s,pi,i)=>s+pi*Y0[i],0);
+  const att=eY1t-eY0t;return{ate,delta:eY1t-eY0c,sog:att-ate,b0:eY0t-eY0c,eY1t,eY0c,eY0t,att};}
+function draw(){const p=probs();let u=rng(),i=0;while(i<N-1&&u>p[i]){u-=p[i];i++;}last=i;let c=0;for(let k=0;k<N;k++)if(k!==i)c+=Y0[k];draws.push(Y1[i]-c/(N-1));}
+function renderTable(){const p=probs();let h='<thead><tr><th>Village</th><th>Y(0)</th><th>Y(1)</th><th>τᵢ</th><th>weight</th><th>pᵢ</th><th>observed</th></tr></thead><tbody>';
+  for(let i=0;i<N;i++){const t=last===i;h+=`<tr class="${last===null?'':(t?'t':'c')}"><td>${i+1}</td><td class="${t?'miss':''}">${Y0[i]}</td><td class="${t||last===null?'':'miss'}">${Y1[i]}</td><td>${Y1[i]-Y0[i]}</td><td><input type="range" min="0" max="4" step="0.5" value="${wts[i]}" data-i="${i}"></td><td>${fmt(p[i],3)}</td><td>${last===null?'':(t?Y1[i]:Y0[i])}</td></tr>`;}
+  const e=exact();h+=`<tr><td><b>Mean</b></td><td>${fmt(mean(Y0),2)}</td><td>${fmt(mean(Y1),2)}</td><td>${fmt(e.ate,2)}</td><td></td><td>1</td><td>${last===null?'':fmt(draws[draws.length-1],2)}</td></tr>`;
+  h+=`<tr><td colspan="7" style="text-align:left;color:var(--muted)">E[Y(1) | D=1] = ${fmt(e.eY1t,2)} · E[Y(0) | D=0] = ${fmt(e.eY0c,2)} · E[Y(0) | D=1] = ${fmt(e.eY0t+0,2)} · ATT = ${fmt(e.att,2)}</td></tr></tbody>`;
+  $('tbl').innerHTML=h;$('tbl').querySelectorAll('input').forEach(inp=>inp.addEventListener('input',ev=>{wts[+ev.target.dataset.i]=+ev.target.value;stopAnim();draws=[];last=null;['pEq','pEx'].forEach(i=>$(i).classList.remove('on'));drawAll();}));}
+function ticks(lo,hi){const step=[1,2,5,10].find(s=>(hi-lo)/s<=8)||10;const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)t.push(v);return t;}
+function drawHist(){const {ctx,w,h}=setupCanvas($('cHist'));const e=exact();
+  // possible values: Y1_i - mean of others' Y0
+  const vals=Y1.map((y,i)=>{let c=0;for(let k=0;k<N;k++)if(k!==i)c+=Y0[k];return y-c/(N-1);});
+  const lo=Math.min(...vals)-2,hi=Math.max(...vals)+2;const counts={};draws.forEach(v=>{const k=v.toFixed(3);counts[k]=(counts[k]||0)+1;});
+  const cmax=Math.max(1,...Object.values(counts));
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,cmax*1.15],xt:ticks(lo,hi),yt:[],xl:'estimate: Y(1) of the treated village − mean Y(0) of the others',yl:'count'});
+  const bw=A.pw/(hi-lo)*0.9;
+  for(const k in counts){const v=+k;ctx.fillStyle=css('--contour');ctx.fillRect(A.px(v)-bw/2,A.py(counts[k]),bw,A.py(0)-A.py(counts[k]));}
+  A.clip();line(ctx,[[A.px(e.ate),A.T],[A.px(e.ate),A.T+A.ph]],css('--red'),2,[6,4]);label(ctx,'ATE '+fmt(e.ate,2),A.px(e.ate)+4,A.T+16,css('--red'));
+  line(ctx,[[A.px(e.delta),A.T],[A.px(e.delta),A.T+A.ph]],css('--navy'),2);label(ctx,'E[estimate] '+fmt(e.delta,2),A.px(e.delta)+4,A.T+32,css('--navy'));
+  if(draws.length){const mu=mean(draws);line(ctx,[[A.px(mu),A.T+A.ph-40],[A.px(mu),A.T+A.ph]],css('--orange'),3);label(ctx,'MC mean '+fmt(mu,2),A.px(mu)+4,A.T+A.ph-30,css('--orange'));}
+  A.unclip();ctx.fillStyle=css('--muted');ctx.textAlign='right';ctx.fillText(`${draws.length} experiments`,A.L+A.pw-6,A.T+A.ph-6);}
+function drawDec(){const {ctx,w,h}=setupCanvas($('cDec'));const e=exact();
+  const items=[['ATE',0,e.ate,css('--red')],['+ selection on gains',e.ate,e.ate+e.sog,css('--orange')],['+ baseline selection',e.ate+e.sog,e.delta,css('--purple')],['= E[difference in means]',0,e.delta,css('--navy')]];
+  if(draws.length)items.push(['Monte Carlo mean',0,mean(draws),css('--grey')]);
+  const vals=items.flatMap(it=>[it[1],it[2]]);const lo=Math.min(0,...vals)-1,hi=Math.max(...vals)+1;
+  const A=axes(ctx,w,h,{L:14,R:14,T:14,B:36,xlim:[lo,hi],ylim:[0,items.length],xt:ticks(lo,hi),yt:[],xl:'value'});const rowH=A.ph/items.length;
+  items.forEach((it,k)=>{const yc=A.T+rowH*(k+.5);ctx.fillStyle=it[3];ctx.globalAlpha=.85;const x0=A.px(it[1]),x1=A.px(it[2]);ctx.fillRect(Math.min(x0,x1),yc-rowH*.2,Math.max(2,Math.abs(x1-x0)),rowH*.4);ctx.globalAlpha=1;
+    const d=it[2]-it[1];label(ctx,`${it[0]}  ${k===0||k>=3?fmt(it[2],2):(d>=0?'+':'')+fmt(d,2)}`,A.L+6,yc-rowH*.2-8,css('--ink'));});
+  A.clip();line(ctx,[[A.px(0),A.T],[A.px(0),A.T+A.ph]],css('--rule'),1);line(ctx,[[A.px(e.ate),A.T],[A.px(e.ate),A.T+A.ph]],css('--red'),1,[4,3]);A.unclip();}
+function readouts(){const e=exact();$('rATE').textContent=fmt(e.ate,2);$('rDelta').textContent=fmt(e.delta,2);$('rSoG').textContent=(e.sog>=0?'+':'')+fmt(e.sog,2);$('rB0').textContent=(e.b0>=0?'+':'')+fmt(e.b0,2);$('rMC').textContent=draws.length?`${draws.length} · ${fmt(mean(draws),2)}`:'—';}
+function drawAll(){renderTable();readouts();drawHist();drawDec();}
+$('pEq').addEventListener('click',()=>{stopAnim();wts=[1,1,1,1,1,1,1];draws=[];last=null;$('pEq').classList.add('on');$('pEx').classList.remove('on');drawAll();});
+$('pEx').addEventListener('click',()=>{stopAnim();wts=[1,1,2,2,1,1,1];draws=[];last=null;$('pEx').classList.add('on');$('pEq').classList.remove('on');drawAll();});
+$('bOne').addEventListener('click',()=>{stopAnim();draw();drawAll();});
+$('bClear').addEventListener('click',()=>{stopAnim();draws=[];last=null;drawAll();});
+$('bStop').addEventListener('click',stopAnim);
+$('bRun').addEventListener('click',()=>{const start=draws.length;animate(t=>{const target=start+Math.ceil(t*1000);while(draws.length<target)draw();drawAll();},5000);});
+hookTheme(()=>{drawHist();drawDec();});
+drawAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Clustered assignment and the standard error</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Clustered random assignment: same individuals, fewer coin flips</h1>
+  <p>Individuals sit in clusters (schools, villages, branches). Assigning the treatment cluster by cluster is often the only feasible design, but the outcomes are still measured per individual. How much precision is lost depends on how similar the members of a cluster are to each other: the intra-cluster correlation ρ.</p>
+</header>
+
+<section class="controls" aria-label="Design">
+  <div class="slider"><label for="sG">Clusters G <b id="vG"></b></label><input id="sG" type="range" min="4" max="40" step="2" value="10"></div>
+  <div class="slider"><label for="sn">Individuals per cluster n <b id="vn"></b></label><input id="sn" type="range" min="2" max="30" step="1" value="10"></div>
+  <div class="slider"><label for="sRho">Intra-cluster correlation ρ <b id="vRho"></b></label><input id="sRho" type="range" min="0" max="0.9" step="0.05" value="0.3"></div>
+  <div class="toggles"><label><input type="checkbox" id="tUneq"> unequal cluster sizes, outcomes rising with size</label></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Units N · true ATE</span><span class="big" id="rN"></span></div>
+  <div class="stat"><span class="small">SE, individual-level assignment</span><span class="big" id="rSEi"></span></div>
+  <div class="stat"><span class="small">SE, cluster-level assignment</span><span class="big" id="rSEc"></span></div>
+  <div class="stat"><span class="small">Ratio · √(1 + (n−1)ρ)</span><span class="big" id="rRatio"></span></div>
+  <div class="stat"><span class="small">Mean estimate, cluster design (bias)</span><span class="big" id="rBias"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bRun">Run 2 000 assignments of each kind</button>
+  <button id="bOne">One assignment</button>
+  <button id="bStop">Stop</button>
+  <button id="bNew">New population</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cPop"></canvas>
+    <figcaption><strong>The population.</strong> Each box is a cluster, each dot a person; the dot's height inside the box is its Y(0). Left half of the panel: the latest individual-level assignment. Right half: the latest cluster-level assignment. Orange = treated, teal = control.</figcaption></figure>
+  <figure><canvas id="cHist"></canvas>
+    <figcaption><strong>Two sampling distributions of the difference in means.</strong> Top, teal: treatment assigned person by person (N/2 treated). Bottom, orange: assigned cluster by cluster (G/2 clusters treated). Red dashed: the true ATE. With ρ &gt; 0 the cluster design is wider.</figcaption></figure>
+  <figure><canvas id="cCurve"></canvas>
+    <figcaption id="capCurve"><strong>SE ratio against ρ.</strong> Dots: simulated ratio of the two SEs for this G and n at each ρ. Line: the design effect √(1 + (n−1)ρ), the textbook approximation for equal cluster sizes. At ρ = 0 clustering costs nothing; at ρ = 1 the design only has G observations.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>Potential outcomes are Y(0) = 50 + c<sub>j</sub> + e<sub>ij</sub> with a cluster effect c<sub>j</sub> of variance 100ρ and an individual part of variance 100(1−ρ), and Y(1) = Y(0) + 5. The ICC formula and the design effect are ahead of the notes (L4); here they only label what the histograms already show.</p>
+  <p>With the unequal-sizes box ticked, cluster sizes range from small to large and bigger clusters have higher outcomes. The pooled difference in means then over-weights whichever large clusters happen to be treated: its average over assignments drifts from the ATE. The bias fades as G grows.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+
+let G=10,n=10,rho=0.3,uneq=false,seed=1;
+let sizes=[],cl=[],Y0=[],Y1=[],N=0,estI=[],estC=[],lastI=null,lastC=null,curve=null;
+const TAU=5;
+function population(){const r=mulberry32(seed*7919+Math.round(rho*100)*13+G*31+n);sizes=[];for(let j=0;j<G;j++)sizes.push(uneq?Math.max(2,Math.round(n*(0.3+1.4*(j/(G-1))))):n);
+  cl=[];Y0=[];Y1=[];const sc=Math.sqrt(100*rho),se=Math.sqrt(100*(1-rho));for(let j=0;j<G;j++){const c=sc*gauss(r)+(uneq?1.2*(sizes[j]-n):0);for(let i=0;i<sizes[j];i++){cl.push(j);const y0=50+c+se*gauss(r);Y0.push(y0);Y1.push(y0+TAU);}}N=Y0.length;}
+function dim(T){let t=0,c=0,nt=0,nc=0;for(let i=0;i<N;i++){if(T[i]){t+=Y1[i];nt++;}else{c+=Y0[i];nc++;}}return t/nt-c/nc;}
+function assignI(r){const T=new Uint8Array(N);sampleK(N,Math.floor(N/2),r).forEach(i=>T[i]=1);return T;}
+function assignC(r){const T=new Uint8Array(N);const tc=new Set(sampleK(G,Math.floor(G/2),r));for(let i=0;i<N;i++)T[i]=tc.has(cl[i])?1:0;return T;}
+let rng=mulberry32(42);
+function simulate(R,rr){const a=[],b=[];for(let k=0;k<R;k++){a.push(dim(assignI(rr)));b.push(dim(assignC(rr)));}return{a,b};}
+function computeCurve(){const saveRho=rho,saveSizes=sizes,saveCl=cl,saveY0=Y0,saveY1=Y1,saveN=N;const pts=[];
+  for(let q=0;q<=0.9001;q+=0.1){rho=+q.toFixed(2);population();const s=simulate(400,mulberry32(3));pts.push([rho,Math.sqrt(pvar(s.b))/Math.sqrt(pvar(s.a))]);}
+  rho=saveRho;sizes=saveSizes;cl=saveCl;Y0=saveY0;Y1=saveY1;N=saveN;return pts;}
+function computeBiasCurve(){const saveG=G,saveSizes=sizes,saveCl=cl,saveY0=Y0,saveY1=Y1,saveN=N;const pts=[];
+  for(const g of [4,6,8,10,14,20,30,40]){G=g;population();const s=simulate(600,mulberry32(3));pts.push([g,mean(s.b)-TAU]);}
+  G=saveG;sizes=saveSizes;cl=saveCl;Y0=saveY0;Y1=saveY1;N=saveN;return pts;}
+function rebuild(){population();estI=[];estC=[];lastI=null;lastC=null;curve=uneq?computeBiasCurve():computeCurve();drawAll();}
+function drawPop(){const {ctx,w,h}=setupCanvas($('cPop'));const cols=Math.ceil(Math.sqrt(G)),rows=Math.ceil(G/cols);const half=(w-24)/2;
+  const ymin=Math.min(...Y0),ymax=Math.max(...Y0);
+  const drawSide=(x0,T,title)=>{ctx.fillStyle=css('--muted');ctx.font=FONT;ctx.textAlign='left';ctx.fillText(title,x0,14);const bw=(half-8)/cols,bh=(h-40)/rows;let idx=0;
+    for(let j=0;j<G;j++){const cx=x0+(j%cols)*bw,cy=22+Math.floor(j/cols)*bh;ctx.strokeStyle=css('--rule');ctx.strokeRect(cx+2,cy+2,bw-4,bh-4);const m=sizes[j];const per=Math.ceil(Math.sqrt(m));
+      for(let i=0;i<m;i++){const k=idx+i;const px=cx+5+(i%per+0.5)*((bw-10)/per),py=cy+bh-5-(Y0[k]-ymin)/(ymax-ymin+1e-9)*(bh-10);ctx.fillStyle=T?(T[k]?css('--treat'):css('--ctrl')):css('--grey');ctx.beginPath();ctx.arc(px,py,Math.max(1.2,Math.min(3,bw/per/3)),0,6.283);ctx.fill();}
+      idx+=m;}};
+  drawSide(8,lastI,'individual-level');drawSide(16+half,lastC,'cluster-level');}
+function ticks(lo,hi){const step=[0.5,1,2,5,10,20].find(s=>(hi-lo)/s<=8)||20;const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)t.push(v);return t;}
+function drawHist(){const {ctx,w,h}=setupCanvas($('cHist'));const all=[...estI,...estC];const lo=all.length?Math.min(...all)-1:TAU-15,hi=all.length?Math.max(...all)+1:TAU+15;const nb=40,bw=(hi-lo)/nb;
+  const bins=v=>{const c=new Array(nb).fill(0);v.forEach(x=>{c[Math.max(0,Math.min(nb-1,Math.floor((x-lo)/bw)))]++;});return c;};const bI=bins(estI),bC=bins(estC);const mx=Math.max(1,...bI,...bC);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,1],xt:ticks(lo,hi),yt:[],xl:'difference in means'});const half=A.ph/2;
+  const row=(b,top,color,name,arr)=>{const sc=(half-22)/mx;ctx.fillStyle=color;for(let k=0;k<nb;k++){if(!b[k])continue;ctx.fillRect(A.px(lo+k*bw)+.5,top+half-2-b[k]*sc,Math.max(1,A.pw/nb-1),b[k]*sc);}ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(`${name}: ${arr.length} draws${arr.length>1?', SD '+fmt(Math.sqrt(pvar(arr)),2)+', mean '+fmt(mean(arr),2):''}`,A.L+6,top+14);};
+  row(bI,A.T,css('--ctrl'),'individual',estI);line(ctx,[[A.L,A.T+half],[A.L+A.pw,A.T+half]],css('--rule'),1);row(bC,A.T+half,css('--treat'),'cluster',estC);
+  A.clip();line(ctx,[[A.px(TAU),A.T],[A.px(TAU),A.T+A.ph]],css('--red'),2,[6,4]);A.unclip();label(ctx,'ATE 5',A.px(TAU)+4,A.T+A.ph-6,css('--red'));}
+function drawCurve(){const {ctx,w,h}=setupCanvas($('cCurve'));
+  if(!uneq){const ymax=Math.max(2,Math.sqrt(1+(n-1)*0.9)*1.1,...curve.map(p=>p[1]*1.1));
+    const A=axes(ctx,w,h,{xlim:[0,0.95],ylim:[0,ymax],xt:[0,0.2,0.4,0.6,0.8],yt:ticks(0,ymax),xl:'intra-cluster correlation ρ',yl:'SE cluster / SE individual'});
+    A.clip();const pts=[];for(let q=0;q<=0.95;q+=0.01)pts.push([A.px(q),A.py(Math.sqrt(1+(n-1)*q))]);line(ctx,pts,css('--navy'),2);curve.forEach(p=>dot(ctx,A.px(p[0]),A.py(p[1]),4.5,css('--orange'),css('--panel')));
+    const r=estI.length>1&&estC.length>1?Math.sqrt(pvar(estC))/Math.sqrt(pvar(estI)):null;if(r){dot(ctx,A.px(rho),A.py(r),7,css('--red'),css('--panel'));label(ctx,'this run '+fmt(r,2),A.px(rho)+8,A.py(r)-8,css('--red'));}
+    line(ctx,[[A.px(rho),A.T],[A.px(rho),A.T+A.ph]],css('--muted'),1,[3,3]);A.unclip();label(ctx,'√(1+(n−1)ρ), n = '+n,A.L+6,A.T+14,css('--navy'));
+    $('capCurve').innerHTML='<strong>SE ratio against ρ.</strong> Dots: simulated ratio of the two SEs for this G and n at each ρ. Line: the design effect √(1 + (n−1)ρ), the textbook approximation for equal cluster sizes. At ρ = 0 clustering costs nothing; at ρ = 1 the design only has G observations.';}
+  else{const ys=curve.map(p=>p[1]);const lim=Math.max(1,...ys.map(Math.abs))*1.2;
+    const A=axes(ctx,w,h,{xlim:[0,42],ylim:[-lim,lim],xt:[4,10,20,30,40],yt:ticks(-lim,lim),xl:'number of clusters G',yl:'E[estimate] − ATE'});
+    A.clip();line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);line(ctx,curve.map(p=>[A.px(p[0]),A.py(p[1])]),css('--orange'),2);curve.forEach(p=>dot(ctx,A.px(p[0]),A.py(p[1]),4.5,css('--orange'),css('--panel')));
+    if(estC.length>1){dot(ctx,A.px(G),A.py(mean(estC)-TAU),7,css('--red'),css('--panel'));}A.unclip();
+    $('capCurve').innerHTML='<strong>Bias of the cluster design against G.</strong> With unequal cluster sizes and outcomes that rise with size, the average of the difference in means over all cluster-level assignments is not the ATE. The gap shrinks as the number of clusters grows. Red: this run.';}}
+function readouts(){$('vG').textContent=G;$('vn').textContent=n;$('vRho').textContent=fmt(rho,2);$('rN').textContent=`${N} · ${TAU}`;
+  const si=estI.length>1?Math.sqrt(pvar(estI)):null,sc=estC.length>1?Math.sqrt(pvar(estC)):null;$('rSEi').textContent=si?fmt(si,2):'—';$('rSEc').textContent=sc?fmt(sc,2):'—';
+  $('rRatio').textContent=si&&sc?`${fmt(sc/si,2)} · ${fmt(Math.sqrt(1+(n-1)*rho),2)}`:`— · ${fmt(Math.sqrt(1+(n-1)*rho),2)}`;$('rBias').textContent=sc?`${fmt(mean(estC),2)} (${(mean(estC)-TAU>=0?'+':'')+fmt(mean(estC)-TAU,2)})`:'—';}
+function drawAll(){readouts();drawPop();drawHist();drawCurve();}
+$('sG').addEventListener('input',e=>{stopAnim();G=+e.target.value;rebuild();});
+$('sn').addEventListener('input',e=>{stopAnim();n=+e.target.value;rebuild();});
+$('sRho').addEventListener('input',e=>{stopAnim();rho=+e.target.value;population();estI=[];estC=[];lastI=null;lastC=null;if(uneq)curve=computeBiasCurve();drawAll();});
+$('tUneq').addEventListener('change',e=>{stopAnim();uneq=e.target.checked;rebuild();});
+$('bNew').addEventListener('click',()=>{stopAnim();seed++;rebuild();});
+$('bStop').addEventListener('click',stopAnim);
+$('bOne').addEventListener('click',()=>{stopAnim();lastI=assignI(rng);lastC=assignC(rng);estI.push(dim(lastI));estC.push(dim(lastC));drawAll();});
+$('bRun').addEventListener('click',()=>{estI=[];estC=[];animate(t=>{const target=Math.ceil(t*2000);while(estI.length<target){lastI=assignI(rng);lastC=assignC(rng);estI.push(dim(lastI));estC.push(dim(lastC));}drawAll();},4000);});
+hookTheme(drawAll);
+rebuild();
+</script>
+</body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KNN regression vs linear regression</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>KNN regression against linear regression, and the curse of dimensionality</h1>
+  <p>ISLR Figures 3.17 to 3.20. KNN regression predicts at x₀ with the average response of the K closest training points: no functional form at all. It wins when the truth is curved and loses when the truth is a line. Add predictors that carry no information and it loses badly, whatever the truth.</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="p0" class="on">True f is linear (Fig 3.17-3.18)</button>
+  <button id="p1">Mildly non-linear</button>
+  <button id="p2">Strongly non-linear (Fig 3.19)</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sK">Neighbours K <b id="vK"></b></label><input id="sK" type="range" min="0" max="100" step="1" value="35"></div>
+  <div class="slider"><label for="sP">Number of predictors p (1 real + p−1 noise) <b id="vP"></b></label><input id="sP" type="range" min="1" max="20" step="1" value="1"></div>
+  <div class="slider"><label for="sS">Noise σ <b id="vS"></b></label><input id="sS" type="range" min="0.1" max="1" step="0.05" value="0.3"></div>
+  <div class="slider"><label for="sN">Training points n <b id="vN"></b></label><input id="sN" type="range" min="50" max="200" step="50" value="100"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">KNN test MSE (K, p)</span><span class="big" id="rKNN"></span></div>
+  <div class="stat"><span class="small">Linear regression test MSE (p)</span><span class="big" id="rOLS"></span></div>
+  <div class="stat"><span class="small">σ² (irreducible)</span><span class="big" id="rS2"></span></div>
+  <div class="stat"><span class="small">Best K at this p</span><span class="big" id="rBest"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bK">Sweep K</button>
+  <button id="bP">Sweep p</button>
+  <button id="bNew">New sample</button>
+  <button id="bStop">Stop</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cFit"></canvas>
+    <figcaption><strong>The fit in the real predictor.</strong> Grey: training data. Black: true f. Navy: least squares. Orange: the KNN fit (the step curve, drawn with the noise predictors held at 0). Small K is jagged, large K is smooth and, for K = n, flat.</figcaption></figure>
+  <figure><canvas id="cMSE"></canvas>
+    <figcaption><strong>Test MSE against 1/K at the current p.</strong> Orange: KNN. Dashed navy: linear regression, which does not depend on K. When f is linear the line wins everywhere; when f is curved KNN wins at moderate K.</figcaption></figure>
+  <figure><canvas id="cDim"></canvas>
+    <figcaption><strong>The curse of dimensionality (Fig 3.20).</strong> KNN test MSE against 1/K for p = 1, 2, 3, 4, 10, 20 predictors, only the first of which matters. Dashed: linear regression at each p, barely moving. With 20 predictors the "nearest" neighbours are far away in every direction, so their average is poor.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>In p dimensions the K nearest neighbours of x₀ come from a ball whose radius grows quickly with p for a fixed n: a non-parametric method needs many more observations per extra dimension, a parametric one only one more coefficient. That is the price of not assuming a form for f.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,xlo:o.xlim[0],xhi:o.xlim[1],ylo:o.ylim[0],yhi:o.ylim[1],clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+// inverse of a small symmetric matrix via solve on unit vectors
+function invMat(A){const n=A.length;const cols=[];for(let k=0;k<n;k++){const e=new Float64Array(n);e[k]=1;cols.push(solve(A,e));}const M=[];for(let i=0;i<n;i++){M[i]=[];for(let j=0;j<n;j++)M[i][j]=cols[j][i];}return M;}
+// OLS with full diagnostics: X rows (with intercept col), y. Returns beta, fitted, resid, h (leverage), s (RSE), XtXinv
+function olsFull(X,y){const n=X.length,p=X[0].length;const A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<n;i++){const r=X[i];for(let j=0;j<p;j++){b[j]+=r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=r[j]*r[k];}}const beta=solve(A,b);const inv=invMat(A);const fitted=X.map(r=>r.reduce((s,v,j)=>s+v*beta[j],0));const resid=y.map((v,i)=>v-fitted[i]);const rss=resid.reduce((s,e)=>s+e*e,0);const s=Math.sqrt(rss/(n-p));const h=X.map(r=>{let q=0;for(let j=0;j<p;j++){let t=0;for(let k=0;k<p;k++)t+=inv[j][k]*r[k];q+=r[j]*t;}return q;});return{beta,fitted,resid,h,s,rss,inv,n,p};}
+// tricube local-linear smoother evaluated at grid points
+function loess(x,y,grid,bwFrac){const span=(Math.max(...x)-Math.min(...x))*bwFrac;return grid.map(g=>{let s0=0,s1=0,s2=0,t0=0,t1=0;for(let i=0;i<x.length;i++){const u=Math.abs(x[i]-g)/span;if(u>=1)continue;const w=(1-u**3)**3,dx=x[i]-g;s0+=w;s1+=w*dx;s2+=w*dx*dx;t0+=w*y[i];t1+=w*dx*y[i];}const det=s0*s2-s1*s1;if(Math.abs(det)<1e-12)return s0?t0/s0:NaN;return (s2*t0-s1*t1)/det;});}
+
+const F=[x=>1+2*x, x=>2+1.5*Math.sin(2*x+0.4), x=>2+Math.sin(6*x)];
+const KS=[1,2,3,5,7,10,15,20,30,50,75,100,150,200];
+const PS=[1,2,3,4,10,20],NT=1000,PMAX=20;
+let preset=0,n=100,sig=0.3,p=1,K=10,seed=1;
+let Xtr=[],ytr=[],Xte=[],yte=[],curves={},ols={},order={};
+const f=x=>F[preset](x);
+function ks(){return KS.filter(k=>k<=n);}
+function gen(){const r=mulberry32(seed*17+preset*3);Xtr=[];ytr=[];for(let i=0;i<n;i++){const row=[];for(let j=0;j<PMAX;j++)row.push(-1+2*r());Xtr.push(row);ytr.push(f(row[0])+sig*gauss(r));}
+  const rt=mulberry32(909+preset);Xte=[];yte=[];for(let i=0;i<NT;i++){const row=[];for(let j=0;j<PMAX;j++)row.push(-1+2*rt());Xte.push(row);yte.push(f(row[0])+sig*gauss(rt));}
+  curves={};ols={};order={};const need=new Set([...PS,p]);for(const q of need)computeP(q);}
+function computeP(q){if(curves[q])return;const ord=[];for(let i=0;i<NT;i++){const d=new Float64Array(n);for(let j=0;j<n;j++){let s=0;for(let k=0;k<q;k++){const t=Xte[i][k]-Xtr[j][k];s+=t*t;}d[j]=s;}ord.push(Array.from(d.keys()).sort((a,b)=>d[a]-d[b]));}order[q]=ord;
+  const cur={};for(const k of ks()){let e=0;for(let i=0;i<NT;i++){let s=0;for(let m=0;m<k;m++)s+=ytr[ord[i][m]];e+=(yte[i]-s/k)**2;}cur[k]=e/NT;}curves[q]=cur;
+  const X=Xtr.map(r=>[1,...r.slice(0,q)]);const b=wls(X,ytr);let e=0;for(let i=0;i<NT;i++){let s=b[0];for(let k=0;k<q;k++)s+=b[k+1]*Xte[i][k];e+=(yte[i]-s)**2;}ols[q]={mse:e/NT,b};}
+function kFromSlider(v){const kk=ks();const target=Math.exp(v/100*Math.log(kk[kk.length-1]));let best=kk[0];for(const k of kk)if(Math.abs(Math.log(k)-Math.log(target))<Math.abs(Math.log(best)-Math.log(target)))best=k;return best;}
+function knnAt(x){const d=Xtr.map((r,j)=>{let s=(x-r[0])**2;for(let k=1;k<p;k++)s+=r[k]*r[k];return[s,j];}).sort((a,b)=>a[0]-b[0]);let s=0;for(let m=0;m<K;m++)s+=ytr[d[m][1]];return s/K;}
+function drawFit(){const {ctx,w,h}=setupCanvas($('cFit'));const lo=Math.min(...ytr)-0.3,hi=Math.max(...ytr)+0.3;const A=axes(ctx,w,h,{xlim:[-1,1],ylim:[lo,hi],xt:[-1,-0.5,0,0.5,1],yt:[],xl:'x₁',yl:'y'});A.clip();
+  Xtr.forEach((r,i)=>dot(ctx,A.px(r[0]),A.py(ytr[i]),2.6,css('--grey')));const g=[];for(let x=-1;x<=1;x+=0.01)g.push([A.px(x),A.py(f(x))]);line(ctx,g,css('--ink'),2);
+  const b=ols[p].b;line(ctx,[[A.px(-1),A.py(b[0]-b[1])],[A.px(1),A.py(b[0]+b[1])]],css('--navy'),2);
+  const kp=[];for(let x=-1;x<=1;x+=0.01)kp.push([A.px(x),A.py(knnAt(x))]);line(ctx,kp,css('--orange'),2.2);A.unclip();label(ctx,'KNN, K = '+K,A.L+6,A.T+14,css('--orange'));label(ctx,'linear fit'+(p>1?' (p = '+p+', others at 0)':''),A.L+6,A.T+30,css('--navy'));}
+function drawMSE(){const {ctx,w,h}=setupCanvas($('cMSE'));const kk=ks();const xs=kk.map(k=>Math.log10(1/k));const vals=kk.map(k=>curves[p][k]);const ymax=Math.max(ols[p].mse,...vals)*1.1;
+  const A=axes(ctx,w,h,{xlim:[Math.min(...xs)-0.1,0.1],ylim:[0,ymax],xt:[-2,-1.7,-1.3,-1,-0.7,-0.3,0].filter(v=>v>=Math.min(...xs)-0.1),xf:v=>{const q=10**v;return q>=0.1?q.toFixed(1):q.toFixed(2);},yt:[],xl:'1/K',yl:'test MSE'});A.clip();
+  line(ctx,[[A.L,A.py(ols[p].mse)],[A.L+A.pw,A.py(ols[p].mse)]],css('--navy'),2,[6,4]);line(ctx,[[A.L,A.py(sig*sig)],[A.L+A.pw,A.py(sig*sig)]],css('--muted'),1,[3,3]);
+  line(ctx,kk.map((k,i)=>[A.px(xs[i]),A.py(curves[p][k])]),css('--orange'),2);kk.forEach((k,i)=>dot(ctx,A.px(xs[i]),A.py(curves[p][k]),2.5,css('--orange')));dot(ctx,A.px(Math.log10(1/K)),A.py(curves[p][K]),6,css('--orange'),css('--panel'));A.unclip();
+  label(ctx,'linear regression '+fmt(ols[p].mse,3),A.L+6,A.py(ols[p].mse)-8,css('--navy'));label(ctx,'σ² = '+fmt(sig*sig,3),A.L+A.pw-6,A.py(sig*sig)+12,css('--muted'),'right');label(ctx,'p = '+p,A.L+A.pw-6,A.T+14,css('--ink'),'right');}
+function drawDim(){const {ctx,w,h}=setupCanvas($('cDim'));const kk=ks();const xs=kk.map(k=>Math.log10(1/k));let ymax=0;PS.forEach(q=>{ymax=Math.max(ymax,ols[q].mse,...kk.map(k=>curves[q][k]));});ymax*=1.08;
+  const A=axes(ctx,w,h,{xlim:[Math.min(...xs)-0.1,0.1],ylim:[0,ymax],xt:[-2,-1.7,-1.3,-1,-0.7,-0.3,0].filter(v=>v>=Math.min(...xs)-0.1),xf:v=>{const q=10**v;return q>=0.1?q.toFixed(1):q.toFixed(2);},yt:[],xl:'1/K',yl:'test MSE'});A.clip();
+  const cols=[css('--green'),css('--blue'),css('--purple'),css('--orange'),css('--red'),css('--ink')];
+  PS.forEach((q,i)=>{line(ctx,[[A.L,A.py(ols[q].mse)],[A.L+A.pw,A.py(ols[q].mse)]],cols[i],1,[5,4]);line(ctx,kk.map((k,j)=>[A.px(xs[j]),A.py(curves[q][k])]),cols[i],q===p?3:1.6);});A.unclip();
+  PS.forEach((q,i)=>label(ctx,'p = '+q,A.L+6+i*44,A.T+14,cols[i]));}
+function readouts(){$('vK').textContent=K;$('vP').textContent=p;$('vS').textContent=sig;$('vN').textContent=n;$('rKNN').textContent=fmt(curves[p][K],3);$('rOLS').textContent=fmt(ols[p].mse,3);$('rS2').textContent=fmt(sig*sig,3);let best=ks()[0];ks().forEach(k=>{if(curves[p][k]<curves[p][best])best=k;});$('rBest').textContent=`${best} (MSE ${fmt(curves[p][best],3)})`;}
+function drawAll(){computeP(p);readouts();drawFit();drawMSE();drawDim();}
+function rebuild(){const kk=ks();if(!kk.includes(K))K=kFromSlider(+$('sK').value);gen();drawAll();}
+$('sK').addEventListener('input',e=>{stopAnim();K=kFromSlider(+e.target.value);drawAll();});
+$('sP').addEventListener('input',e=>{stopAnim();p=+e.target.value;drawAll();});
+$('sS').addEventListener('input',e=>{stopAnim();sig=+e.target.value;rebuild();});
+$('sN').addEventListener('input',e=>{stopAnim();n=+e.target.value;rebuild();});
+$('bNew').addEventListener('click',()=>{stopAnim();seed++;rebuild();});
+$('bStop').addEventListener('click',stopAnim);
+$('bK').addEventListener('click',()=>{const kk=ks();animate(t=>{K=kk[Math.min(kk.length-1,Math.floor(t*kk.length))];$('sK').value=Math.round(100*Math.log(K)/Math.log(kk[kk.length-1]));drawAll();},kk.length*400);});
+$('bP').addEventListener('click',()=>{animate(t=>{p=Math.max(1,Math.min(PMAX,Math.round(1+t*(PMAX-1))));$('sP').value=p;drawAll();},PMAX*350);});
+[['p0',0],['p1',1],['p2',2]].forEach(([id,q])=>$(id).addEventListener('click',()=>{stopAnim();preset=q;['p0','p1','p2'].forEach(i=>$(i).classList.toggle('on',i===id));rebuild();}));
+hookTheme(drawAll);
+rebuild();
+</script>
+</body>
+</html>

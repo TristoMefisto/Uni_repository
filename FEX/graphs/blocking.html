@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Blocking and the blocked estimator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+.tablewrap{max-height:440px;overflow:auto}
+figure.tbl{display:flex;flex-direction:column}
+tr.blockA td:first-child{border-left:3px solid var(--blue)}
+tr.blockB td:first-child{border-left:3px solid var(--orange)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Blocking: same units, smaller standard error</h1>
+  <p>Gerber &amp; Green Table 3.3: 14 public-works projects, 8 in region A and 6 in region B, with the outcome when audited (Y(1)) and when not (Y(0)). Four audits can be assigned to any 4 of the 14 projects, or 2 per region. The second design is a block design: complete random assignment inside each block.</p>
+</header>
+
+<section class="controls" aria-label="Design">
+  <div class="slider"><label for="sMA">Audits in region A, m<sub>A</sub> <b id="vMA"></b></label><input id="sMA" type="range" min="1" max="7" step="1" value="2"></div>
+  <div class="slider"><label for="sMB">Audits in region B, m<sub>B</sub> <b id="vMB"></b></label><input id="sMB" type="range" min="1" max="5" step="1" value="2"></div>
+  <div class="slider"><label for="sShift">Shift every region-B outcome by <b id="vShift"></b></label><input id="sShift" type="range" min="-14" max="10" step="1" value="0"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">ATE region A · region B</span><span class="big" id="rATEj"></span></div>
+  <div class="stat"><span class="small">ATE, weights N<sub>j</sub>/N</span><span class="big long" id="rATE"></span></div>
+  <div class="stat"><span class="small">True SE, complete assignment</span><span class="big" id="rSEc"></span></div>
+  <div class="stat"><span class="small">True SE, blocked</span><span class="big" id="rSEb"></span></div>
+  <div class="stat"><span class="small">SE<sub>A</sub> · SE<sub>B</sub></span><span class="big" id="rSEj"></span></div>
+  <div class="stat"><span class="small">Combination formula</span><span class="big long" id="rForm"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bEnum">Enumerate both designs</button>
+  <button id="bDraw">New blocked draw</button>
+  <button id="bStop">Stop</button>
+  <button id="bReset">Reset to Table 3.3</button>
+</div>
+
+<div class="panels">
+  <figure class="tbl"><div class="tablewrap"><table class="data" id="tbl"></table></div>
+    <figcaption><strong>Schedule of potential outcomes.</strong> Blue edge: region A, orange edge: region B. Highlighted rows: the current blocked draw. Within each region the projects look alike, so the variances inside a block are far smaller than across the 14.</figcaption></figure>
+  <figure><canvas id="cHist"></canvas>
+    <figcaption><strong>Two sampling distributions.</strong> Top, grey: every complete assignment of m<sub>A</sub>+m<sub>B</sub> audits among the 14. Bottom, blue: every blocked assignment. Same units, same number of audits: the blocked spread is the smaller one. Red line: true ATE.</figcaption></figure>
+  <figure><canvas id="cEst"></canvas>
+    <figcaption><strong>Estimation in the current blocked draw.</strong> Five ways to combine the two within-block differences. Filled bars: this draw. Hollow marks: the average of that estimator over all blocked assignments (its expectation). Only the N<sub>j</sub>/N weighting is unbiased when the treatment shares differ across blocks.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>The blocked SE is √(Σ<sub>j</sub> SE<sub>j</sub>² (N<sub>j</sub>/N)²): the variance of a weighted sum of independent block estimates. It falls below the unblocked SE when potential outcomes are similar within block and different across blocks. Use the shift slider to make the regions alike (shift −11 puts region B on top of region A) and the gain disappears.</p>
+  <p>With m<sub>A</sub>/8 = m<sub>B</sub>/6 the block-fixed-effects regression weights the blocks by N<sub>j</sub>/N and is fine. With unequal treatment shares (the default, 2/8 vs 2/6) its weights become ∝ N<sub>j</sub> p<sub>j</sub>(1−p<sub>j</sub>), so the coefficient's expectation drifts away from the ATE. Interacting D with the centred block dummy, or reweighting by 1/p<sub>j</sub> and 1/(1−p<sub>j</sub>), restores the N<sub>j</sub>/N weights exactly.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+
+const A0=[0,1,2,4,4,6,6,9],A1=[0,0,1,2,0,0,2,3],B0=[14,15,16,16,17,18],B1=[12,9,8,15,5,17];
+const NA=8,NB=6,N=14;let mA=2,mB=2,shift=0;
+let Y0,Y1,blk;
+let combC=[],combB=[],estC=[],estB=[],seC,seB,seA_,seB_,cur=null;
+const rng=mulberry32(33);
+function build(){
+  Y0=[...A0,...B0.map(v=>v+shift)];Y1=[...A1,...B1.map(v=>v+shift)];blk=[...Array(NA).fill(0),...Array(NB).fill(1)];
+  combC=combos(N,mA+mB);
+  const cA=combos(NA,mA),cB=combos(NB,mB);combB=[];for(const a of cA)for(const b of cB)combB.push([...a,...b.map(i=>i+NA)]);
+  estC=[];estB=[];
+  seC=trueSE(combC);seB=Math.sqrt(pvar(combB.map(T=>estimators(T).weighted)));
+  seA_=trueSE(cA.map(a=>a),0);seB_=trueSE(cB.map(b=>b.map(i=>i+NA)),1);
+  cur=combB[Math.floor(rng()*combB.length)];
+  drawAll();
+}
+function diffMeans(T,units){const set=new Set(T);let t=0,c=0,nt=0,nc=0;for(const i of units){if(set.has(i)){t+=Y1[i];nt++;}else{c+=Y0[i];nc++;}}return t/nt-c/nc;}
+function trueSE(cs,block){const units=block===undefined?[...Array(N).keys()]:[...Array(N).keys()].filter(i=>blk[i]===block);const es=cs.map(T=>diffMeans(T,units));return Math.sqrt(pvar(es));}
+const ateA=()=>mean(A1)-mean(A0),ateB=()=>mean(B1)-mean(B0),ate=()=>(NA*ateA()+NB*ateB())/N;
+function estimators(T){
+  const set=new Set(T);const D=[],y=[],XA=[];for(let i=0;i<N;i++){D.push(set.has(i)?1:0);y.push(set.has(i)?Y1[i]:Y0[i]);XA.push(blk[i]===0?1:0);}
+  const unitsA=[...Array(N).keys()].filter(i=>blk[i]===0),unitsB=[...Array(N).keys()].filter(i=>blk[i]===1);
+  const dA=diffMeans(T,unitsA),dB=diffMeans(T,unitsB);
+  const naive=diffMeans(T,[...Array(N).keys()]);
+  const weighted=(NA*dA+NB*dB)/N;
+  const fe=wls(D.map((d,i)=>[1,d,XA[i]]),y)[1];
+  const xbar=NA/N;const inter=wls(D.map((d,i)=>[1,d,XA[i],d*(XA[i]-xbar)]),y)[1];
+  const pA=mA/NA,pB=mB/NB;const w=D.map((d,i)=>{const p=blk[i]===0?pA:pB;return d?1/p:1/(1-p);});
+  const wlsb=wls(D.map((d,i)=>[1,d,XA[i]]),y,w)[1];
+  return{dA,dB,naive,weighted,fe,inter,wls:wlsb};
+}
+let expect=null;
+function expectations(){const keys=['naive','weighted','fe','inter','wls'];const acc={};keys.forEach(k=>acc[k]=0);for(const T of combB){const e=estimators(T);keys.forEach(k=>acc[k]+=e[k]);}keys.forEach(k=>acc[k]/=combB.length);return acc;}
+function renderTable(){
+  const set=new Set(cur);let h='<thead><tr><th>Project</th><th>Block</th><th>Y(0)</th><th>Y(1)</th><th>τᵢ</th><th>D</th></tr></thead><tbody>';
+  for(let i=0;i<N;i++){const t=set.has(i);h+=`<tr class="${t?'t':'c'} ${blk[i]?'blockB':'blockA'}"><td>${i+1}</td><td>${blk[i]?'B':'A'}</td><td class="${t?'miss':''}">${Y0[i]}</td><td class="${t?'':'miss'}">${Y1[i]}</td><td>${Y1[i]-Y0[i]}</td><td><span class="tag ${t?'t':'c'}">${t?1:0}</span></td></tr>`;}
+  const uA=[...Array(N).keys()].filter(i=>blk[i]===0),uB=[...Array(N).keys()].filter(i=>blk[i]===1);
+  h+=`<tr><td colspan="2"><b>Mean A</b></td><td>${fmt(mean(uA.map(i=>Y0[i])),2)}</td><td>${fmt(mean(uA.map(i=>Y1[i])),2)}</td><td>${fmt(ateA(),2)}</td><td></td></tr>`;
+  h+=`<tr><td colspan="2"><b>Mean B</b></td><td>${fmt(mean(uB.map(i=>Y0[i])),2)}</td><td>${fmt(mean(uB.map(i=>Y1[i])),2)}</td><td>${fmt(ateB(),2)}</td><td></td></tr>`;
+  h+=`<tr><td colspan="2"><b>Var, all · A · B</b></td><td>${fmt(pvar(Y0),1)} · ${fmt(pvar(uA.map(i=>Y0[i])),2)} · ${fmt(pvar(uB.map(i=>Y0[i])),2)}</td><td>${fmt(pvar(Y1),1)} · ${fmt(pvar(uA.map(i=>Y1[i])),2)} · ${fmt(pvar(uB.map(i=>Y1[i])),2)}</td><td></td><td></td></tr></tbody>`;
+  $('tbl').innerHTML=h;
+}
+function ticks(lo,hi){const span=hi-lo;const step=[1,2,5,10,20].find(s=>span/s<=8)||20;const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)t.push(v);return t;}
+function drawHist(){
+  const {ctx,w,h}=setupCanvas($('cHist'));
+  const allC=combC.map(T=>diffMeans(T,[...Array(N).keys()])),allB=combB.map(T=>diffMeans(T,[...Array(N).keys()]).valueOf());
+  const allBw=combB.map(T=>{const e=estimators(T);return e.weighted;});
+  let lo=Math.min(...allC,...allBw),hi=Math.max(...allC,...allBw);const pad=(hi-lo)*.06;lo-=pad;hi+=pad;
+  const nb=36,bw=(hi-lo)/nb;
+  const binsOf=vals=>{const c=new Array(nb).fill(0);vals.forEach(v=>{c[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++;});return c;};
+  const cC=binsOf(estC),cB=binsOf(estB);const maxC=Math.max(1,...binsOf(allC)),maxB=Math.max(1,...binsOf(allBw));
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,1],xt:ticks(lo,hi),yt:[],xl:'estimated ATE',yl:''});
+  const half=A.ph/2;
+  const drawRow=(counts,max,top,color,name,n,tot,se)=>{const scale=(half-24)/(max);ctx.fillStyle=color;for(let b=0;b<nb;b++){if(!counts[b])continue;const x0=A.px(lo+b*bw),x1=A.px(lo+(b+1)*bw);const hh=counts[b]*scale;ctx.fillRect(x0+.5,top+half-2-hh,Math.max(1,x1-x0-1),hh);}
+    ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(`${name}: ${n} of ${tot}${n===tot?', SE '+fmt(se,2):''}`,A.L+6,top+14);
+    if(n>1){const mu=mean(n===tot?(name.startsWith('blocked')?allBw:allC):counts.length?[]:[]);}};
+  drawRow(cC,maxC,A.T,css('--grey'),'complete',estC.length,combC.length,seC);
+  line(ctx,[[A.L,A.T+half],[A.L+A.pw,A.T+half]],css('--rule'),1);
+  drawRow(cB,maxB,A.T+half,css('--contour'),'blocked',estB.length,combB.length,seB);
+  A.clip();line(ctx,[[A.px(ate()),A.T],[A.px(ate()),A.T+A.ph]],css('--red'),2,[6,4]);label(ctx,'ATE '+fmt(ate(),2),A.px(ate())+4,A.T+half+14,css('--red'));
+  if(estC.length>1){const sd=Math.sqrt(pvar(estC));label(ctx,`SD so far ${fmt(sd,2)}`,A.L+A.pw-6,A.T+14,css('--ink'),'right');}
+  if(estB.length>1){const sd=Math.sqrt(pvar(estB));label(ctx,`SD so far ${fmt(sd,2)}`,A.L+A.pw-6,A.T+half+14,css('--ink'),'right');}
+  A.unclip();
+}
+function drawEst(){
+  const {ctx,w,h}=setupCanvas($('cEst'));const e=estimators(cur);if(!expect)expect=expectations();
+  const items=[['pooled diff. in means',e.naive,expect.naive,css('--grey')],['N_j/N weighted',e.weighted,expect.weighted,css('--contour')],['OLS block FE',e.fe,expect.fe,css('--orange')],['FE + centred interaction',e.inter,expect.inter,css('--green')],['WLS 1/p_j weights',e.wls,expect.wls,css('--purple')]];
+  const vals=items.flatMap(it=>[it[1],it[2]]).concat([ate(),0]);let lo=Math.min(...vals),hi=Math.max(...vals);const pad=Math.max(1,(hi-lo)*.15);lo-=pad;hi+=pad;
+  const A=axes(ctx,w,h,{L:14,R:14,T:14,B:36,xlim:[lo,hi],ylim:[0,items.length],xt:ticks(lo,hi),yt:[],xl:'estimate of the ATE'});
+  const rowH=A.ph/items.length;
+  items.forEach((it,k)=>{const yc=A.T+rowH*(k+0.5);ctx.fillStyle=it[3];ctx.globalAlpha=.85;const x0=A.px(0),x1=A.px(it[1]);ctx.fillRect(Math.min(x0,x1),yc-rowH*.22,Math.abs(x1-x0),rowH*.44);ctx.globalAlpha=1;
+    ctx.strokeStyle=it[3];ctx.lineWidth=2;ctx.beginPath();ctx.arc(A.px(it[2]),yc,5,0,6.283);ctx.stroke();
+    label(ctx,`${it[0]}  ${fmt(it[1],2)}  (E = ${fmt(it[2],2)})`,A.L+6,yc-rowH*.22-8,css('--ink'));});
+  A.clip();line(ctx,[[A.px(ate()),A.T],[A.px(ate()),A.T+A.ph]],css('--red'),2,[6,4]);line(ctx,[[A.px(0),A.T],[A.px(0),A.T+A.ph]],css('--rule'),1);A.unclip();
+  label(ctx,'ATE '+fmt(ate(),2),A.px(ate())+4,A.T+A.ph-6,css('--red'));
+  label(ctx,`this draw: A ${fmt(e.dA,2)}, B ${fmt(e.dB,2)}`,A.L+A.pw-6,A.T+A.ph-6,css('--ink'),'right');
+}
+function readouts(){$('vMA').textContent=mA+' of 8';$('vMB').textContent=mB+' of 6';$('vShift').textContent=(shift>0?'+':'')+shift;
+  $('rATEj').textContent=`${fmt(ateA(),2)} · ${fmt(ateB(),2)}`;$('rATE').textContent=`${fmt(ate(),2)} = 8/14·(${fmt(ateA(),0)}) + 6/14·(${fmt(ateB(),0)})`;
+  $('rSEc').textContent=fmt(seC,2);$('rSEb').textContent=fmt(seB,2);$('rSEj').textContent=`${fmt(seA_,2)} · ${fmt(seB_,2)}`;
+  $('rForm').textContent=`√(${fmt(seA_,2)}²·(8/14)² + ${fmt(seB_,2)}²·(6/14)²) = ${fmt(Math.sqrt(seA_**2*(8/14)**2+seB_**2*(6/14)**2),2)}`;}
+function drawAll(){renderTable();readouts();drawHist();drawEst();}
+$('sMA').addEventListener('input',e=>{stopAnim();mA=+e.target.value;expect=null;build();});
+$('sMB').addEventListener('input',e=>{stopAnim();mB=+e.target.value;expect=null;build();});
+$('sShift').addEventListener('input',e=>{stopAnim();shift=+e.target.value;expect=null;build();});
+$('bReset').addEventListener('click',()=>{stopAnim();mA=2;mB=2;shift=0;$('sMA').value=2;$('sMB').value=2;$('sShift').value=0;expect=null;build();});
+$('bStop').addEventListener('click',stopAnim);
+$('bDraw').addEventListener('click',()=>{stopAnim();cur=combB[Math.floor(rng()*combB.length)];estB.push(diffMeansW(cur));drawAll();});
+function diffMeansW(T){return estimators(T).weighted;}
+$('bEnum').addEventListener('click',()=>{estC=[];estB=[];const all=[...Array(N).keys()];animate(t=>{const kc=Math.ceil(t*combC.length),kb=Math.ceil(t*combB.length);while(estC.length<kc)estC.push(diffMeans(combC[estC.length],all));while(estB.length<kb){cur=combB[estB.length];estB.push(diffMeansW(cur));}drawAll();},7000);});
+hookTheme(()=>{drawHist();drawEst();});
+build();
+</script>
+</body>
+</html>

@@ -6,10 +6,10 @@
 <title>Uni repository</title>
 <style>
   :root { --bg:#F7F6F2; --surface:#fff; --border:#DDD9D0; --text:#1A1A2E; --muted:#75736B;
-           --pe1:#1565C0; --pm:#6A1B9A; --math:#2E7D32; }
+           --pe1:#1565C0; --pm:#6A1B9A; --math:#2E7D32; --fex:#C2410C; --ml:#0F766E; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#17171A; --surface:#212126; --border:#33333A; --text:#ECECEC; --muted:#9A9A9A;
-             --pe1:#5B9BE8; --pm:#C08BE0; --math:#66BB6A; }
+             --pe1:#5B9BE8; --pm:#C08BE0; --math:#66BB6A; --fex:#F0874A; --ml:#3CC4B0; }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--text); font-family:Georgia,serif; line-height:1.6;
@@ -19,13 +19,13 @@
   .sub { color:var(--muted); font-style:italic; font-size:14px; margin-bottom:34px; }
   h2 { font-size:13px; text-transform:uppercase; letter-spacing:.09em; margin:34px 0 12px;
         padding-bottom:7px; border-bottom:1px solid var(--border); }
-  h2.pe1 { color:var(--pe1); } h2.pm { color:var(--pm); } h2.math { color:var(--math); }
+  h2.pe1 { color:var(--pe1); } h2.pm { color:var(--pm); } h2.math { color:var(--math); } h2.fex { color:var(--fex); } h2.ml { color:var(--ml); }
   .apps { display:flex; gap:12px; flex-wrap:wrap; }
   .app { flex:1 1 240px; background:var(--surface); border:1px solid var(--border); border-radius:9px;
           padding:15px 18px; text-decoration:none; color:var(--text); display:block; }
   .app:hover { border-color:currentColor; }
   .app .t { font-weight:bold; font-size:15px; margin-bottom:3px; }
-  .app.pe1 .t { color:var(--pe1); } .app.pm .t { color:var(--pm); } .app.math .t { color:var(--math); }
+  .app.pe1 .t { color:var(--pe1); } .app.pm .t { color:var(--pm); } .app.math .t { color:var(--math); } .app.fex .t { color:var(--fex); } .app.ml .t { color:var(--ml); }
   .app .d { font-size:12.5px; color:var(--muted); }
   details { margin-top:10px; }
   summary { cursor:pointer; font-size:13.5px; color:var(--muted); }
@@ -101,6 +101,61 @@
       <div class="d">Management theory, performance, strategic planning and local strategic planning, in four maps</div>
     </a>
   </div>
+
+  <h2 class="fex">Field experiments</h2>
+  <div class="apps">
+    <a class="app fex" href="FEX/graphs/sampling_distribution_se.html">
+      <div class="t">Sampling distribution and SE</div>
+      <div class="d">Every assignment of the 7 villages, the true SE of 4.60 and its conservative estimate</div>
+    </a>
+    <a class="app fex" href="FEX/graphs/randomization_inference.html">
+      <div class="t">Randomization inference</div>
+      <div class="d">Sharp null, placebo assignments and the RI p-value, exact or Monte Carlo</div>
+    </a>
+    <a class="app fex" href="FEX/graphs/blocking.html">
+      <div class="t">Blocking</div>
+      <div class="d">Table 3.3: SE from 3.50 to 1.36, and five ways to estimate the ATE in a blocked design</div>
+    </a>
+  </div>
+  <details>
+    <summary>5 individual graphs (for embedding one at a time)</summary>
+    <ul>
+      <li><a href="FEX/graphs/sampling_distribution_se.html">Sampling distribution and standard error</a></li>
+      <li><a href="FEX/graphs/randomization_inference.html">Randomization inference p-value</a></li>
+      <li><a href="FEX/graphs/blocking.html">Blocking and the blocked estimator</a></li>
+      <li><a href="FEX/graphs/random_assignment_vs_selection.html">Random assignment vs selection</a></li>
+      <li><a href="FEX/graphs/clustering_se.html">Clustered assignment and the SE</a></li>
+    </ul>
+  </details>
+
+  <h2 class="ml">Machine learning</h2>
+  <div class="apps">
+    <a class="app ml" href="ML/graphs/train_test_error.html">
+      <div class="t">Training vs test error</div>
+      <div class="d">Polynomial fits of growing flexibility on three true functions, and the U-shaped test MSE</div>
+    </a>
+    <a class="app ml" href="ML/graphs/bias_variance.html">
+      <div class="t">Bias-variance trade-off</div>
+      <div class="d">A hundred training sets, their fitted curves, and the decomposition of the test MSE</div>
+    </a>
+    <a class="app ml" href="ML/graphs/bayes_knn.html">
+      <div class="t">Bayes classifier and KNN</div>
+      <div class="d">The true decision boundary, KNN with any K, and error against 1/K</div>
+    </a>
+  </div>
+  <details>
+    <summary>8 individual graphs (for embedding one at a time)</summary>
+    <ul>
+      <li><a href="ML/graphs/train_test_error.html">Training vs test error</a></li>
+      <li><a href="ML/graphs/bias_variance.html">Bias-variance trade-off</a></li>
+      <li><a href="ML/graphs/bayes_knn.html">Bayes classifier and KNN</a></li>
+      <li><a href="ML/graphs/rss_landscape_ols.html">RSS landscape (OLS on Advertising)</a></li>
+      <li><a href="ML/graphs/residual_analysis.html">Residual analysis (Auto)</a></li>
+      <li><a href="ML/graphs/collinearity_credit.html">Collinearity (Credit)</a></li>
+      <li><a href="ML/graphs/logistic_default.html">Logistic regression (Default)</a></li>
+      <li><a href="ML/graphs/knn_regression_vs_ols.html">KNN regression vs linear regression</a></li>
+    </ul>
+  </details>
 
   <h2 class="math">Mathematics</h2>
   <div class="apps">

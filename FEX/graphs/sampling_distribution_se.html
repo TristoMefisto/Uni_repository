@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sampling distribution and standard error</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+.tablewrap{max-height:420px;overflow:auto}
+figure.tbl{display:flex;flex-direction:column}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The sampling distribution of the ATE estimator</h1>
+  <p>Gerber &amp; Green Table 2.1: 7 villages, budget share under a male (Y(0)) or female (Y(1)) village head. Randomize which m villages are treated, compute the difference in means, and repeat for every possible assignment. The spread of those estimates is the standard error.</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="pVill" class="on">Table 2.1 villages (edit the cells)</button>
+  <button id="pRand">Random units: N and variance sliders</button>
+</div>
+
+<section class="controls" aria-label="Design parameters">
+  <div class="slider"><label for="sM">Treated units m <b id="vM"></b></label><input id="sM" type="range" min="1" max="6" step="1" value="2"></div>
+  <div class="slider" id="wN" hidden><label for="sN">Units N <b id="vN"></b></label><input id="sN" type="range" min="6" max="30" step="1" value="10"></div>
+  <div class="slider" id="wS0" hidden><label for="sS0">Spread of Y(0) <b id="vS0"></b></label><input id="sS0" type="range" min="0" max="10" step="0.5" value="4"></div>
+  <div class="slider" id="wS1" hidden><label for="sS1">Spread of Y(1) <b id="vS1"></b></label><input id="sS1" type="range" min="0" max="10" step="0.5" value="4"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">True ATE (both columns known)</span><span class="big" id="rATE"></span></div>
+  <div class="stat"><span class="small">Possible assignments J</span><span class="big" id="rJ"></span></div>
+  <div class="stat"><span class="small">This assignment's estimate</span><span class="big" id="rEst"></span></div>
+  <div class="stat"><span class="small">True SE (SD over all J)</span><span class="big" id="rSE"></span></div>
+  <div class="stat"><span class="small">Estimated SE, this assignment</span><span class="big long" id="rSEh"></span></div>
+  <div class="stat"><span class="small">Mean of estimated SE</span><span class="big" id="rSEm"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bEnum">Enumerate every assignment</button>
+  <button id="bNext">Next assignment</button>
+  <button id="bRandom">Random assignment</button>
+  <button id="bStop">Stop</button>
+  <button id="bReset">Reset table</button>
+</div>
+
+<div class="panels">
+  <figure class="tbl"><div class="tablewrap"><table class="data" id="tbl"></table></div>
+    <figcaption><strong>Schedule of potential outcomes.</strong> Rows in orange are treated in the current assignment (Y(1) observed), teal rows are controls (Y(0) observed). The dimmed value is the counterfactual you never see. Click a number to edit it.</figcaption></figure>
+  <figure><canvas id="cHist"></canvas>
+    <figcaption><strong>Sampling distribution of the estimate.</strong> One bar count per assignment enumerated so far. Red line: true ATE. Navy line: this assignment. With all J the mean equals the ATE (unbiased) and the SD is the true SE.</figcaption></figure>
+  <figure><canvas id="cSE"></canvas>
+    <figcaption><strong>The estimated SE across assignments.</strong> Each assignment shows only one column per unit, so the SE is estimated with √(V̂ar Y(0)/(N−m) + V̂ar Y(1)/m). Red dashed line: true SE. On average the estimate is at least as large: it is conservative.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p id="noteJ"></p>
+  <p>Four ways to make the true SE smaller, all visible here: more units (N), a balanced split (m = N/2), and less spread in Y(0) or in Y(1). Edit the table to make the villages more alike and watch the histogram tighten; move m away from N/2 and watch it widen.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+
+const V0=[10,15,20,20,10,15,15], V1=[15,15,30,15,20,15,30];
+let preset='vill', Y0=V0.slice(), Y1=V1.slice(), N=7, m=2;
+let combosAll=[], J=0, mc=false, idx=0, ests=[], seh=[], enumerated=0, cur=null;
+const rng=mulberry32(7);
+
+function genRandom(){const r=mulberry32(11+N);N=+$('sN').value;const s0=+$('sS0').value,s1=+$('sS1').value;Y0=[];Y1=[];for(let i=0;i<N;i++){const base=15+s0*gauss(r);Y0.push(Math.round(base));Y1.push(Math.round(base+5+s1*gauss(r)));}}
+function trueStats(){
+  const ate=mean(Y1)-mean(Y0);
+  const v0=pvar(Y0),v1=pvar(Y1);const m0=mean(Y0),m1=mean(Y1);let cov=0;for(let i=0;i<N;i++)cov+=(Y0[i]-m0)*(Y1[i]-m1);cov/=N;
+  const se=Math.sqrt((1/(N-1))*(m*v0/(N-m)+(N-m)*v1/m+2*cov));
+  return{ate,se};
+}
+function estimate(T){let t=0,c=0,ty=[],cy=[];const set=new Set(T);for(let i=0;i<N;i++){if(set.has(i)){t+=Y1[i];ty.push(Y1[i]);}else{c+=Y0[i];cy.push(Y0[i]);}}
+  const est=t/m-c/(N-m);const vt=m>1?svar(ty):NaN,vc=(N-m)>1?svar(cy):NaN;const seh=Math.sqrt(vc/(N-m)+vt/m);return{est,seh,vt,vc};}
+function rebuild(){
+  m=Math.min(m,N-1);$('sM').max=N-1;$('sM').value=m;
+  J=choose(N,m);mc=J>3000;combosAll=mc?[]:combos(N,m);
+  ests=[];seh=[];enumerated=0;idx=0;
+  cur=mc?sampleK(N,m,rng):combosAll[0];
+  $('noteJ').textContent=mc?`There are ${J.toLocaleString('en-US')} possible assignments, too many to list: the histograms use random assignments drawn with the original procedure (Monte Carlo), and the true SE is computed exactly from the full schedule.`:`With N = ${N} and m = ${m} there are C(${N}, ${m}) = ${J} equally likely assignments. Enumerating them all gives the exact sampling distribution.`;
+  drawAll();
+}
+function addCurrent(){const e=estimate(cur);ests.push(e.est);seh.push(e.seh);enumerated++;}
+function stepTo(k){ // enumerate combos up to index k (exclusive)
+  while(enumerated<k&&enumerated<J){cur=combosAll[enumerated];addCurrent();}
+}
+function renderTable(){
+  const set=new Set(cur);let h='<thead><tr><th>Unit</th><th>Y(0)</th><th>Y(1)</th><th>τᵢ</th><th>Group</th><th>Observed</th></tr></thead><tbody>';
+  for(let i=0;i<N;i++){const t=set.has(i);h+=`<tr class="${t?'t':'c'}"><td>${i+1}</td><td class="${t?'miss':''}">${preset==='vill'?`<input data-i="${i}" data-c="0" value="${Y0[i]}">`:Y0[i]}</td><td class="${t?'':'miss'}">${preset==='vill'?`<input data-i="${i}" data-c="1" value="${Y1[i]}">`:Y1[i]}</td><td>${Y1[i]-Y0[i]}</td><td><span class="tag ${t?'t':'c'}">${t?'T':'C'}</span></td><td>${t?Y1[i]:Y0[i]}</td></tr>`;}
+  const e=estimate(cur);
+  h+=`<tr><td><b>Average</b></td><td>${fmt(mean(Y0),2)}</td><td>${fmt(mean(Y1),2)}</td><td>${fmt(mean(Y1)-mean(Y0),2)}</td><td></td><td>Ȳ₁−Ȳ₀ = ${fmt(e.est,2)}</td></tr></tbody>`;
+  $('tbl').innerHTML=h;
+  $('tbl').querySelectorAll('input').forEach(inp=>inp.addEventListener('change',ev=>{const i=+ev.target.dataset.i,c=+ev.target.dataset.c;const v=parseFloat(ev.target.value);if(isNaN(v))return;(c?Y1:Y0)[i]=v;stopAnim();rebuild();}));
+}
+function hist(ctx,w,h,vals,opts){
+  const all=opts.all;let lo=Math.min(...all),hi=Math.max(...all);if(!isFinite(lo)){lo=0;hi=1;}if(hi-lo<1e-9){lo-=1;hi+=1;}
+  const pad=(hi-lo)*0.08;lo-=pad;hi+=pad;const nb=opts.bins||Math.min(40,Math.max(14,Math.round(Math.sqrt(all.length)*1.5)));
+  const bw=(hi-lo)/nb;const counts=new Array(nb).fill(0);vals.forEach(v=>{if(isNaN(v))return;let b=Math.floor((v-lo)/bw);b=Math.max(0,Math.min(nb-1,b));counts[b]++;});
+  const cmax=Math.max(1,...counts,...(opts.refCounts||[1]));
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,cmax*1.12],xt:ticks(lo,hi),xf:v=>fmt(v,opts.dec??1),yt:[],xl:opts.xl,yl:'count'});
+  ctx.fillStyle=opts.color;for(let b=0;b<nb;b++){if(!counts[b])continue;const x0=A.px(lo+b*bw),x1=A.px(lo+(b+1)*bw);ctx.fillRect(x0+0.5,A.py(counts[b]),Math.max(1,x1-x0-1),A.py(0)-A.py(counts[b]));}
+  ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(`${vals.filter(v=>!isNaN(v)).length} of ${opts.total}`,A.L+6,A.T+14);
+  return A;
+}
+function ticks(lo,hi){const span=hi-lo;const step=[0.5,1,2,5,10,20,50,100].find(s=>span/s<=8)||100;const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)t.push(+v.toFixed(6));return t;}
+function drawHist(){
+  const {ctx,w,h}=setupCanvas($('cHist'));const ts=trueStats();
+  const pool=ests.length?ests:[ts.ate-3*ts.se,ts.ate+3*ts.se];
+  const A=hist(ctx,w,h,ests,{all:[...pool,ts.ate],total:mc?'draws':J,color:css('--contour'),xl:'estimated ATE (difference in means)'});
+  A.clip();line(ctx,[[A.px(ts.ate),A.T],[A.px(ts.ate),A.T+A.ph]],css('--red'),2,[6,4]);label(ctx,'ATE '+fmt(ts.ate,2),A.px(ts.ate)+4,A.T+28,css('--red'));
+  if(cur){const e=estimate(cur);line(ctx,[[A.px(e.est),A.T],[A.px(e.est),A.T+A.ph]],css('--navy'),2);label(ctx,'this: '+fmt(e.est,2),A.px(e.est)+4,A.T+44,css('--navy'));}
+  if(ests.length>1){const mu=mean(ests),sd=Math.sqrt(pvar(ests));label(ctx,`mean ${fmt(mu,2)}, SD ${fmt(sd,2)}`,A.L+A.pw-6,A.T+14,css('--ink'),'right');}
+  A.unclip();
+}
+function drawSE(){
+  const {ctx,w,h}=setupCanvas($('cSE'));const ts=trueStats();const ok=seh.filter(v=>isFinite(v));
+  const pool=ok.length?ok:[0,ts.se*2];
+  const A=hist(ctx,w,h,ok,{all:[...pool,ts.se,0],total:mc?'draws':J,color:css('--orange'),xl:'estimated SE for that assignment',dec:1});
+  A.clip();line(ctx,[[A.px(ts.se),A.T],[A.px(ts.se),A.T+A.ph]],css('--red'),2,[6,4]);label(ctx,'true SE '+fmt(ts.se,2),A.px(ts.se)+4,A.T+28,css('--red'));
+  if(ok.length){const mu=mean(ok);line(ctx,[[A.px(mu),A.T],[A.px(mu),A.T+A.ph]],css('--orange'),2);label(ctx,'mean '+fmt(mu,2),A.px(mu)+4,A.T+44,css('--orange'));}
+  if(cur){const e=estimate(cur);if(isFinite(e.seh)){line(ctx,[[A.px(e.seh),A.T+A.ph-30],[A.px(e.seh),A.T+A.ph]],css('--navy'),2);}}
+  A.unclip();
+}
+function readouts(){
+  const ts=trueStats();const e=estimate(cur);const ok=seh.filter(v=>isFinite(v));
+  $('rATE').textContent=fmt(ts.ate,2);$('rJ').textContent=J.toLocaleString('en-US');$('rEst').textContent=fmt(e.est,2);
+  $('rSE').textContent=fmt(ts.se,2);$('rSEh').textContent=isFinite(e.seh)?fmt(e.seh,2)+` = √(${fmt(e.vc,1)}/${N-m} + ${fmt(e.vt,1)}/${m})`:'needs m ≥ 2 and N−m ≥ 2';
+  $('rSEm').textContent=ok.length?fmt(mean(ok),2)+(mean(ok)>=ts.se-1e-9?' ≥ true':' < true'):'—';
+  $('vM').textContent=m+' of '+N;$('vN').textContent=N;$('vS0').textContent=$('sS0').value;$('vS1').textContent=$('sS1').value;
+}
+function drawAll(){renderTable();readouts();drawHist();drawSE();}
+
+$('sM').addEventListener('input',e=>{stopAnim();m=+e.target.value;rebuild();});
+['sN','sS0','sS1'].forEach(id=>$(id).addEventListener('input',()=>{stopAnim();genRandom();rebuild();}));
+$('pVill').addEventListener('click',()=>{stopAnim();preset='vill';$('pVill').classList.add('on');$('pRand').classList.remove('on');['wN','wS0','wS1'].forEach(i=>$(i).hidden=true);Y0=V0.slice();Y1=V1.slice();N=7;m=2;rebuild();});
+$('pRand').addEventListener('click',()=>{stopAnim();preset='rand';$('pRand').classList.add('on');$('pVill').classList.remove('on');['wN','wS0','wS1'].forEach(i=>$(i).hidden=false);genRandom();m=Math.round(N/2);rebuild();});
+$('bReset').addEventListener('click',()=>{stopAnim();if(preset==='vill'){Y0=V0.slice();Y1=V1.slice();}else genRandom();rebuild();});
+$('bStop').addEventListener('click',stopAnim);
+$('bNext').addEventListener('click',()=>{stopAnim();if(mc){cur=sampleK(N,m,rng);addCurrent();}else{if(enumerated>=J){ests=[];seh=[];enumerated=0;}stepTo(enumerated+1);}drawAll();});
+$('bRandom').addEventListener('click',()=>{stopAnim();cur=sampleK(N,m,rng);if(mc)addCurrent();drawAll();});
+$('bEnum').addEventListener('click',()=>{
+  ests=[];seh=[];enumerated=0;
+  if(mc){const total=2000;const dur=6000;let done=0;animate(t=>{const target=Math.floor(t*total);while(done<target){cur=sampleK(N,m,rng);addCurrent();done++;}drawAll();},dur);}
+  else{const dur=Math.min(12000,Math.max(2500,J*120));animate(t=>{stepTo(Math.max(1,Math.ceil(t*J)));drawAll();},dur);}
+});
+hookTheme(()=>{drawHist();drawSE();});
+rebuild();
+</script>
+</body>
+</html>

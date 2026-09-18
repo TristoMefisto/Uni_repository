@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bayes classifier and KNN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+figure canvas{aspect-ratio:1/1}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The Bayes classifier and K-nearest neighbours</h1>
+  <p>ISLR Figures 2.13 to 2.17. Two classes in two dimensions, generated from a known distribution, so the true conditional probability Pr(orange | X) is available. The Bayes classifier uses it and is unbeatable; KNN estimates it from the K closest training points, and K sets its flexibility.</p>
+</header>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sK">Neighbours K <b id="vK"></b></label><input id="sK" type="range" min="0" max="100" step="1" value="45"></div>
+  <div class="slider"><label for="sN">Training points per class <b id="vN"></b></label><input id="sN" type="range" min="50" max="400" step="50" value="100"></div>
+  <div class="slider"><label for="sS">Class overlap (spread of each class) <b id="vS"></b></label><input id="sS" type="range" min="0.3" max="0.9" step="0.05" value="0.55"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Bayes error rate</span><span class="big" id="rBayes"></span></div>
+  <div class="stat"><span class="small">KNN training error</span><span class="big" id="rTr"></span></div>
+  <div class="stat"><span class="small">KNN test error (2 000 points)</span><span class="big" id="rTe"></span></div>
+  <div class="stat"><span class="small">Best K on the test set</span><span class="big" id="rBest"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bSweep">Sweep K from 1 upwards</button>
+  <button id="bNew">New training sample</button>
+  <button id="bStop">Stop</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cTrue"></canvas>
+    <figcaption><strong>The truth.</strong> Shading: Pr(orange | X), known here because the data are simulated. Purple dashed: the Bayes decision boundary, where the probability is exactly 0.5. Points on the wrong side of it are the Bayes error, the lowest test error any classifier can reach.</figcaption></figure>
+  <figure><canvas id="cKNN"></canvas>
+    <figcaption><strong>KNN with the chosen K.</strong> Circles: training data. Small dots: the class KNN assigns to each point of the plane. Black: the KNN decision boundary. Purple dashed: the Bayes boundary it is trying to recover. K = 1 traces every training point; large K smooths towards a line.</figcaption></figure>
+  <figure><canvas id="cErr"></canvas>
+    <figcaption><strong>Error against flexibility 1/K.</strong> Grey: training error, which reaches zero at K = 1 (each point is its own nearest neighbour). Red: test error, U-shaped. Dashed: the Bayes rate. Dot: current K.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>Each class is a mixture of three Gaussian bumps; Pr(orange | x) is the orange density divided by the sum of the two densities, and the Bayes error rate is the integral of the smaller of the two densities. Widen the overlap and both the Bayes rate and the best achievable KNN error rise: this is the classification analogue of the irreducible error.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+const CO=[[-1.5,1.2],[0.8,1.8],[1.6,-0.4]],CB=[[-1.2,-1.4],[0.3,0.2],[1.9,-2.0]];
+const LIM=3.5,GX=60,GT=121;
+let sd=0.55,nPer=100,seed=1,K=10;
+const KS=[1,2,3,4,5,7,10,15,20,30,50,75,100,150,200];
+let tr=[],te=[],trLab=[],teLab=[],gridLab=[],testLab=[],trainLab=[],errs=[],bayesErr=0,pTrue=[],trueBoundary=[],knnField=[];
+const dens=(x,y,C)=>{let s=0;for(const c of C)s+=Math.exp(-((x-c[0])**2+(y-c[1])**2)/(2*sd*sd));return s/(3*2*Math.PI*sd*sd);};
+const pOrange=(x,y)=>{const a=dens(x,y,CO),b=dens(x,y,CB);return a/(a+b+1e-300);};
+function drawClass(r,C){const c=C[Math.floor(r()*3)];return[c[0]+sd*gauss(r),c[1]+sd*gauss(r)];}
+function kList(){return KS.filter(k=>k<=2*nPer);}
+function kFromSlider(v){const ks=kList();const kk=Math.round(Math.exp(v/100*Math.log(ks[ks.length-1])));let best=ks[0];for(const k of ks)if(Math.abs(Math.log(k)-Math.log(kk))<Math.abs(Math.log(best)-Math.log(kk)))best=k;return best;}
+function sortedLabels(px,py){const d=new Float64Array(tr.length);for(let i=0;i<tr.length;i++)d[i]=(tr[i][0]-px)**2+(tr[i][1]-py)**2;const idx=Array.from(d.keys()).sort((a,b)=>d[a]-d[b]);const out=new Uint8Array(tr.length);for(let i=0;i<tr.length;i++)out[i]=trLab[idx[i]];return out;}
+function build(){const r=mulberry32(seed*31+7);tr=[];trLab=[];for(let i=0;i<nPer;i++){tr.push(drawClass(r,CO));trLab.push(1);tr.push(drawClass(r,CB));trLab.push(0);}
+  const rt=mulberry32(4242);te=[];teLab=[];for(let i=0;i<1000;i++){te.push(drawClass(rt,CO));teLab.push(1);te.push(drawClass(rt,CB));teLab.push(0);}
+  // true probability field + Bayes error
+  pTrue=[];let be=0;const h=2*LIM/(GT-1);for(let i=0;i<GT;i++){pTrue[i]=[];for(let j=0;j<GT;j++){const x=-LIM+i*h,y=-LIM+j*h;const a=dens(x,y,CO),b=dens(x,y,CB);pTrue[i][j]=a/(a+b+1e-300);be+=Math.min(a,b)*0.5*h*h;}}bayesErr=be;trueBoundary=isolines(pTrue,GT,GT,0.5);
+  gridLab=[];const hg=2*LIM/(GX-1);for(let i=0;i<GX;i++){gridLab[i]=[];for(let j=0;j<GX;j++)gridLab[i][j]=sortedLabels(-LIM+i*hg,-LIM+j*hg);}
+  testLab=te.map(p=>sortedLabels(p[0],p[1]));trainLab=tr.map(p=>sortedLabels(p[0],p[1]));
+  errs=kList().map(k=>({k,tr:errRate(trainLab,trLab,k),te:errRate(testLab,teLab,k)}));
+  const ks=kList();if(!ks.includes(K))K=kFromSlider(+$('sK').value);
+  drawAll();}
+function prefix(lab,k){let s=0;for(let i=0;i<k;i++)s+=lab[i];return s/k;}
+function errRate(labs,truth,k){let e=0;for(let i=0;i<labs.length;i++){const p=prefix(labs[i],k);if((p>0.5?1:0)!==truth[i])e++;}return e/labs.length;}
+function frame(ctx,w,h){const L=30,R=8,T=8,B=26;const pw=w-L-R,ph=h-T-B;const px=x=>L+(x+LIM)/(2*LIM)*pw,py=y=>T+ph-(y+LIM)/(2*LIM)*ph;ctx.strokeStyle=css('--rule');ctx.strokeRect(L,T,pw,ph);ctx.fillStyle=css('--muted');ctx.font=FONT;ctx.textAlign='center';[-2,0,2].forEach(v=>ctx.fillText(v,px(v),T+ph+14));ctx.textAlign='right';[-2,0,2].forEach(v=>ctx.fillText(v,L-5,py(v)+4));ctx.textAlign='center';ctx.fillText('X₁',L+pw/2,h-2);ctx.save();ctx.translate(9,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('X₂',0,0);ctx.restore();return{L,T,pw,ph,px,py};}
+function hexToRgb(hx){hx=hx.replace('#','');return [0,2,4].map(i=>parseInt(hx.substr(i,2),16));}
+function drawTrue(){const {ctx,w,h}=setupCanvas($('cTrue'));const F=frame(ctx,w,h);const o=hexToRgb(css('--orange')),b=hexToRgb(css('--blue'));const hg=2*LIM/(GT-1);const cw=F.pw/(GT-1)+0.6,ch=F.ph/(GT-1)+0.6;
+  for(let i=0;i<GT-1;i++)for(let j=0;j<GT-1;j++){const p=pTrue[i][j];const c=o.map((v,k)=>Math.round(b[k]+(v-b[k])*p));ctx.fillStyle=`rgba(${c},${0.18+0.5*Math.abs(p-0.5)*2})`;ctx.fillRect(F.px(-LIM+i*hg),F.py(-LIM+(j+1)*hg),cw,ch);}
+  ctx.strokeStyle=css('--purple');ctx.lineWidth=2;ctx.setLineDash([6,4]);ctx.beginPath();trueBoundary.forEach(s=>{ctx.moveTo(F.px(-LIM+s[0][0]*hg),F.py(-LIM+s[0][1]*hg));ctx.lineTo(F.px(-LIM+s[1][0]*hg),F.py(-LIM+s[1][1]*hg));});ctx.stroke();ctx.setLineDash([]);
+  label(ctx,'Pr(orange | X) high',F.L+6,F.T+14,css('--orange'));label(ctx,'Bayes boundary',F.L+F.pw-6,F.T+F.ph-8,css('--purple'),'right');}
+function drawKNN(){const {ctx,w,h}=setupCanvas($('cKNN'));const F=frame(ctx,w,h);const hg=2*LIM/(GX-1);knnField=[];
+  for(let i=0;i<GX;i++){knnField[i]=[];for(let j=0;j<GX;j++){const p=prefix(gridLab[i][j],K);knnField[i][j]=p;ctx.fillStyle=p>0.5?css('--orange'):css('--blue');ctx.globalAlpha=.55;ctx.fillRect(F.px(-LIM+i*hg)-1,F.py(-LIM+j*hg)-1,2,2);}}ctx.globalAlpha=1;
+  const hT=2*LIM/(GT-1);ctx.strokeStyle=css('--purple');ctx.lineWidth=1.5;ctx.setLineDash([6,4]);ctx.beginPath();trueBoundary.forEach(s=>{ctx.moveTo(F.px(-LIM+s[0][0]*hT),F.py(-LIM+s[0][1]*hT));ctx.lineTo(F.px(-LIM+s[1][0]*hT),F.py(-LIM+s[1][1]*hT));});ctx.stroke();ctx.setLineDash([]);
+  const segs=isolines(knnField,GX,GX,0.5);ctx.strokeStyle=css('--ink');ctx.lineWidth=1.8;ctx.beginPath();segs.forEach(s=>{ctx.moveTo(F.px(-LIM+s[0][0]*hg),F.py(-LIM+s[0][1]*hg));ctx.lineTo(F.px(-LIM+s[1][0]*hg),F.py(-LIM+s[1][1]*hg));});ctx.stroke();
+  tr.forEach((p,i)=>{ctx.beginPath();ctx.arc(F.px(p[0]),F.py(p[1]),3,0,6.283);ctx.strokeStyle=trLab[i]?css('--orange'):css('--blue');ctx.lineWidth=1.4;ctx.stroke();});
+  label(ctx,'KNN, K = '+K,F.L+6,F.T+14,css('--ink'));}
+function drawErr(){const {ctx,w,h}=setupCanvas($('cErr'));const ks=kList();const xs=ks.map(k=>Math.log10(1/k));const lo=Math.min(...xs)-0.1,hi=0.1;const ymax=Math.max(0.3,...errs.map(e=>Math.max(e.tr,e.te)))*1.1;
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,ymax],xt:[Math.log10(0.01),Math.log10(0.02),Math.log10(0.05),Math.log10(0.1),Math.log10(0.2),Math.log10(0.5),0].filter(v=>v>=lo),xf:v=>{const q=10**v;return q>=0.1?q.toFixed(1):q.toFixed(2);},yt:[0,0.1,0.2,0.3,0.4,0.5].filter(v=>v<=ymax),yf:v=>v.toFixed(2),xl:'1/K (flexibility)',yl:'error rate'});
+  A.clip();line(ctx,[[A.L,A.py(bayesErr)],[A.L+A.pw,A.py(bayesErr)]],css('--ink'),1,[5,4]);
+  line(ctx,errs.map((e,i)=>[A.px(xs[i]),A.py(e.tr)]),css('--grey'),2);line(ctx,errs.map((e,i)=>[A.px(xs[i]),A.py(e.te)]),css('--red'),2);
+  errs.forEach((e,i)=>{dot(ctx,A.px(xs[i]),A.py(e.tr),2.5,css('--grey'));dot(ctx,A.px(xs[i]),A.py(e.te),2.5,css('--red'));});
+  const cur=errs.find(e=>e.k===K);if(cur){dot(ctx,A.px(Math.log10(1/K)),A.py(cur.tr),6,css('--grey'),css('--panel'));dot(ctx,A.px(Math.log10(1/K)),A.py(cur.te),6,css('--red'),css('--panel'));}
+  A.unclip();label(ctx,'test',A.L+A.pw-6,A.T+14,css('--red'),'right');label(ctx,'training',A.L+A.pw-6,A.T+30,css('--grey'),'right');label(ctx,'Bayes '+fmt(bayesErr,3),A.L+6,A.py(bayesErr)-8,css('--ink'));}
+function readouts(){const cur=errs.find(e=>e.k===K);$('vK').textContent=K;$('vN').textContent=nPer;$('vS').textContent=fmt(sd,2);$('rBayes').textContent=fmt(bayesErr,3);$('rTr').textContent=cur?fmt(cur.tr,3):'—';$('rTe').textContent=cur?fmt(cur.te,3):'—';let best=errs[0];errs.forEach(e=>{if(e.te<best.te)best=e;});$('rBest').textContent=`${best.k} (test error ${fmt(best.te,3)})`;}
+function drawAll(){readouts();drawTrue();drawKNN();drawErr();}
+$('sK').addEventListener('input',e=>{stopAnim();K=kFromSlider(+e.target.value);readouts();drawKNN();drawErr();});
+$('sN').addEventListener('input',e=>{stopAnim();nPer=+e.target.value;build();});
+$('sS').addEventListener('input',e=>{stopAnim();sd=+e.target.value;build();});
+$('bNew').addEventListener('click',()=>{stopAnim();seed++;build();});
+$('bStop').addEventListener('click',stopAnim);
+$('bSweep').addEventListener('click',()=>{const ks=kList();animate(t=>{const i=Math.min(ks.length-1,Math.floor(t*ks.length));K=ks[i];$('sK').value=Math.round(100*Math.log(K)/Math.log(ks[ks.length-1]));readouts();drawKNN();drawErr();},ks.length*450);});
+hookTheme(drawAll);
+build();
+</script>
+</body>
+</html>

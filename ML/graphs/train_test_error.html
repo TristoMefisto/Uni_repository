@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Training vs test error</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Training error always falls, test error does not</h1>
+  <p>ISLR Figures 2.9 to 2.11. A true function f (black), noisy training points, and a family of fits of growing flexibility: polynomials from a straight line up to degree 15. Training MSE is measured on the points used to fit; test MSE on fresh points from the same f.</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="p0" class="on">Smooth non-linear f (Fig 2.9)</button>
+  <button id="p1">Near-linear f (Fig 2.10)</button>
+  <button id="p2">Highly non-linear f (Fig 2.11)</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sD">Flexibility: polynomial degree <b id="vD"></b></label><input id="sD" type="range" min="1" max="15" step="1" value="3"></div>
+  <div class="slider"><label for="sN">Training points n <b id="vN"></b></label><input id="sN" type="range" min="20" max="200" step="5" value="30"></div>
+  <div class="slider"><label for="sS">Noise σ <b id="vS"></b></label><input id="sS" type="range" min="0.5" max="6" step="0.25" value="3"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Training MSE</span><span class="big" id="rTr"></span></div>
+  <div class="stat"><span class="small">Test MSE (500 fresh points)</span><span class="big" id="rTe"></span></div>
+  <div class="stat"><span class="small">Irreducible error σ²</span><span class="big" id="rS2"></span></div>
+  <div class="stat"><span class="small">Best degree on the test set</span><span class="big" id="rBest"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bSweep">Sweep flexibility</button>
+  <button id="bNew">New training sample</button>
+  <button id="bStop">Stop</button>
+  <label class="small" style="display:flex;align-items:center;gap:6px;margin-left:8px"><input type="checkbox" id="tTest"> show the test points</label>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cFit"></canvas>
+    <figcaption><strong>Data and fits.</strong> Black: the true f. Grey dots: training data. Coloured curve: the polynomial of the chosen degree. Past the right degree the curve starts chasing the noise: it bends to pass near individual points, which is overfitting.</figcaption></figure>
+  <figure><canvas id="cMSE"></canvas>
+    <figcaption><strong>MSE against flexibility.</strong> Grey: training MSE, falling with every extra degree. Red: test MSE, U-shaped. Dashed: σ², the floor no method can beat on average. The minimum of the red curve is the flexibility to pick.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>The training MSE can be driven towards zero by a flexible enough model, because the fit is allowed to memorise the sample. The test MSE cannot: once the model follows the noise, new points from the same f land far from the curve. Compare the three presets: with a near-linear f the best degree is 1 or 2; with a highly non-linear f the U bottoms out much further right.</p>
+  <p>Test data are rarely available in practice, which is why the test MSE is estimated by cross-validation instead.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+const F=[t=>10+8*Math.sin(2*Math.PI*t*0.8+0.5)+6*t, t=>5+15*t+1.5*Math.sin(2*Math.PI*t), t=>12+8*Math.sin(2*Math.PI*1.6*t)+5*Math.sin(2*Math.PI*3.4*t+1)];
+let preset=0,d=3,n=30,sig=3,seed=1,showTest=false;
+let xs=[],ys=[],xt=[],yt=[],fits=[],DMAX=15;
+const f=t=>F[preset](t/100);
+function gen(){const r=mulberry32(100*seed+preset);xs=[];ys=[];for(let i=0;i<n;i++){const x=100*r();xs.push(x);ys.push(f(x)+sig*gauss(r));}
+  const rt=mulberry32(777+preset);xt=[];yt=[];for(let i=0;i<500;i++){const x=100*rt();xt.push(x);yt.push(f(x)+sig*gauss(rt));}
+  DMAX=Math.min(15,n-5);$('sD').max=DMAX;if(d>DMAX){d=DMAX;$('sD').value=d;}
+  fits=[null];for(let k=1;k<=DMAX;k++){const fit=polyFit(xs,ys,k,0,100);const tr=mean(xs.map((x,i)=>(ys[i]-fit.f(x))**2)),te=mean(xt.map((x,i)=>(yt[i]-fit.f(x))**2));fits.push({fit,tr,te});}}
+function colorOf(k){const t=(k-1)/(DMAX-1);const a=[217,138,23],b=[47,143,78],c=[34,102,184];const mix=(u,v,s)=>u.map((x,i)=>Math.round(x+(v[i]-x)*s));const col=t<0.5?mix(a,c,t*2):mix(c,b,(t-0.5)*2);return `rgb(${col})`;}
+function drawFit(){const {ctx,w,h}=setupCanvas($('cFit'));const ally=[...ys,...(showTest?yt:[])];const lo=Math.min(...ally)-2,hi=Math.max(...ally)+2;
+  const A=axes(ctx,w,h,{xlim:[0,100],ylim:[lo,hi],xt:[0,25,50,75,100],yt:[],xl:'X',yl:'Y'});A.clip();
+  if(showTest){ctx.globalAlpha=.35;xt.forEach((x,i)=>dot(ctx,A.px(x),A.py(yt[i]),2,css('--red')));ctx.globalAlpha=1;}
+  xs.forEach((x,i)=>dot(ctx,A.px(x),A.py(ys[i]),3,css('--grey')));
+  const g=[];for(let x=0;x<=100;x+=0.5)g.push([A.px(x),A.py(f(x))]);line(ctx,g,css('--ink'),2);
+  const fit=fits[d].fit;const c=[];for(let x=0;x<=100;x+=0.5)c.push([A.px(x),A.py(fit.f(x))]);line(ctx,c,colorOf(d),2.5);
+  A.unclip();label(ctx,'degree '+d,A.L+A.pw-6,A.T+14,colorOf(d),'right');label(ctx,'true f',A.L+6,A.T+14,css('--ink'));}
+function drawMSE(){const {ctx,w,h}=setupCanvas($('cMSE'));const tes=fits.slice(1).map(o=>o.te);const ymax=Math.max(sig*sig*1.6,Math.min(Math.max(...tes),Math.min(...tes)*3))*1.05;
+  const A=axes(ctx,w,h,{xlim:[0.5,DMAX+0.5],ylim:[0,ymax],xt:[1,3,5,7,9,11,13,15].filter(v=>v<=DMAX),yt:[0,Math.round(ymax/4),Math.round(ymax/2),Math.round(3*ymax/4)].map(v=>v),xl:'flexibility (polynomial degree)',yl:'mean squared error'});
+  A.clip();line(ctx,[[A.L,A.py(sig*sig)],[A.L+A.pw,A.py(sig*sig)]],css('--ink'),1,[5,4]);
+  line(ctx,fits.slice(1).map((o,i)=>[A.px(i+1),A.py(Math.min(o.tr,ymax*1.1))]),css('--grey'),2);
+  line(ctx,fits.slice(1).map((o,i)=>[A.px(i+1),A.py(Math.min(o.te,ymax*1.1))]),css('--red'),2);
+  fits.slice(1).forEach((o,i)=>{dot(ctx,A.px(i+1),A.py(Math.min(o.tr,ymax*1.1)),2.5,css('--grey'));dot(ctx,A.px(i+1),A.py(Math.min(o.te,ymax*1.1)),2.5,css('--red'));});
+  dot(ctx,A.px(d),A.py(Math.min(fits[d].tr,ymax*1.1)),6,css('--grey'),css('--panel'));dot(ctx,A.px(d),A.py(Math.min(fits[d].te,ymax*1.1)),6,css('--red'),css('--panel'));
+  A.unclip();label(ctx,'test MSE',A.L+A.pw-6,A.T+14,css('--red'),'right');label(ctx,'training MSE',A.L+A.pw-6,A.T+30,css('--grey'),'right');label(ctx,'σ² = '+fmt(sig*sig,1),A.L+6,A.py(sig*sig)-8,css('--ink'));}
+function readouts(){$('vD').textContent=d;$('vN').textContent=n;$('vS').textContent=sig;$('rTr').textContent=fmt(fits[d].tr,2);$('rTe').textContent=fmt(fits[d].te,2);$('rS2').textContent=fmt(sig*sig,2);
+  let best=1;for(let k=2;k<=DMAX;k++)if(fits[k].te<fits[best].te)best=k;$('rBest').textContent=best+' (test MSE '+fmt(fits[best].te,2)+')';}
+function drawAll(){readouts();drawFit();drawMSE();}
+function rebuild(){gen();drawAll();}
+$('sD').addEventListener('input',e=>{stopAnim();d=+e.target.value;drawAll();});
+$('sN').addEventListener('input',e=>{stopAnim();n=+e.target.value;rebuild();});
+$('sS').addEventListener('input',e=>{stopAnim();sig=+e.target.value;rebuild();});
+$('tTest').addEventListener('change',e=>{showTest=e.target.checked;drawAll();});
+$('bNew').addEventListener('click',()=>{stopAnim();seed++;rebuild();});
+$('bStop').addEventListener('click',stopAnim);
+$('bSweep').addEventListener('click',()=>{animate(t=>{d=Math.max(1,Math.min(DMAX,Math.round(1+t*(DMAX-1))));$('sD').value=d;drawAll();},DMAX*350);});
+[['p0',0],['p1',1],['p2',2]].forEach(([id,p])=>$(id).addEventListener('click',()=>{stopAnim();preset=p;['p0','p1','p2'].forEach(i=>$(i).classList.toggle('on',i===id));rebuild();}));
+hookTheme(drawAll);
+rebuild();
+</script>
+</body>
+</html>

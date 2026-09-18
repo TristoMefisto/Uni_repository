@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Randomization inference p-value</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+.tablewrap{max-height:420px;overflow:auto}
+figure.tbl{display:flex;flex-direction:column}
+td.filled{color:var(--purple);font-weight:500}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Randomization inference: the p-value from placebo assignments</h1>
+  <p>Only one assignment was run, so only one potential outcome per unit is observed. Under the sharp null (no effect for any unit) the missing column is just a copy of the observed one, and every other assignment the lottery could have produced becomes a placebo experiment. The RI p-value is the share of placebos with an estimate at least as extreme as the real one.</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="pA" class="on">4 units, 2 treated (6 assignments)</button>
+  <button id="pB">Table 2.1 villages, 2 treated (21)</button>
+  <button id="pC">Simulated experiment, N = 20 (184 756)</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sTau">Add a true effect τ to the treated <b id="vTau"></b></label><input id="sTau" type="range" min="0" max="15" step="0.5" value="0"></div>
+  <div class="slider" id="wReps" hidden><label for="sReps">Placebo draws (reps) <b id="vReps"></b></label><input id="sReps" type="range" min="100" max="5000" step="100" value="1000"></div>
+  <div class="toggles"><label><input type="radio" name="tail" value="1" checked> one-tailed (≥ observed)</label><label><input type="radio" name="tail" value="2"> two-tailed (|·| ≥ |observed|)</label></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Observed estimate τ̂</span><span class="big" id="rObs"></span></div>
+  <div class="stat"><span class="small">Placebos at least as extreme</span><span class="big" id="rCount"></span></div>
+  <div class="stat"><span class="small">RI p-value</span><span class="big long" id="rP"></span></div>
+  <div class="stat"><span class="small">t-test p-value (weak null)</span><span class="big long" id="rT"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bRun">Run the placebo assignments</button>
+  <button id="bStep">One placebo</button>
+  <button id="bStop">Stop</button>
+  <button id="bNull">Toggle sharp-null fill</button>
+</div>
+
+<div class="panels">
+  <figure class="tbl"><div class="tablewrap"><table class="data" id="tbl"></table></div>
+    <figcaption id="capT"><strong>The experiment.</strong> Observed outcomes only: one column per unit. Purple entries are the counterfactuals filled in under the sharp null Y(1) = Y(0). The highlighted rows show the current placebo assignment.</figcaption></figure>
+  <figure><canvas id="cHist"></canvas>
+    <figcaption><strong>Placebo estimates τ̂(ω).</strong> Each placebo assignment gives a difference in means under the sharp null. Red: the observed estimate. Shaded bars: placebos at least as extreme. The p-value is their share.</figcaption></figure>
+  <figure><canvas id="cTrace"></canvas>
+    <figcaption><strong>p-value as placebos accumulate.</strong> With a full enumeration the p-value is exact; with Monte Carlo draws it settles around the exact value, and the adjusted (c+1)/(n+1) version guards against reporting exactly zero.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>The sharp null is stronger than the weak null of the t-test: no unit at all is affected, not just the average. That is what makes the placebo outcomes computable. Drag τ up to add a real effect to the treated units and watch the observed estimate move into the tail of the placebo distribution.</p>
+  <p id="noteC"></p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+
+// t distribution CDF via regularized incomplete beta
+function betacf(a,b,x){let m2,aa,c=1,d=1-(a+b)*x/(a+1);if(Math.abs(d)<1e-30)d=1e-30;d=1/d;let h=d;for(let m=1;m<=200;m++){m2=2*m;aa=m*(b-m)*x/((a-1+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;h*=d*c;aa=-(a+m)*(a+b+m)*x/((a+m2)*(a+1+m2));d=1+aa*d;if(Math.abs(d)<1e-30)d=1e-30;c=1+aa/c;if(Math.abs(c)<1e-30)c=1e-30;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<3e-14)break;}return h;}
+function lgamma(x){const c=[76.18009172947146,-86.50532032941677,24.01409824083091,-1.231739572450155,0.1208650973866179e-2,-0.5395239384953e-5];let y=x,t=x+5.5;t-=(x+0.5)*Math.log(t);let s=1.000000000190015;for(let j=0;j<6;j++)s+=c[j]/++y;return -t+Math.log(2.5066282746310005*s/x);}
+function ibeta(a,b,x){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgamma(a+b)-lgamma(a)-lgamma(b)+a*Math.log(x)+b*Math.log(1-x));return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+function tcdf(t,df){const x=df/(df+t*t);const p=0.5*ibeta(df/2,0.5,x);return t>0?1-p:p;}
+
+let preset='A', N, m, D, yObs, tau=0, tail=1, reps=1000;
+let J, mc, allC, placebos=[], trace=[], cur=null, fillNull=true;
+const rng=mulberry32(2026);
+function setup(){
+  tau=+$('sTau').value;
+  if(preset==='A'){N=4;m=2;D=[1,1,0,0];yObs=[3,1,0,1];}
+  else if(preset==='B'){N=7;m=2;D=[1,0,0,0,0,0,1];yObs=[15,15,20,20,10,15,30];}
+  else{N=20;m=10;const r=mulberry32(99);D=[];yObs=[];const T=new Set(sampleK(N,m,r));for(let i=0;i<N;i++){D.push(T.has(i)?1:0);yObs.push(Math.round(50+10*gauss(r)));}}
+  yObs=yObs.map((y,i)=>y+(D[i]?tau:0));
+  J=choose(N,m);mc=J>3000;allC=mc?null:combos(N,m);
+  placebos=[];trace=[];cur=null;
+  $('wReps').hidden=!mc;$('vReps').textContent=reps;$('vTau').textContent=tau;
+  $('noteC').textContent=mc?`With N = 20 and m = 10 there are C(20, 10) = 184,756 assignments. The page draws ${reps} of them at random with the same procedure (complete random assignment of 10 units), which is what ritest does with reps().`:`With N = ${N} and m = ${m} the ${J} assignments are enumerated, so the p-value is exact: no approximation, no large-sample argument.`;
+  drawAll();
+}
+function est(T){const set=new Set(T);let a=0,b=0;for(let i=0;i<N;i++)set.has(i)?a+=yObs[i]:b+=yObs[i];return a/m-b/(N-m);}
+function obs(){const T=[];for(let i=0;i<N;i++)if(D[i])T.push(i);return est(T);}
+function extreme(v,o){return tail===1?v>=o-1e-9:Math.abs(v)>=Math.abs(o)-1e-9;}
+function tTest(){const ty=[],cy=[];for(let i=0;i<N;i++)(D[i]?ty:cy).push(yObs[i]);const v1=svar(ty)/m,v0=svar(cy)/(N-m);const se=Math.sqrt(v1+v0);const t=(mean(ty)-mean(cy))/se;const df=(v1+v0)**2/(v1*v1/(m-1)+v0*v0/(N-m-1));const p2=2*(1-tcdf(Math.abs(t),df));return{t,se,df,p:tail===1?(t>0?p2/2:1-p2/2):p2};}
+function addPlacebo(){cur=mc?sampleK(N,m,rng):allC[placebos.length];placebos.push(est(cur));const o=obs();const c=placebos.filter(v=>extreme(v,o)).length;trace.push(c/placebos.length);}
+function renderTable(){
+  const set=new Set(cur||[]);let h=`<thead><tr><th>i</th><th>Y(1)</th><th>Y(0)</th><th>D</th><th>placebo D</th></tr></thead><tbody>`;
+  for(let i=0;i<N;i++){const t=D[i]===1;const f=fillNull;const y1=t?yObs[i]:(f?`<span class="filled">${yObs[i]}</span>`:'?'),y0=!t?yObs[i]:(f?`<span class="filled">${yObs[i]}</span>`:'?');
+    h+=`<tr class="${cur?(set.has(i)?'t':'c'):''}"><td>${i+1}</td><td>${y1}</td><td>${y0}</td><td><span class="tag ${t?'t':'c'}">${D[i]}</span></td><td>${cur?`<span class="tag ${set.has(i)?'t':'c'}">${set.has(i)?1:0}</span>`:'—'}</td></tr>`;}
+  h+=`<tr><td><b>τ̂</b></td><td colspan="2">observed ${fmt(obs(),2)}</td><td></td><td>${cur?'placebo '+fmt(est(cur),2):''}</td></tr></tbody>`;$('tbl').innerHTML=h;
+}
+function ticks(lo,hi){const span=hi-lo;const step=[0.5,1,2,5,10,20].find(s=>span/s<=8)||20;const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)t.push(+v.toFixed(6));return t;}
+function drawHist(){
+  const {ctx,w,h}=setupCanvas($('cHist'));const o=obs();
+  const pool=placebos.length?placebos:[-1,1];let lo=Math.min(...pool,o),hi=Math.max(...pool,o);if(hi-lo<1e-9){lo-=1;hi+=1;}const pad=(hi-lo)*.1;lo-=pad;hi+=pad;
+  const discrete=!mc;const bw=discrete?(preset==='A'?0.5:0.5):(hi-lo)/30;const nb=Math.ceil((hi-lo)/bw);const base=discrete?Math.floor(lo/bw)*bw:lo;
+  const counts=new Array(nb+1).fill(0),ext=new Array(nb+1).fill(0);placebos.forEach(v=>{const b=Math.min(nb,Math.max(0,Math.round((v-base)/bw-(discrete?0:0.5))));counts[b]++;if(extreme(v,o))ext[b]++;});
+  const cmax=Math.max(1,...counts);
+  const A=axes(ctx,w,h,{xlim:[base,base+(nb+1)*bw],ylim:[0,cmax*1.15],xt:ticks(base,base+(nb+1)*bw),yt:[],xl:'placebo estimate τ̂(ω)',yl:'count'});
+  for(let b=0;b<=nb;b++){if(!counts[b])continue;const x0=A.px(base+b*bw-(discrete?bw/2:0)),x1=A.px(base+(b+1)*bw-(discrete?bw/2:0));ctx.fillStyle=css('--grey');ctx.fillRect(x0+0.5,A.py(counts[b]),Math.max(1,x1-x0-1),A.py(0)-A.py(counts[b]));ctx.fillStyle=css('--red');ctx.fillRect(x0+0.5,A.py(ext[b]),Math.max(1,x1-x0-1),A.py(0)-A.py(ext[b]));}
+  A.clip();line(ctx,[[A.px(o),A.T],[A.px(o),A.T+A.ph]],css('--red'),2,[6,4]);label(ctx,'observed '+fmt(o,2),A.px(o)+4,A.T+34,css('--red'));
+  if(tail===2&&o!==0){line(ctx,[[A.px(-o),A.T],[A.px(-o),A.T+A.ph]],css('--red'),1,[3,3]);}
+  if(cur){const v=est(cur);dot(ctx,A.px(v),A.py(0)-6,5,css('--navy'),css('--panel'));}
+  A.unclip();ctx.fillStyle=css('--muted');ctx.textAlign='right';ctx.fillText(`${placebos.length} placebos${mc?'':' of '+J}`,A.L+A.pw-6,A.T+14);
+}
+function drawTrace(){
+  const {ctx,w,h}=setupCanvas($('cTrace'));const n=Math.max(10,mc?reps:J);
+  const A=axes(ctx,w,h,{xlim:[0,n],ylim:[0,1],xt:ticks(0,n).filter(v=>v>0),yt:[0,0.25,0.5,0.75,1],xl:'placebo assignments used',yl:'p-value'});
+  A.clip();line(ctx,[[A.L,A.py(0.05)],[A.L+A.pw,A.py(0.05)]],css('--muted'),1,[3,3]);label(ctx,'0.05',A.L+A.pw-4,A.py(0.05)-8,css('--muted'),'right');
+  const tt=tTest();line(ctx,[[A.L,A.py(tt.p)],[A.L+A.pw,A.py(tt.p)]],css('--orange'),1.5,[6,4]);label(ctx,'t-test p '+fmt(tt.p,3),A.L+4,A.py(tt.p)-8,css('--orange'));
+  if(trace.length){line(ctx,trace.map((p,i)=>[A.px(i+1),A.py(p)]),css('--navy'),2);const last=trace[trace.length-1];dot(ctx,A.px(trace.length),A.py(last),4,css('--navy'),css('--panel'));label(ctx,'RI p '+fmt(last,3),Math.min(A.px(trace.length)+6,A.L+A.pw-60),A.py(last)+14,css('--navy'));
+    if(mc){const c=Math.round(last*trace.length);const adj=(c+1)/(trace.length+1);line(ctx,[[A.L,A.py(adj)],[A.L+A.pw,A.py(adj)]],css('--purple'),1,[2,3]);label(ctx,'(c+1)/(n+1) = '+fmt(adj,4),A.L+4,A.py(adj)-8,css('--purple'));}}
+  A.unclip();
+}
+function readouts(){const o=obs();const c=placebos.filter(v=>extreme(v,o)).length;$('rObs').textContent=fmt(o,2);$('rCount').textContent=placebos.length?`${c} of ${placebos.length}`:'—';
+  $('rP').textContent=placebos.length?(mc?`${fmt(c/placebos.length,4)} (adj. ${fmt((c+1)/(placebos.length+1),4)})`:`${c}/${placebos.length} = ${fmt(c/placebos.length,3)}`):'—';
+  const tt=tTest();$('rT').textContent=isFinite(tt.p)?`${fmt(tt.p,3)} (t = ${fmt(tt.t,2)}, SE ${fmt(tt.se,2)})`:'n/a';}
+function drawAll(){renderTable();readouts();drawHist();drawTrace();}
+function run(){placebos=[];trace=[];const total=mc?reps:J;const dur=mc?5000:Math.max(2500,Math.min(10000,total*200));animate(t=>{const target=Math.max(1,Math.ceil(t*total));while(placebos.length<target)addPlacebo();drawAll();},dur);}
+$('bRun').addEventListener('click',run);
+$('bStep').addEventListener('click',()=>{stopAnim();const total=mc?Infinity:J;if(placebos.length>=total){placebos=[];trace=[];}addPlacebo();drawAll();});
+$('bStop').addEventListener('click',stopAnim);
+$('bNull').addEventListener('click',()=>{fillNull=!fillNull;renderTable();});
+$('sTau').addEventListener('input',()=>{stopAnim();setup();});
+$('sReps').addEventListener('input',e=>{stopAnim();reps=+e.target.value;setup();});
+document.querySelectorAll('input[name=tail]').forEach(r=>r.addEventListener('change',e=>{tail=+e.target.value;trace=[];const o=obs();let c=0;placebos.forEach((v,i)=>{if(extreme(v,o))c++;trace.push(c/(i+1));});drawAll();}));
+[['pA','A'],['pB','B'],['pC','C']].forEach(([id,p])=>$(id).addEventListener('click',()=>{stopAnim();preset=p;['pA','pB','pC'].forEach(i=>$(i).classList.toggle('on',i===id));setup();}));
+hookTheme(()=>{drawHist();drawTrace();});
+setup();
+</script>
+</body>
+</html>

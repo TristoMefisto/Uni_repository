@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bias-variance trade-off</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The bias-variance trade-off, seen over many training sets</h1>
+  <p>ISLR Figure 2.12 made explicit. Draw R training samples from the same Y = f(X) + ε, fit the same polynomial to each, and look at all the fitted curves together. Their average misses f by the bias; their spread around that average is the variance. Expected test MSE = Var(f̂) + Bias² + σ².</p>
+</header>
+
+<div class="tabs" role="tablist">
+  <button id="p0" class="on">Smooth non-linear f</button>
+  <button id="p1">Near-linear f</button>
+  <button id="p2">Highly non-linear f</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sD">Flexibility: polynomial degree <b id="vD"></b></label><input id="sD" type="range" min="1" max="15" step="1" value="3"></div>
+  <div class="slider"><label for="sX">Evaluation point x₀ <b id="vX"></b></label><input id="sX" type="range" min="2" max="98" step="1" value="60"></div>
+  <div class="slider"><label for="sS">Noise σ <b id="vS"></b></label><input id="sS" type="range" min="0.5" max="6" step="0.25" value="3"></div>
+  <div class="slider"><label for="sR">Training sets R <b id="vR"></b></label><input id="sR" type="range" min="20" max="200" step="20" value="100"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Bias², averaged over x</span><span class="big" id="rB"></span></div>
+  <div class="stat"><span class="small">Variance, averaged over x</span><span class="big" id="rV"></span></div>
+  <div class="stat"><span class="small">σ²</span><span class="big" id="rS"></span></div>
+  <div class="stat"><span class="small">Sum = expected test MSE</span><span class="big" id="rT"></span></div>
+  <div class="stat"><span class="small">At x₀: bias² · variance</span><span class="big" id="rX"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bSweep">Sweep flexibility</button>
+  <button id="bNew">Redraw the training sets</button>
+  <button id="bStop">Stop</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cSpag"></canvas>
+    <figcaption><strong>R fitted curves.</strong> Thin lines: one fit per training set (n = 50). Thick coloured line: their average. Black: f. Where the average sits away from f there is bias; where the thin lines fan out there is variance. Vertical line at x₀ with ±1 SD of f̂(x₀).</figcaption></figure>
+  <figure><canvas id="cDec"></canvas>
+    <figcaption><strong>The decomposition against flexibility.</strong> Blue: squared bias, falling. Orange: variance, rising. Dashed: σ². Red: their sum, the expected test MSE, with its minimum where the two forces balance. Dot: current degree.</figcaption></figure>
+  <figure><canvas id="cHist"></canvas>
+    <figcaption><strong>f̂(x₀) across the R training sets.</strong> Histogram of the R predictions at x₀. Black tick: the true f(x₀). Distance from the tick to the histogram's centre is the bias at x₀; the histogram's width is the variance at x₀.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>A rigid model (degree 1) gives almost the same line whatever the sample: tiny variance, but the line cannot follow f, so large bias. A very flexible one passes close to f on average but each single fit wanders with its sample: small bias, large variance. Neither extreme minimises the sum. Switch preset: with a near-linear f the bias is already gone at degree 1 or 2, with a highly non-linear f it stays large until high degrees.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+
+const F=[t=>10+8*Math.sin(2*Math.PI*t*0.8+0.5)+6*t, t=>5+15*t+1.5*Math.sin(2*Math.PI*t), t=>12+8*Math.sin(2*Math.PI*1.6*t)+5*Math.sin(2*Math.PI*3.4*t+1)];
+const n=50,DMAX=15,G=61;
+let preset=0,d=3,x0=60,sig=3,R=100,seed=1;
+const grid=Array.from({length:G},(_,g)=>100*g/(G-1));
+let fhat=[],stats=[];
+const f=t=>F[preset](t/100);
+function compute(){fhat=[null];for(let k=1;k<=DMAX;k++)fhat.push([]);
+  for(let r=0;r<R;r++){const rr=mulberry32(1000*seed+r*7+preset);const xs=[],ys=[];for(let i=0;i<n;i++){const x=100*rr();xs.push(x);ys.push(f(x)+sig*gauss(rr));}
+    for(let k=1;k<=DMAX;k++){const fit=polyFit(xs,ys,k,0,100);fhat[k].push(grid.map(x=>fit.f(x)));}}
+  stats=[null];for(let k=1;k<=DMAX;k++){const meanG=grid.map((_,g)=>mean(fhat[k].map(c=>c[g])));const varG=grid.map((_,g)=>pvar(fhat[k].map(c=>c[g])));const biasG=grid.map((x,g)=>(meanG[g]-f(x))**2);
+    stats.push({meanG,varG,biasG,bias:mean(biasG),vari:mean(varG)});}}
+const gi=()=>Math.round(x0/100*(G-1));
+function drawSpag(){const {ctx,w,h}=setupCanvas($('cSpag'));const st=stats[d];const fy=grid.map(f);const lo=Math.min(...fy)-3*sig-2,hi=Math.max(...fy)+3*sig+2;
+  const A=axes(ctx,w,h,{xlim:[0,100],ylim:[lo,hi],xt:[0,25,50,75,100],yt:[],xl:'X',yl:'Y'});A.clip();
+  ctx.globalAlpha=Math.max(0.06,0.5/Math.sqrt(R));fhat[d].forEach(c=>line(ctx,c.map((y,g)=>[A.px(grid[g]),A.py(y)]),css('--orange'),1));ctx.globalAlpha=1;
+  line(ctx,grid.map((x,g)=>[A.px(x),A.py(fy[g])]),css('--ink'),2);line(ctx,grid.map((x,g)=>[A.px(x),A.py(st.meanG[g])]),css('--blue'),2.5);
+  const g=gi();const sd=Math.sqrt(st.varG[g]);line(ctx,[[A.px(x0),A.T],[A.px(x0),A.T+A.ph]],css('--muted'),1,[3,3]);line(ctx,[[A.px(x0),A.py(st.meanG[g]-sd)],[A.px(x0),A.py(st.meanG[g]+sd)]],css('--red'),3);dot(ctx,A.px(x0),A.py(fy[g]),4,css('--ink'),css('--panel'));
+  A.unclip();label(ctx,'average fit, degree '+d,A.L+6,A.T+14,css('--blue'));label(ctx,'true f',A.L+6,A.T+30,css('--ink'));}
+function drawDec(){const {ctx,w,h}=setupCanvas($('cDec'));const tot=stats.slice(1).map(s=>s.bias+s.vari+sig*sig);const ymax=Math.min(Math.max(...tot),sig*sig*4+Math.min(...tot))*1.08;
+  const A=axes(ctx,w,h,{xlim:[0.5,DMAX+0.5],ylim:[0,ymax],xt:[1,3,5,7,9,11,13,15],yt:[0,Math.round(ymax/4),Math.round(ymax/2),Math.round(3*ymax/4)],xl:'flexibility (polynomial degree)',yl:'MSE components'});A.clip();
+  const cl=v=>Math.min(v,ymax*1.1);line(ctx,[[A.L,A.py(sig*sig)],[A.L+A.pw,A.py(sig*sig)]],css('--ink'),1,[5,4]);
+  line(ctx,stats.slice(1).map((s,i)=>[A.px(i+1),A.py(cl(s.bias))]),css('--blue'),2);line(ctx,stats.slice(1).map((s,i)=>[A.px(i+1),A.py(cl(s.vari))]),css('--orange'),2);line(ctx,tot.map((v,i)=>[A.px(i+1),A.py(cl(v))]),css('--red'),2.5);
+  dot(ctx,A.px(d),A.py(cl(stats[d].bias)),5,css('--blue'),css('--panel'));dot(ctx,A.px(d),A.py(cl(stats[d].vari)),5,css('--orange'),css('--panel'));dot(ctx,A.px(d),A.py(cl(tot[d-1])),6,css('--red'),css('--panel'));
+  A.unclip();label(ctx,'bias²',A.L+A.pw-6,A.T+14,css('--blue'),'right');label(ctx,'variance',A.L+A.pw-6,A.T+30,css('--orange'),'right');label(ctx,'test MSE',A.L+A.pw-6,A.T+46,css('--red'),'right');label(ctx,'σ²',A.L+6,A.py(sig*sig)-8,css('--ink'));}
+function drawHist(){const {ctx,w,h}=setupCanvas($('cHist'));const g=gi();const vals=fhat[d].map(c=>c[g]);const fx=f(x0);let lo=Math.min(...vals,fx),hi=Math.max(...vals,fx);const pad=Math.max(1,(hi-lo)*.15);lo-=pad;hi+=pad;const nb=24,bw=(hi-lo)/nb;const c=new Array(nb).fill(0);vals.forEach(v=>c[Math.max(0,Math.min(nb-1,Math.floor((v-lo)/bw)))]++);const mx=Math.max(...c);
+  const step=[0.5,1,2,5,10,20].find(s=>(hi-lo)/s<=7)||20;const xt=[];for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step)xt.push(+v.toFixed(3));
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,mx*1.15],xt,yt:[],xl:'f̂(x₀) at x₀ = '+x0,yl:'count'});
+  ctx.fillStyle=css('--orange');for(let b=0;b<nb;b++)if(c[b])ctx.fillRect(A.px(lo+b*bw)+.5,A.py(c[b]),Math.max(1,A.pw/nb-1),A.py(0)-A.py(c[b]));
+  A.clip();line(ctx,[[A.px(fx),A.T],[A.px(fx),A.T+A.ph]],css('--ink'),2);const mu=mean(vals);line(ctx,[[A.px(mu),A.T],[A.px(mu),A.T+A.ph]],css('--blue'),2,[5,4]);A.unclip();
+  label(ctx,'f(x₀) = '+fmt(fx,2),A.px(fx)+4,A.T+14,css('--ink'));label(ctx,'mean f̂ = '+fmt(mu,2),A.px(mu)+4,A.T+30,css('--blue'));label(ctx,'SD = '+fmt(Math.sqrt(pvar(vals)),2),A.L+A.pw-6,A.T+A.ph-6,css('--orange'),'right');}
+function readouts(){const s=stats[d];const g=gi();$('vD').textContent=d;$('vX').textContent=x0;$('vS').textContent=sig;$('vR').textContent=R;$('rB').textContent=fmt(s.bias,2);$('rV').textContent=fmt(s.vari,2);$('rS').textContent=fmt(sig*sig,2);$('rT').textContent=fmt(s.bias+s.vari+sig*sig,2);$('rX').textContent=fmt(s.biasG[g],2)+' · '+fmt(s.varG[g],2);}
+function drawAll(){readouts();drawSpag();drawDec();drawHist();}
+function rebuild(){compute();drawAll();}
+$('sD').addEventListener('input',e=>{stopAnim();d=+e.target.value;drawAll();});
+$('sX').addEventListener('input',e=>{x0=+e.target.value;drawAll();});
+$('sS').addEventListener('input',e=>{stopAnim();sig=+e.target.value;rebuild();});
+$('sR').addEventListener('input',e=>{stopAnim();R=+e.target.value;rebuild();});
+$('bNew').addEventListener('click',()=>{stopAnim();seed++;rebuild();});
+$('bStop').addEventListener('click',stopAnim);
+$('bSweep').addEventListener('click',()=>{animate(t=>{d=Math.max(1,Math.min(DMAX,Math.round(1+t*(DMAX-1))));$('sD').value=d;drawAll();},DMAX*350);});
+[['p0',0],['p1',1],['p2',2]].forEach(([id,p])=>$(id).addEventListener('click',()=>{stopAnim();preset=p;['p0','p1','p2'].forEach(i=>$(i).classList.toggle('on',i===id));rebuild();}));
+hookTheme(drawAll);
+rebuild();
+</script>
+</body>
+</html>

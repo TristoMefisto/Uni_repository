@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RSS landscape: sales on TV advertising</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+:root{--surfLow:#3d57d9; --surfHigh:#d5d8e3}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--surfLow:#5a73ff; --surfHigh:#474b6e}}
+:root[data-theme="dark"]{--surfLow:#5a73ff; --surfHigh:#474b6e}
+#cont{cursor:crosshair}#surf{cursor:grab}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Least squares as a landscape</h1>
+  <p>Sales regressed on TV advertising, 200 markets (ISLR Advertising data). Every (β₀, β₁) pair is a candidate line; RSS scores how badly it fits. Move the line and watch where it sits on the RSS surface.</p>
+</header>
+
+<section class="controls" aria-label="Line parameters">
+  <div class="slider">
+    <label for="s0">Intercept β₀ <b id="v0"></b></label>
+    <input id="s0" type="range" min="5" max="9" step="0.01">
+  </div>
+  <div class="slider">
+    <label for="s1">Slope β₁ <b id="v1"></b></label>
+    <input id="s1" type="range" min="0.03" max="0.06" step="0.0001">
+  </div>
+  <div>
+    <div class="readout">
+      <div><div class="small">RSS of this line</div><div class="big" id="rss"></div></div>
+      <div class="small" id="delta"></div>
+    </div>
+    <div class="meter" aria-hidden="true"><i id="bar"></i></div>
+  </div>
+  <div class="readout">
+    <div><div class="small">R² = 1 − RSS/TSS</div><div class="big" id="r2"></div></div>
+    <div><div class="small">RSE = √(RSS/(n−2))</div><div class="big" id="rse"></div></div>
+  </div>
+</section>
+
+<div class="buttons">
+  <button class="primary" id="bOLS">Jump to OLS minimum</button>
+  <button id="bPivot">Pivot line around the data centre</button>
+  <button id="bShift">Shift line up and down</button>
+  <button id="bStop">Stop</button>
+</div>
+<div class="toggles">
+  <label><input type="checkbox" id="tResid" checked> Residuals</label>
+  <label><input type="checkbox" id="tOLS" checked> OLS line</label>
+  <label><input type="checkbox" id="tPivot"> Pivot line on contour</label>
+</div>
+
+<div class="panels">
+  <figure><canvas id="scat"></canvas><figcaption><strong>Data and current line.</strong> Gray segments are residuals; RSS is the sum of their squares. The cross marks the data centre (x̄, ȳ).</figcaption></figure>
+  <figure><canvas id="cont"></canvas><figcaption><strong>Contour map of RSS.</strong> Click or drag to pick (β₀, β₁). Labels in thousands. Red dot = OLS.</figcaption></figure>
+  <figure><canvas id="surf"></canvas><figcaption><strong>RSS surface.</strong> Drag to rotate. Same function, seen from the side.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>Try the two animations and compare the RSS readout. Pivoting keeps the line through (x̄, ȳ), so it moves along the tilted valley and RSS rises slowly. Shifting moves the whole line away from the data centre, so RSS rises faster.</p>
+  <p>The pivot line is β₀ = ȳ − β₁·x̄: for any slope, it gives the best intercept. Its negative slope (−x̄ ≈ −147) is why the ellipses tilt down.</p>
+  <p>At the minimum, β̂₀ = 7.03 and β̂₁ = 0.0475: an extra $1,000 of TV advertising is associated with about 47.5 more units sold. RSE is the typical size of a residual and R² the share of the variance of sales the line explains; both are computed for whatever line you are holding.</p>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+
+const D = {"x": [230.1, 44.5, 17.2, 151.5, 180.8, 8.7, 57.5, 120.2, 8.6, 199.8, 66.1, 214.7, 23.8, 97.5, 204.1, 195.4, 67.8, 281.4, 69.2, 147.3, 218.4, 237.4, 13.2, 228.3, 62.3, 262.9, 142.9, 240.1, 248.8, 70.6, 292.9, 112.9, 97.2, 265.6, 95.7, 290.7, 266.9, 74.7, 43.1, 228.0, 202.5, 177.0, 293.6, 206.9, 25.1, 175.1, 89.7, 239.9, 227.2, 66.9, 199.8, 100.4, 216.4, 182.6, 262.7, 198.9, 7.3, 136.2, 210.8, 210.7, 53.5, 261.3, 239.3, 102.7, 131.1, 69.0, 31.5, 139.3, 237.4, 216.8, 199.1, 109.8, 26.8, 129.4, 213.4, 16.9, 27.5, 120.5, 5.4, 116.0, 76.4, 239.8, 75.3, 68.4, 213.5, 193.2, 76.3, 110.7, 88.3, 109.8, 134.3, 28.6, 217.7, 250.9, 107.4, 163.3, 197.6, 184.9, 289.7, 135.2, 222.4, 296.4, 280.2, 187.9, 238.2, 137.9, 25.0, 90.4, 13.1, 255.4, 225.8, 241.7, 175.7, 209.6, 78.2, 75.1, 139.2, 76.4, 125.7, 19.4, 141.3, 18.8, 224.0, 123.1, 229.5, 87.2, 7.8, 80.2, 220.3, 59.6, 0.7, 265.2, 8.4, 219.8, 36.9, 48.3, 25.6, 273.7, 43.0, 184.9, 73.4, 193.7, 220.5, 104.6, 96.2, 140.3, 240.1, 243.2, 38.0, 44.7, 280.7, 121.0, 197.6, 171.3, 187.8, 4.1, 93.9, 149.8, 11.7, 131.7, 172.5, 85.7, 188.4, 163.5, 117.2, 234.5, 17.9, 206.8, 215.4, 284.3, 50.0, 164.5, 19.6, 168.4, 222.4, 276.9, 248.4, 170.2, 276.7, 165.6, 156.6, 218.5, 56.2, 287.6, 253.8, 205.0, 139.5, 191.1, 286.0, 18.7, 39.5, 75.5, 17.2, 166.8, 149.7, 38.2, 94.2, 177.0, 283.6, 232.1], "y": [22.1, 10.4, 9.3, 18.5, 12.9, 7.2, 11.8, 13.2, 4.8, 10.6, 8.6, 17.4, 9.2, 9.7, 19.0, 22.4, 12.5, 24.4, 11.3, 14.6, 18.0, 12.5, 5.6, 15.5, 9.7, 12.0, 15.0, 15.9, 18.9, 10.5, 21.4, 11.9, 9.6, 17.4, 9.5, 12.8, 25.4, 14.7, 10.1, 21.5, 16.6, 17.1, 20.7, 12.9, 8.5, 14.9, 10.6, 23.2, 14.8, 9.7, 11.4, 10.7, 22.6, 21.2, 20.2, 23.7, 5.5, 13.2, 23.8, 18.4, 8.1, 24.2, 15.7, 14.0, 18.0, 9.3, 9.5, 13.4, 18.9, 22.3, 18.3, 12.4, 8.8, 11.0, 17.0, 8.7, 6.9, 14.2, 5.3, 11.0, 11.8, 12.3, 11.3, 13.6, 21.7, 15.2, 12.0, 16.0, 12.9, 16.7, 11.2, 7.3, 19.4, 22.2, 11.5, 16.9, 11.7, 15.5, 25.4, 17.2, 11.7, 23.8, 14.8, 14.7, 20.7, 19.2, 7.2, 8.7, 5.3, 19.8, 13.4, 21.8, 14.1, 15.9, 14.6, 12.6, 12.2, 9.4, 15.9, 6.6, 15.5, 7.0, 11.6, 15.2, 19.7, 10.6, 6.6, 8.8, 24.7, 9.7, 1.6, 12.7, 5.7, 19.6, 10.8, 11.6, 9.5, 20.8, 9.6, 20.7, 10.9, 19.2, 20.1, 10.4, 11.4, 10.3, 13.2, 25.4, 10.9, 10.1, 16.1, 11.6, 16.6, 19.0, 15.6, 3.2, 15.3, 10.1, 7.3, 12.9, 14.4, 13.3, 14.9, 18.0, 11.9, 11.9, 8.0, 12.2, 17.1, 15.0, 8.4, 14.5, 7.6, 11.7, 11.5, 27.0, 20.2, 11.7, 11.8, 12.6, 10.5, 12.2, 8.7, 26.2, 17.6, 22.6, 10.3, 17.3, 15.9, 6.7, 10.8, 9.9, 5.9, 19.6, 17.3, 7.6, 9.7, 12.8, 25.5, 13.4]};
+const X = D.x, Y = D.y, n = X.length;
+let Sx=0,Sy=0,Sxx=0,Sxy=0,Syy=0;
+for(let i=0;i<n;i++){Sx+=X[i];Sy+=Y[i];Sxx+=X[i]*X[i];Sxy+=X[i]*Y[i];Syy+=Y[i]*Y[i];}
+const mx=Sx/n, my=Sy/n;
+const B1=(Sxy-n*mx*my)/(Sxx-n*mx*mx), B0=my-B1*mx;
+const rssOf=(b0,b1)=>Syy+n*b0*b0+b1*b1*Sxx-2*b0*Sy-2*b1*Sxy+2*b0*b1*Sx;
+const RSSMIN=rssOf(B0,B1);
+const TSS=Syy-n*my*my;
+const R0=[5,9], R1=[0.03,0.06];
+let b0=6.2, b1=0.056;
+let showResid=true, showOLS=true, showPivot=false;
+
+/* ---------- scatter ---------- */
+function drawScatter(){
+  const c=$('scat'), {ctx,w,h}=setupCanvas(c);
+  const L=42,R=10,T=10,B=34, pw=w-L-R, ph=h-T-B;
+  const px=x=>L+x/300*pw, py=y=>T+ph-(y/28)*ph;
+  ctx.font=FONT; ctx.fillStyle=css('--muted'); ctx.strokeStyle=css('--rule'); ctx.lineWidth=1;
+  ctx.strokeRect(L,T,pw,ph);
+  ctx.textAlign='center';
+  for(let x=0;x<=300;x+=50){ctx.fillText(x,px(x),T+ph+15);}
+  ctx.textAlign='right';
+  for(let y=0;y<=25;y+=5){ctx.fillText(y,L-6,py(y)+4);}
+  ctx.textAlign='center'; ctx.fillText('TV budget ($000)',L+pw/2,h-3);
+  ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText('Sales (000 units)',0,0);ctx.restore();
+  ctx.save(); ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+  if(showResid){
+    ctx.strokeStyle=css('--resid'); ctx.lineWidth=1; ctx.beginPath();
+    for(let i=0;i<n;i++){ctx.moveTo(px(X[i]),py(Y[i]));ctx.lineTo(px(X[i]),py(b0+b1*X[i]));}
+    ctx.stroke();
+  }
+  if(showOLS){
+    ctx.strokeStyle=css('--red'); ctx.setLineDash([5,4]); ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(px(0),py(B0)); ctx.lineTo(px(300),py(B0+B1*300)); ctx.stroke(); ctx.setLineDash([]);
+  }
+  ctx.fillStyle=css('--point');
+  for(let i=0;i<n;i++){ctx.beginPath();ctx.arc(px(X[i]),py(Y[i]),2.3,0,6.283);ctx.fill();}
+  ctx.strokeStyle=css('--navy'); ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.moveTo(px(0),py(b0)); ctx.lineTo(px(300),py(b0+b1*300)); ctx.stroke();
+  ctx.strokeStyle=css('--ink'); ctx.lineWidth=2;
+  const cx=px(mx), cy=py(my);
+  ctx.beginPath(); ctx.moveTo(cx-6,cy);ctx.lineTo(cx+6,cy);ctx.moveTo(cx,cy-6);ctx.lineTo(cx,cy+6);ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- contour ---------- */
+const G=140; const grid=[];
+let gmax=0;
+for(let i=0;i<=G;i++){grid[i]=[];for(let j=0;j<=G;j++){
+  const v=rssOf(R0[0]+(R0[1]-R0[0])*i/G, R1[0]+(R1[1]-R1[0])*j/G); grid[i][j]=v; if(v>gmax)gmax=v;}}
+const LEVELS=[2110,2150,2200,2300,2500,3000,3500,4000];
+const segsByLevel=LEVELS.map(lv=>{
+  const segs=[];
+  for(let i=0;i<G;i++)for(let j=0;j<G;j++){
+    const a=grid[i][j],b=grid[i+1][j],c=grid[i+1][j+1],d=grid[i][j+1];
+    const pts=[];
+    const edge=(v1,v2,x1,y1,x2,y2)=>{ if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);} };
+    edge(a,b,i,j,i+1,j); edge(b,c,i+1,j,i+1,j+1); edge(c,d,i+1,j+1,i,j+1); edge(d,a,i,j+1,i,j);
+    if(pts.length>=2)segs.push([pts[0],pts[1]]);
+    if(pts.length===4)segs.push([pts[2],pts[3]]);
+  }
+  return segs;
+});
+let contGeom=null;
+function drawContour(){
+  const c=$('cont'), {ctx,w,h}=setupCanvas(c);
+  const L=52,R=10,T=10,B=34, pw=w-L-R, ph=h-T-B;
+  contGeom={L,T,pw,ph};
+  const gx=i=>L+i/G*pw, gy=j=>T+ph-j/G*ph;
+  const px=v=>L+(v-R0[0])/(R0[1]-R0[0])*pw, py=v=>T+ph-(v-R1[0])/(R1[1]-R1[0])*ph;
+  ctx.font=FONT; ctx.fillStyle=css('--muted'); ctx.strokeStyle=css('--rule'); ctx.lineWidth=1;
+  ctx.strokeRect(L,T,pw,ph);
+  ctx.textAlign='center';
+  for(let v=5;v<=9;v++)ctx.fillText(v,px(v),T+ph+15);
+  ctx.fillText('β₀ (intercept)',L+pw/2,h-3);
+  ctx.textAlign='right';
+  for(let v=0.03;v<=0.0601;v+=0.01)ctx.fillText(v.toFixed(2),L-6,py(v)+4);
+  ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillText('β₁ (slope)',0,0);ctx.restore();
+
+  ctx.save(); ctx.beginPath(); ctx.rect(L,T,pw,ph); ctx.clip();
+  ctx.strokeStyle=css('--contour'); ctx.lineWidth=1.2;
+  segsByLevel.forEach((segs,k)=>{
+    ctx.beginPath();
+    let best=null;
+    for(const s of segs){ctx.moveTo(gx(s[0][0]),gy(s[0][1]));ctx.lineTo(gx(s[1][0]),gy(s[1][1]));
+      const sx=gx(s[0][0]), sy=gy(s[0][1]);
+      const score=(sx-px(B0))*0.55-(sy-py(B1));
+      if(sx>L+14&&sx<L+pw-24&&sy>T+10&&sy<T+ph-6&&(!best||score>best[2]))best=[sx,sy,score];}
+    ctx.stroke();
+    if(best){ ctx.save(); ctx.font='11px "Fira Sans", system-ui, sans-serif';
+      const txt=(LEVELS[k]/1000).toString(); const tw=ctx.measureText(txt).width;
+      ctx.fillStyle=css('--panel'); ctx.fillRect(best[0]-tw/2-2,best[1]-7,tw+4,13);
+      ctx.fillStyle=css('--contour'); ctx.textAlign='center'; ctx.fillText(txt,best[0],best[1]+4); ctx.restore(); }
+  });
+  if(showPivot){
+    ctx.strokeStyle=css('--ink'); ctx.setLineDash([6,4]); ctx.lineWidth=1.3; ctx.beginPath();
+    ctx.moveTo(px(my-mx*R1[0]),py(R1[0])); ctx.lineTo(px(my-mx*R1[1]),py(R1[1])); ctx.stroke(); ctx.setLineDash([]);
+  }
+  const cx=px(b0), cy=py(b1);
+  ctx.strokeStyle=css('--navy'); ctx.globalAlpha=.35; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(cx,T);ctx.lineTo(cx,T+ph);ctx.moveTo(L,cy);ctx.lineTo(L+pw,cy);ctx.stroke(); ctx.globalAlpha=1;
+  ctx.fillStyle=css('--red'); ctx.beginPath(); ctx.arc(px(B0),py(B1),4.5,0,6.283); ctx.fill();
+  ctx.fillStyle=css('--navy'); ctx.strokeStyle=css('--panel'); ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(cx,cy,6.5,0,6.283); ctx.fill(); ctx.stroke();
+  ctx.restore();
+}
+function contPick(e){
+  const r=$('cont').getBoundingClientRect(), g=contGeom;
+  const x=e.clientX-r.left, y=e.clientY-r.top;
+  const u=Math.min(1,Math.max(0,(x-g.L)/g.pw)), v=Math.min(1,Math.max(0,1-(y-g.T)/g.ph));
+  stopAnim(); setParams(R0[0]+u*(R0[1]-R0[0]), R1[0]+v*(R1[1]-R1[0]));
+}
+let contDrag=false;
+$('cont').addEventListener('pointerdown',e=>{contDrag=true;$('cont').setPointerCapture(e.pointerId);contPick(e);});
+$('cont').addEventListener('pointermove',e=>{if(contDrag)contPick(e);});
+$('cont').addEventListener('pointerup',()=>contDrag=false);
+
+/* ---------- 3D surface ---------- */
+const S=34; let yaw=-0.75, pitch=0.42;
+const zmax=gmax;
+const nz=v=>(v-RSSMIN)/(zmax-RSSMIN);
+function hexToRgb(hx){hx=hx.replace('#','');return [0,2,4].map(i=>parseInt(hx.substr(i,2),16));}
+function drawSurface(){
+  const c=$('surf'), {ctx,w,h}=setupCanvas(c);
+  const sc=Math.min(w,h)*0.33, cx=w/2, cy=h*0.56;
+  const cy_=Math.cos(yaw), sy_=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const proj=(u,v,z)=>{ const x1=u*cy_-v*sy_, y1=u*sy_+v*cy_; const wz=z*1.5-0.75;
+    return [cx+sc*x1, cy-sc*(wz*cp+y1*sp), y1*cp-wz*sp]; };
+  const U=i=>-1+2*i/S;
+  const P=[]; for(let i=0;i<=S;i++){P[i]=[];for(let j=0;j<=S;j++){
+    const bb0=R0[0]+(R0[1]-R0[0])*i/S, bb1=R1[0]+(R1[1]-R1[0])*j/S; const z=nz(rssOf(bb0,bb1));
+    P[i][j]=[proj(U(i),U(j),z), z, [U(i),U(j),z*1.5]];}}
+  const Lt=[-0.35,-0.55,0.76];
+  ctx.strokeStyle=css('--rule'); ctx.lineWidth=1;
+  const fl=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([u,v])=>proj(u,v,0));
+  ctx.beginPath(); fl.forEach((p,k)=>k?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.stroke();
+  const quads=[];
+  for(let i=0;i<S;i++)for(let j=0;j<S;j++){
+    const a=P[i][j],b=P[i+1][j],c2=P[i+1][j+1],d=P[i][j+1];
+    const e1=[c2[2][0]-a[2][0],c2[2][1]-a[2][1],c2[2][2]-a[2][2]], e2=[d[2][0]-b[2][0],d[2][1]-b[2][1],d[2][2]-b[2][2]];
+    const nx=e1[1]*e2[2]-e1[2]*e2[1], ny=e1[2]*e2[0]-e1[0]*e2[2], nzz=e1[0]*e2[1]-e1[1]*e2[0], nl=Math.hypot(nx,ny,nzz)||1;
+    const lam=Math.abs((nx*Lt[0]+ny*Lt[1]+nzz*Lt[2])/nl);
+    quads.push([ (a[0][2]+b[0][2]+c2[0][2]+d[0][2])/4, [a[0],b[0],c2[0],d[0]], (a[1]+b[1]+c2[1]+d[1])/4, lam ]);
+  }
+  quads.sort((p,q)=>q[0]-p[0]);
+  const lo=hexToRgb(css('--surfLow')), hi=hexToRgb(css('--surfHigh'));
+  const edge=css('--panel');
+  for(const q of quads){
+    const t=Math.min(1,Math.pow(q[2],0.7)), sh=0.55+0.45*q[3];
+    const col=lo.map((l,k)=>Math.round((l+(hi[k]-l)*t)*sh));
+    ctx.fillStyle=`rgb(${col})`; ctx.strokeStyle=edge; ctx.globalAlpha=1; ctx.lineWidth=0.25;
+    ctx.beginPath(); q[1].forEach((p,k)=>k?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1])); ctx.closePath(); ctx.fill(); ctx.stroke();
+  }
+  ctx.font=FONT; ctx.fillStyle=css('--muted'); ctx.textAlign='center';
+  const la=proj(0,-1.25,0), lb=proj(1.25,0,0), lz=proj(-1,-1,1.05);
+  ctx.fillText('β₀',la[0],la[1]+4); ctx.fillText('β₁',lb[0],lb[1]+4); ctx.fillText('RSS',lz[0],lz[1]);
+  const lz0=proj(-1,-1,0); ctx.strokeStyle=css('--muted'); ctx.beginPath(); ctx.moveTo(lz0[0],lz0[1]); ctx.lineTo(lz[0],lz[1]+6); ctx.stroke();
+  const uo=-1+2*(B0-R0[0])/(R0[1]-R0[0]), vo=-1+2*(B1-R1[0])/(R1[1]-R1[0]);
+  const po=proj(uo,vo,0); ctx.fillStyle=css('--red'); ctx.beginPath(); ctx.arc(po[0],po[1],4.5,0,6.283); ctx.fill();
+  const uc=-1+2*(b0-R0[0])/(R0[1]-R0[0]), vc=-1+2*(b1-R1[0])/(R1[1]-R1[0]);
+  const pc=proj(uc,vc,nz(rssOf(b0,b1))), pf=proj(uc,vc,0);
+  ctx.strokeStyle=css('--navy'); ctx.setLineDash([3,3]); ctx.lineWidth=1.3;
+  ctx.beginPath(); ctx.moveTo(pf[0],pf[1]); ctx.lineTo(pc[0],pc[1]); ctx.stroke(); ctx.setLineDash([]);
+  ctx.fillStyle=css('--navy'); ctx.strokeStyle=css('--panel'); ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(pc[0],pc[1],6.5,0,6.283); ctx.fill(); ctx.stroke();
+}
+let sDrag=null;
+$('surf').addEventListener('pointerdown',e=>{sDrag=[e.clientX,e.clientY];$('surf').setPointerCapture(e.pointerId);$('surf').style.cursor='grabbing';});
+$('surf').addEventListener('pointermove',e=>{ if(!sDrag)return;
+  yaw+=(e.clientX-sDrag[0])*0.01; pitch=Math.min(1.45,Math.max(0.05,pitch+(e.clientY-sDrag[1])*0.008));
+  sDrag=[e.clientX,e.clientY]; drawSurface(); });
+$('surf').addEventListener('pointerup',()=>{sDrag=null;$('surf').style.cursor='grab';});
+
+/* ---------- state ---------- */
+function setParams(a,b){
+  b0=Math.min(R0[1],Math.max(R0[0],a)); b1=Math.min(R1[1],Math.max(R1[0],b));
+  $('s0').value=b0; $('s1').value=b1;
+  $('v0').textContent=b0.toFixed(2); $('v1').textContent=b1.toFixed(4);
+  const r=rssOf(b0,b1);
+  $('rss').textContent=Math.round(r).toLocaleString('en-US');
+  $('r2').textContent=(1-r/TSS).toFixed(3);
+  $('rse').textContent=Math.sqrt(r/(n-2)).toFixed(3);
+  const d=r-RSSMIN;
+  $('delta').innerHTML=d<0.5?'At the minimum<br>β̂₀ = '+B0.toFixed(2)+', β̂₁ = '+B1.toFixed(4)
+    :'+'+Math.round(d).toLocaleString('en-US')+' above the minimum ('+Math.round(RSSMIN).toLocaleString('en-US')+')<br>'+(100*d/RSSMIN).toFixed(1)+'% worse fit';
+  $('bar').style.width=Math.min(100,100*d/3000)+'%';
+  drawAll();
+}
+function drawAll(){drawScatter();drawContour();drawSurface();}
+$('s0').addEventListener('input',e=>{stopAnim();setParams(+e.target.value,b1);});
+$('s1').addEventListener('input',e=>{stopAnim();setParams(b0,+e.target.value);});
+$('tResid').addEventListener('change',e=>{showResid=e.target.checked;drawAll();});
+$('tOLS').addEventListener('change',e=>{showOLS=e.target.checked;drawAll();});
+$('tPivot').addEventListener('change',e=>{showPivot=e.target.checked;drawAll();});
+$('bOLS').addEventListener('click',()=>{ const s0=b0,s1=b1;
+  animate(t=>{const e=1-Math.pow(1-t,3); setParams(s0+(B0-s0)*e, s1+(B1-s1)*e);},700); });
+$('bPivot').addEventListener('click',()=>{ showPivot=true; $('tPivot').checked=true;
+  animate(t=>{const bb1=B1+0.0115*Math.sin(t*4*Math.PI); setParams(my-mx*bb1,bb1);},6000); });
+$('bShift').addEventListener('click',()=>{
+  animate(t=>{setParams(B0+1.5*Math.sin(t*4*Math.PI),B1);},6000); });
+$('bStop').addEventListener('click',stopAnim);
+hookTheme(drawAll);
+setParams(b0,b1);
+</script>
+</body>
+</html>
