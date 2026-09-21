@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -81,6 +99,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 figure canvas{aspect-ratio:1/0.95}
 canvas.cont{cursor:crosshair}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -88,12 +108,12 @@ canvas.cont{cursor:crosshair}
   <h1>Collinearity: two predictors that carry the same information</h1>
   <p>ISLR Figures 3.14 and 3.15, Credit data (400 customers). Balance is regressed on Limit together with Age, then on Limit together with Rating. Limit and Rating are almost the same variable, and the RSS surface tells you what that does to the coefficients.</p>
 </header>
+<ol class="steps"><li>Top scatters: Age has nothing to do with Limit; Rating is almost the same variable as Limit.</li><li>Bottom: RSS contours around the least-squares point. Round = each coefficient is pinned down; a long valley = many pairs fit equally well.</li><li>Press <em>Walk along the valley</em>: the two coefficients swing a lot while RSS barely moves. That is why their SEs explode.</li></ol>
+<div class="main"><div class="col">
 
 <div class="stats">
   <div class="stat"><span class="small">cor(Limit, Age) · cor(Limit, Rating)</span><span class="big" id="rCor"></span></div>
   <div class="stat"><span class="small">VIF, model 1 · model 2</span><span class="big" id="rVIF"></span></div>
-  <div class="stat"><span class="small">SE of β̂<sub>Limit</sub>, model 1 → model 2</span><span class="big" id="rSE"></span></div>
-  <div class="stat"><span class="small">Hovered point: RSS relative to the minimum</span><span class="big long" id="rHover">move over a contour plot</span></div>
 </div>
 
 <div class="buttons">
@@ -113,6 +133,9 @@ canvas.cont{cursor:crosshair}
 
 <div class="note">
   <p>Contours are RSS = RSS<sub>min</sub> × (1 + c) for c = 0.5%, 1%, 2%, 5%, 10%, with the intercept profiled out. The elongated valley is the geometry behind the variance inflation factor: VIF = 1/(1 − R²) of one predictor on the other, and the standard error of a coefficient grows with √VIF. In model 2 the t-statistic of Limit collapses from 34.5 to 0.4 while the fit (RSS) is essentially the same as in a regression on Rating alone.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>RSS around the minimum</b></div><div class="n">an ellipse; its shape is set by the predictors</div><div class="k" data-tex='\begin{aligned}RSS(\beta) = RSS_{min} + \;&(\beta - \hat\beta)^{\mathsf T}\, X_c^{\mathsf T} X_c\\ &(\beta - \hat\beta)\end{aligned}'></div><span class="v" id="rHover"></span></div><div class="f"><div class="n"><b>Variance inflation factor</b></div><div class="n">R² from regressing X_j on the other predictors</div><div class="k" data-tex='VIF(\hat\beta_j) = \frac{1}{1 - R^2_{X_j \mid X_{-j}}}'></div><span class="v" id="fVIF"></span></div><div class="f"><div class="n"><b>Standard error of a coefficient</b></div><div class="k" data-tex='SE(\hat\beta_j) = \hat\sigma \sqrt{[(X^{\mathsf T}X)^{-1}]_{jj}} \propto \sqrt{VIF}'></div><span class="v" id="rSE"></span></div><div class="f"><div class="n"><b>t-statistic of Limit</b></div><div class="k" data-tex='t = \frac{\hat\beta_{Limit}}{SE(\hat\beta_{Limit})}'></div><span class="v" id="fT"></span></div></aside>
 </div>
 </div>
 
@@ -184,7 +207,7 @@ function contour(id,M,name2,xsd,ysd){const {ctx,w,h}=setupCanvas($(id));const b1
   if(walk&&walk.id===id){dot(ctx,A.px(walk.b1*s1),A.py(walk.b2*s2),7,css('--red'),css('--panel'));}
   A.unclip();}
 function rssAt(M,b1,b2){const d=[b1-M.f.beta[1],b2-M.f.beta[2]];return M.f.rss+d[0]*d[0]*M.S[0][0]+2*d[0]*d[1]*M.S[0][1]+d[1]*d[1]*M.S[1][1];}
-function drawAll(){scatter('cS1',CR.limit,CR.age,'Limit','Age');scatter('cS2',CR.limit,CR.rating,'Limit','Rating');contour('cC1',M1,'Age',sd(CR.limit),sd(CR.age));contour('cC2',M2,'Rating',sd(CR.limit),sd(CR.rating));}
+function drawAll(){fillFormulas();scatter('cS1',CR.limit,CR.age,'Limit','Age');scatter('cS2',CR.limit,CR.rating,'Limit','Rating');contour('cC1',M1,'Age',sd(CR.limit),sd(CR.age));contour('cC2',M2,'Rating',sd(CR.limit),sd(CR.rating));}
 function table(){const row=(name,M,v2)=>`<tr><td>${name}</td><td>Intercept</td><td>${fmt(M.f.beta[0],3)}</td><td>${fmt(M.se[0],3)}</td><td>${fmt(M.t[0],3)}</td></tr><tr><td></td><td>${v2}</td><td>${fmt(M.f.beta[2],3)}</td><td>${fmt(M.se[2],3)}</td><td>${fmt(M.t[2],3)}</td></tr><tr><td></td><td>Limit</td><td>${fmt(M.f.beta[1],3)}</td><td>${fmt(M.se[1],3)}</td><td>${fmt(M.t[1],3)}</td></tr>`;
   $('tbl').innerHTML=`<thead><tr><th></th><th></th><th>Coefficient</th><th>Std. error</th><th>t-statistic</th></tr></thead><tbody>${row('Model 1',M1,'Age')}${row('Model 2',M2,'Rating')}</tbody>`;
   $('rCor').textContent=`${fmt(r1,3)} · ${fmt(r2,3)}`;$('rVIF').textContent=`${fmt(1/(1-r1*r1),2)} · ${fmt(1/(1-r2*r2),1)}`;$('rSE').textContent=`${fmt(M1.se[1],4)} → ${fmt(M2.se[1],4)} (×${fmt(M2.se[1]/M1.se[1],1)})`;}
@@ -197,6 +220,10 @@ $('bValley').addEventListener('click',()=>{const S=M2.S;const tr=S[0][0]+S[1][1]
   animate(t=>{const s=Math.sin(t*4*Math.PI)*rmax;walk={id:'cC2',b1:M2.f.beta[1]+s*u[0],b2:M2.f.beta[2]+s*u[1]};const R=rssAt(M2,walk.b1,walk.b2);$('rHover').textContent=`valley walk: β Limit ${fmt(walk.b1,4)}, β Rating ${fmt(walk.b2,3)} → RSS +${fmt(100*(R/M2.f.rss-1),2)}%`;contour('cC2',M2,'Rating',sd(CR.limit),sd(CR.rating));},8000,()=>{walk=null;drawAll();});});
 hookTheme(drawAll);
 table();drawAll();
+function fillFormulas(){$('fVIF').textContent=`model 1: 1/(1 − ${fmt(r1*r1,3)}) = ${fmt(1/(1-r1*r1),2)}; model 2: 1/(1 − ${fmt(r2*r2,4)}) = ${fmt(1/(1-r2*r2),1)}`;$('fT').textContent=`model 1: ${fmt(M1.t[1],1)} → model 2: ${fmt(M2.t[1],2)}`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

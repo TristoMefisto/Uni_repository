@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -78,6 +96,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 figure.tbl{display:flex;flex-direction:column}
 table.data input[type=range]{width:56px;vertical-align:middle}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -85,6 +105,8 @@ table.data input[type=range]{width:56px;vertical-align:middle}
   <h1>Random assignment vs selection into treatment</h1>
   <p>Gerber &amp; Green Table 2.1 again: one of the 7 villages gets a female head. If every village has the same chance (1/7), the difference in means is unbiased for the ATE of 5. Give some villages a higher chance and the same difference in means picks up two extra terms: selection on gains and baseline selection.</p>
 </header>
+<ol class="steps"><li>Each village has a chance p<sub>i</sub> of being the treated one; by default all equal (1/7).</li><li>Press <em>One experiment</em>: one village is drawn, its Y(1) is compared with the other six Y(0). Run 1 000 to see where the estimates centre.</li><li>Switch to the in-class preset: the histogram centres on 5.74, not on the ATE of 5. The right panel splits the gap into its two parts.</li></ol>
+<div class="main"><div class="col">
 
 <div class="tabs" role="tablist">
   <button id="pEq" class="on">Equal probabilities (1/7 each)</button>
@@ -92,11 +114,9 @@ table.data input[type=range]{width:56px;vertical-align:middle}
 </div>
 
 <div class="stats">
-  <div class="stat"><span class="small">ATE = E[Y(1)] − E[Y(0)]</span><span class="big" id="rATE"></span></div>
-  <div class="stat"><span class="small">E[Y(1) | D=1] − E[Y(0) | D=0]</span><span class="big" id="rDelta"></span></div>
-  <div class="stat"><span class="small">Selection on gains, ATT − ATE</span><span class="big" id="rSoG"></span></div>
-  <div class="stat"><span class="small">Baseline selection B₀</span><span class="big" id="rB0"></span></div>
-  <div class="stat"><span class="small">Draws · mean of estimates</span><span class="big" id="rMC"></span></div>
+  <div class="stat"><span class="small">ATE</span><span class="big" id="rATE"></span></div>
+  <div class="stat"><span class="small">E[difference in means]</span><span class="big" id="rDelta"></span></div>
+  <div class="stat"><span class="small">Draws · Monte Carlo mean</span><span class="big" id="rMC"></span></div>
 </div>
 
 <div class="buttons">
@@ -118,6 +138,9 @@ table.data input[type=range]{width:56px;vertical-align:middle}
 <div class="note">
   <p>Expected values are computed exactly from the probabilities: E[Y(1) | D=1] = Σᵢ pᵢ Y(1)ᵢ and E[Y(0) | D=0] = Σᵢ (1−pᵢ) Y(0)ᵢ / 6, where pᵢ is village i's chance of being treated. The Monte Carlo mean converges to the same number.</p>
   <p>This is the critique of non-experimental comparisons: when "nature" assigns the treatment, the probabilities vary with the potential outcomes and nobody knows them. With known unequal probabilities, weighting each observation by the inverse of its assignment probability recovers the ATE.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Expected outcome of the treated</b></div><div class="k" data-tex='E[Y(1)\mid D=1] = \sum_i p_i\, Y_i(1)'></div><span class="v" id="fE1"></span></div><div class="f"><div class="n"><b>Expected outcome of the controls</b></div><div class="k" data-tex='E[Y(0)\mid D=0] = \sum_i \frac{1-p_i}{N-1}\, Y_i(0)'></div><span class="v" id="fE0"></span></div><div class="f"><div class="n"><b>What the difference in means estimates</b></div><div class="k" data-tex='\Delta = ATE + \underbrace{(ATT - ATE)}_{\text{gains}} + \underbrace{B_0}_{\text{baseline}}'></div><span class="v" id="fDec"></span></div><div class="f"><div class="n"><b>Baseline selection</b></div><div class="n">would the treated have done differently anyway?</div><div class="k" data-tex='B_0 = E[Y(0)\mid D=1] - E[Y(0)\mid D=0]'></div><span class="v" id="fB0"></span></div><div class="f"><div class="n"><b>Selection on gains</b></div><div class="n">do the treated gain more than average?</div><div class="k" data-tex='ATT - ATE = E[\tau_i \mid D=1] - E[\tau_i]'></div><span class="v" id="fSoG"></span></div></aside>
 </div>
 </div>
 
@@ -185,7 +208,7 @@ function drawDec(){const {ctx,w,h}=setupCanvas($('cDec'));const e=exact();
   items.forEach((it,k)=>{const yc=A.T+rowH*(k+.5);ctx.fillStyle=it[3];ctx.globalAlpha=.85;const x0=A.px(it[1]),x1=A.px(it[2]);ctx.fillRect(Math.min(x0,x1),yc-rowH*.2,Math.max(2,Math.abs(x1-x0)),rowH*.4);ctx.globalAlpha=1;
     const d=it[2]-it[1];label(ctx,`${it[0]}  ${k===0||k>=3?fmt(it[2],2):(d>=0?'+':'')+fmt(d,2)}`,A.L+6,yc-rowH*.2-8,css('--ink'));});
   A.clip();line(ctx,[[A.px(0),A.T],[A.px(0),A.T+A.ph]],css('--rule'),1);line(ctx,[[A.px(e.ate),A.T],[A.px(e.ate),A.T+A.ph]],css('--red'),1,[4,3]);A.unclip();}
-function readouts(){const e=exact();$('rATE').textContent=fmt(e.ate,2);$('rDelta').textContent=fmt(e.delta,2);$('rSoG').textContent=(e.sog>=0?'+':'')+fmt(e.sog,2);$('rB0').textContent=(e.b0>=0?'+':'')+fmt(e.b0,2);$('rMC').textContent=draws.length?`${draws.length} · ${fmt(mean(draws),2)}`:'—';}
+function readouts(){fillFormulas();const e=exact();$('rATE').textContent=fmt(e.ate,2);$('rDelta').textContent=fmt(e.delta,2);$('rMC').textContent=draws.length?`${draws.length} · ${fmt(mean(draws),2)}`:'—';}
 function drawAll(){renderTable();readouts();drawHist();drawDec();}
 $('pEq').addEventListener('click',()=>{stopAnim();wts=[1,1,1,1,1,1,1];draws=[];last=null;$('pEq').classList.add('on');$('pEx').classList.remove('on');drawAll();});
 $('pEx').addEventListener('click',()=>{stopAnim();wts=[1,1,2,2,1,1,1];draws=[];last=null;$('pEx').classList.add('on');$('pEq').classList.remove('on');drawAll();});
@@ -195,6 +218,10 @@ $('bStop').addEventListener('click',stopAnim);
 $('bRun').addEventListener('click',()=>{const start=draws.length;animate(t=>{const target=start+Math.ceil(t*1000);while(draws.length<target)draw();drawAll();},5000);});
 hookTheme(()=>{drawHist();drawDec();});
 drawAll();
+function fillFormulas(){const e=exact();$('fE1').textContent=`= ${fmt(e.eY1t,2)}`;$('fE0').textContent=`= ${fmt(e.eY0c,2)}`;$('fDec').textContent=`${fmt(e.ate,2)} ${e.sog<0?'−':'+'} ${fmt(Math.abs(e.sog),2)} ${e.b0<0?'−':'+'} ${fmt(Math.abs(e.b0),2)} = ${fmt(e.delta,2)}`;$('fB0').textContent=`${fmt(e.eY0t,2)} − ${fmt(e.eY0c,2)} = ${fmt(e.b0,2)}`;$('fSoG').textContent=`${fmt(e.att,2)} − ${fmt(e.ate,2)} = ${fmt(e.sog,2)}`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

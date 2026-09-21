@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -76,6 +94,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -83,6 +103,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>Clustered random assignment: same individuals, fewer coin flips</h1>
   <p>Individuals sit in clusters (schools, villages, branches). Assigning the treatment cluster by cluster is often the only feasible design, but the outcomes are still measured per individual. How much precision is lost depends on how similar the members of a cluster are to each other: the intra-cluster correlation ρ.</p>
 </header>
+<ol class="steps"><li>Boxes are clusters, dots are people. Raise ρ to make the people inside a box alike.</li><li>Press <em>Run</em>: top histogram assigns treatment person by person, bottom one cluster by cluster. Same people, same ATE.</li><li>The ratio of the two SDs is the price of clustering. The right panel compares it with the textbook formula.</li></ol>
+<div class="main"><div class="col">
 
 <section class="controls" aria-label="Design">
   <div class="slider"><label for="sG">Clusters G <b id="vG"></b></label><input id="sG" type="range" min="4" max="40" step="2" value="10"></div>
@@ -92,11 +114,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 </section>
 
 <div class="stats">
-  <div class="stat"><span class="small">Units N · true ATE</span><span class="big" id="rN"></span></div>
   <div class="stat"><span class="small">SE, individual-level assignment</span><span class="big" id="rSEi"></span></div>
   <div class="stat"><span class="small">SE, cluster-level assignment</span><span class="big" id="rSEc"></span></div>
-  <div class="stat"><span class="small">Ratio · √(1 + (n−1)ρ)</span><span class="big" id="rRatio"></span></div>
-  <div class="stat"><span class="small">Mean estimate, cluster design (bias)</span><span class="big" id="rBias"></span></div>
+  <div class="stat"><span class="small">Mean estimate, cluster design</span><span class="big" id="rBias"></span></div>
 </div>
 
 <div class="buttons">
@@ -118,6 +138,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 <div class="note">
   <p>Potential outcomes are Y(0) = 50 + c<sub>j</sub> + e<sub>ij</sub> with a cluster effect c<sub>j</sub> of variance 100ρ and an individual part of variance 100(1−ρ), and Y(1) = Y(0) + 5. The ICC formula and the design effect are ahead of the notes (L4); here they only label what the histograms already show.</p>
   <p>With the unequal-sizes box ticked, cluster sizes range from small to large and bigger clusters have higher outcomes. The pooled difference in means then over-weights whichever large clusters happen to be treated: its average over assignments drifts from the ATE. The bias fades as G grows.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Outcomes with a cluster component</b></div><div class="n">ρ is the intra-cluster correlation</div><div class="k" data-tex='\begin{aligned}Y_{ij}(0) &= 50 + c_j + e_{ij}\\ \rho &= \frac{Var(c_j)}{Var(c_j) + Var(e_{ij})}\end{aligned}'></div><span class="v" id="fRho"></span></div><div class="f"><div class="n"><b>Units and true effect</b></div><div class="k" data-tex='N = G \cdot n,\qquad Y_{ij}(1) = Y_{ij}(0) + 5'></div><span class="v" id="rN"></span></div><div class="f"><div class="n"><b>Design effect (equal cluster sizes)</b></div><div class="n">simulated ratio · formula</div><div class="k" data-tex='\frac{SE_{cluster}}{SE_{individual}} \approx \sqrt{1 + (n-1)\rho}'></div><span class="v" id="rRatio"></span></div><div class="f"><div class="n"><b>Effective sample size</b></div><div class="n">how many independent observations the cluster design is worth</div><div class="k" data-tex='N_{eff} = \frac{N}{1 + (n-1)\rho}'></div><span class="v" id="fNeff"></span></div></aside>
 </div>
 </div>
 
@@ -196,7 +219,7 @@ function drawCurve(){const {ctx,w,h}=setupCanvas($('cCurve'));
     A.clip();line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);line(ctx,curve.map(p=>[A.px(p[0]),A.py(p[1])]),css('--orange'),2);curve.forEach(p=>dot(ctx,A.px(p[0]),A.py(p[1]),4.5,css('--orange'),css('--panel')));
     if(estC.length>1){dot(ctx,A.px(G),A.py(mean(estC)-TAU),7,css('--red'),css('--panel'));}A.unclip();
     $('capCurve').innerHTML='<strong>Bias of the cluster design against G.</strong> With unequal cluster sizes and outcomes that rise with size, the average of the difference in means over all cluster-level assignments is not the ATE. The gap shrinks as the number of clusters grows. Red: this run.';}}
-function readouts(){$('vG').textContent=G;$('vn').textContent=n;$('vRho').textContent=fmt(rho,2);$('rN').textContent=`${N} · ${TAU}`;
+function readouts(){fillFormulas();$('vG').textContent=G;$('vn').textContent=n;$('vRho').textContent=fmt(rho,2);$('rN').textContent=`${N} · ${TAU}`;
   const si=estI.length>1?Math.sqrt(pvar(estI)):null,sc=estC.length>1?Math.sqrt(pvar(estC)):null;$('rSEi').textContent=si?fmt(si,2):'—';$('rSEc').textContent=sc?fmt(sc,2):'—';
   $('rRatio').textContent=si&&sc?`${fmt(sc/si,2)} · ${fmt(Math.sqrt(1+(n-1)*rho),2)}`:`— · ${fmt(Math.sqrt(1+(n-1)*rho),2)}`;$('rBias').textContent=sc?`${fmt(mean(estC),2)} (${(mean(estC)-TAU>=0?'+':'')+fmt(mean(estC)-TAU,2)})`:'—';}
 function drawAll(){readouts();drawPop();drawHist();drawCurve();}
@@ -210,6 +233,10 @@ $('bOne').addEventListener('click',()=>{stopAnim();lastI=assignI(rng);lastC=assi
 $('bRun').addEventListener('click',()=>{estI=[];estC=[];animate(t=>{const target=Math.ceil(t*2000);while(estI.length<target){lastI=assignI(rng);lastC=assignC(rng);estI.push(dim(lastI));estC.push(dim(lastC));}drawAll();},4000);});
 hookTheme(drawAll);
 rebuild();
+function fillFormulas(){$('fRho').textContent=`ρ = ${fmt(rho,2)}: Var(c) = ${fmt(100*rho,0)}, Var(e) = ${fmt(100*(1-rho),0)}`;$('fNeff').textContent=`${N} / ${fmt(1+(n-1)*rho,2)} = ${fmt(N/(1+(n-1)*rho),0)}`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

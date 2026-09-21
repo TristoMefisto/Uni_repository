@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -80,6 +98,8 @@ figure.tbl{display:flex;flex-direction:column}
 tr.blockA td:first-child{border-left:3px solid var(--blue)}
 tr.blockB td:first-child{border-left:3px solid var(--orange)}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -87,6 +107,8 @@ tr.blockB td:first-child{border-left:3px solid var(--orange)}
   <h1>Blocking: same units, smaller standard error</h1>
   <p>Gerber &amp; Green Table 3.3: 14 public-works projects, 8 in region A and 6 in region B, with the outcome when audited (Y(1)) and when not (Y(0)). Four audits can be assigned to any 4 of the 14 projects, or 2 per region. The second design is a block design: complete random assignment inside each block.</p>
 </header>
+<ol class="steps"><li>Blue edge = region A, orange edge = region B. Inside a region the outcomes are alike; across regions they differ a lot.</li><li>Press <em>Enumerate</em>: top histogram = 4 audits anywhere among the 14; bottom = 2 per region. Same ATE, narrower spread.</li><li>Right panel: five ways to combine the two block estimates in one draw. Hollow circles are their averages over all draws.</li></ol>
+<div class="main"><div class="col">
 
 <section class="controls" aria-label="Design">
   <div class="slider"><label for="sMA">Audits in region A, m<sub>A</sub> <b id="vMA"></b></label><input id="sMA" type="range" min="1" max="7" step="1" value="2"></div>
@@ -95,12 +117,9 @@ tr.blockB td:first-child{border-left:3px solid var(--orange)}
 </section>
 
 <div class="stats">
-  <div class="stat"><span class="small">ATE region A · region B</span><span class="big" id="rATEj"></span></div>
-  <div class="stat"><span class="small">ATE, weights N<sub>j</sub>/N</span><span class="big long" id="rATE"></span></div>
+  <div class="stat"><span class="small">ATE (region A · region B)</span><span class="big" id="rATEj"></span></div>
   <div class="stat"><span class="small">True SE, complete assignment</span><span class="big" id="rSEc"></span></div>
   <div class="stat"><span class="small">True SE, blocked</span><span class="big" id="rSEb"></span></div>
-  <div class="stat"><span class="small">SE<sub>A</sub> · SE<sub>B</sub></span><span class="big" id="rSEj"></span></div>
-  <div class="stat"><span class="small">Combination formula</span><span class="big long" id="rForm"></span></div>
 </div>
 
 <div class="buttons">
@@ -122,6 +141,9 @@ tr.blockB td:first-child{border-left:3px solid var(--orange)}
 <div class="note">
   <p>The blocked SE is √(Σ<sub>j</sub> SE<sub>j</sub>² (N<sub>j</sub>/N)²): the variance of a weighted sum of independent block estimates. It falls below the unblocked SE when potential outcomes are similar within block and different across blocks. Use the shift slider to make the regions alike (shift −11 puts region B on top of region A) and the gain disappears.</p>
   <p>With m<sub>A</sub>/8 = m<sub>B</sub>/6 the block-fixed-effects regression weights the blocks by N<sub>j</sub>/N and is fine. With unequal treatment shares (the default, 2/8 vs 2/6) its weights become ∝ N<sub>j</sub> p<sub>j</sub>(1−p<sub>j</sub>), so the coefficient's expectation drifts away from the ATE. Interacting D with the centred block dummy, or reweighting by 1/p<sub>j</sub> and 1/(1−p<sub>j</sub>), restores the N<sub>j</sub>/N weights exactly.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>ATE as a weighted average of block ATEs</b></div><div class="k" data-tex='ATE = \sum_{j} \frac{N_j}{N}\, ATE_j'></div><span class="v" id="rATE"></span></div><div class="f"><div class="n"><b>SE of the blocked estimator</b></div><div class="n">variance of a weighted sum of independent block estimates</div><div class="k" data-tex='SE = \sqrt{\sum_{j} SE_j^2 \left(\frac{N_j}{N}\right)^2}'></div><span class="v" id="rForm"></span></div><div class="f"><div class="n"><b>Block SEs</b></div><div class="k" data-tex='SE_A,\; SE_B'></div><span class="v" id="rSEj"></span></div><div class="f"><div class="n"><b>Regression with block fixed effects</b></div><div class="n">β̂₁ is the ATE only if the treated share is the same in every block</div><div class="k" data-tex='Y_i = \beta_0 + \beta_1 D_i + c_A X_{Ai} + u_i'></div><span class="v" id="fFE"></span></div><div class="f"><div class="n"><b>Fix 1: centred interaction</b></div><div class="k" data-tex='\begin{aligned}&+\ \delta_A D_i\,(X_{Ai} - \bar X_A)\\ \Rightarrow\; &\hat\beta_1 = \tfrac{N_A}{N}\widehat{ATE}_A + \tfrac{N_B}{N}\widehat{ATE}_B\end{aligned}'></div><span class="v" id="fInt"></span></div><div class="f"><div class="n"><b>Fix 2: weighted least squares</b></div><div class="k" data-tex='w_i = \begin{cases} 1/p_j & D_i = 1 \\ 1/(1-p_j) & D_i = 0\end{cases}'></div><span class="v" id="fW"></span></div></aside>
 </div>
 </div>
 
@@ -233,7 +255,7 @@ function drawEst(){
   label(ctx,'ATE '+fmt(ate(),2),A.px(ate())+4,A.T+A.ph-6,css('--red'));
   label(ctx,`this draw: A ${fmt(e.dA,2)}, B ${fmt(e.dB,2)}`,A.L+A.pw-6,A.T+A.ph-6,css('--ink'),'right');
 }
-function readouts(){$('vMA').textContent=mA+' of 8';$('vMB').textContent=mB+' of 6';$('vShift').textContent=(shift>0?'+':'')+shift;
+function readouts(){fillFormulas();$('vMA').textContent=mA+' of 8';$('vMB').textContent=mB+' of 6';$('vShift').textContent=(shift>0?'+':'')+shift;
   $('rATEj').textContent=`${fmt(ateA(),2)} · ${fmt(ateB(),2)}`;$('rATE').textContent=`${fmt(ate(),2)} = 8/14·(${fmt(ateA(),0)}) + 6/14·(${fmt(ateB(),0)})`;
   $('rSEc').textContent=fmt(seC,2);$('rSEb').textContent=fmt(seB,2);$('rSEj').textContent=`${fmt(seA_,2)} · ${fmt(seB_,2)}`;
   $('rForm').textContent=`√(${fmt(seA_,2)}²·(8/14)² + ${fmt(seB_,2)}²·(6/14)²) = ${fmt(Math.sqrt(seA_**2*(8/14)**2+seB_**2*(6/14)**2),2)}`;}
@@ -248,6 +270,10 @@ function diffMeansW(T){return estimators(T).weighted;}
 $('bEnum').addEventListener('click',()=>{estC=[];estB=[];const all=[...Array(N).keys()];animate(t=>{const kc=Math.ceil(t*combC.length),kb=Math.ceil(t*combB.length);while(estC.length<kc)estC.push(diffMeans(combC[estC.length],all));while(estB.length<kb){cur=combB[estB.length];estB.push(diffMeansW(cur));}drawAll();},7000);});
 hookTheme(()=>{drawHist();drawEst();});
 build();
+function fillFormulas(){const e=estimators(cur);$('fFE').textContent=`this draw: β̂₁ = ${fmt(e.fe,2)} (block-weighted estimate ${fmt(e.weighted,2)})`;$('fInt').textContent=`this draw: β̂₁ = ${fmt(e.inter,2)}`;$('fW').textContent=`p_A = ${mA}/8, p_B = ${mB}/6 → β̂₁ = ${fmt(e.wls,2)}`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

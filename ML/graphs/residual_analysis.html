@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -79,6 +97,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 #cScat{cursor:crosshair}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -86,6 +106,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>Residual plots: what a fit is hiding</h1>
   <p>ISLR Figures 3.9 and 3.11 to 3.13. Auto data, 392 cars: miles per gallon against horsepower. A residual plot puts the residuals against the fitted values; any pattern left in it says the model is missing something. Leverage and studentized residuals tell apart unusual x from unusual y.</p>
 </header>
+<ol class="steps"><li>Choose linear or quadratic. The middle panel plots residuals against fitted values: a curved red smooth means the model missed a curve.</li><li>Tick <em>drag mode</em> and move a point. The dashed line shows the fit without it.</li><li>Right panel: far to the right = unusual x (leverage), far up or down = unusual y (outlier). Both at once is the dangerous corner.</li></ol>
+<div class="main"><div class="col">
 
 <div class="tabs" role="tablist">
   <button id="pAuto" class="on">Auto: non-linearity, outliers, leverage</button>
@@ -101,11 +123,10 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <div class="toggles"><label><input type="checkbox" id="tLog"> fit log(Y) instead of Y</label></div>
 </section>
 
-<div class="stats" id="stAuto">
+<div class="stats">
   <div class="stat"><span class="small">Residual standard error</span><span class="big" id="rRSE"></span></div>
   <div class="stat"><span class="small">R²</span><span class="big" id="rR2"></span></div>
-  <div class="stat"><span class="small">Flagged: |studentized| &gt; 3 · leverage &gt; 3p/n</span><span class="big" id="rFlag"></span></div>
-  <div class="stat"><span class="small">Dragged point: residual · studentized · leverage</span><span class="big long" id="rPt"></span></div>
+  <div class="stat"><span class="small">Flagged: |t| > 3 · h > 3p/n</span><span class="big" id="rFlag"></span></div>
 </div>
 
 <div class="panels" id="panAuto">
@@ -125,6 +146,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 <div class="note">
   <p>Studentized residual: the residual divided by its estimated standard deviation, refitting without the point. Leverage: the diagonal of the hat matrix, h = x'(X'X)⁻¹x, between 1/n and 1. Try dragging a point far to the right at an ordinary mpg (leverage jumps, line follows) and then straight up at an ordinary horsepower (studentized residual jumps, line barely moves).</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Residuals and their size</b></div><div class="k" data-tex='e_i = y_i - \hat y_i,\qquad RSE = \sqrt{\frac{RSS}{n - p}}'></div><span class="v" id="fRSE"></span></div><div class="f"><div class="n"><b>Leverage (simple regression)</b></div><div class="n">in general h_i = xᵢᵀ(XᵀX)⁻¹xᵢ; average p/n</div><div class="k" data-tex='h_i = \frac{1}{n} + \frac{(x_i - \bar x)^2}{\sum_{i^\prime}(x_{i^\prime} - \bar x)^2}'></div><span class="v" id="fLev"></span></div><div class="f"><div class="n"><b>Studentized residual</b></div><div class="n">σ̂₍ᵢ₎ is the RSE refitted without point i</div><div class="k" data-tex='t_i = \frac{e_i}{\hat\sigma_{(i)}\sqrt{1 - h_i}}'></div><span class="v" id="fStud"></span></div><div class="f"><div class="n"><b>Dragged point: residual · t · leverage</b></div><div class="k" data-tex='e_i,\; t_i,\; h_i'></div><span class="v" id="rPt"></span></div><div class="f"><div class="n"><b>Non-constant variance</b></div><div class="n">the second tab: fit log Y, or weighted least squares</div><div class="k" data-tex='Var(\varepsilon_i) = \sigma_i^2 \ne \sigma^2'></div></div></aside>
 </div>
 </div>
 
@@ -195,7 +219,7 @@ function drawLev(){const {ctx,w,h}=setupCanvas($('cLev'));const hmax=Math.max(0.
   line(ctx,[[A.L,A.py(3)],[A.L+A.pw,A.py(3)]],css('--muted'),1,[3,3]);line(ctx,[[A.L,A.py(-3)],[A.L+A.pw,A.py(-3)]],css('--muted'),1,[3,3]);line(ctx,[[A.px(3*fit.p/fit.n),A.T],[A.px(3*fit.p/fit.n),A.T+A.ph]],css('--muted'),1,[3,3]);
   fit.h.forEach((hv,i)=>{const flag=Math.abs(fit.stud[i])>3||hv>3*fit.p/fit.n;dot(ctx,A.px(hv),A.py(fit.stud[i]),i===extra?6:2.6,i===extra?css('--red'):(flag?css('--orange'):css('--grey')),i===extra?css('--panel'):null);});
   A.unclip();label(ctx,'3p/n = '+fmt(3*fit.p/fit.n,3),A.px(3*fit.p/fit.n)+4,A.T+14,css('--muted'));}
-function readouts(){$('rRSE').textContent=fmt(fit.s,3);const tss=pvar(mpg)*mpg.length;$('rR2').textContent=fmt(1-fit.rss/tss,3);const nO=fit.stud.filter(t=>Math.abs(t)>3).length,nL=fit.h.filter(v=>v>3*fit.p/fit.n).length;$('rFlag').textContent=`${nO} · ${nL}`;
+function readouts(){fillFormulas();$('rRSE').textContent=fmt(fit.s,3);const tss=pvar(mpg)*mpg.length;$('rR2').textContent=fmt(1-fit.rss/tss,3);const nO=fit.stud.filter(t=>Math.abs(t)>3).length,nL=fit.h.filter(v=>v>3*fit.p/fit.n).length;$('rFlag').textContent=`${nO} · ${nL}`;
   $('rPt').textContent=extra!==null?`${fmt(fit.resid[extra],2)} · ${fmt(fit.stud[extra],2)} · ${fmt(fit.h[extra],3)} (hp ${Math.round(hp[extra])}, mpg ${fmt(mpg[extra],1)})`:'none (tick drag mode, or add a point)';}
 function drawAuto(){refit();readouts();drawScat();drawRes();drawLev();}
 // drag handling
@@ -220,6 +244,10 @@ $('pAuto').addEventListener('click',()=>{tab='auto';$('pAuto').classList.add('on
 $('pFun').addEventListener('click',()=>{tab='fun';$('pFun').classList.add('on');$('pAuto').classList.remove('on');$('ctlAuto').hidden=true;$('stAuto').hidden=true;$('panAuto').hidden=true;$('ctlFun').hidden=false;$('panFun').hidden=false;$('vG').textContent=gam;drawFun();});
 hookTheme(()=>{if(tab==='auto')drawAuto();else drawFun();});
 genFun();drawAuto();
+function fillFormulas(){$('fRSE').textContent=`√(${fmt(fit.rss,0)} / (${fit.n} − ${fit.p})) = ${fmt(fit.s,3)}`;$('fLev').textContent=`average p/n = ${fmt(fit.p/fit.n,4)}; cut-off 3p/n = ${fmt(3*fit.p/fit.n,4)}`;$('fStud').textContent=extra!==null?`dragged point: ${fmt(fit.resid[extra],2)} / (${fmt(fit.s,2)} · √(1 − ${fmt(fit.h[extra],3)})) ≈ ${fmt(fit.stud[extra],2)}`:'|t| above 3 flags an outlier';}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

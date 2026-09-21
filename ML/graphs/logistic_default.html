@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -76,6 +94,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -83,6 +103,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>Logistic regression: probability of default on credit-card balance</h1>
   <p>ISLR Figure 4.2 and Tables 4.1 to 4.4, Default data (10 000 customers, 333 defaulted). A straight line fitted to a 0/1 outcome predicts negative probabilities; the logistic curve stays inside [0, 1]. The coefficients are found by maximum likelihood, here with Newton's method step by step, and a threshold turns the probabilities into a classifier.</p>
 </header>
+<ol class="steps"><li>Grey line: a straight line fitted to 0/1, negative for small balances. Navy: the logistic curve, always between 0 and 1.</li><li>Press <em>Run Newton</em>: the curve settles as the coefficients converge to the maximum-likelihood values.</li><li>Move the threshold τ: the confusion matrix and the dot on the ROC curve follow.</li></ol>
+<div class="main"><div class="col">
 
 <section class="controls" aria-label="Parameters">
   <div class="slider"><label for="sT">Classification threshold τ <b id="vT"></b></label><input id="sT" type="range" min="1" max="99" step="1" value="50"></div>
@@ -91,11 +113,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 <div class="stats">
   <div class="stat"><span class="small">β̂₀ · β̂₁ (per $1 of balance)</span><span class="big long" id="rB"></span></div>
-  <div class="stat"><span class="small">SE(β̂₁) · z</span><span class="big long" id="rZ"></span></div>
-  <div class="stat"><span class="small">Newton iterations · log-likelihood</span><span class="big long" id="rIt"></span></div>
   <div class="stat"><span class="small">Training error at τ</span><span class="big" id="rErr"></span></div>
   <div class="stat"><span class="small">Sensitivity · specificity</span><span class="big" id="rSS"></span></div>
-  <div class="stat"><span class="small">Null classifier error · AUC</span><span class="big" id="rNull"></span></div>
 </div>
 
 <div class="buttons">
@@ -116,6 +135,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 <div class="note">
   <p>A one-unit increase in balance raises the log odds of default by β̂₁ = 0.0055; a $1,000 increase multiplies the odds by e<sup>5.5</sup> ≈ 245. The training error at τ = 0.5 is 2.75%, but the null classifier that never predicts default gets 3.33%: overall error is a poor yardstick when one class is rare, which is why sensitivity, specificity and the ROC curve exist.</p>
   <p>Newton's method: start from β₁ = 0, and at each step move by −H⁻¹ g, where g is the gradient of the log-likelihood and H its Hessian. On standardised balance it converges in a handful of steps.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Logistic function</b></div><div class="n">S-shaped, stays inside [0, 1]</div><div class="k" data-tex='p(X) = \frac{e^{\beta_0 + \beta_1 X}}{1 + e^{\beta_0 + \beta_1 X}}'></div></div><div class="f"><div class="n"><b>Log odds are linear</b></div><div class="k" data-tex='\log\frac{p(X)}{1 - p(X)} = \beta_0 + \beta_1 X'></div><span class="v" id="fOdds"></span></div><div class="f"><div class="n"><b>Log-likelihood to maximise</b></div><div class="n">iterations · value</div><div class="k" data-tex='\begin{aligned}\ell(\beta) &= \sum_i \Big[y_i\,\eta_i - \log\big(1 + e^{\eta_i}\big)\Big]\\ \eta_i &= \beta_0 + \beta_1 x_i\end{aligned}'></div><span class="v" id="rIt"></span></div><div class="f"><div class="n"><b>Newton step</b></div><div class="n">g gradient, H Hessian; SE(β̂₁) · z</div><div class="k" data-tex='\beta \leftarrow \beta - H^{-1} g'></div><span class="v" id="rZ"></span></div><div class="f"><div class="n"><b>Classification at threshold τ</b></div><div class="k" data-tex='\begin{aligned}\text{error} &= \tfrac{FP + FN}{n}\\ \text{sens} &= \tfrac{TP}{TP + FN},\quad \text{spec} = \tfrac{TN}{TN + FP}\end{aligned}'></div><span class="v" id="fConf"></span></div><div class="f"><div class="n"><b>Null classifier · AUC</b></div><div class="n">null classifier error (never predict default) · AUC</div><div class="k" data-tex='AUC = \int_0^1 TPR\; d(FPR)'></div><span class="v" id="rNull"></span></div></aside>
 </div>
 </div>
 
@@ -195,7 +217,7 @@ function drawConf(){const {ctx,w,h}=setupCanvas($('cConf'));const cf=confusion(t
   ctx.fillStyle=css('--muted');ctx.textAlign='center';ctx.fillText(`total ${n0.toLocaleString('en-US')}`,L+cw/2,h-14);ctx.fillText(`total ${n1}`,L+cw*1.5,h-14);}
 function drawROC(){const {ctx,w,h}=setupCanvas($('cROC'));const A=axes(ctx,w,h,{xlim:[0,1],ylim:[0,1],xt:[0,0.2,0.4,0.6,0.8,1],yt:[0,0.2,0.4,0.6,0.8,1],xf:v=>v.toFixed(1),yf:v=>v.toFixed(1),xl:'false positive rate (1 − specificity)',yl:'true positive rate (sensitivity)'});A.clip();line(ctx,[[A.px(0),A.py(0)],[A.px(1),A.py(1)]],css('--muted'),1,[4,4]);line(ctx,roc.map(p=>[A.px(p[0]),A.py(p[1])]),css('--navy'),2);
   const cf=confusion(tau);dot(ctx,A.px(cf.FP/n0),A.py(cf.TP/n1),6,css('--red'),css('--panel'));A.unclip();label(ctx,'AUC = '+fmt(roc.auc,3),A.L+A.pw-6,A.T+A.ph-8,css('--navy'),'right');label(ctx,'τ = '+fmt(tau,2),A.px(cf.FP/n0)+8,A.py(cf.TP/n1)-8,css('--red'));}
-function readouts(){const Ck=coef(step);const cf=confusion(tau);$('vT').textContent=fmt(tau,2);$('rB').textContent=`${fmt(Ck.b0,3)} · ${fmt(Ck.b1,5)}`;$('rZ').textContent=`${fmt(Ck.se1,6)} · ${fmt(Ck.b1/Ck.se1,2)}`;$('rIt').textContent=`${step} of ${trace.length-1} · ${fmt(Ck.ll,1)}`;$('rErr').textContent=fmt(100*(cf.FP+cf.FN)/N,2)+'%';$('rSS').textContent=`${fmt(100*cf.TP/n1,1)}% · ${fmt(100*cf.TN/n0,1)}%`;$('rNull').textContent=`${fmt(100*n1/N,2)}% · ${fmt(roc.auc,3)}`;}
+function readouts(){fillFormulas();const Ck=coef(step);const cf=confusion(tau);$('vT').textContent=fmt(tau,2);$('rB').textContent=`${fmt(Ck.b0,3)} · ${fmt(Ck.b1,5)}`;$('rZ').textContent=`${fmt(Ck.se1,6)} · ${fmt(Ck.b1/Ck.se1,2)}`;$('rIt').textContent=`${step} of ${trace.length-1} · ${fmt(Ck.ll,1)}`;$('rErr').textContent=fmt(100*(cf.FP+cf.FN)/N,2)+'%';$('rSS').textContent=`${fmt(100*cf.TP/n1,1)}% · ${fmt(100*cf.TN/n0,1)}%`;$('rNull').textContent=`${fmt(100*n1/N,2)}% · ${fmt(roc.auc,3)}`;}
 function drawAll(){readouts();drawFit();drawConf();drawROC();}
 $('sT').addEventListener('input',e=>{tau=+e.target.value/100;drawAll();});
 [['bT50',50],['bT20',20],['bT10',10]].forEach(([id,v])=>$(id).addEventListener('click',()=>{tau=v/100;$('sT').value=v;drawAll();}));
@@ -204,6 +226,10 @@ $('bStop').addEventListener('click',()=>{stopAnim();step=trace.length-1;drawAll(
 $('bNewton').addEventListener('click',()=>{animate(t=>{step=Math.min(trace.length-1,Math.floor(t*trace.length));readouts();drawFit();},trace.length*700,()=>{step=trace.length-1;drawAll();});});
 hookTheme(drawAll);
 drawAll();
+function fillFormulas(){const Ck=coef(step);$('fOdds').textContent=`+$1 of balance → log odds +${fmt(Ck.b1,5)}; +$1000 → odds × ${fmt(Math.exp(1000*Ck.b1),0)}`;const cf=confusion(tau);$('fConf').textContent=`(${cf.FP}+${cf.FN})/${N.toLocaleString('en-US')} = ${fmt(100*(cf.FP+cf.FN)/N,2)}% · ${cf.TP}/${n1} = ${fmt(100*cf.TP/n1,1)}% · ${cf.TN.toLocaleString('en-US')}/${n0.toLocaleString('en-US')} = ${fmt(100*cf.TN/n0,1)}%`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

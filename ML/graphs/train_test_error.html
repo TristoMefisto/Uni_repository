@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -76,6 +94,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -83,6 +103,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>Training error always falls, test error does not</h1>
   <p>ISLR Figures 2.9 to 2.11. A true function f (black), noisy training points, and a family of fits of growing flexibility: polynomials from a straight line up to degree 15. Training MSE is measured on the points used to fit; test MSE on fresh points from the same f.</p>
 </header>
+<ol class="steps"><li>Pick a shape for the true f and a polynomial degree. The coloured curve is the fit.</li><li>Grey = training MSE, measured on the dots used to fit. Red = test MSE, measured on 500 new points from the same f.</li><li>Press <em>Sweep flexibility</em>: grey only falls, red turns back up. The bottom of the red U is the degree to pick.</li></ol>
+<div class="main"><div class="col">
 
 <div class="tabs" role="tablist">
   <button id="p0" class="on">Smooth non-linear f (Fig 2.9)</button>
@@ -98,9 +120,7 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 <div class="stats">
   <div class="stat"><span class="small">Training MSE</span><span class="big" id="rTr"></span></div>
-  <div class="stat"><span class="small">Test MSE (500 fresh points)</span><span class="big" id="rTe"></span></div>
-  <div class="stat"><span class="small">Irreducible error σ²</span><span class="big" id="rS2"></span></div>
-  <div class="stat"><span class="small">Best degree on the test set</span><span class="big" id="rBest"></span></div>
+  <div class="stat"><span class="small">Test MSE</span><span class="big" id="rTe"></span></div>
 </div>
 
 <div class="buttons">
@@ -120,6 +140,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 <div class="note">
   <p>The training MSE can be driven towards zero by a flexible enough model, because the fit is allowed to memorise the sample. The test MSE cannot: once the model follows the noise, new points from the same f land far from the curve. Compare the three presets: with a near-linear f the best degree is 1 or 2; with a highly non-linear f the U bottoms out much further right.</p>
   <p>Test data are rarely available in practice, which is why the test MSE is estimated by cross-validation instead.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>The model and the fit</b></div><div class="k" data-tex='Y = f(X) + \varepsilon,\quad \hat f(x) = \sum_{k=0}^{d}\hat\beta_k\, x^k'></div><span class="v" id="fModel"></span></div><div class="f"><div class="n"><b>Training MSE</b></div><div class="n">falls whenever d goes up: more freedom, closer to the dots</div><div class="k" data-tex='MSE_{train} = \frac{1}{n}\sum_{i=1}^{n}\big(y_i - \hat f(x_i)\big)^2'></div><span class="v" id="fTr"></span></div><div class="f"><div class="n"><b>Test MSE</b></div><div class="n">on points not used for fitting</div><div class="k" data-tex='MSE_{test} = \text{Ave}\big(y_0 - \hat f(x_0)\big)^2'></div><span class="v" id="rBest"></span></div><div class="f"><div class="n"><b>The floor</b></div><div class="n">no method beats the noise on average</div><div class="k" data-tex='E\big[(y_0 - \hat f(x_0))^2\big] \ge Var(\varepsilon) = \sigma^2'></div><span class="v" id="rS2"></span></div></aside>
 </div>
 </div>
 
@@ -185,7 +208,7 @@ function drawMSE(){const {ctx,w,h}=setupCanvas($('cMSE'));const tes=fits.slice(1
   fits.slice(1).forEach((o,i)=>{dot(ctx,A.px(i+1),A.py(Math.min(o.tr,ymax*1.1)),2.5,css('--grey'));dot(ctx,A.px(i+1),A.py(Math.min(o.te,ymax*1.1)),2.5,css('--red'));});
   dot(ctx,A.px(d),A.py(Math.min(fits[d].tr,ymax*1.1)),6,css('--grey'),css('--panel'));dot(ctx,A.px(d),A.py(Math.min(fits[d].te,ymax*1.1)),6,css('--red'),css('--panel'));
   A.unclip();label(ctx,'test MSE',A.L+A.pw-6,A.T+14,css('--red'),'right');label(ctx,'training MSE',A.L+A.pw-6,A.T+30,css('--grey'),'right');label(ctx,'σ² = '+fmt(sig*sig,1),A.L+6,A.py(sig*sig)-8,css('--ink'));}
-function readouts(){$('vD').textContent=d;$('vN').textContent=n;$('vS').textContent=sig;$('rTr').textContent=fmt(fits[d].tr,2);$('rTe').textContent=fmt(fits[d].te,2);$('rS2').textContent=fmt(sig*sig,2);
+function readouts(){fillFormulas();$('vD').textContent=d;$('vN').textContent=n;$('vS').textContent=sig;$('rTr').textContent=fmt(fits[d].tr,2);$('rTe').textContent=fmt(fits[d].te,2);$('rS2').textContent=fmt(sig*sig,2);
   let best=1;for(let k=2;k<=DMAX;k++)if(fits[k].te<fits[best].te)best=k;$('rBest').textContent=best+' (test MSE '+fmt(fits[best].te,2)+')';}
 function drawAll(){readouts();drawFit();drawMSE();}
 function rebuild(){gen();drawAll();}
@@ -199,6 +222,10 @@ $('bSweep').addEventListener('click',()=>{animate(t=>{d=Math.max(1,Math.min(DMAX
 [['p0',0],['p1',1],['p2',2]].forEach(([id,p])=>$(id).addEventListener('click',()=>{stopAnim();preset=p;['p0','p1','p2'].forEach(i=>$(i).classList.toggle('on',i===id));rebuild();}));
 hookTheme(drawAll);
 rebuild();
+function fillFormulas(){$('fModel').textContent=`degree d = ${d}: ${d+1} coefficients fitted on n = ${n} points`;$('fTr').textContent=`= ${fmt(fits[d].tr,2)} at d = ${d}`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

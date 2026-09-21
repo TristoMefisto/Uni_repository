@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -76,6 +94,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -83,6 +103,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>KNN regression against linear regression, and the curse of dimensionality</h1>
   <p>ISLR Figures 3.17 to 3.20. KNN regression predicts at x₀ with the average response of the K closest training points: no functional form at all. It wins when the truth is curved and loses when the truth is a line. Add predictors that carry no information and it loses badly, whatever the truth.</p>
 </header>
+<ol class="steps"><li>Orange step curve: the KNN prediction, the average of the K nearest y values. Navy: the straight-line fit.</li><li>Middle: test MSE for every K. The dashed line is the linear regression, which does not depend on K.</li><li>Press <em>Sweep p</em>: add predictors that carry no information. KNN gets worse and worse; the line does not.</li></ol>
+<div class="main"><div class="col">
 
 <div class="tabs" role="tablist">
   <button id="p0" class="on">True f is linear (Fig 3.17-3.18)</button>
@@ -98,10 +120,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 </section>
 
 <div class="stats">
-  <div class="stat"><span class="small">KNN test MSE (K, p)</span><span class="big" id="rKNN"></span></div>
-  <div class="stat"><span class="small">Linear regression test MSE (p)</span><span class="big" id="rOLS"></span></div>
-  <div class="stat"><span class="small">σ² (irreducible)</span><span class="big" id="rS2"></span></div>
-  <div class="stat"><span class="small">Best K at this p</span><span class="big" id="rBest"></span></div>
+  <div class="stat"><span class="small">KNN test MSE</span><span class="big" id="rKNN"></span></div>
+  <div class="stat"><span class="small">Linear regression test MSE</span><span class="big" id="rOLS"></span></div>
 </div>
 
 <div class="buttons">
@@ -122,6 +142,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 <div class="note">
   <p>In p dimensions the K nearest neighbours of x₀ come from a ball whose radius grows quickly with p for a fixed n: a non-parametric method needs many more observations per extra dimension, a parametric one only one more coefficient. That is the price of not assuming a form for f.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>KNN regression</b></div><div class="n">no assumption on the shape of f</div><div class="k" data-tex='\hat f(x_0) = \frac{1}{K}\sum_{x_i \in \mathcal N_0} y_i'></div><span class="v" id="fK"></span></div><div class="f"><div class="n"><b>Linear regression</b></div><div class="n">one extra coefficient per predictor</div><div class="k" data-tex='\hat f(x) = \hat\beta_0 + \hat\beta_1 x_1 + \dots + \hat\beta_p x_p'></div><span class="v" id="fOLS"></span></div><div class="f"><div class="n"><b>Test MSE</b></div><div class="n">best K at this p</div><div class="k" data-tex='MSE_{test} = \text{Ave}\big(y_0 - \hat f(x_0)\big)^2'></div><span class="v" id="rBest"></span></div><div class="f"><div class="n"><b>Irreducible error</b></div><div class="k" data-tex='\sigma^2'></div><span class="v" id="rS2"></span></div><div class="f"><div class="n"><b>Distance in p dimensions</b></div><div class="n">noise coordinates push every neighbour away</div><div class="k" data-tex='d(x_0, x_i) = \sqrt{\sum_{k=1}^{p}(x_{0k} - x_{ik})^2}'></div><span class="v" id="fDist"></span></div></aside>
 </div>
 </div>
 
@@ -198,7 +221,7 @@ function drawDim(){const {ctx,w,h}=setupCanvas($('cDim'));const kk=ks();const xs
   const cols=[css('--green'),css('--blue'),css('--purple'),css('--orange'),css('--red'),css('--ink')];
   PS.forEach((q,i)=>{line(ctx,[[A.L,A.py(ols[q].mse)],[A.L+A.pw,A.py(ols[q].mse)]],cols[i],1,[5,4]);line(ctx,kk.map((k,j)=>[A.px(xs[j]),A.py(curves[q][k])]),cols[i],q===p?3:1.6);});A.unclip();
   PS.forEach((q,i)=>label(ctx,'p = '+q,A.L+6+i*44,A.T+14,cols[i]));}
-function readouts(){$('vK').textContent=K;$('vP').textContent=p;$('vS').textContent=sig;$('vN').textContent=n;$('rKNN').textContent=fmt(curves[p][K],3);$('rOLS').textContent=fmt(ols[p].mse,3);$('rS2').textContent=fmt(sig*sig,3);let best=ks()[0];ks().forEach(k=>{if(curves[p][k]<curves[p][best])best=k;});$('rBest').textContent=`${best} (MSE ${fmt(curves[p][best],3)})`;}
+function readouts(){fillFormulas();$('vK').textContent=K;$('vP').textContent=p;$('vS').textContent=sig;$('vN').textContent=n;$('rKNN').textContent=fmt(curves[p][K],3);$('rOLS').textContent=fmt(ols[p].mse,3);$('rS2').textContent=fmt(sig*sig,3);let best=ks()[0];ks().forEach(k=>{if(curves[p][k]<curves[p][best])best=k;});$('rBest').textContent=`${best} (MSE ${fmt(curves[p][best],3)})`;}
 function drawAll(){computeP(p);readouts();drawFit();drawMSE();drawDim();}
 function rebuild(){const kk=ks();if(!kk.includes(K))K=kFromSlider(+$('sK').value);gen();drawAll();}
 $('sK').addEventListener('input',e=>{stopAnim();K=kFromSlider(+e.target.value);drawAll();});
@@ -212,6 +235,10 @@ $('bP').addEventListener('click',()=>{animate(t=>{p=Math.max(1,Math.min(PMAX,Mat
 [['p0',0],['p1',1],['p2',2]].forEach(([id,q])=>$(id).addEventListener('click',()=>{stopAnim();preset=q;['p0','p1','p2'].forEach(i=>$(i).classList.toggle('on',i===id));rebuild();}));
 hookTheme(drawAll);
 rebuild();
+function fillFormulas(){$('fK').textContent=`K = ${K}, p = ${p}: test MSE ${fmt(curves[p][K],3)}`;$('fOLS').textContent=`p = ${p}: ${p+1} coefficients, test MSE ${fmt(ols[p].mse,3)}`;$('fDist').textContent=p>1?`${p-1} of the ${p} coordinates are pure noise`:'only the real predictor: neighbours are truly near';}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -79,6 +97,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 figure.tbl{display:flex;flex-direction:column}
 td.filled{color:var(--purple);font-weight:500}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -86,6 +106,8 @@ td.filled{color:var(--purple);font-weight:500}
   <h1>Randomization inference: the p-value from placebo assignments</h1>
   <p>Only one assignment was run, so only one potential outcome per unit is observed. Under the sharp null (no effect for any unit) the missing column is just a copy of the observed one, and every other assignment the lottery could have produced becomes a placebo experiment. The RI p-value is the share of placebos with an estimate at least as extreme as the real one.</p>
 </header>
+<ol class="steps"><li>One column per unit was observed. The sharp null says the treatment did nothing, so the missing column is a copy of the observed one (purple).</li><li>Press <em>One placebo</em>: re-run the lottery on those numbers and recompute the difference in means.</li><li>Press <em>Run</em>: all placebos. The p-value is the share of them at least as extreme as the real estimate (red).</li></ol>
+<div class="main"><div class="col">
 
 <div class="tabs" role="tablist">
   <button id="pA" class="on">4 units, 2 treated (6 assignments)</button>
@@ -101,9 +123,7 @@ td.filled{color:var(--purple);font-weight:500}
 
 <div class="stats">
   <div class="stat"><span class="small">Observed estimate τ̂</span><span class="big" id="rObs"></span></div>
-  <div class="stat"><span class="small">Placebos at least as extreme</span><span class="big" id="rCount"></span></div>
   <div class="stat"><span class="small">RI p-value</span><span class="big long" id="rP"></span></div>
-  <div class="stat"><span class="small">t-test p-value (weak null)</span><span class="big long" id="rT"></span></div>
 </div>
 
 <div class="buttons">
@@ -125,6 +145,9 @@ td.filled{color:var(--purple);font-weight:500}
 <div class="note">
   <p>The sharp null is stronger than the weak null of the t-test: no unit at all is affected, not just the average. That is what makes the placebo outcomes computable. Drag τ up to add a real effect to the treated units and watch the observed estimate move into the tail of the placebo distribution.</p>
   <p id="noteC"></p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Sharp null hypothesis</b></div><div class="n">no effect for any unit, not just on average</div><div class="k" data-tex='H_0:\; Y_i(1) = Y_i(0)\quad \text{for every } i'></div></div><div class="f"><div class="n"><b>Placebo estimate</b></div><div class="n">ω is one possible assignment</div><div class="k" data-tex='\hat\tau(\omega) = \bar Y_{T(\omega)} - \bar Y_{C(\omega)}'></div><span class="v" id="fPl"></span></div><div class="f"><div class="n"><b>RI p-value</b></div><div class="k" data-tex='p = \frac{\#\{\omega:\ \hat\tau(\omega) \ge \hat\tau_{obs}\}}{|\Omega|}'></div><span class="v" id="fP"></span></div><div class="f"><div class="n"><b>Monte Carlo adjustment</b></div><div class="n">c extreme placebos out of n draws</div><div class="k" data-tex='p_{adj} = \frac{c+1}{n+1}'></div><span class="v" id="fAdj"></span></div><div class="f"><div class="n"><b>The t-test it replaces (weak null)</b></div><div class="k" data-tex='t = \frac{\hat\tau}{\widehat{SE}}\qquad (H_0:\ E[Y_i(1)] = E[Y_i(0)])'></div><span class="v" id="rT"></span></div></aside>
 </div>
 </div>
 
@@ -215,7 +238,7 @@ function drawTrace(){
     if(mc){const c=Math.round(last*trace.length);const adj=(c+1)/(trace.length+1);line(ctx,[[A.L,A.py(adj)],[A.L+A.pw,A.py(adj)]],css('--purple'),1,[2,3]);label(ctx,'(c+1)/(n+1) = '+fmt(adj,4),A.L+4,A.py(adj)-8,css('--purple'));}}
   A.unclip();
 }
-function readouts(){const o=obs();const c=placebos.filter(v=>extreme(v,o)).length;$('rObs').textContent=fmt(o,2);$('rCount').textContent=placebos.length?`${c} of ${placebos.length}`:'—';
+function readouts(){fillFormulas();const o=obs();const c=placebos.filter(v=>extreme(v,o)).length;$('rObs').textContent=fmt(o,2);
   $('rP').textContent=placebos.length?(mc?`${fmt(c/placebos.length,4)} (adj. ${fmt((c+1)/(placebos.length+1),4)})`:`${c}/${placebos.length} = ${fmt(c/placebos.length,3)}`):'—';
   const tt=tTest();$('rT').textContent=isFinite(tt.p)?`${fmt(tt.p,3)} (t = ${fmt(tt.t,2)}, SE ${fmt(tt.se,2)})`:'n/a';}
 function drawAll(){renderTable();readouts();drawHist();drawTrace();}
@@ -230,6 +253,10 @@ document.querySelectorAll('input[name=tail]').forEach(r=>r.addEventListener('cha
 [['pA','A'],['pB','B'],['pC','C']].forEach(([id,p])=>$(id).addEventListener('click',()=>{stopAnim();preset=p;['pA','pB','pC'].forEach(i=>$(i).classList.toggle('on',i===id));setup();}));
 hookTheme(()=>{drawHist();drawTrace();});
 setup();
+function fillFormulas(){const o=obs();const c=placebos.filter(v=>extreme(v,o)).length;$('fPl').textContent=cur?`latest placebo: ${fmt(est(cur),2)}`:'press "One placebo"';$('fP').textContent=placebos.length?`${c} of ${placebos.length} ${tail===1?'≥':'at least as far from 0 as'} ${fmt(o,2)} → p = ${fmt(c/placebos.length,3)}`:'no placebos yet';$('fAdj').textContent=mc&&placebos.length?`(${c}+1)/(${placebos.length}+1) = ${fmt((c+1)/(placebos.length+1),4)}`:'used when placebos are sampled, not enumerated';}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

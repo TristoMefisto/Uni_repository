@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -80,6 +98,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 :root[data-theme="dark"]{--surfLow:#5a73ff; --surfHigh:#474b6e}
 #cont{cursor:crosshair}#surf{cursor:grab}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -87,6 +107,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>Least squares as a landscape</h1>
   <p>Sales regressed on TV advertising, 200 markets (ISLR Advertising data). Every (β₀, β₁) pair is a candidate line; RSS scores how badly it fits. Move the line and watch where it sits on the RSS surface.</p>
 </header>
+<ol class="steps"><li>Move the two sliders: the navy line moves and the grey segments (residuals) change length.</li><li>RSS is the sum of the squared residuals. The contour map and the surface show RSS for <em>every</em> possible line.</li><li>Press <em>Jump to OLS</em>: the bottom of the bowl, where no other line does better.</li></ol>
+<div class="main"><div class="col">
 
 <section class="controls" aria-label="Line parameters">
   <div class="slider">
@@ -132,6 +154,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <p>Try the two animations and compare the RSS readout. Pivoting keeps the line through (x̄, ȳ), so it moves along the tilted valley and RSS rises slowly. Shifting moves the whole line away from the data centre, so RSS rises faster.</p>
   <p>The pivot line is β₀ = ȳ − β₁·x̄: for any slope, it gives the best intercept. Its negative slope (−x̄ ≈ −147) is why the ellipses tilt down.</p>
   <p>At the minimum, β̂₀ = 7.03 and β̂₁ = 0.0475: an extra $1,000 of TV advertising is associated with about 47.5 more units sold. RSE is the typical size of a residual and R² the share of the variance of sales the line explains; both are computed for whatever line you are holding.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Residual sum of squares</b></div><div class="k" data-tex='RSS = \sum_{i=1}^{n}\big(y_i - \beta_0 - \beta_1 x_i\big)^2'></div><span class="v" id="fRSS"></span></div><div class="f"><div class="n"><b>Slope at the minimum</b></div><div class="k" data-tex='\hat\beta_1 = \frac{\sum_i (x_i - \bar x)(y_i - \bar y)}{\sum_i (x_i - \bar x)^2}'></div><span class="v" id="fB1"></span></div><div class="f"><div class="n"><b>Intercept at the minimum</b></div><div class="n">the OLS line always passes through (x̄, ȳ)</div><div class="k" data-tex='\hat\beta_0 = \bar y - \hat\beta_1 \bar x'></div><span class="v" id="fB0"></span></div><div class="f"><div class="n"><b>Goodness of fit</b></div><div class="k" data-tex='R^2 = 1 - \frac{RSS}{TSS},\qquad RSE = \sqrt{\tfrac{RSS}{n-2}}'></div><span class="v" id="fR2"></span></div></aside>
 </div>
 </div>
 
@@ -353,7 +378,7 @@ function setParams(a,b){
   const r=rssOf(b0,b1);
   $('rss').textContent=Math.round(r).toLocaleString('en-US');
   $('r2').textContent=(1-r/TSS).toFixed(3);
-  $('rse').textContent=Math.sqrt(r/(n-2)).toFixed(3);
+  $('rse').textContent=Math.sqrt(r/(n-2)).toFixed(3);fillFormulas();
   const d=r-RSSMIN;
   $('delta').innerHTML=d<0.5?'At the minimum<br>β̂₀ = '+B0.toFixed(2)+', β̂₁ = '+B1.toFixed(4)
     :'+'+Math.round(d).toLocaleString('en-US')+' above the minimum ('+Math.round(RSSMIN).toLocaleString('en-US')+')<br>'+(100*d/RSSMIN).toFixed(1)+'% worse fit';
@@ -375,6 +400,10 @@ $('bShift').addEventListener('click',()=>{
 $('bStop').addEventListener('click',stopAnim);
 hookTheme(drawAll);
 setParams(b0,b1);
+function fillFormulas(){const r=rssOf(b0,b1);$('fRSS').textContent=`this line: ${Math.round(r).toLocaleString('en-US')}; minimum ${Math.round(RSSMIN).toLocaleString('en-US')}`;$('fB1').textContent=`${Math.round(Sxy-n*mx*my).toLocaleString('en-US')} / ${Math.round(Sxx-n*mx*mx).toLocaleString('en-US')} = ${B1.toFixed(4)}`;$('fB0').textContent=`${fmt(my,2)} − ${B1.toFixed(4)} · ${fmt(mx,1)} = ${B0.toFixed(2)}`;$('fR2').textContent=`R² = 1 − ${Math.round(r).toLocaleString('en-US')} / ${Math.round(TSS).toLocaleString('en-US')} = ${(1-r/TSS).toFixed(3)}; RSE = √(${Math.round(r)} / ${n-2}) = ${Math.sqrt(r/(n-2)).toFixed(2)}`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>

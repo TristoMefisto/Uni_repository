@@ -8,6 +8,24 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
 :root{
   --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
   --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
@@ -76,6 +94,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -83,6 +103,8 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <h1>The bias-variance trade-off, seen over many training sets</h1>
   <p>ISLR Figure 2.12 made explicit. Draw R training samples from the same Y = f(X) + ε, fit the same polynomial to each, and look at all the fitted curves together. Their average misses f by the bias; their spread around that average is the variance. Expected test MSE = Var(f̂) + Bias² + σ².</p>
 </header>
+<ol class="steps"><li>Every thin line is the same model fitted to a different training sample of 50 points.</li><li>Thick line: their average. Its gap from the black f is the bias; the fan of thin lines around it is the variance.</li><li>Press <em>Sweep flexibility</em>: bias falls, variance rises. The red sum is the expected test MSE; pick the degree at its minimum.</li></ol>
+<div class="main"><div class="col">
 
 <div class="tabs" role="tablist">
   <button id="p0" class="on">Smooth non-linear f</button>
@@ -98,11 +120,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 </section>
 
 <div class="stats">
-  <div class="stat"><span class="small">Bias², averaged over x</span><span class="big" id="rB"></span></div>
-  <div class="stat"><span class="small">Variance, averaged over x</span><span class="big" id="rV"></span></div>
-  <div class="stat"><span class="small">σ²</span><span class="big" id="rS"></span></div>
-  <div class="stat"><span class="small">Sum = expected test MSE</span><span class="big" id="rT"></span></div>
-  <div class="stat"><span class="small">At x₀: bias² · variance</span><span class="big" id="rX"></span></div>
+  <div class="stat"><span class="small">Bias² (averaged over x)</span><span class="big" id="rB"></span></div>
+  <div class="stat"><span class="small">Variance (averaged over x)</span><span class="big" id="rV"></span></div>
+  <div class="stat"><span class="small">Expected test MSE</span><span class="big" id="rT"></span></div>
 </div>
 
 <div class="buttons">
@@ -122,6 +142,9 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 <div class="note">
   <p>A rigid model (degree 1) gives almost the same line whatever the sample: tiny variance, but the line cannot follow f, so large bias. A very flexible one passes close to f on average but each single fit wanders with its sample: small bias, large variance. Neither extreme minimises the sum. Switch preset: with a near-linear f the bias is already gone at degree 1 or 2, with a highly non-linear f it stays large until high degrees.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>The decomposition</b></div><div class="k" data-tex='\begin{aligned}E\big[(y_0 - \hat f(x_0))^2\big] = \;&Var\big(\hat f(x_0)\big)\\ &+ \big[\mathrm{Bias}(\hat f(x_0))\big]^2\\ &+ Var(\varepsilon)\end{aligned}'></div><span class="v" id="fSum"></span></div><div class="f"><div class="n"><b>Bias at x₀</b></div><div class="n">average fit minus truth</div><div class="k" data-tex='\mathrm{Bias}\big(\hat f(x_0)\big) = E\big[\hat f(x_0)\big] - f(x_0)'></div><span class="v" id="fBias"></span></div><div class="f"><div class="n"><b>Variance at x₀</b></div><div class="n">how much the fit moves from sample to sample</div><div class="k" data-tex='Var\big(\hat f(x_0)\big) = E\Big[\big(\hat f(x_0) - E[\hat f(x_0)]\big)^2\Big]'></div><span class="v" id="fVar"></span></div><div class="f"><div class="n"><b>Irreducible error</b></div><div class="k" data-tex='Var(\varepsilon) = \sigma^2'></div><span class="v" id="rS"></span></div></aside>
 </div>
 </div>
 
@@ -191,7 +214,7 @@ function drawHist(){const {ctx,w,h}=setupCanvas($('cHist'));const g=gi();const v
   ctx.fillStyle=css('--orange');for(let b=0;b<nb;b++)if(c[b])ctx.fillRect(A.px(lo+b*bw)+.5,A.py(c[b]),Math.max(1,A.pw/nb-1),A.py(0)-A.py(c[b]));
   A.clip();line(ctx,[[A.px(fx),A.T],[A.px(fx),A.T+A.ph]],css('--ink'),2);const mu=mean(vals);line(ctx,[[A.px(mu),A.T],[A.px(mu),A.T+A.ph]],css('--blue'),2,[5,4]);A.unclip();
   label(ctx,'f(x₀) = '+fmt(fx,2),A.px(fx)+4,A.T+14,css('--ink'));label(ctx,'mean f̂ = '+fmt(mu,2),A.px(mu)+4,A.T+30,css('--blue'));label(ctx,'SD = '+fmt(Math.sqrt(pvar(vals)),2),A.L+A.pw-6,A.T+A.ph-6,css('--orange'),'right');}
-function readouts(){const s=stats[d];const g=gi();$('vD').textContent=d;$('vX').textContent=x0;$('vS').textContent=sig;$('vR').textContent=R;$('rB').textContent=fmt(s.bias,2);$('rV').textContent=fmt(s.vari,2);$('rS').textContent=fmt(sig*sig,2);$('rT').textContent=fmt(s.bias+s.vari+sig*sig,2);$('rX').textContent=fmt(s.biasG[g],2)+' · '+fmt(s.varG[g],2);}
+function readouts(){fillFormulas();const s=stats[d];const g=gi();$('vD').textContent=d;$('vX').textContent=x0;$('vS').textContent=sig;$('vR').textContent=R;$('rB').textContent=fmt(s.bias,2);$('rV').textContent=fmt(s.vari,2);$('rS').textContent=fmt(sig*sig,2);$('rT').textContent=fmt(s.bias+s.vari+sig*sig,2);}
 function drawAll(){readouts();drawSpag();drawDec();drawHist();}
 function rebuild(){compute();drawAll();}
 $('sD').addEventListener('input',e=>{stopAnim();d=+e.target.value;drawAll();});
@@ -204,6 +227,10 @@ $('bSweep').addEventListener('click',()=>{animate(t=>{d=Math.max(1,Math.min(DMAX
 [['p0',0],['p1',1],['p2',2]].forEach(([id,p])=>$(id).addEventListener('click',()=>{stopAnim();preset=p;['p0','p1','p2'].forEach(i=>$(i).classList.toggle('on',i===id));rebuild();}));
 hookTheme(drawAll);
 rebuild();
+function fillFormulas(){const s=stats[d],g=gi();$('fSum').textContent=`averaged over x: ${fmt(s.vari,2)} + ${fmt(s.bias,2)} + ${fmt(sig*sig,2)} = ${fmt(s.vari+s.bias+sig*sig,2)}`;$('fBias').textContent=`at x₀ = ${x0}: ${fmt(s.meanG[g],2)} − ${fmt(f(x0),2)} = ${fmt(s.meanG[g]-f(x0),2)} (squared: ${fmt(s.biasG[g],2)})`;$('fVar').textContent=`at x₀ = ${x0}: ${fmt(s.varG[g],2)} (SD ${fmt(Math.sqrt(s.varG[g]),2)})`;}
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
 </script>
 </body>
 </html>
