@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cross-validation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Estimating the test error: validation set, LOOCV and k-fold CV</h1>
+  <p>ISLR Figures 5.2 and 5.4 on the Auto data (n = 392): mpg regressed on polynomials of horsepower, degree 1 to 10. Each method estimates the test MSE of every degree without a separate test set. The point is how much each estimate moves when the random split changes, and how many fits it costs.</p>
+</header>
+<ol class="steps"><li>Pick a method. In the scatter, grey points train the model and red points are held out; the curve is the fit of the chosen degree on the grey points.</li><li>Press <em>New random split</em>: the validation-set curves jump up and down, the k-fold curves barely move, LOOCV never moves (no randomness).</li><li>Read the minimum of each curve: every method says degree 2 is much better than degree 1, and that higher degrees add little.</li></ol>
+<div class="main"><div class="col">
+
+<div class="tabs" role="tablist">
+  <button id="m0" class="on">Validation set (half and half)</button>
+  <button id="m1">LOOCV</button>
+  <button id="m2">k-fold CV</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sD">Polynomial degree shown <b id="vD"></b></label><input id="sD" type="range" min="1" max="10" step="1" value="2"></div>
+  <div class="slider"><label for="sK">Folds k (k-fold only) <b id="vK"></b></label><input id="sK" type="range" min="2" max="20" step="1" value="10"></div>
+  <div class="slider"><label for="sR">Repetitions with different splits <b id="vR"></b></label><input id="sR" type="range" min="1" max="10" step="1" value="10"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Estimated test MSE, degree shown</span><span class="big" id="rEst"></span></div>
+  <div class="stat"><span class="small">Range across the repetitions</span><span class="big" id="rRange"></span></div>
+  <div class="stat"><span class="small">Fits per degree</span><span class="big" id="rFits"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bNew">New random split</button>
+  <button id="bLoop">Walk through the held-out parts</button>
+  <button id="bStop">Stop</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cData"></canvas>
+    <figcaption><strong>The data and the current split.</strong> Grey: observations used to fit. Red: held out, used only to compute the error. The curve is the polynomial of the chosen degree fitted on the grey points. <em>Walk through</em> moves the held-out part: one split after another, one fold after another, or one observation after another.</figcaption></figure>
+  <figure><canvas id="cCV"></canvas>
+    <figcaption><strong>Estimated test MSE by degree.</strong> One coloured line per repetition (a new random split each time); the thick one is the split in the scatter. Dashed black: LOOCV, drawn in every tab as a reference. The cross marks the minimum of the thick line.</figcaption></figure>
+  <figure><canvas id="cSplit"></canvas>
+    <figcaption><strong>How the n observations are used.</strong> Each row is one fit: blue = training, orange = held out. Validation set: one fit on half the data. LOOCV: n fits, one observation out each time. k-fold: k fits, one fold out each time. The estimate is the average of the rows' errors.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>The validation set approach uses only half the data to fit, so its curves sit above LOOCV (the error of a model fitted on fewer points is overestimated) and they move a lot with the split. LOOCV uses n - 1 points for each fit and has no randomness, but it needs n fits (here the leverage shortcut gives the same number from a single fit). k-fold with k = 5 or 10 is close to LOOCV at a fraction of the cost, and repeating it with new folds changes little.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>Validation set approach</b></div><div class="n">MSE on the held-out half</div><div class="k" data-tex='MSE_{val} = \frac{1}{n_{val}}\sum_{i \in val}\big(y_i - \hat y_i\big)^2'></div><span class="v" id="fVal"></span></div>
+<div class="f"><div class="n"><b>LOOCV</b></div><div class="n">average of n squared errors, each from a fit without observation i</div><div class="k" data-tex='CV_{(n)} = \frac{1}{n}\sum_{i=1}^{n} MSE_i,\quad MSE_i = \big(y_i - \hat y_{i}^{(-i)}\big)^2'></div><span class="v" id="fLoo"></span></div>
+<div class="f"><div class="n"><b>Shortcut for least squares</b></div><div class="n">one fit on all the data, residuals inflated by the leverage</div><div class="k" data-tex='CV_{(n)} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat y_i}{1 - h_i}\right)^2'></div><span class="v" id="fShort"></span></div>
+<div class="f"><div class="n"><b>k-fold CV</b></div><div class="n">average of the k fold MSEs</div><div class="k" data-tex='CV_{(k)} = \frac{1}{k}\sum_{i=1}^{k} MSE_i'></div><span class="v" id="fK"></span></div>
+</aside>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+
+const D={"hp":[130,165,150,150,140,198,220,215,225,190,170,160,150,225,95,95,97,85,88,46,87,90,95,113,90,215,200,210,193,88,90,95,100,105,100,88,100,165,175,153,150,180,170,175,110,72,100,88,86,90,70,76,65,69,60,70,95,80,54,90,86,165,175,150,153,150,208,155,160,190,97,150,130,140,150,112,76,87,69,86,92,97,80,88,175,150,145,137,150,198,150,158,150,215,225,175,105,100,100,88,95,46,150,167,170,180,100,88,72,94,90,85,107,90,145,230,49,75,91,112,150,110,122,180,95,100,100,67,80,65,75,100,110,105,140,150,150,140,150,83,67,78,52,61,75,75,75,97,93,67,95,105,72,72,170,145,150,148,110,105,110,95,110,110,129,75,83,100,78,96,71,97,97,70,90,95,88,98,115,53,86,81,92,79,83,140,150,120,152,100,105,81,90,52,60,70,53,100,78,110,95,71,70,75,72,102,150,88,108,120,180,145,130,150,68,80,58,96,70,145,110,145,130,110,105,100,98,180,170,190,149,78,88,75,89,63,83,67,78,97,110,110,48,66,52,70,60,110,140,139,105,95,85,88,100,90,105,85,110,120,145,165,139,140,68,95,97,75,95,105,85,97,103,125,115,133,71,68,115,85,88,90,110,130,129,138,135,155,142,125,150,71,65,80,80,77,125,71,90,70,70,65,69,90,115,115,90,76,60,70,65,90,88,90,90,78,90,75,92,75,65,105,65,48,48,67,67,67,67,62,132,100,88,72,84,84,92,110,84,58,64,60,67,65,62,68,63,65,65,74,75,75,100,74,80,76,116,120,110,105,88,85,88,88,88,85,84,90,92,74,68,68,63,70,88,75,70,67,67,67,110,85,92,112,96,84,90,86,52,84,79,82],"mpg":[18.0,15.0,18.0,16.0,17.0,15.0,14.0,14.0,14.0,15.0,15.0,14.0,15.0,14.0,24.0,22.0,18.0,21.0,27.0,26.0,25.0,24.0,25.0,26.0,21.0,10.0,10.0,11.0,9.0,27.0,28.0,25.0,19.0,16.0,17.0,19.0,18.0,14.0,14.0,14.0,14.0,12.0,13.0,13.0,18.0,22.0,19.0,18.0,23.0,28.0,30.0,30.0,31.0,35.0,27.0,26.0,24.0,25.0,23.0,20.0,21.0,13.0,14.0,15.0,14.0,17.0,11.0,13.0,12.0,13.0,19.0,15.0,13.0,13.0,14.0,18.0,22.0,21.0,26.0,22.0,28.0,23.0,28.0,27.0,13.0,14.0,13.0,14.0,15.0,12.0,13.0,13.0,14.0,13.0,12.0,13.0,18.0,16.0,18.0,18.0,23.0,26.0,11.0,12.0,13.0,12.0,18.0,20.0,21.0,22.0,18.0,19.0,21.0,26.0,15.0,16.0,29.0,24.0,20.0,19.0,15.0,24.0,20.0,11.0,20.0,19.0,15.0,31.0,26.0,32.0,25.0,16.0,16.0,18.0,16.0,13.0,14.0,14.0,14.0,29.0,26.0,26.0,31.0,32.0,28.0,24.0,26.0,24.0,26.0,31.0,19.0,18.0,15.0,15.0,16.0,15.0,16.0,14.0,17.0,16.0,15.0,18.0,21.0,20.0,13.0,29.0,23.0,20.0,23.0,24.0,25.0,24.0,18.0,29.0,19.0,23.0,23.0,22.0,25.0,33.0,28.0,25.0,25.0,26.0,27.0,17.5,16.0,15.5,14.5,22.0,22.0,24.0,22.5,29.0,24.5,29.0,33.0,20.0,18.0,18.5,17.5,29.5,32.0,28.0,26.5,20.0,13.0,19.0,19.0,16.5,16.5,13.0,13.0,13.0,31.5,30.0,36.0,25.5,33.5,17.5,17.0,15.5,15.0,17.5,20.5,19.0,18.5,16.0,15.5,15.5,16.0,29.0,24.5,26.0,25.5,30.5,33.5,30.0,30.5,22.0,21.5,21.5,43.1,36.1,32.8,39.4,36.1,19.9,19.4,20.2,19.2,20.5,20.2,25.1,20.5,19.4,20.6,20.8,18.6,18.1,19.2,17.7,18.1,17.5,30.0,27.5,27.2,30.9,21.1,23.2,23.8,23.9,20.3,17.0,21.6,16.2,31.5,29.5,21.5,19.8,22.3,20.2,20.6,17.0,17.6,16.5,18.2,16.9,15.5,19.2,18.5,31.9,34.1,35.7,27.4,25.4,23.0,27.2,23.9,34.2,34.5,31.8,37.3,28.4,28.8,26.8,33.5,41.5,38.1,32.1,37.2,28.0,26.4,24.3,19.1,34.3,29.8,31.3,37.0,32.2,46.6,27.9,40.8,44.3,43.4,36.4,30.0,44.6,33.8,29.8,32.7,23.7,35.0,32.4,27.2,26.6,25.8,23.5,30.0,39.1,39.0,35.1,32.3,37.0,37.7,34.1,34.7,34.4,29.9,33.0,33.7,32.4,32.9,31.6,28.1,30.7,25.4,24.2,22.4,26.6,20.2,17.6,28.0,27.0,34.0,31.0,29.0,27.0,24.0,36.0,37.0,31.0,38.0,36.0,36.0,36.0,34.0,38.0,32.0,38.0,25.0,38.0,26.0,22.0,32.0,36.0,27.0,27.0,44.0,32.0,28.0,31.0]};
+const HP=D.hp,MPG=D.mpg,N=HP.length,DM=10,LO=40,HI=235;
+const sc=v=>2*(v-LO)/(HI-LO)-1;
+const BAS=HP.map(h=>legendre(sc(h),DM));
+// Gram of all observations (degree 10); lower degrees are leading blocks (Legendre basis is nested)
+function gram(idx){const p=DM+1,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(const i of idx){const r=BAS[i],y=MPG[i];for(let j=0;j<p;j++){b[j]+=r[j]*y;const Aj=A[j];for(let k=0;k<p;k++)Aj[k]+=r[j]*r[k];}}return{A,b};}
+const ALL=Array.from({length:N},(_,i)=>i);
+const GALL=gram(ALL);
+function sub(G,H){return{A:G.A.map((r,j)=>r.map((v,k)=>v-H.A[j][k])),b:G.b.map((v,j)=>v-H.b[j])};}
+function betaOf(G,d){const p=d+1;const A=[];for(let j=0;j<p;j++)A.push(Array.from(G.A[j].slice(0,p)));return solve(A,Array.from(G.b.slice(0,p)));}
+function predI(beta,i){let s=0;for(let k=0;k<beta.length;k++)s+=beta[k]*BAS[i][k];return s;}
+function predX(beta,x){const L=legendre(sc(x),beta.length-1);let s=0;for(let k=0;k<beta.length;k++)s+=beta[k]*L[k];return s;}
+function mseOn(beta,idx){let s=0;for(const i of idx)s+=(MPG[i]-predI(beta,i))**2;return s/idx.length;}
+function inv(A){const n=A.length;const I=[];for(let j=0;j<n;j++){const e=Array(n).fill(0);e[j]=1;I.push(solve(A.map(r=>r.slice()),e));}return A.map((_,i)=>I.map(col=>col[i]));}
+// LOOCV by the leverage shortcut, all degrees
+const LOO=[null];const LEV=[null];
+for(let d=1;d<=DM;d++){const beta=betaOf(GALL,d);const p=d+1;const A=[];for(let j=0;j<p;j++)A.push(Array.from(GALL.A[j].slice(0,p)));const Ai=inv(A);let s=0;const h=[];
+  for(let i=0;i<N;i++){const r=BAS[i];let hi=0;for(let j=0;j<p;j++){let t=0;for(let k=0;k<p;k++)t+=Ai[j][k]*r[k];hi+=r[j]*t;}h.push(hi);s+=((MPG[i]-predI(beta,i))/(1-hi))**2;}
+  LOO.push(s/N);LEV.push(h);}
+// brute-force LOOCV at one degree (to check the shortcut)
+function looBrute(d){let s=0;for(let i=0;i<N;i++){const r=BAS[i];const Gi={A:GALL.A.map((row,j)=>row.map((v,k)=>v-r[j]*r[k])),b:GALL.b.map((v,j)=>v-r[j]*MPG[i])};const beta=betaOf(Gi,d);s+=(MPG[i]-predI(beta,i))**2;}return s/N;}
+
+let mode=0,d=2,K=10,R=10,seed=1,cur=0,animI=-1;
+let VAL=[],KF=[];// VAL[r]={train,val,curve[d]}, KF[r]={fold[i],curve[d],foldMSE[d][f]}
+function perm(rng){return sampleK(N,N,rng);}
+function genVal(){VAL=[];for(let r=0;r<10;r++){const rng=mulberry32(1000*seed+r);const p=perm(rng);const tr=p.slice(0,N/2),va=p.slice(N/2);const G=gram(tr);const curve=[null];for(let dd=1;dd<=DM;dd++)curve.push(mseOn(betaOf(G,dd),va));VAL.push({tr,va,curve,G});}}
+function genK(){KF=[];for(let r=0;r<10;r++){const rng=mulberry32(5000*seed+r*7+K);const p=perm(rng);const fold=new Array(N);const members=Array.from({length:K},()=>[]);p.forEach((i,j)=>{fold[i]=j%K;members[j%K].push(i);});
+  const GF=members.map(m=>gram(m));const curve=[null];const fm=[null];
+  for(let dd=1;dd<=DM;dd++){const e=[];for(let f=0;f<K;f++){const beta=betaOf(sub(GALL,GF[f]),dd);e.push(mseOn(beta,members[f]));}fm.push(e);curve.push(mean(e));}
+  KF.push({fold,members,GF,curve,fm,order:p});}}
+const REPC=['--red','--blue','--green','--orange','--purple','--contour','--treat','--ctrl','--point','--grey'];
+function curveSet(){if(mode===0)return VAL.slice(0,R).map(o=>o.curve);if(mode===2)return KF.slice(0,R).map(o=>o.curve);return[LOO];}
+function drawData(){const {ctx,w,h}=setupCanvas($('cData'));const A=axes(ctx,w,h,{xlim:[40,235],ylim:[5,48],xt:[50,100,150,200],yt:[10,20,30,40],xl:'horsepower',yl:'mpg'});A.clip();
+  let held=new Set(),G=GALL;
+  if(mode===0){const o=VAL[cur];held=new Set(o.va);G=o.G;}
+  else if(mode===2){const o=KF[0];const f=animI>=0?animI:0;held=new Set(o.members[f]);G=sub(GALL,o.GF[f]);}
+  else if(animI>=0){const i=LOOORD[animI];held=new Set([i]);const r=BAS[i];G={A:GALL.A.map((row,j)=>row.map((v,k)=>v-r[j]*r[k])),b:GALL.b.map((v,j)=>v-r[j]*MPG[i])};}
+  for(let i=0;i<N;i++)if(!held.has(i))dot(ctx,A.px(HP[i]),A.py(MPG[i]),2.4,css('--grey'));
+  ctx.globalAlpha=.9;for(const i of held)dot(ctx,A.px(HP[i]),A.py(MPG[i]),mode===1?6:2.8,css('--red'),mode===1?css('--panel'):null);ctx.globalAlpha=1;
+  const beta=betaOf(G,d);const c=[];for(let x=46;x<=230;x+=1)c.push([A.px(x),A.py(predX(beta,x))]);line(ctx,c,css('--navy'),2.5);
+  A.unclip();const lab=mode===0?`split ${cur+1}: fit on 196, test on 196`:mode===2?`fold ${(animI>=0?animI:0)+1} of ${K} held out`:(animI>=0?`observation ${LOOORD[animI]+1} held out`:'fit on all 392 (shortcut)');label(ctx,lab,A.L+A.pw-6,A.T+14,css('--ink'),'right');label(ctx,'degree '+d,A.L+A.pw-6,A.T+30,css('--navy'),'right');}
+function drawCV(){const {ctx,w,h}=setupCanvas($('cCV'));const A=axes(ctx,w,h,{xlim:[0.6,10.4],ylim:[15,28],xt:[1,2,3,4,5,6,7,8,9,10],yt:[16,18,20,22,24,26,28],xl:'degree of polynomial',yl:'estimated test MSE'});A.clip();
+  line(ctx,[[A.px(d),A.T],[A.px(d),A.T+A.ph]],css('--rule'),1);
+  const cs=curveSet();const hi=mode===0?cur:0;
+  if(mode!==1)cs.forEach((c,r)=>{if(r===hi)return;ctx.globalAlpha=.55;line(ctx,c.slice(1).map((v,i)=>[A.px(i+1),A.py(v)]),css(REPC[r%10]),1.2);ctx.globalAlpha=1;});
+  line(ctx,LOO.slice(1).map((v,i)=>[A.px(i+1),A.py(v)]),css('--ink'),mode===1?2.5:1.5,mode===1?[]:[6,4]);
+  if(mode!==1){const c=cs[hi];line(ctx,c.slice(1).map((v,i)=>[A.px(i+1),A.py(v)]),css(REPC[hi%10]),2.8);c.slice(1).forEach((v,i)=>dot(ctx,A.px(i+1),A.py(v),3,css(REPC[hi%10])));}
+  else LOO.slice(1).forEach((v,i)=>dot(ctx,A.px(i+1),A.py(v),3,css('--ink')));
+  const c=mode===1?LOO:cs[hi];let m=1;for(let k=2;k<=DM;k++)if(c[k]<c[m])m=k;const X=A.px(m),Y=A.py(c[m]);ctx.strokeStyle=css('--ink');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X-6,Y-6);ctx.lineTo(X+6,Y+6);ctx.moveTo(X+6,Y-6);ctx.lineTo(X-6,Y+6);ctx.stroke();
+  A.unclip();label(ctx,'LOOCV',A.px(10)-4,A.py(LOO[10])-10,css('--ink'),'right');label(ctx,mode===0?`${R} validation splits`:mode===2?`${R} runs of ${K}-fold CV`:'LOOCV (deterministic)',A.L+A.pw-6,A.T+14,css('--muted'),'right');}
+function drawSplit(){const {ctx,w,h}=setupCanvas($('cSplit'));const L=64,Rr=60,T=16,W=w-L-Rr;ctx.font=FONT;
+  let rows=[];// each row: {lab, test:Set of positions, hl}
+  if(mode===0){const o=VAL[cur];const pos=new Map();o.tr.concat(o.va).forEach((i,j)=>pos.set(i,j));rows=[{lab:'one fit',test:[N/2,N],hl:true,right:'MSE'}];}
+  else if(mode===2){const shown=K<=10?[...Array(K).keys()]:[0,1,2,3,4,-1,K-2,K-1];const bs=N/K;rows=shown.map(f=>f<0?{gap:true}:{lab:'fit '+(f+1),test:[f*bs,(f+1)*bs],hl:f===(animI>=0?animI:-9),right:'MSE'+sub_(f+1)});}
+  else{const sh=[0,1,2,-1,N-1];const a=animI>=0?LOOORD[animI]:-9;rows=sh.map(i=>i<0?{gap:true}:{lab:'fit '+(i+1),test:[i,i+1],hl:false,right:'MSE'+sub_(i+1)});if(a>=0){rows.splice(3,0,{lab:'fit '+(a+1),test:[a,a+1],hl:true,right:'MSE'+sub_(a+1)});}}
+  const rh=Math.min(26,(h-T-24)/rows.length);
+  rows.forEach((r,k)=>{const y=T+k*rh;if(r.gap){ctx.fillStyle=css('--muted');ctx.textAlign='center';ctx.fillText('⋮',L+W/2,y+rh*0.7);return;}
+    ctx.fillStyle=css('--blue');ctx.globalAlpha=r.hl?.55:.3;ctx.fillRect(L,y+3,W,rh-6);ctx.globalAlpha=1;
+    const x0=L+W*r.test[0]/N,x1=L+W*r.test[1]/N;ctx.fillStyle=css('--orange');ctx.fillRect(x0,y+3,Math.max(2.5,x1-x0),rh-6);
+    if(r.hl){ctx.strokeStyle=css('--ink');ctx.lineWidth=1.5;ctx.strokeRect(L-1,y+2,W+2,rh-4);}
+    ctx.fillStyle=css('--muted');ctx.textAlign='right';ctx.fillText(r.lab,L-6,y+rh/2+4);ctx.textAlign='left';ctx.fillText(r.right,L+W+6,y+rh/2+4);});
+  ctx.fillStyle=css('--muted');ctx.textAlign='center';ctx.fillText(mode===0?'1 fit on n/2 observations':mode===2?`${K} fits on about ${Math.round(N*(K-1)/K)} observations each`:`${N} fits on ${N-1} observations each`,L+W/2,h-6);}
+function sub_(k){const m='₀₁₂₃₄₅₆₇₈₉';return String(k).split('').map(c=>m[+c]).join('');}
+let LOOORD=ALL.slice().sort((a,b)=>HP[a]-HP[b]);
+function readouts(){$('vD').textContent=d;$('vK').textContent=K;$('vR').textContent=R;
+  const cs=curveSet();const hi=mode===0?cur:0;const est=mode===1?LOO[d]:cs[hi][d];$('rEst').textContent=fmt(est,2);
+  if(mode===1)$('rRange').textContent='0 (no randomness)';else{const v=cs.map(c=>c[d]);$('rRange').textContent=R>1?`${fmt(Math.min(...v),2)} to ${fmt(Math.max(...v),2)}`:'one split only';}
+  $('rFits').textContent=mode===0?'1':mode===1?`${N} (1 with the shortcut)`:String(K);
+  $('fVal').textContent=`split ${cur+1}, degree ${d}: ${fmt(VAL[cur].curve[d],2)}`;
+  $('fLoo').textContent=`degree ${d}: ${fmt(BRUTE[d]??LOO[d],2)} from ${N} separate fits`;
+  $('fShort').textContent=`degree ${d}: ${fmt(LOO[d],2)} from one fit (same number)`;
+  const o=KF[0];$('fK').textContent=`k = ${K}, degree ${d}: (${o.fm[d].slice(0,3).map(v=>fmt(v,1)).join(' + ')}${K>3?' + …':''}) / ${K} = ${fmt(o.curve[d],2)}`;}
+const BRUTE={};function ensureBrute(){if(BRUTE[d]===undefined)BRUTE[d]=looBrute(d);}
+function drawAll(){ensureBrute();readouts();drawData();drawCV();drawSplit();}
+function setMode(m){stopAnim();animI=-1;mode=m;['m0','m1','m2'].forEach((id,i)=>$(id).classList.toggle('on',i===m));drawAll();}
+$('m0').addEventListener('click',()=>setMode(0));$('m1').addEventListener('click',()=>setMode(1));$('m2').addEventListener('click',()=>setMode(2));
+$('sD').addEventListener('input',e=>{d=+e.target.value;drawAll();});
+$('sK').addEventListener('input',e=>{stopAnim();animI=-1;K=+e.target.value;genK();drawAll();});
+$('sR').addEventListener('input',e=>{R=+e.target.value;if(cur>=R)cur=0;drawAll();});
+$('bNew').addEventListener('click',()=>{stopAnim();animI=-1;seed++;cur=0;genVal();genK();drawAll();});
+$('bStop').addEventListener('click',()=>{stopAnim();});
+$('bLoop').addEventListener('click',()=>{if(mode===0){animate(t=>{cur=Math.min(R-1,Math.floor(t*R));drawAll();},R*900);}
+  else if(mode===2){animate(t=>{animI=Math.min(K-1,Math.floor(t*K));drawAll();},K*700,()=>{});}
+  else{animate(t=>{animI=Math.min(N-1,Math.floor(t*N));drawAll();},12000,()=>{});}});
+hookTheme(drawAll);
+genVal();genK();drawAll();
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+</script>
+</body>
+</html>

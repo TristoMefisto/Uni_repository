@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>The bootstrap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>The bootstrap: a standard error from one data set</h1>
+  <p>ISLR Figure 5.10, with a least squares slope (or a median) in place of the slide's α. 1000 data sets drawn from the true population give the real sampling distribution of the estimate; 1000 bootstrap samples drawn with replacement from a single data set try to reproduce it without ever seeing the population.</p>
+</header>
+<ol class="steps"><li>Press <em>Draw from the population</em>: the gold histogram is the true sampling distribution, and its spread is the true SE (infeasible in practice).</li><li>Press <em>Bootstrap this data set</em>: the blue histogram is built only from the n points on the left, resampled with replacement.</li><li>Compare the spreads (histograms and boxplots): the bootstrap SE is close to the true one, also for the median, which has no simple SE formula. It is itself an estimate: press <em>New original data set</em> and bootstrap again to see it move.</li></ol>
+<div class="main"><div class="col">
+
+<div class="tabs" role="tablist">
+  <button id="e0" class="on">Estimator: slope of the least squares line</button>
+  <button id="e1">Estimator: median of y</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sN">Sample size n <b id="vN"></b></label><input id="sN" type="range" min="10" max="200" step="5" value="40"></div>
+  <div class="slider"><label for="sS">Noise σ <b id="vS"></b></label><input id="sS" type="range" min="0.5" max="4" step="0.25" value="2"></div>
+  <div class="slider"><label for="sB">Bootstrap samples B <b id="vB"></b></label><input id="sB" type="range" min="100" max="2000" step="100" value="1000"></div>
+</section>
+<div class="toggles"><label><input type="checkbox" id="tH"> errors that grow with x (the SE formula of the slope assumes they do not)</label></div>
+
+<div class="stats">
+  <div class="stat"><span class="small">True SE (1000 population data sets)</span><span class="big" id="rTrue"></span></div>
+  <div class="stat"><span class="small">Bootstrap SE from this data set</span><span class="big" id="rBoot"></span></div>
+  <div class="stat"><span class="small">Formula SE (slope only)</span><span class="big" id="rForm"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bPop">Draw from the population</button>
+  <button class="primary" id="bBoot">Bootstrap this data set</button>
+  <button id="bOne">One bootstrap sample</button>
+  <button id="bNew">New original data set</button>
+  <button id="bStop">Stop</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cSample"></canvas>
+    <figcaption><strong>The original data set Z and one bootstrap sample.</strong> Navy: the estimate on Z. During the bootstrap, the orange points are the current sample Z*: the number next to a point says how many times it was drawn (points left out are faded), and the orange line is the estimate on Z*.</figcaption></figure>
+  <figure><canvas id="cPop"></canvas>
+    <figcaption><strong>1000 data sets from the true population.</strong> The sampling distribution of the estimator. The pink line is the true value. Its standard deviation is the true SE, which needs the population and is never available in practice.</figcaption></figure>
+  <figure><canvas id="cBoot"></canvas>
+    <figcaption><strong>B bootstrap samples from the single data set.</strong> Same axis as the gold one. It is centred on the estimate from Z (navy), not on the truth, but its spread is what matters: its standard deviation is the bootstrap SE.</figcaption></figure>
+  <figure><canvas id="cBox"></canvas>
+    <figcaption><strong>Boxplots of the two distributions.</strong> Similar boxes mean the bootstrap got the uncertainty right. Try a small n, or a new original data set: the centre of the blue box moves with the data, the width much less.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>The bootstrap replaces the population with the sample: drawing n observations with replacement from Z imitates drawing n observations from the population. It does not correct a bad estimate (the blue histogram is centred where Z happens to be), but it measures how much the estimate would move from sample to sample.</p>
+  <p>With errors that grow with x, the usual formula for the SE of the slope understates the true SE (it assumes a constant error variance). The bootstrap resamples the (x, y) pairs and does not need that assumption, so on average it gets closer to the true SE (over 40 original data sets of n = 100: true 0.174, bootstrap 0.171, formula 0.154).</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>The population and the estimate</b></div><div class="k" data-tex='y = \beta_0 + \beta_1 x + \varepsilon,\quad \alpha = \beta_1 \text{ or } \text{median}(y)'></div><span class="v" id="fPop"></span></div>
+<div class="f"><div class="n"><b>Bootstrap data sets</b></div><div class="n">n draws with replacement from Z, B times</div><div class="k" data-tex='Z^{*1}, \dots, Z^{*B} \;\to\; \hat\alpha^{*1}, \dots, \hat\alpha^{*B}'></div><span class="v" id="fDraw"></span></div>
+<div class="f"><div class="n"><b>Bootstrap SE</b></div><div class="n">standard deviation of the B bootstrap estimates</div><div class="k" data-tex='SE_B(\hat\alpha) = \sqrt{\frac{1}{B-1}\sum_{r=1}^{B}\Big(\hat\alpha^{*r} - \frac{1}{B}\sum_{r^\prime=1}^{B}\hat\alpha^{*r^\prime}\Big)^2}'></div><span class="v" id="fSE"></span></div>
+<div class="f"><div class="n"><b>Formula SE of the slope</b></div><div class="n">valid with a constant error variance</div><div class="k" data-tex='SE(\hat\beta_1) = \frac{\hat\sigma}{\sqrt{\sum_i (x_i - \bar x)^2}}'></div><span class="v" id="fForm"></span></div>
+</aside>
+</div>
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+
+const B0=1,B1=0.6,MX=5,SX=2,NPOP=1000;
+let est=0,n=40,sig=2,B=1000,het=false,seed=1;
+let X=[],Y=[],POP=[],BOOT=[],shownPop=0,shownBoot=0,curIdx=null;
+function drawSet(rng,m){const x=[],y=[];for(let i=0;i<m;i++){const xi=MX+SX*gauss(rng);const s=het?sig*Math.max(0.15,Math.abs(xi))/MX*1.4:sig;x.push(xi);y.push(B0+B1*xi+s*gauss(rng));}return{x,y};}
+function slope(x,y){const mx=mean(x),my=mean(y);let sxy=0,sxx=0;for(let i=0;i<x.length;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;}return sxy/sxx;}
+function median(a){const b=a.slice().sort((p,q)=>p-q),m=b.length;return m%2?b[(m-1)/2]:(b[m/2-1]+b[m/2])/2;}
+function estim(x,y){return est===0?slope(x,y):median(y);}
+const TRUE=()=>est===0?B1:B0+B1*MX;
+function sd(a){return Math.sqrt(svar(a));}
+function formulaSE(){const mx=mean(X);let sxx=0;for(const v of X)sxx+=(v-mx)**2;const b=slope(X,Y),a=mean(Y)-b*mx;let rss=0;for(let i=0;i<n;i++)rss+=(Y[i]-a-b*X[i])**2;return Math.sqrt(rss/(n-2))/Math.sqrt(sxx);}
+function genOrig(){const r=mulberry32(900+seed*31+n);const o=drawSet(r,n);X=o.x;Y=o.y;BOOT=[];shownBoot=0;curIdx=null;}
+function genPop(){const r=mulberry32(77+n*13+Math.round(sig*100)+(het?5:0));POP=[];for(let k=0;k<NPOP;k++){const o=drawSet(r,n);POP.push(estim(o.x,o.y));}}
+function genBoot(){const r=mulberry32(4242+seed*17+n+B);BOOT=[];for(let b=0;b<B;b++){const idx=Array.from({length:n},()=>Math.floor(r()*n));BOOT.push({idx,a:estim(idx.map(i=>X[i]),idx.map(i=>Y[i]))});}}
+function range(){const all=[...POP,...BOOT.map(o=>o.a)];if(!all.length)return[TRUE()-1,TRUE()+1];let lo=Math.min(...all),hi=Math.max(...all);const pad=(hi-lo)*0.06||0.1;return[lo-pad,hi+pad];}
+function ticks(lo,hi,k){const step=niceStep((hi-lo)/k);const t=[];for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step)t.push(+v.toFixed(6));return t;}
+function niceStep(r){const p=10**Math.floor(Math.log10(r));const m=r/p;return (m<1.5?1:m<3?2:m<7?5:10)*p;}
+function hist(canvas,vals,count,color,xr,center,centerColor,title){const {ctx,w,h}=setupCanvas(canvas);const nb=30,bw=(xr[1]-xr[0])/nb;const c=new Array(nb).fill(0);vals.slice(0,count).forEach(v=>{const k=Math.min(nb-1,Math.max(0,Math.floor((v-xr[0])/bw)));c[k]++;});
+  const ymax=Math.max(10,Math.max(...c))*1.15;const A=axes(ctx,w,h,{xlim:xr,ylim:[0,ymax],xt:ticks(xr[0],xr[1],5),yt:ticks(0,ymax,4),xf:v=>+v.toFixed(3),xl:est===0?'estimated slope':'estimated median',yl:'count'});
+  ctx.fillStyle=color;ctx.strokeStyle=css('--panel');c.forEach((k,i)=>{if(!k)return;const x0=A.px(xr[0]+i*bw),x1=A.px(xr[0]+(i+1)*bw);ctx.globalAlpha=.85;ctx.fillRect(x0,A.py(k),x1-x0,A.py(0)-A.py(k));ctx.globalAlpha=1;ctx.strokeRect(x0,A.py(k),x1-x0,A.py(0)-A.py(k));});
+  line(ctx,[[A.px(TRUE()),A.T],[A.px(TRUE()),A.T+A.ph]],'#e0559b',2.5);
+  if(center!==null)line(ctx,[[A.px(center),A.T],[A.px(center),A.T+A.ph]],centerColor,2,[5,4]);
+  label(ctx,title,A.L+6,A.T+14,css('--ink'));if(count)label(ctx,'SD = '+fmt(sd(vals.slice(0,count)),4),A.L+6,A.T+30,color);}
+function drawSample(){const {ctx,w,h}=setupCanvas($('cSample'));const lo=Math.min(-1,...Y)-0.5,hi=Math.max(9,...Y)+0.5;const A=axes(ctx,w,h,{xlim:[-1,11],ylim:[lo,hi],xt:[0,2,4,6,8,10],yt:ticks(lo,hi,5),xl:'x',yl:'y'});A.clip();
+  const cnt=new Array(n).fill(0);if(curIdx)curIdx.forEach(i=>cnt[i]++);
+  for(let i=0;i<n;i++){const faded=curIdx&&!cnt[i];ctx.globalAlpha=faded?.25:1;dot(ctx,A.px(X[i]),A.py(Y[i]),3.5,curIdx&&cnt[i]?css('--orange'):css('--grey'));ctx.globalAlpha=1;if(curIdx&&cnt[i]>1)label(ctx,'×'+cnt[i],A.px(X[i])+5,A.py(Y[i])-6,css('--orange'));}
+  const drawEst=(xx,yy,col,dash)=>{if(est===0){const b=slope(xx,yy),a=mean(yy)-b*mean(xx);line(ctx,[[A.px(-1),A.py(a-b)],[A.px(11),A.py(a+11*b)]],col,2.5,dash);}else{const m=median(yy);line(ctx,[[A.L,A.py(m)],[A.L+A.pw,A.py(m)]],col,2.5,dash);}};
+  drawEst(X,Y,css('--navy'));if(curIdx)drawEst(curIdx.map(i=>X[i]),curIdx.map(i=>Y[i]),css('--orange'),[6,4]);
+  A.unclip();label(ctx,`Z: n = ${n}, estimate ${fmt(estim(X,Y),3)}`,A.L+6,A.T+14,css('--navy'));if(curIdx)label(ctx,`Z*: estimate ${fmt(estim(curIdx.map(i=>X[i]),curIdx.map(i=>Y[i])),3)}`,A.L+6,A.T+30,css('--orange'));}
+function drawBox(){const {ctx,w,h}=setupCanvas($('cBox'));const xr=range();const A=axes(ctx,w,h,{xlim:[0,3],ylim:xr,xt:[],yt:ticks(xr[0],xr[1],5),yf:v=>+v.toFixed(3),yl:est===0?'estimated slope':'estimated median'});
+  const q=(a,p)=>{const b=a.slice().sort((u,v)=>u-v);const k=(b.length-1)*p,f=Math.floor(k);return b[f]+(b[Math.min(b.length-1,f+1)]-b[f])*(k-f);};
+  const box=(vals,cx,col,lab)=>{ctx.fillStyle=css('--muted');ctx.textAlign='center';ctx.fillText(lab,A.px(cx),A.T+A.ph+15);if(vals.length<5)return;const q1=q(vals,.25),q2=q(vals,.5),q3=q(vals,.75),iq=q3-q1;const lo=Math.max(Math.min(...vals),q1-1.5*iq),hi=Math.min(Math.max(...vals),q3+1.5*iq);const x0=A.px(cx-0.35),x1=A.px(cx+0.35);
+    ctx.fillStyle=col;ctx.globalAlpha=.8;ctx.fillRect(x0,A.py(q3),x1-x0,A.py(q1)-A.py(q3));ctx.globalAlpha=1;ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.strokeRect(x0,A.py(q3),x1-x0,A.py(q1)-A.py(q3));line(ctx,[[x0,A.py(q2)],[x1,A.py(q2)]],css('--ink'),2.5);
+    line(ctx,[[A.px(cx),A.py(q3)],[A.px(cx),A.py(hi)]],css('--ink'),1,[3,3]);line(ctx,[[A.px(cx),A.py(q1)],[A.px(cx),A.py(lo)]],css('--ink'),1,[3,3]);
+    vals.forEach(v=>{if(v<lo||v>hi){ctx.strokeStyle=css('--ink');ctx.beginPath();ctx.arc(A.px(cx),A.py(v),2.5,0,6.3);ctx.stroke();}});};
+  box(POP.slice(0,shownPop),0.9,css('--orange'),'True');box(BOOT.slice(0,shownBoot).map(o=>o.a),2.1,css('--blue'),'Bootstrap');
+  line(ctx,[[A.L,A.py(TRUE())],[A.L+A.pw,A.py(TRUE())]],'#e0559b',2);}
+function readouts(){$('vN').textContent=n;$('vS').textContent=sig;$('vB').textContent=B;
+  const tSE=shownPop?sd(POP.slice(0,shownPop)):null,bSE=shownBoot>1?sd(BOOT.slice(0,shownBoot).map(o=>o.a)):null;
+  $('rTrue').textContent=tSE?fmt(tSE,4):'press Draw';$('rBoot').textContent=bSE?fmt(bSE,4):'press Bootstrap';$('rForm').textContent=est===0?fmt(formulaSE(),4):'no simple formula';
+  $('fPop').textContent=`β₀ = ${B0}, β₁ = ${B1}, x ~ N(${MX}, ${SX}²), σ = ${sig}${het?' × (grows with x)':''}; true α = ${fmt(TRUE(),2)}`;
+  $('fDraw').textContent=shownBoot?`${shownBoot} of B = ${B} samples drawn, each of n = ${n}`:`B = ${B} samples of n = ${n}`;
+  $('fSE').textContent=bSE?`SE_B = ${fmt(bSE,4)}  (true SE ${tSE?fmt(tSE,4):'?'})`:'';
+  $('fForm').textContent=est===0?`= ${fmt(formulaSE(),4)}${het?'  (wrong here: variance not constant)':''}`:'not for the median';}
+function drawAll(){readouts();drawSample();const xr=range();hist($('cPop'),POP,shownPop,css('--orange'),xr,null,null,'from the population');hist($('cBoot'),BOOT.map(o=>o.a),shownBoot,css('--blue'),xr,estim(X,Y),css('--navy'),'bootstrap from Z');drawBox();}
+function rebuildPop(){genPop();}
+function resetAll(){stopAnim();genOrig();genPop();shownPop=0;drawAll();}
+[['e0',0],['e1',1]].forEach(([id,k])=>$(id).addEventListener('click',()=>{est=k;['e0','e1'].forEach(i=>$(i).classList.toggle('on',i===id));resetAll();}));
+$('sN').addEventListener('input',e=>{n=+e.target.value;resetAll();});
+$('sS').addEventListener('input',e=>{sig=+e.target.value;resetAll();});
+$('sB').addEventListener('input',e=>{stopAnim();B=+e.target.value;BOOT=[];shownBoot=0;curIdx=null;drawAll();});
+$('tH').addEventListener('change',e=>{het=e.target.checked;resetAll();});
+$('bNew').addEventListener('click',()=>{seed++;stopAnim();genOrig();drawAll();});
+$('bStop').addEventListener('click',stopAnim);
+$('bPop').addEventListener('click',()=>{animate(t=>{shownPop=Math.max(1,Math.round(t*NPOP));drawAll();},2500);});
+$('bBoot').addEventListener('click',()=>{genBoot();animate(t=>{shownBoot=Math.max(1,Math.round(t*B));curIdx=BOOT[shownBoot-1].idx;drawAll();},3500,()=>{curIdx=null;drawAll();});});
+$('bOne').addEventListener('click',()=>{stopAnim();if(!BOOT.length||shownBoot>=BOOT.length){genBoot();shownBoot=0;}shownBoot++;curIdx=BOOT[shownBoot-1].idx;drawAll();});
+hookTheme(drawAll);
+genOrig();genPop();drawAll();
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+</script>
+</body>
+</html>
