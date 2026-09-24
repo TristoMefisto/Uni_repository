@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>D, DD and ANCOVA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>D, DD and ANCOVA: which estimator is more precise</h1>
+  <p>One baseline round and one follow-up round, treatment randomly assigned. All three estimators are unbiased for the ATE, so the whole question is the width of their sampling distributions, and that is set by the autocorrelation of the outcome between the two rounds.</p>
+</header>
+<ol class="steps"><li>Set the autocorrelation with the slider and watch the three sampling distributions on the right change width while they stay centred on the true ATE.</li><li>Cross &rho; = 0.5: below it DD is wider than the plain difference in means, above it DD is narrower. ANCOVA is never worse than either.</li><li>Read the ratio curve: at &rho; = 0 DD needs twice the sample size of ANCOVA for the same precision, at &rho; = 1 they are the same.</li></ol>
+<div class="main"><div class="col">
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sRho">Autocorrelation &rho; between rounds <b id="vRho"></b></label><input id="sRho" type="range" min="0" max="0.95" step="0.05" value="0.25"></div>
+  <div class="slider"><label for="sN">Units per group n <b id="vN"></b></label><input id="sN" type="range" min="20" max="400" step="10" value="100"></div>
+  <div class="slider"><label for="sTau">True ATE <b id="vTau"></b></label><input id="sTau" type="range" min="0" max="10" step="0.5" value="4"></div>
+  <div class="slider"><label for="sR">Simulated experiments <b id="vR"></b></label><input id="sR" type="range" min="200" max="4000" step="200" value="2000"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">SE of D (simulated)</span><span class="big" id="rSeD"></span></div>
+  <div class="stat"><span class="small">SE of DD</span><span class="big" id="rSeDD"></span></div>
+  <div class="stat"><span class="small">SE of ANCOVA</span><span class="big" id="rSeAN"></span></div>
+  <div class="stat"><span class="small">SE ratio DD / ANCOVA</span><span class="big" id="rRatio"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bNew">New draw of experiments</button>
+  <button id="bSweep">Sweep &rho; from 0 to 0.95</button>
+  <button id="bStop">Stop</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cScatter"></canvas>
+    <figcaption><strong>One experiment.</strong> Baseline outcome on the horizontal axis, follow-up on the vertical, treated in orange and controls in teal. The dashed line is the 45 degree line that DD implicitly imposes (a slope of 1 on the baseline); the solid line is the slope ANCOVA estimates. The closer the cloud is to a line, the higher &rho;.</figcaption></figure>
+  <figure><canvas id="cDist"></canvas>
+    <figcaption><strong>Sampling distributions.</strong> The estimate of the ATE from each simulated experiment, one histogram per estimator. All three are centred on the true ATE (vertical line); only the spread differs.</figcaption></figure>
+  <figure><canvas id="cRatio"></canvas>
+    <figcaption><strong>Standard error relative to ANCOVA.</strong> The theoretical curves: DD is <em>&radic;(2/(1+&rho;))</em> times the ANCOVA standard error, D is <em>1/&radic;(1-&rho;&sup2;)</em> times it. ANCOVA is the flat line at 1. The two curves cross at &rho; = 0.5.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>The data generating process is the one behind Proposition 3 and Proposition 4: the same unit is measured twice, the two measurements share a variance &sigma;&sup2; and a correlation &rho;, and the treatment shifts the second one by the ATE. DD subtracts the baseline with a coefficient fixed at 1, ANCOVA estimates that coefficient, which is why ANCOVA is never the worse of the two and is strictly better whenever &rho; is below 1. The plain difference in means throws the baseline away, so it is beaten by ANCOVA for any &rho; above 0, and by DD only once &rho; passes 0.5.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>The three estimators</b></div><div class="n">D, DD, ANCOVA on one pre and one post round</div><div class="k" data-tex='\begin{aligned} \hat\tau_D &= \bar Y^{post}_{T} - \bar Y^{post}_{C} \\ \hat\tau_{DD} &= \overline{(Y^{post}-Y^{pre})}_{T} - \overline{(Y^{post}-Y^{pre})}_{C} \\ Y_{i,post} &= \beta_0 + \beta_1 D_i + \gamma Y_{i,pre} + u_i \end{aligned}'></div><span class="v" id="fEst"></span></div>
+<div class="f"><div class="n"><b>Autocorrelation</b></div><div class="k" data-tex='\rho = \frac{Cov(Y_{i,t}, Y_{i,t-1})}{\sqrt{Var(Y_{i,t})\,Var(Y_{i,t-1})}}'></div><span class="v" id="fRho"></span></div>
+<div class="f"><div class="n"><b>Proposition 4</b></div><div class="n">DD against ANCOVA</div><div class="k" data-tex='\frac{SE_{DD}(\hat{ATE})}{SE_{ANCOVA}(\hat{ATE})} = \sqrt{\frac{2}{1+\rho}}'></div><span class="v" id="fP4"></span></div>
+<div class="f"><div class="n"><b>Proposition 3</b></div><div class="n">DD beats D when the baseline predicts the outcome strongly enough</div><div class="k" data-tex='\frac{COV(Y_i(0),X_i)}{VAR(X_i)} + \frac{COV(Y_i(1),X_i)}{VAR(X_i)} > 1'></div><span class="v" id="fP3"></span></div>
+<div class="f"><div class="n"><b>Theoretical standard errors</b></div><div class="k" data-tex='SE_D = \sqrt{\tfrac{2\sigma^2}{n}},\quad SE_{DD} = \sqrt{\tfrac{2\sigma^2}{n}\,2(1-\rho)},\quad SE_{AN} = \sqrt{\tfrac{2\sigma^2}{n}(1-\rho^2)}'></div><span class="v" id="fSE"></span></div>
+</aside>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+const SIG=10;            // sd of the outcome in each round
+let seed=7, sweepId=null;
+
+function simulate(rho,n,tau,R,sd){
+  const rng=mulberry32(sd);
+  const est={D:[],DD:[],AN:[]};
+  let sample=null;
+  for(let r=0;r<R;r++){
+    const pre=[],post=[],d=[];
+    for(let i=0;i<2*n;i++){
+      const treated=i<n?1:0;
+      const e0=gauss(rng), e1=rho*e0+Math.sqrt(1-rho*rho)*gauss(rng);
+      const xp=50+SIG*e0, yp=50+SIG*e1+tau*treated;
+      pre.push(xp); post.push(yp); d.push(treated);
+    }
+    const mT=a=>mean(a.filter((_,i)=>d[i]===1)), mC=a=>mean(a.filter((_,i)=>d[i]===0));
+    est.D.push(mT(post)-mC(post));
+    const diff=post.map((v,i)=>v-pre[i]);
+    est.DD.push(mT(diff)-mC(diff));
+    // ANCOVA: regress post on [1, D, pre]
+    const X=pre.map((v,i)=>[1,d[i],v]);
+    const b=wls(X,post);
+    est.AN.push(b[1]);
+    if(r===0) sample={pre,post,d,slope:b[2]};
+  }
+  return {est,sample};
+}
+const sd_=a=>Math.sqrt(svar(a));
+
+function hist(vals,lo,hi,bins){
+  const h=new Array(bins).fill(0), w=(hi-lo)/bins;
+  vals.forEach(v=>{const k=Math.floor((v-lo)/w);if(k>=0&&k<bins)h[k]++;});
+  return {h,w};
+}
+
+let S=null;
+function params(){return{rho:+$('sRho').value,n:+$('sN').value,tau:+$('sTau').value,R:+$('sR').value};}
+
+function drawScatter(){
+  const c=$('cScatter'); const {ctx,w,h}=setupCanvas(c);
+  const p=params(), s=S.sample;
+  const lo=Math.min(...s.pre,...s.post), hi=Math.max(...s.pre,...s.post);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[lo,hi],xt:[20,40,60,80],yt:[20,40,60,80],xl:'baseline outcome',yl:'follow-up outcome'});
+  A.clip();
+  line(ctx,[[A.px(lo),A.py(lo)],[A.px(hi),A.py(hi)]],css('--grey'),1.2,[5,4]);
+  const mPre=mean(s.pre), mPost=mean(s.post);
+  const f=x=>mPost+s.slope*(x-mPre);
+  line(ctx,[[A.px(lo),A.py(f(lo))],[A.px(hi),A.py(f(hi))]],css('--navy'),1.8);
+  for(let i=0;i<s.pre.length;i++) dot(ctx,A.px(s.pre[i]),A.py(s.post[i]),2.6,s.d[i]?css('--treat'):css('--ctrl'));
+  A.unclip();
+  label(ctx,'slope '+fmt(s.slope,2)+' (ANCOVA)',A.L+8,A.T+14,css('--navy'));
+  label(ctx,'slope 1 (DD)',A.L+8,A.T+30,css('--grey'));
+}
+
+function drawDist(){
+  const c=$('cDist'); const {ctx,w,h}=setupCanvas(c);
+  const p=params(), E=S.est;
+  const all=[...E.D,...E.DD,...E.AN];
+  const lo=Math.min(...all), hi=Math.max(...all);
+  const bins=44;
+  const hs=[['D',E.D,css('--grey')],['DD',E.DD,css('--orange')],['ANCOVA',E.AN,css('--navy')]];
+  let top=0; const built=hs.map(([k,v,col])=>{const H=hist(v,lo,hi,bins);top=Math.max(top,Math.max(...H.h));return [k,H,col];});
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,top*1.12],yt:[],xl:'estimate of the ATE',yl:'frequency'});
+  A.clip();
+  built.forEach(([k,H,col])=>{
+    const pts=[];
+    for(let i=0;i<bins;i++){const x=lo+(i+0.5)*H.w;pts.push([A.px(x),A.py(H.h[i])]);}
+    line(ctx,pts,col,1.9);
+  });
+  line(ctx,[[A.px(p.tau),A.py(0)],[A.px(p.tau),A.py(top*1.1)]],css('--red'),1.2,[4,4]);
+  A.unclip();
+  label(ctx,'true ATE '+fmt(p.tau,1),A.px(p.tau)+4,A.T+14,css('--red'));
+  let y=A.T+14;
+  built.forEach(([k,H,col])=>{label(ctx,k,A.L+A.pw-6,y,col,'right');y+=15;});
+}
+
+function drawRatio(){
+  const c=$('cRatio'); const {ctx,w,h}=setupCanvas(c);
+  const p=params();
+  const A=axes(ctx,w,h,{xlim:[0,0.95],ylim:[0,3.4],xt:[0,0.25,0.5,0.75],yt:[0,1,2,3],xl:'autocorrelation ρ',yl:'SE relative to ANCOVA'});
+  A.clip();
+  const dd=[],dl=[];
+  for(let i=0;i<=190;i++){const r=i/200;dd.push([A.px(r),A.py(Math.sqrt(2/(1+r)))]);dl.push([A.px(r),A.py(1/Math.sqrt(1-r*r))]);}
+  line(ctx,dd,css('--orange'),2);
+  line(ctx,dl,css('--grey'),2);
+  line(ctx,[[A.px(0),A.py(1)],[A.px(0.95),A.py(1)]],css('--navy'),2);
+  const r=p.rho;
+  line(ctx,[[A.px(r),A.py(0)],[A.px(r),A.py(3.4)]],css('--rule'),1,[3,3]);
+  dot(ctx,A.px(r),A.py(Math.sqrt(2/(1+r))),4,css('--orange'));
+  dot(ctx,A.px(r),A.py(1/Math.sqrt(1-r*r)),4,css('--grey'));
+  dot(ctx,A.px(r),A.py(1),4,css('--navy'));
+  A.unclip();
+  label(ctx,'DD',A.px(0.34),A.py(Math.sqrt(2/1.34))-7,css('--orange'));
+  label(ctx,'D',A.px(0.86),A.py(1/Math.sqrt(1-0.86*0.86))-7,css('--grey'),'right');
+  label(ctx,'ANCOVA',A.px(0.06),A.py(1)+16,css('--navy'));
+}
+
+function readouts(){
+  const p=params(), E=S.est;
+  const seD=sd_(E.D), seDD=sd_(E.DD), seAN=sd_(E.AN);
+  $('rSeD').textContent=fmt(seD,3);
+  $('rSeDD').textContent=fmt(seDD,3);
+  $('rSeAN').textContent=fmt(seAN,3);
+  $('rRatio').textContent=fmt(seDD/seAN,3);
+  $('vRho').textContent=fmt(p.rho,2);
+  $('vN').textContent=p.n;
+  $('vTau').textContent=fmt(p.tau,1);
+  $('vR').textContent=p.R;
+  $('fEst').textContent='estimates in this draw: D '+fmt(mean(E.D),2)+', DD '+fmt(mean(E.DD),2)+', ANCOVA '+fmt(mean(E.AN),2)+' (true ATE '+fmt(p.tau,1)+')';
+  $('fRho').textContent='ρ = '+fmt(p.rho,2)+', so the baseline explains '+fmt(100*p.rho*p.rho,0)+'% of the variance of the follow-up';
+  $('fP4').textContent='√(2/(1+'+fmt(p.rho,2)+')) = '+fmt(Math.sqrt(2/(1+p.rho)),3)+' → DD needs '+fmt(2/(1+p.rho),2)+'x the sample size of ANCOVA';
+  $('fP3').textContent='here the two slopes are ρ + ρ = '+fmt(2*p.rho,2)+', so DD beats D only above ρ = 0.5';
+  const k=Math.sqrt(2*SIG*SIG/p.n);
+  $('fSE').textContent='theory: '+fmt(k,3)+', '+fmt(k*Math.sqrt(2*(1-p.rho)),3)+', '+fmt(k*Math.sqrt(1-p.rho*p.rho),3);
+}
+
+function run(){
+  const p=params();
+  S=simulate(p.rho,p.n,p.tau,p.R,seed);
+  drawAll();
+}
+function drawAll(){ if(!S)return; drawScatter(); drawDist(); drawRatio(); readouts(); }
+
+['sRho','sN','sTau','sR'].forEach(id=>$(id).addEventListener('input',run));
+$('bNew').addEventListener('click',()=>{seed++;run();});
+$('bStop').addEventListener('click',()=>{if(sweepId){clearInterval(sweepId);sweepId=null;}});
+$('bSweep').addEventListener('click',()=>{
+  if(sweepId)clearInterval(sweepId);
+  let v=0;
+  sweepId=setInterval(()=>{
+    $('sRho').value=fmt(v,2); run();
+    v+=0.05; if(v>0.951){clearInterval(sweepId);sweepId=null;}
+  },260);
+});
+hookTheme(drawAll);
+run();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

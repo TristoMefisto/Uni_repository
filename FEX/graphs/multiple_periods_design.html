@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Allocating a survey budget</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --contour:#2f4fd8; --red:#c62f2a; --resid:#9aa0b5; --point:#a8423a;
+  --fill:#eef0f8; --orange:#d98a17; --blue:#2266b8; --green:#2f8f4e; --purple:#7b3fa0; --grey:#8a8fa8;
+  --treat:#c9552b; --ctrl:#2a9d8f; --hl:#fff3c4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+    --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+  --navy:#9fa8ff; --contour:#7d93ff; --red:#ff6a5f; --resid:#5d6286; --point:#e08378;
+  --fill:#20244a; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#ff7d55; --ctrl:#4fd1c0; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>More T in experiments: allocating a fixed survey budget</h1>
+  <p>McKenzie (2012). The budget pays for K surveys in total, split between units and rounds: K = 2n(m + r), with m pre-treatment rounds, r post-treatment rounds and n units in each group. The standard error of the ATE has a closed form for each of the three estimators, so the best allocation can be read off directly, and it depends on the autocorrelation.</p>
+</header>
+<ol class="steps"><li>Set the autocorrelation first. It decides everything else: with &rho; high the baseline rounds are worth paying for, with &rho; low they are not.</li><li>Move m and r. The number of units n falls automatically, because the budget is fixed.</li><li>The grid at the bottom is every allocation the budget allows. The cross marks the best one for the estimator you picked, the ring marks the allocation you are on.</li></ol>
+<div class="main"><div class="col">
+
+<div class="tabs" role="tablist">
+  <button id="m0">ANCOVA</button>
+  <button id="m1">DD</button>
+  <button id="m2">D (post only)</button>
+</div>
+
+<section class="controls" aria-label="Parameters">
+  <div class="slider"><label for="sRho">Autocorrelation &rho; <b id="vRho"></b></label><input id="sRho" type="range" min="0" max="0.9" step="0.05" value="0.5"></div>
+  <div class="slider"><label for="sK">Budget K, total surveys <b id="vK"></b></label><input id="sK" type="range" min="1200" max="8000" step="400" value="4000"></div>
+  <div class="slider"><label for="sM">Pre-treatment rounds m <b id="vM"></b></label><input id="sM" type="range" min="0" max="6" step="1" value="1"></div>
+  <div class="slider"><label for="sR">Post-treatment rounds r <b id="vR"></b></label><input id="sR" type="range" min="1" max="8" step="1" value="1"></div>
+</section>
+
+<div class="stats">
+  <div class="stat"><span class="small">Units per group n</span><span class="big" id="rN"></span></div>
+  <div class="stat"><span class="small">SE of the chosen estimator</span><span class="big" id="rSE"></span></div>
+  <div class="stat"><span class="small">Best allocation for it</span><span class="big long" id="rBest"></span></div>
+  <div class="stat"><span class="small">Cost of being on this one</span><span class="big" id="rLoss"></span></div>
+</div>
+
+<div class="buttons">
+  <button class="primary" id="bGo">Jump to the best allocation</button>
+  <button id="bLow">&rho; = 0.1</button>
+  <button id="bHigh">&rho; = 0.8</button>
+</div>
+
+<div class="panels">
+  <figure><canvas id="cR"></canvas>
+    <figcaption><strong>Standard error against the number of follow-ups.</strong> m is held at its current value and the budget is fixed, so every extra round takes units away. One line per estimator; the dot is the current r.</figcaption></figure>
+  <figure><canvas id="cRho"></canvas>
+    <figcaption><strong>Standard error against the autocorrelation.</strong> The current allocation, with &rho; running from 0 to 0.9. DD improves fast in &rho; because differencing removes the part of the noise that persists; D does not use the baseline at all, so it barely moves.</figcaption></figure>
+  <figure><canvas id="cGrid"></canvas>
+    <figcaption><strong>Every allocation the budget allows.</strong> Rows are m, columns are r, colour is the standard error of the chosen estimator: the stronger the colour, the lower the standard error. The cross is the minimum, the ring is where the sliders are (they sit on top of each other when you are already on the best cell). With m = 0 only D is defined.</figcaption></figure>
+</div>
+
+<div class="note">
+  <p>Two regularities come out of the grid. When &rho; is high the minimum sits at a small number of rounds, because repeated observations of the same unit carry nearly the same information and units are worth more than rounds, but one baseline round is worth having (the same intuition as clustered randomization). When &rho; is low the baseline predicts nothing, DD is the worst of the three, and the money is better spent on follow-ups that average out noise, or on units if the estimator is D.</p>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>Budget constraint</b></div><div class="k" data-tex='K = 2n \cdot T, \qquad T = m + r'></div><span class="v" id="fK"></span></div>
+<div class="f"><div class="n"><b>D (post-treatment rounds only)</b></div><div class="k" data-tex='SE_D = \sqrt{\frac{2\sigma^2}{n}\left(\frac{1+(r-1)\rho}{r}\right)}'></div><span class="v" id="fD"></span></div>
+<div class="f"><div class="n"><b>DD (all rounds)</b></div><div class="k" data-tex='SE_{DD} = \sqrt{\frac{2\sigma^2}{n}\left(\frac{1+(r-1)\rho}{r} - \frac{(m+1)\rho-1}{m}\right)}'></div><span class="v" id="fDD"></span></div>
+<div class="f"><div class="n"><b>ANCOVA</b></div><div class="k" data-tex='SE_{ANCOVA} = \sqrt{\frac{2\sigma^2}{n}\left(\frac{1+(r-1)\rho}{r} - \frac{m\rho^2}{1+(m-1)\rho}\right)}'></div><span class="v" id="fAN"></span></div>
+<div class="f"><div class="n"><b>Two rounds only</b></div><div class="n">m = r = 1 recovers Proposition 4</div><div class="k" data-tex='\frac{SE_{DD}}{SE_{ANCOVA}} = \sqrt{\frac{2}{1+\rho}}'></div><span class="v" id="fP4"></span></div>
+</aside>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+const SIG2=1;                 // sigma^2, the scale is arbitrary
+const MMAX=6, RMAX=8;
+let mode=0;                   // 0 ANCOVA, 1 DD, 2 D
+const NAMES=['ANCOVA','DD','D'];
+const COLS=()=>[css('--navy'),css('--orange'),css('--grey')];
+
+function post(r,rho){return (1+(r-1)*rho)/r;}
+function seOf(k,n,m,r,rho){
+  if(n<=0) return NaN;
+  const base=2*SIG2/n;
+  if(k===2) return Math.sqrt(base*post(r,rho));
+  if(m<1) return NaN;
+  if(k===1){const v=post(r,rho)-((m+1)*rho-1)/m;return v>0?Math.sqrt(base*v):0;}
+  const v=post(r,rho)-m*rho*rho/(1+(m-1)*rho);
+  return v>0?Math.sqrt(base*v):0;
+}
+function nOf(K,m,r){return Math.floor(K/(2*(m+r)));}
+function params(){return{rho:+$('sRho').value,K:+$('sK').value,m:+$('sM').value,r:+$('sR').value};}
+
+function bestAlloc(k,K,rho){
+  let best=null;
+  for(let m=(k===2?0:1);m<=MMAX;m++)for(let r=1;r<=RMAX;r++){
+    const n=nOf(K,m,r); if(n<5)continue;
+    const s=seOf(k,n,m,r,rho); if(!isFinite(s))continue;
+    if(!best||s<best.se) best={m,r,n,se:s};
+  }
+  return best;
+}
+
+function drawR(){
+  const c=$('cR');const{ctx,w,h}=setupCanvas(c);const p=params();
+  const series=[0,1,2].map(k=>{const a=[];for(let r=1;r<=RMAX;r++){const n=nOf(p.K,p.m,r);a.push(seOf(k,n,p.m,r,p.rho));}return a;});
+  const fin=series.flat().filter(v=>isFinite(v));
+  const hi=Math.max(...fin)*1.1;
+  const A=axes(ctx,w,h,{xlim:[0.6,RMAX+0.4],ylim:[0,hi],xt:[1,2,3,4,5,6,7,8],yt:[],xl:'post-treatment rounds r',yl:'SE of the ATE'});
+  A.clip();
+  const cols=COLS();
+  series.forEach((a,k)=>{
+    const pts=[];a.forEach((v,i)=>{if(isFinite(v))pts.push([A.px(i+1),A.py(v)]);});
+    if(pts.length)line(ctx,pts,cols[k],k===mode?2.4:1.4,k===mode?[]:[4,3]);
+  });
+  const cur=seOf(mode,nOf(p.K,p.m,p.r),p.m,p.r,p.rho);
+  if(isFinite(cur))dot(ctx,A.px(p.r),A.py(cur),4.5,cols[mode]);
+  A.unclip();
+  let y=A.T+14;[0,1,2].forEach(k=>{label(ctx,NAMES[k],A.L+A.pw-6,y,cols[k],'right');y+=15;});
+}
+
+function drawRho(){
+  const c=$('cRho');const{ctx,w,h}=setupCanvas(c);const p=params();
+  const n=nOf(p.K,p.m,p.r);
+  const series=[0,1,2].map(k=>{const a=[];for(let i=0;i<=90;i++){a.push(seOf(k,n,p.m,p.r,i/100));}return a;});
+  const fin=series.flat().filter(v=>isFinite(v));
+  const hi=Math.max(...fin)*1.1;
+  const A=axes(ctx,w,h,{xlim:[0,0.9],ylim:[0,hi],xt:[0,0.25,0.5,0.75],yt:[],xl:'autocorrelation ρ',yl:'SE of the ATE'});
+  A.clip();
+  const cols=COLS();
+  series.forEach((a,k)=>{
+    const pts=[];a.forEach((v,i)=>{if(isFinite(v))pts.push([A.px(i/100),A.py(v)]);});
+    if(pts.length)line(ctx,pts,cols[k],k===mode?2.4:1.4,k===mode?[]:[4,3]);
+  });
+  line(ctx,[[A.px(p.rho),A.py(0)],[A.px(p.rho),A.py(hi)]],css('--rule'),1,[3,3]);
+  const cur=seOf(mode,n,p.m,p.r,p.rho);
+  if(isFinite(cur))dot(ctx,A.px(p.rho),A.py(cur),4.5,cols[mode]);
+  A.unclip();
+  label(ctx,'m = '+p.m+', r = '+p.r+', n = '+n,A.L+8,A.T+14,css('--muted'));
+}
+
+function drawGrid(){
+  const c=$('cGrid');const{ctx,w,h}=setupCanvas(c);const p=params();
+  const m0=(mode===2?0:1);
+  const rows=MMAX-m0+1, cols=RMAX;
+  const L=44,T=16,R=12,B=38;const pw=w-L-R,ph=h-T-B;
+  const cw=pw/cols, ch=ph/rows;
+  const vals=[];let lo=Infinity,hi=-Infinity,best=null;
+  for(let m=m0;m<=MMAX;m++)for(let r=1;r<=RMAX;r++){
+    const n=nOf(p.K,m,r);const s=(n>=5)?seOf(mode,n,m,r,p.rho):NaN;
+    vals.push({m,r,s});
+    if(isFinite(s)){lo=Math.min(lo,s);hi=Math.max(hi,s);if(!best||s<best.s)best={m,r,s};}
+  }
+  ctx.font=FONT;
+  vals.forEach(v=>{
+    const x=L+(v.r-1)*cw, y=T+(v.m-m0)*ch;
+    if(!isFinite(v.s)){ctx.fillStyle=css('--fill');ctx.fillRect(x,y,cw-1,ch-1);return;}
+    const t=(v.s-lo)/(hi-lo||1);
+    ctx.fillStyle=`color-mix(in srgb, ${COLS()[mode]} ${Math.round(88-72*t)}%, ${css('--panel')})`;
+    ctx.fillRect(x,y,cw-1,ch-1);
+  });
+  ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+  ctx.fillStyle=css('--muted');ctx.textAlign='center';
+  for(let r=1;r<=RMAX;r++)ctx.fillText(r,L+(r-0.5)*cw,T+ph+15);
+  ctx.textAlign='right';
+  for(let m=m0;m<=MMAX;m++)ctx.fillText('m='+m,L-6,T+(m-m0+0.62)*ch);
+  ctx.textAlign='center';ctx.fillText('post-treatment rounds r',L+pw/2,h-3);
+  if(best){
+    const x=L+(best.r-0.5)*cw,y=T+(best.m-m0+0.5)*ch;
+    ctx.strokeStyle=css('--red');ctx.lineWidth=2.2;
+    ctx.beginPath();ctx.moveTo(x-6,y-6);ctx.lineTo(x+6,y+6);ctx.moveTo(x+6,y-6);ctx.lineTo(x-6,y+6);ctx.stroke();
+  }
+  if(p.m>=m0){
+    const x=L+(p.r-0.5)*cw,y=T+(p.m-m0+0.5)*ch;
+    ctx.strokeStyle=css('--ink');ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(x,y,8,0,6.2832);ctx.stroke();
+  }
+}
+
+function readouts(){
+  const p=params(), n=nOf(p.K,p.m,p.r);
+  const se=seOf(mode,n,p.m,p.r,p.rho);
+  const b=bestAlloc(mode,p.K,p.rho);
+  $('vRho').textContent=fmt(p.rho,2);$('vK').textContent=p.K;$('vM').textContent=p.m;$('vR').textContent=p.r;
+  $('rN').textContent=n;
+  $('rSE').textContent=isFinite(se)?fmt(se,4):'not defined';
+  $('rBest').textContent=b?('m = '+b.m+', r = '+b.r+', n = '+b.n):'—';
+  $('rLoss').textContent=(b&&isFinite(se))?('+'+fmt(100*(se/b.se-1),1)+'%'):'—';
+  $('fK').textContent=p.K+' = 2 × '+n+' × '+(p.m+p.r)+'  (T = '+p.m+' + '+p.r+')';
+  const sD=seOf(2,n,p.m,p.r,p.rho), sDD=seOf(1,n,p.m,p.r,p.rho), sAN=seOf(0,n,p.m,p.r,p.rho);
+  $('fD').textContent='SE = '+fmt(sD,4);
+  $('fDD').textContent=isFinite(sDD)?('SE = '+fmt(sDD,4)):'needs m ≥ 1';
+  $('fAN').textContent=isFinite(sAN)?('SE = '+fmt(sAN,4)):'needs m ≥ 1';
+  $('fP4').textContent=(p.m===1&&p.r===1)?('√(2/(1+'+fmt(p.rho,2)+')) = '+fmt(Math.sqrt(2/(1+p.rho)),3)+', and '+fmt(sDD/sAN,3)+' here'):('set m = r = 1 to see it; now DD/ANCOVA = '+(isFinite(sDD)&&isFinite(sAN)?fmt(sDD/sAN,3):'—'));
+  [0,1,2].forEach(k=>$('m'+k).classList.toggle('on',k===mode));
+}
+
+function drawAll(){drawR();drawRho();drawGrid();readouts();}
+['sRho','sK','sM','sR'].forEach(id=>$(id).addEventListener('input',drawAll));
+[0,1,2].forEach(k=>$('m'+k).addEventListener('click',()=>{mode=k;if(mode!==2&&+$('sM').value<1)$('sM').value=1;drawAll();}));
+$('bGo').addEventListener('click',()=>{const p=params();const b=bestAlloc(mode,p.K,p.rho);if(b){$('sM').value=b.m;$('sR').value=b.r;drawAll();}});
+$('bLow').addEventListener('click',()=>{$('sRho').value=0.1;drawAll();});
+$('bHigh').addEventListener('click',()=>{$('sRho').value=0.8;drawAll();});
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>
