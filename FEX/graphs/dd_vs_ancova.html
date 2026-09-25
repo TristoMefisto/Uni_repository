@@ -237,7 +237,8 @@ function drawScatter(){
   const c=$('cScatter'); const {ctx,w,h}=setupCanvas(c);
   const p=params(), s=S.sample;
   const lo=Math.min(...s.pre,...s.post), hi=Math.max(...s.pre,...s.post);
-  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[lo,hi],xt:[20,40,60,80],yt:[20,40,60,80],xl:'baseline outcome',yl:'follow-up outcome'});
+  const Lq=46,Tq=12,Bq=36,phq=h-Tq-Bq,Rq=Math.max(12,w-Lq-phq);   // square box: the 45 degree line has to be at 45 degrees
+  const A=axes(ctx,w,h,{L:Lq,R:Rq,T:Tq,B:Bq,xlim:[lo,hi],ylim:[lo,hi],xt:[20,40,60,80],yt:[20,40,60,80],xl:'baseline outcome',yl:'follow-up outcome'});
   A.clip();
   line(ctx,[[A.px(lo),A.py(lo)],[A.px(hi),A.py(hi)]],css('--grey'),1.2,[5,4]);
   const mPre=mean(s.pre), mPost=mean(s.post);
