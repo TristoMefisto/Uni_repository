@@ -99,6 +99,24 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 table.data td.diff{background:var(--hl)}
 .col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 
+
+/* --- wide layout trial: controls on top, graphs full width, formulas underneath --- */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:12px 16px}
+.note p{columns:2;column-gap:36px;margin:0}
+@media (max-width:820px){.note p{columns:1}}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -144,10 +162,6 @@ table.data td.diff{background:var(--hl)}
   <figure><canvas id="cSplit"></canvas>
     <figcaption><strong>How the n observations are used.</strong> Each row is one fit: blue = training, orange = held out. Validation set: one fit on half the data. LOOCV: n fits, one observation out each time. k-fold: k fits, one fold out each time. The estimate is the average of the rows' errors.</figcaption></figure>
 </div>
-
-<div class="note">
-  <p>The validation set approach uses only half the data to fit, so its curves sit above LOOCV (the error of a model fitted on fewer points is overestimated) and they move a lot with the split. LOOCV uses n - 1 points for each fit and has no randomness, but it needs n fits (here the leverage shortcut gives the same number from a single fit). k-fold with k = 5 or 10 is close to LOOCV at a fraction of the cost, and repeating it with new folds changes little.</p>
-</div>
 </div>
 <aside class="formulas"><h2>Formulas, with the current numbers</h2>
 <div class="f"><div class="n"><b>Validation set approach</b></div><div class="n">MSE on the held-out half</div><div class="k" data-tex='MSE_{val} = \frac{1}{n_{val}}\sum_{i \in val}\big(y_i - \hat y_i\big)^2'></div><span class="v" id="fVal"></span></div>
@@ -155,6 +169,10 @@ table.data td.diff{background:var(--hl)}
 <div class="f"><div class="n"><b>Shortcut for least squares</b></div><div class="n">one fit on all the data, residuals inflated by the leverage</div><div class="k" data-tex='CV_{(n)} = \frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat y_i}{1 - h_i}\right)^2'></div><span class="v" id="fShort"></span></div>
 <div class="f"><div class="n"><b>k-fold CV</b></div><div class="n">average of the k fold MSEs</div><div class="k" data-tex='CV_{(k)} = \frac{1}{k}\sum_{i=1}^{k} MSE_i'></div><span class="v" id="fK"></span></div>
 </aside>
+
+<div class="note">
+  <p>The validation set approach uses only half the data to fit, so its curves sit above LOOCV (the error of a model fitted on fewer points is overestimated) and they move a lot with the split. LOOCV uses n - 1 points for each fit and has no randomness, but it needs n fits (here the leverage shortcut gives the same number from a single fit). k-fold with k = 5 or 10 is close to LOOCV at a fraction of the cost, and repeating it with new folds changes little.</p>
+</div>
 </div>
 </div>
 
