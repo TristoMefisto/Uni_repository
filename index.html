@@ -4,35 +4,41 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Uni repository</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#F7F6F2; --surface:#fff; --border:#DDD9D0; --text:#1A1A2E; --muted:#75736B;
-           --pe1:#1565C0; --pm:#6A1B9A; --math:#2E7D32; --fex:#C2410C; --ml:#0F766E; }
+  /* Bologna palette */
+  :root { --bg:#F6F5F1; --surface:#FFFFFF; --border:#DFDCD4; --text:#16162A; --muted:#6B6A78;
+          --accent:#2A3A8F;
+          --pe1:#2A3A8F; --pe3:#2E8B57; --pm:#7D4FA8; --fex:#B8760F; --ml:#2A6FD6; --math:#00838F; }
   @media (prefers-color-scheme: dark) {
-    :root { --bg:#17171A; --surface:#212126; --border:#33333A; --text:#ECECEC; --muted:#9A9A9A;
-             --pe1:#5B9BE8; --pm:#C08BE0; --math:#66BB6A; --fex:#F0874A; --ml:#3CC4B0; }
+    :root { --bg:#14141A; --surface:#1D1D24; --border:#33323C; --text:#ECEAE4; --muted:#9A98A4;
+            --accent:#8FA0FF;
+            --pe1:#8FA0FF; --pe3:#5FC27E; --pm:#B98AF0; --fex:#F0A83A; --ml:#6FA3FF; --math:#4DD0E1; }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:Georgia,serif; line-height:1.6;
-          padding:48px 20px 80px; }
-  .wrap { max-width:820px; margin:0 auto; }
-  h1 { font-size:26px; margin-bottom:6px; }
-  .sub { color:var(--muted); font-style:italic; font-size:14px; margin-bottom:34px; }
-  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.09em; margin:34px 0 12px;
-        padding-bottom:7px; border-bottom:1px solid var(--border); }
-  h2.pe1 { color:var(--pe1); } h2.pm { color:var(--pm); } h2.math { color:var(--math); } h2.fex { color:var(--fex); } h2.ml { color:var(--ml); }
+  body { background:var(--bg); color:var(--text);
+         font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+         line-height:1.6; padding:48px 20px 80px; }
+  .wrap { max-width:900px; margin:0 auto; }
+  h1 { font-size:26px; font-weight:600; margin-bottom:6px; }
+  .sub { color:var(--muted); font-size:14px; margin-bottom:38px; }
+  h2 { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.09em;
+       margin:32px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--border); }
+  h2.pe1 { color:var(--pe1); } h2.pe3 { color:var(--pe3); } h2.pm { color:var(--pm); }
+  h2.fex { color:var(--fex); } h2.ml { color:var(--ml); } h2.math { color:var(--math); }
   .apps { display:flex; gap:12px; flex-wrap:wrap; }
-  .app { flex:1 1 240px; background:var(--surface); border:1px solid var(--border); border-radius:9px;
-          padding:15px 18px; text-decoration:none; color:var(--text); display:block; }
+  .app { flex:1 1 250px; background:var(--surface); border:1px solid var(--border); border-radius:9px;
+         padding:15px 18px; text-decoration:none; color:var(--text); display:block; }
   .app:hover { border-color:currentColor; }
-  .app .t { font-weight:bold; font-size:15px; margin-bottom:3px; }
-  .app.pe1 .t { color:var(--pe1); } .app.pm .t { color:var(--pm); } .app.math .t { color:var(--math); } .app.fex .t { color:var(--fex); } .app.ml .t { color:var(--ml); }
+  .app .t { font-weight:600; font-size:15px; margin-bottom:3px; }
+  .app.pe1 .t { color:var(--pe1); } .app.pe3 .t { color:var(--pe3); } .app.pm .t { color:var(--pm); }
+  .app.fex .t { color:var(--fex); } .app.ml .t { color:var(--ml); } .app.math .t { color:var(--math); }
   .app .d { font-size:12.5px; color:var(--muted); }
-  details { margin-top:10px; }
-  summary { cursor:pointer; font-size:13.5px; color:var(--muted); }
-  ul { columns:2; column-gap:26px; margin:12px 0 0 18px; }
-  @media (max-width:620px) { ul { columns:1; } }
-  li { font-size:13px; margin-bottom:3px; break-inside:avoid; }
-  a { color:var(--pe1); }
+  .foot { margin-top:42px; padding-top:14px; border-top:1px solid var(--border);
+          font-size:12.5px; color:var(--muted); }
+  a { color:var(--accent); }
 </style>
 </head>
 <body>
@@ -40,65 +46,35 @@
   <h1>Uni repository</h1>
   <div class="sub">Interactive graphs, cheat sheets and testing dashboards. Embeddable in Notion and Obsidian.</div>
 
-  <h2 class="pe1">Public Economics — PE1 &amp; PE3</h2>
+  <h2 class="pe1">Public Economics · PE1</h2>
   <div class="apps">
     <a class="app pe1" href="PE1/pe1_toolkit.html">
       <div class="t">PE1 Toolkit</div>
-      <div class="d">All graphs, the formula cheat sheet and testing mode, plus Competition Policy (PE3)</div>
+      <div class="d">All 33 graphs grouped by topic, the formula cheat sheet and testing mode, in one place</div>
     </a>
     <a class="app pe1" href="PE1/formula_cheatsheet.html">
       <div class="t">Formula cheat sheet</div>
-      <div class="d">Every derivation from the course, on one page</div>
+      <div class="d">Every PE1 formula on one page, also available inside the toolkit</div>
     </a>
   </div>
-  <details>
-    <summary>33 individual graphs (for embedding one at a time)</summary>
-    <ul>
-      <li><a href="PE1/graphs/abatement_full_information.html">Abatement full information</a></li>
-      <li><a href="PE1/graphs/best_response_derivation.html">Best response derivation</a></li>
-      <li><a href="PE1/graphs/cap_and_trade.html">Cap and trade</a></li>
-      <li><a href="PE1/graphs/coasian_bargaining.html">Coasian bargaining</a></li>
-      <li><a href="PE1/graphs/cv_ev_consumer_choice.html">Cv/ev consumer choice</a></li>
-      <li><a href="PE1/graphs/cv_ev_excess_burden.html">Cv/ev excess burden</a></li>
-      <li><a href="PE1/graphs/cv_ev_welfare.html">Cv/ev welfare</a></li>
-      <li><a href="PE1/graphs/dynamic_efficiency.html">Dynamic efficiency</a></li>
-      <li><a href="PE1/graphs/edgeworth_pareto.html">Edgeworth pareto</a></li>
-      <li><a href="PE1/graphs/excess_burden_partial_eq.html">Excess burden partial eq</a></li>
-      <li><a href="PE1/graphs/excise_tax_buyers.html">Excise tax buyers</a></li>
-      <li><a href="PE1/graphs/excise_tax_producers.html">Excise tax producers</a></li>
-      <li><a href="PE1/graphs/excise_vs_lumpsum.html">Excise vs lumpsum</a></li>
-      <li><a href="PE1/graphs/monopoly_tax_isoelastic.html">Monopoly tax isoelastic</a></li>
-      <li><a href="PE1/graphs/monopoly_tax_linear.html">Monopoly tax linear</a></li>
-      <li><a href="PE1/graphs/moral_hazard.html">Moral hazard</a></li>
-      <li><a href="PE1/graphs/nash_provision_full.html">Nash provision full</a></li>
-      <li><a href="PE1/graphs/nash_reaction_functions.html">Nash reaction functions</a></li>
-      <li><a href="PE1/graphs/negative_production_externality.html">Negative production externality</a></li>
-      <li><a href="PE1/graphs/pareto_lens.html">Pareto lens</a></li>
-      <li><a href="PE1/graphs/pigouvian_tax.html">Pigouvian tax</a></li>
-      <li><a href="PE1/graphs/planner_optimal_provision.html">Planner optimal provision</a></li>
-      <li><a href="PE1/graphs/rothschild_stiglitz_govt_intervention.html">Rothschild stiglitz govt intervention</a></li>
-      <li><a href="PE1/graphs/rothschild_stiglitz_pooling.html">Rothschild stiglitz pooling</a></li>
-      <li><a href="PE1/graphs/rothschild_stiglitz_separating.html">Rothschild stiglitz separating</a></li>
-      <li><a href="PE1/graphs/rothschild_stiglitz_symmetric.html">Rothschild stiglitz symmetric</a></li>
-      <li><a href="PE1/graphs/social_insurance_full_insurance.html">Social insurance full insurance</a></li>
-      <li><a href="PE1/graphs/standard_regulation.html">Standard regulation</a></li>
-      <li><a href="PE1/graphs/static_efficiency.html">Static efficiency</a></li>
-      <li><a href="PE1/graphs/tatonnement.html">Tatonnement</a></li>
-      <li><a href="PE1/graphs/tax_incidence_elasticity.html">Tax incidence elasticity</a></li>
-      <li><a href="PE1/graphs/taxes_vs_standards_uncertainty.html">Taxes vs standards uncertainty</a></li>
-      <li><a href="PE1/graphs/tragedy_of_commons.html">Tragedy of commons</a></li>
-    </ul>
-  </details>
+
+  <h2 class="pe3">Competition Policy · PE3</h2>
+  <div class="apps">
+    <a class="app pe3" href="PE3/pe3_toolkit.html">
+      <div class="t">Competition Policy Toolkit</div>
+      <div class="d">Concept maps per topic, flashcards, open questions and a mock exam</div>
+    </a>
+  </div>
 
   <h2 class="pm">Public Management</h2>
   <div class="apps">
     <a class="app pm" href="PM/pm_toolkit.html">
       <div class="t">PM Toolkit</div>
-      <div class="d">Flashcards, MCQ, open questions and a mock exam across the seven topics</div>
+      <div class="d">Flashcards, MCQ, open questions and a mock exam, pooled or by topic</div>
     </a>
     <a class="app pm" href="PM/pm_concept_map.pdf">
-      <div class="t">Schemes (PDF)</div>
-      <div class="d">Management theory, performance, strategic planning and local strategic planning, in four maps</div>
+      <div class="t">Concept map</div>
+      <div class="d">The whole course as one seven-page concept map (PDF)</div>
     </a>
   </div>
 
@@ -106,104 +82,17 @@
   <div class="apps">
     <a class="app fex" href="FEX/fex_toolkit.html">
       <div class="t">Field Experiments Toolkit</div>
-      <div class="d">All 7 graphs in one place, grouped by lecture, with a sidebar you can collapse</div>
-    </a>
-    <a class="app fex" href="FEX/graphs/sampling_distribution_se.html">
-      <div class="t">Sampling distribution and SE</div>
-      <div class="d">Every assignment of the 7 villages, the true SE of 4.60 and its conservative estimate</div>
-    </a>
-    <a class="app fex" href="FEX/graphs/randomization_inference.html">
-      <div class="t">Randomization inference</div>
-      <div class="d">Sharp null, placebo assignments and the RI p-value, exact or Monte Carlo</div>
-    </a>
-    <a class="app fex" href="FEX/graphs/blocking.html">
-      <div class="t">Blocking</div>
-      <div class="d">Table 3.3: SE from 3.50 to 1.36, and five ways to estimate the ATE in a blocked design</div>
-    </a>
-    <a class="app fex" href="FEX/graphs/dd_vs_ancova.html">
-      <div class="t">D, DD and ANCOVA</div>
-      <div class="d">Three unbiased estimators, one autocorrelation: the SE ratio &radic;(2/(1+&rho;)) and where DD overtakes D</div>
-    </a>
-    <a class="app fex" href="FEX/graphs/multiple_periods_design.html">
-      <div class="t">Allocating a survey budget</div>
-      <div class="d">McKenzie (2012): n, m and r under K = 2n(m+r), and the best allocation for each estimator</div>
+      <div class="d">All 7 graphs grouped by lecture, from the sampling distribution to survey-budget design</div>
     </a>
   </div>
-  <details>
-    <summary>7 individual graphs (for embedding one at a time)</summary>
-    <ul>
-      <li><a href="FEX/graphs/sampling_distribution_se.html">Sampling distribution and standard error</a></li>
-      <li><a href="FEX/graphs/randomization_inference.html">Randomization inference p-value</a></li>
-      <li><a href="FEX/graphs/blocking.html">Blocking and the blocked estimator</a></li>
-      <li><a href="FEX/graphs/random_assignment_vs_selection.html">Random assignment vs selection</a></li>
-      <li><a href="FEX/graphs/clustering_se.html">Clustered assignment and the SE</a></li>
-      <li><a href="FEX/graphs/dd_vs_ancova.html">D, DD and ANCOVA</a></li>
-      <li><a href="FEX/graphs/multiple_periods_design.html">Allocating a survey budget</a></li>
-    </ul>
-  </details>
 
   <h2 class="ml">Machine learning</h2>
   <div class="apps">
     <a class="app ml" href="ML/ml_toolkit.html">
       <div class="t">Machine Learning Toolkit</div>
-      <div class="d">All 14 graphs in one place, grouped by lecture, with a sidebar you can collapse</div>
-    </a>
-    <a class="app ml" href="ML/graphs/train_test_error.html">
-      <div class="t">Training vs test error</div>
-      <div class="d">Polynomial fits of growing flexibility on three true functions, and the U-shaped test MSE</div>
-    </a>
-    <a class="app ml" href="ML/graphs/bias_variance.html">
-      <div class="t">Bias-variance trade-off</div>
-      <div class="d">A hundred training sets, their fitted curves, and the decomposition of the test MSE</div>
-    </a>
-    <a class="app ml" href="ML/graphs/bayes_knn.html">
-      <div class="t">Bayes classifier and KNN</div>
-      <div class="d">The true decision boundary, KNN with any K, and error against 1/K</div>
-    </a>
-    <a class="app ml" href="ML/graphs/cross_validation.html">
-      <div class="t">Cross-validation</div>
-      <div class="d">Validation set, LOOCV and k-fold CV on the Auto data, and how much each estimate moves with the split</div>
-    </a>
-    <a class="app ml" href="ML/graphs/bootstrap.html">
-      <div class="t">The bootstrap</div>
-      <div class="d">1000 data sets from the population against 1000 bootstrap samples from one: the bootstrap SE</div>
-    </a>
-    <a class="app ml" href="ML/graphs/subset_selection_credit.html">
-      <div class="t">Subset selection (Credit)</div>
-      <div class="d">All 2,048 models, forward and backward paths, Cp, BIC, adjusted R² and CV with the one-SE rule</div>
-    </a>
-    <a class="app ml" href="ML/graphs/ridge_lasso.html">
-      <div class="t">Ridge and the lasso (Credit)</div>
-      <div class="d">The eleven coefficients at any budget, the diamond against the circle on three predictor pairs, and ten-fold CV</div>
-    </a>
-    <a class="app ml" href="ML/graphs/pca.html">
-      <div class="t">Principal components (Credit)</div>
-      <div class="d">Build a component by hand on two predictors, then rotate three of them in space until the third dimension disappears</div>
-    </a>
-    <a class="app ml" href="ML/graphs/pcr_pls.html">
-      <div class="t">PCR and PLS (Credit)</div>
-      <div class="d">The direction PCA picks against the one PLS picks, and why the component that matters on Credit is the tenth</div>
+      <div class="d">All 14 graphs grouped by lecture, from the bias-variance trade-off to PCR and PLS</div>
     </a>
   </div>
-  <details>
-    <summary>14 individual graphs (for embedding one at a time)</summary>
-    <ul>
-      <li><a href="ML/graphs/train_test_error.html">Training vs test error</a></li>
-      <li><a href="ML/graphs/bias_variance.html">Bias-variance trade-off</a></li>
-      <li><a href="ML/graphs/bayes_knn.html">Bayes classifier and KNN</a></li>
-      <li><a href="ML/graphs/rss_landscape_ols.html">RSS landscape (OLS on Advertising)</a></li>
-      <li><a href="ML/graphs/residual_analysis.html">Residual analysis (Auto)</a></li>
-      <li><a href="ML/graphs/collinearity_credit.html">Collinearity (Credit)</a></li>
-      <li><a href="ML/graphs/logistic_default.html">Logistic regression (Default)</a></li>
-      <li><a href="ML/graphs/knn_regression_vs_ols.html">KNN regression vs linear regression</a></li>
-      <li><a href="ML/graphs/cross_validation.html">Cross-validation (Auto)</a></li>
-      <li><a href="ML/graphs/bootstrap.html">The bootstrap</a></li>
-      <li><a href="ML/graphs/subset_selection_credit.html">Subset selection (Credit)</a></li>
-      <li><a href="ML/graphs/ridge_lasso.html">Ridge and the lasso (Credit)</a></li>
-      <li><a href="ML/graphs/pca.html">Principal components (Credit)</a></li>
-      <li><a href="ML/graphs/pcr_pls.html">PCR and PLS (Credit)</a></li>
-    </ul>
-  </details>
 
   <h2 class="math">Mathematics</h2>
   <div class="apps">
@@ -212,6 +101,8 @@
       <div class="d">Calculus, optimisation, linear algebra, probability and discounting, on one page</div>
     </a>
   </div>
+
+  <div class="foot">Every toolkit has a collapsible sidebar (the button, or the <b>[</b> key) and deep links to a single graph.</div>
 </div>
 </body>
 </html>

@@ -7,49 +7,53 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --border2:#CFCABE; --grid:#E8E6DF;
-    --text:#1A1A2E; --muted:#75736B; --muted2:#9A968A;
-    --accent:#1565C0; --accent2:#0D47A1; --pe3-accent:#2E7D32;
-    --buyer:#C62828; --seller:#E67E22; --demand:#1565C0; --supply:#2E7D32; --mr:#6A1B9A; --mc:#C62828;
-    --eq:#F9A825; --eq-stroke:#4A3000;
-    --green:#2E7D32; --amber:#B8860B; --red:#C62828;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --border2:#CFCBC2; --grid:#E8E6DF;
+    --text:#16162A; --muted:#6B6A78; --muted2:#8A8880;
+    --accent:#2A3A8F; --accent2:#1F2C6E; --pe3-accent:#2E8B57;
+    --buyer:#C0392B; --seller:#B8760F; --demand:#2A6FD6; --supply:#2E8B57; --mr:#7D4FA8; --mc:#C0392B;
+    --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF;
+    --green:#2E8B57; --amber:#B8760F; --red:#C0392B;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#17171A; --surface:#212126; --plot-bg:#1B1B1F; --border:#33333A; --border2:#3E3E46; --grid:#2A2A30;
-      --text:#ECECEC; --muted:#9A9A9A; --muted2:#77776F;
-      --accent:#5B9BE8; --accent2:#8FC1F2; --pe3-accent:#7CC47F;
-      --buyer:#EF6C6C; --seller:#F0A860; --demand:#5B9BE8; --supply:#66BB6A; --mr:#B57BE0; --mc:#EF6C6C;
-      --eq:#FFD54F; --eq-stroke:#1A1A1E;
-      --green:#66BB6A; --amber:#E0B84D; --red:#EF6C6C;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#2A2A32; --border2:#3D3C47; --grid:#2A2A32;
+      --text:#ECEAE4; --muted:#9A98A4; --muted2:#85838E;
+      --accent:#8FA0FF; --accent2:#6FA3FF; --pe3-accent:#5FC27E;
+      --buyer:#EF6C6C; --seller:#F0A83A; --demand:#6FA3FF; --supply:#5FC27E; --mr:#B98AF0; --mc:#EF6C6C;
+      --eq:#FFD54F; --eq-stroke:#16162A;
+      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; overflow:hidden; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
 
   /* ── Theory / Testing mode split ── */
   .mode-switch-inline { display:flex; gap:2px; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:2px; margin-top:8px; }
   /* Subject switch (PE1 ↔ PE3) — sits under the mode pills in each sidebar header */
-  .subject-switch { display:block; width:100%; margin-top:8px; padding:7px 10px; font-family:'Georgia',serif;
+  .subject-switch { display:block; width:100%; margin-top:8px; padding:7px 10px; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
                     font-size:11.5px; font-weight:bold; letter-spacing:.02em; cursor:pointer; text-align:left;
                     border:1px solid var(--border2); border-radius:7px; background:var(--surface); color:var(--muted);
                     transition:all .15s; }
-  .subject-switch:hover { border-color:var(--pe3-accent); color:var(--pe3-accent); background:rgba(46,125,50,.06); }
+  .subject-switch:hover { border-color:var(--pe3-accent); color:var(--pe3-accent); background:rgba(46,139,87,.06); }
   /* PE3 uses a purple accent to distinguish it from the blue PE1 toolkit */
   #mode-testing .test-nav-item.pe1-pool { color:var(--accent); }
-  #mode-testing .test-nav-item.pe1-pool.active { background:rgba(21,101,192,.08); color:var(--accent); border-left-color:var(--accent); font-weight:bold; }
+  #mode-testing .test-nav-item.pe1-pool.active { background:rgba(42,58,143,.08); color:var(--accent); border-left-color:var(--accent); font-weight:bold; }
   #mode-testing .fc-topic-tag { color:var(--accent); }
   .fc-topic-tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--pe3-accent);
                   font-weight:bold; margin-top:10px; }
   .exam-intro { font-size:13px; color:var(--muted); font-style:italic; line-height:1.6; margin-bottom:22px;
-                padding:12px 16px; background:rgba(46,125,50,.06); border-left:3px solid var(--pe3-accent); border-radius:4px; }
+                padding:12px 16px; background:rgba(46,139,87,.06); border-left:3px solid var(--pe3-accent); border-radius:4px; }
   .exam-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
-  .mode-btn { flex:1; border:none; background:transparent; font-family:'Georgia',serif; font-size:11.5px; font-weight:bold;
+  .mode-btn { flex:1; border:none; background:transparent; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:11.5px; font-weight:bold;
               padding:6px 4px; border-radius:5px; cursor:pointer; color:var(--muted); letter-spacing:.02em; }
-  .mode-btn.active { background:var(--accent); color:#fff; }
+  .mode-btn.active { background:var(--accent); color:var(--on-accent); }
   .mode-panel { display:none; height:100vh; }
   .mode-panel.active { display:flex; }
 
@@ -73,7 +77,7 @@
   .nav-item.active { background:var(--bg); color:var(--text); border-left-color:var(--accent); font-weight:bold; }
   .nav-item.stub { opacity:.6; }
   .nav-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
-  .nav-count { margin-left:auto; font-size:10px; color:var(--muted2); font-family:'Courier New',monospace; }
+  .nav-count { margin-left:auto; font-size:10px; color:var(--muted2); font-variant-numeric:tabular-nums; }
 
   /* ── Main ── */
   .main { flex:1; overflow:hidden; display:flex; flex-direction:column; min-width:0; }
@@ -96,7 +100,7 @@
 
   /* ── Generic module layout: formulas (left) + graph iframe (right) ── */
   .graph-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
-  .gtab { font-family:'Georgia',serif; font-size:12.5px; padding:8px 14px; border-radius:20px; cursor:pointer;
+  .gtab { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px; padding:8px 14px; border-radius:20px; cursor:pointer;
           border:1.5px solid var(--border2); background:var(--surface); color:var(--text); transition:all .15s; }
   .gtab:hover { border-color:var(--accent); }
   .gtab.active { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:bold; }
@@ -110,9 +114,9 @@
   .module-note { font-size:12px; color:var(--muted); font-style:italic; margin-bottom:12px; line-height:1.5; }
 
   /* ── Ported cheat-sheet card styling, reusable anywhere via .cheatsheet-scope ── */
-  .cheatsheet-scope { --cs-black:#1A1A1E; --cs-orange:#E07B00; --cs-red:#C62828; --cs-blue:#1565C0; --cs-green:#2E7D32; --cs-purple:#6A1B9A; --cs-teal:#00838F; }
+  .cheatsheet-scope { --cs-black:#16162A; --cs-orange:#B8760F; --cs-red:#C0392B; --cs-blue:#2A6FD6; --cs-green:#2E8B57; --cs-purple:#7D4FA8; --cs-teal:#00838F; }
   @media (prefers-color-scheme: dark) {
-    .cheatsheet-scope { --cs-black:#ECECEC; --cs-orange:#FFB74D; --cs-red:#EF6C6C; --cs-blue:#5B9BE8; --cs-green:#66BB6A; --cs-purple:#BA68C8; --cs-teal:#4DD0E1; }
+    .cheatsheet-scope { --cs-black:#ECEAE4; --cs-orange:#F0A83A; --cs-red:#EF6C6C; --cs-blue:#6FA3FF; --cs-green:#5FC27E; --cs-purple:#B98AF0; --cs-teal:#4DD0E1; }
   }
   .cheatsheet-scope .board { column-count:1; }
   .cheatsheet-scope .card { background:var(--surface); border:1px solid var(--border); border-radius:8px;
@@ -137,7 +141,7 @@
   .cheatsheet-scope .katex-display > .katex { white-space:nowrap; }
   .cheatsheet-scope .card, .cheatsheet-scope .twocol .half { min-width:0; overflow-wrap:break-word; }
   .cheatsheet-scope .ring-red { border:2px solid #D32F2F; border-radius:50%; padding:1px 7px; display:inline-block; }
-  .cheatsheet-scope .ring-green { border:2px solid #2E7D32; border-radius:50%; padding:1px 7px; display:inline-block; }
+  .cheatsheet-scope .ring-green { border:2px solid #2E8B57; border-radius:50%; padding:1px 7px; display:inline-block; }
   .formula-box { font-size:12.5px; line-height:1.5; }
   .formula-box .katex { font-size:0.98em; }
   .formula-box .katex-display { overflow-x:auto; overflow-y:hidden; margin:6px 0; padding:2px 0; }
@@ -145,9 +149,9 @@
   .formula-box .fdiv { border:none; border-top:1px dashed var(--border); margin:9px 0; }
 
   /* ── Full cheat sheet (ported, namespaced to avoid clashing with shell .card etc.) ── */
-  #panel-formulas { --cs-black:#1A1A1E; --cs-orange:#E07B00; --cs-red:#C62828; --cs-blue:#1565C0; --cs-green:#2E7D32; --cs-purple:#6A1B9A; --cs-teal:#00838F; }
+  #panel-formulas { --cs-black:#16162A; --cs-orange:#B8760F; --cs-red:#C0392B; --cs-blue:#2A6FD6; --cs-green:#2E8B57; --cs-purple:#7D4FA8; --cs-teal:#00838F; }
   @media (prefers-color-scheme: dark) {
-    #panel-formulas { --cs-black:#ECECEC; --cs-orange:#FFB74D; --cs-red:#EF6C6C; --cs-blue:#5B9BE8; --cs-green:#66BB6A; --cs-purple:#BA68C8; --cs-teal:#4DD0E1; }
+    #panel-formulas { --cs-black:#ECEAE4; --cs-orange:#F0A83A; --cs-red:#EF6C6C; --cs-blue:#6FA3FF; --cs-green:#5FC27E; --cs-purple:#B98AF0; --cs-teal:#4DD0E1; }
   }
   #panel-formulas .board { max-width:1700px; margin:0 auto; column-count:3; column-gap:22px; }
   @media (max-width:1300px){ #panel-formulas .board{ column-count:2; } }
@@ -174,7 +178,7 @@
   #panel-formulas .katex-display > .katex { white-space:nowrap; }
   #panel-formulas .card, #panel-formulas .twocol .half { min-width:0; overflow-wrap:break-word; }
   #panel-formulas .ring-red { border:2.2px solid #D32F2F; border-radius:50%; padding:2px 9px; display:inline-block; }
-  #panel-formulas .ring-green { border:2.2px solid #2E7D32; border-radius:50%; padding:2px 8px; display:inline-block; }
+  #panel-formulas .ring-green { border:2.2px solid #2E8B57; border-radius:50%; padding:2px 8px; display:inline-block; }
   /* ── Testing mode ── */
   .test-app { display:flex; height:100vh; width:100%; }
   .test-sidebar { width:250px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
@@ -188,7 +192,7 @@
      border:1px solid var(--border); border-radius:8px; background:var(--plot-bg,var(--surface));
      cursor:grab; }
   .test-nav-item.exam { color:var(--accent); font-weight:bold; }
-  .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(21,101,192,.08); color:var(--accent); }
+  .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(42,58,143,.08); color:var(--accent); }
   .test-nav-item { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:5px; cursor:pointer;
                     font-size:13px; color:var(--muted); transition:all .15s; margin-bottom:1px; border-left:2.5px solid transparent; }
   .test-nav-item:hover { background:var(--bg); color:var(--text); }
@@ -199,7 +203,7 @@
   .test-topbar { padding:14px 26px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; }
   .test-topbar-title { font-size:17px; font-weight:bold; color:var(--accent); margin-bottom:10px; }
   .test-tabs { display:flex; gap:6px; }
-  .test-tab { border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:'Georgia',serif;
+  .test-tab { border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
               font-size:12.5px; font-weight:bold; padding:6px 14px; border-radius:16px; cursor:pointer; }
   .test-tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
   .test-tab .cnt { opacity:.75; font-weight:normal; margin-left:3px; }
@@ -208,23 +212,23 @@
 
   /* Mock exam */
   .exam-toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
-  .exam-new-btn { border:1px solid var(--accent); background:var(--accent); color:#fff; font-family:'Georgia',serif;
+  .exam-new-btn { border:1px solid var(--accent); background:var(--accent); color:var(--on-accent); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
                   font-size:12.5px; font-weight:bold; padding:8px 16px; border-radius:6px; cursor:pointer; }
   .exam-timer-note { font-size:11px; color:var(--muted2); font-style:italic; }
   .exam-section-title { font-size:15px; font-weight:bold; color:var(--accent); margin:22px 0 4px; padding-top:14px; border-top:2px solid var(--border); }
   .exam-section-title:first-of-type { margin-top:0; padding-top:0; border-top:none; }
   .exam-section-sub { font-size:12px; color:var(--muted); font-style:italic; margin-bottom:12px; }
   .exam-tag { display:inline-block; font-size:10px; color:var(--muted2); text-transform:uppercase; letter-spacing:.05em;
-              margin-bottom:6px; font-family:'Courier New',monospace; }
+              margin-bottom:6px; font-variant-numeric:tabular-nums; }
 
   /* Flashcards */
   .fc-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
-  .fc-progress { font-size:12px; color:var(--muted2); font-family:'Courier New',monospace; }
+  .fc-progress { font-size:12px; color:var(--muted2); font-variant-numeric:tabular-nums; }
   .fc-card { width:100%; min-height:220px; background:var(--surface); border:1px solid var(--border2); border-radius:12px;
              box-shadow:0 3px 14px rgba(0,0,0,.06); padding:30px 34px; display:flex; align-items:center; justify-content:center;
              text-align:center; cursor:pointer; font-size:16px; line-height:1.55; }
   .fc-card .fc-tag { position:absolute; margin-top:-160px; font-size:10px; letter-spacing:.08em; text-transform:uppercase;
-                      color:var(--muted2); font-family:Georgia,serif; font-style:italic; }
+                      color:var(--muted2); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-style:italic; }
   .fc-card.answer { background:var(--bg); }
   /* single flex child: keeps text + inline $math$ on one flowing line instead of
      splitting each text node / KaTeX span into its own flex item (which tore
@@ -233,7 +237,7 @@
   .fc-content .katex-display { margin:0.45em 0; }
   .fc-hint { font-size:11px; color:var(--muted2); font-style:italic; }
   .fc-controls { display:flex; gap:10px; }
-  .fc-btn { border:1px solid var(--border2); background:var(--surface); color:var(--text); font-family:'Georgia',serif;
+  .fc-btn { border:1px solid var(--border2); background:var(--surface); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
             font-size:13px; padding:8px 18px; border-radius:6px; cursor:pointer; }
   .fc-btn:hover { background:var(--bg); }
   .fc-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
@@ -242,11 +246,11 @@
   .mcq-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:20px; }
   .mcq-q { font-size:14.5px; line-height:1.5; margin-bottom:14px; }
   .mcq-opt { display:block; width:100%; text-align:left; padding:9px 13px; margin-bottom:7px; border-radius:7px;
-             border:1px solid var(--border2); background:var(--bg); color:var(--text); font-family:'Georgia',serif;
+             border:1px solid var(--border2); background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
              font-size:13.5px; cursor:pointer; }
   .mcq-opt:hover { border-color:var(--accent); }
-  .mcq-opt.correct { background:rgba(46,125,50,.14); border-color:var(--green); font-weight:bold; }
-  .mcq-opt.wrong { background:rgba(198,40,40,.12); border-color:var(--red); }
+  .mcq-opt.correct { background:rgba(46,139,87,.14); border-color:var(--green); font-weight:bold; }
+  .mcq-opt.wrong { background:rgba(192,57,43,.12); border-color:var(--red); }
   .mcq-opt[disabled] { cursor:default; }
   .mcq-rationale { margin-top:10px; font-size:13px; color:var(--muted); line-height:1.55; border-top:1px dashed var(--border); padding-top:10px; display:none; }
   .mcq-rationale.shown { display:block; }
@@ -256,29 +260,29 @@
   .ex-q { font-size:14.5px; line-height:1.6; margin-bottom:12px; }
   .ex-sol { font-size:13.5px; line-height:1.65; color:var(--text); border-top:1px dashed var(--border); padding-top:12px; margin-top:6px; display:none; }
   .ex-sol.shown { display:block; }
-  .ex-toggle { border:1px solid var(--accent); background:transparent; color:var(--accent); font-family:'Georgia',serif;
+  .ex-toggle { border:1px solid var(--accent); background:transparent; color:var(--accent); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
                font-size:12.5px; font-weight:bold; padding:6px 14px; border-radius:6px; cursor:pointer; }
 
   .test-empty { color:var(--muted); font-style:italic; font-size:13px; padding:30px 0; text-align:center; }
   /* PE3 open questions: prompt + free-text answer + copy */
   .oq-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:22px; }
   .oq-q { font-size:14.5px; line-height:1.6; margin-bottom:14px; }
-  .oq-input { width:100%; min-height:150px; box-sizing:border-box; resize:vertical; font-family:'Georgia',serif;
+  .oq-input { width:100%; min-height:150px; box-sizing:border-box; resize:vertical; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
               font-size:13.5px; line-height:1.6; color:var(--text); background:var(--bg);
               border:1px solid var(--border2); border-radius:8px; padding:12px 14px; }
   .oq-input:focus { outline:none; border-color:var(--pe3-accent); }
   .oq-copy { margin-top:12px; border:1px solid var(--pe3-accent); background:transparent; color:var(--pe3-accent);
-             font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
+             font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
   .oq-copy:hover { background:var(--pe3-accent); color:#fff; }
   /* PE1 write-in answer field (blue accent) — added to exercises & exam questions */
-  .aw-input { width:100%; min-height:130px; box-sizing:border-box; resize:vertical; font-family:'Georgia',serif;
+  .aw-input { width:100%; min-height:130px; box-sizing:border-box; resize:vertical; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
               font-size:13.5px; line-height:1.6; color:var(--text); background:var(--bg);
               border:1px solid var(--border2); border-radius:8px; padding:12px 14px; margin-top:12px; }
   .aw-input:focus { outline:none; border-color:var(--accent); }
   .aw-row { display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap; }
   .aw-copy { border:1px solid var(--accent); background:transparent; color:var(--accent);
-             font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
-  .aw-copy:hover { background:var(--accent); color:#fff; }
+             font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
+  .aw-copy:hover { background:var(--accent); color:var(--on-accent); }
 
 /* collapsible sidebar */
 body.sb-collapsed .sidebar,
@@ -614,7 +618,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
       $$\pi_\tau = \htmlClass{ring-red}{\frac{1}{1+\tau}}\big[qx - (c + \htmlClass{ring-green}{\tau c})x\big] = \htmlClass{ring-red}{\frac{1}{1+\tau}}\,\pi'$$
     </div>
     <div class="note">In monopoly, the ad-valorem tax is equivalent to the combination of:</div>
-    <div class="note">• a <b>specific tax</b> of value <span style="color:#2E7D32;font-weight:bold">τc</span><br>
+    <div class="note">• a <b>specific tax</b> of value <span style="color:#2E8B57;font-weight:bold">τc</span><br>
     • a <b>profit tax</b> at rate $\gamma = \dfrac{\tau}{1+\tau}$ &nbsp;→&nbsp; profit net of tax: $(1-\gamma)\pi' = \dfrac{1}{1+\tau}\pi'$</div>
     <div class="note" style="margin-top:6px">A profit tax has no effect on the firm's optimal Q and pre-tax price p — but it raises revenue.</div>
   </div>

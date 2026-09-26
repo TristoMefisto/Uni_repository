@@ -4,24 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PM Toolkit — Public Management Testing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --border:#DDD9D0; --border2:#CFCABE;
-    --text:#1A1A2E; --muted:#75736B; --muted2:#9A968A;
-    --accent:#6A1B9A; --accent2:#4A148C;
-    --green:#2E7D32; --red:#C62828; --amber:#B8860B;
+    --bg:#F6F5F1; --surface:#FFFFFF; --border:#DFDCD4; --border2:#CFCBC2;
+    --text:#16162A; --muted:#6B6A78; --muted2:#8A8880;
+    --accent:#7D4FA8; --accent2:#5E3A80;
+    --green:#2E8B57; --red:#C0392B; --amber:#B8760F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#17171A; --surface:#212126; --border:#33333A; --border2:#3E3E46;
-      --text:#ECECEC; --muted:#9A9A9A; --muted2:#77776F;
-      --accent:#C08BE0; --accent2:#D9B3EE;
-      --green:#66BB6A; --red:#EF6C6C; --amber:#E0B84D;
+      --bg:#14141A; --surface:#1D1D24; --border:#2A2A32; --border2:#3D3C47;
+      --text:#ECEAE4; --muted:#9A98A4; --muted2:#85838E;
+      --accent:#B98AF0; --accent2:#CDB4F5;
+      --green:#5FC27E; --red:#EF6C6C; --amber:#F0A83A;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; overflow:hidden; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; overflow:hidden; }
 
   .test-app { display:flex; height:100vh; width:100%; }
   .test-sidebar { width:264px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
@@ -30,11 +34,11 @@
   .test-sidebar-logo { font-size:13px; font-weight:bold; letter-spacing:.08em; text-transform:uppercase;
                        color:var(--accent); margin-bottom:3px; }
   .test-sidebar-sub { font-size:11px; color:var(--muted); line-height:1.5; font-style:italic; }
-  .subject-switch { display:block; width:100%; margin-top:10px; padding:7px 10px; font-family:'Georgia',serif;
+  .subject-switch { display:block; width:100%; margin-top:10px; padding:7px 10px; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
                     font-size:11.5px; font-weight:bold; letter-spacing:.02em; cursor:pointer; text-align:left;
                     border:1px solid var(--border2); border-radius:7px; background:var(--surface);
                     color:var(--muted); transition:all .15s; text-decoration:none; }
-  .subject-switch:hover { border-color:var(--accent); color:var(--accent); background:rgba(106,27,154,.06); }
+  .subject-switch:hover { border-color:var(--accent); color:var(--accent); background:rgba(125,79,168,.06); }
   .test-nav { padding:12px 8px; flex:1; overflow-y:auto; }
   .test-sidebar-footer { padding:8px; border-top:1px solid var(--border); }
   .test-nav-item { display:flex; align-items:flex-start; gap:9px; padding:9px 10px; border-radius:5px; cursor:pointer;
@@ -44,18 +48,18 @@
   .test-nav-item:hover { background:var(--bg); color:var(--text); }
   .test-nav-item.active { background:var(--bg); color:var(--text); border-left-color:var(--accent); font-weight:bold; }
   .test-nav-item.pool { color:var(--accent); }
-  .test-nav-item.pool.active { background:rgba(106,27,154,.08); color:var(--accent); border-left-color:var(--accent); }
+  .test-nav-item.pool.active { background:rgba(125,79,168,.08); color:var(--accent); border-left-color:var(--accent); }
   .test-nav-item.exam { color:var(--accent); font-weight:bold; }
-  .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(106,27,154,.08); color:var(--accent); }
+  .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(125,79,168,.08); color:var(--accent); }
   .test-nav-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
-  .nav-count { flex-shrink:0; font-size:10px; color:var(--muted2); font-family:'Courier New',monospace;
+  .nav-count { flex-shrink:0; font-size:10px; color:var(--muted2); font-variant-numeric:tabular-nums;
                padding-top:2px; letter-spacing:.02em; }
 
   .test-main { flex:1; overflow:hidden; display:flex; flex-direction:column; min-width:0; }
   .test-topbar { padding:14px 26px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; }
   .test-topbar-title { font-size:17px; font-weight:bold; color:var(--accent); margin-bottom:10px; }
   .test-tabs { display:flex; gap:6px; flex-wrap:wrap; }
-  .test-tab { border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:'Georgia',serif;
+  .test-tab { border:1px solid var(--border); background:var(--bg); color:var(--muted); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
               font-size:12.5px; font-weight:bold; padding:6px 14px; border-radius:16px; cursor:pointer; }
   .test-tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
   .test-tab .cnt { opacity:.75; font-weight:normal; margin-left:3px; }
@@ -65,7 +69,7 @@
 
   /* Flashcards */
   .fc-wrap { display:flex; flex-direction:column; align-items:center; gap:16px; }
-  .fc-progress { font-size:12px; color:var(--muted2); font-family:'Courier New',monospace; }
+  .fc-progress { font-size:12px; color:var(--muted2); font-variant-numeric:tabular-nums; }
   .fc-card { width:100%; min-height:230px; background:var(--surface); border:1px solid var(--border2); border-radius:12px;
              box-shadow:0 3px 14px rgba(0,0,0,.06); padding:30px 34px; display:flex; align-items:center;
              justify-content:center; text-align:center; cursor:pointer; font-size:16px; line-height:1.6; }
@@ -75,26 +79,26 @@
   .fc-topic-tag { font-size:11px; letter-spacing:.06em; text-transform:uppercase; color:var(--accent);
                   font-weight:bold; }
   .fc-controls { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
-  .fc-btn { border:1px solid var(--border2); background:var(--surface); color:var(--text); font-family:'Georgia',serif;
+  .fc-btn { border:1px solid var(--border2); background:var(--surface); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
             font-size:13px; padding:8px 18px; border-radius:6px; cursor:pointer; }
   .fc-btn:hover { background:var(--bg); }
   .fc-btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
 
   /* MCQ */
-  .mcq-score { font-size:12px; color:var(--muted); font-family:'Courier New',monospace; margin-bottom:16px;
+  .mcq-score { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; margin-bottom:16px;
                padding:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:7px;
                display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; }
   .mcq-score button { border:1px solid var(--border2); background:transparent; color:var(--muted);
-                      font-family:'Georgia',serif; font-size:11.5px; padding:4px 12px; border-radius:14px; cursor:pointer; }
+                      font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:11.5px; padding:4px 12px; border-radius:14px; cursor:pointer; }
   .mcq-score button:hover { border-color:var(--accent); color:var(--accent); }
   .mcq-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:20px; }
   .mcq-q { font-size:14.5px; line-height:1.55; margin-bottom:14px; }
   .mcq-opt { display:block; width:100%; text-align:left; padding:9px 13px; margin-bottom:7px; border-radius:7px;
-             border:1px solid var(--border2); background:var(--bg); color:var(--text); font-family:'Georgia',serif;
+             border:1px solid var(--border2); background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
              font-size:13.5px; cursor:pointer; line-height:1.45; }
   .mcq-opt:hover { border-color:var(--accent); }
-  .mcq-opt.correct { background:rgba(46,125,50,.14); border-color:var(--green); font-weight:bold; }
-  .mcq-opt.wrong { background:rgba(198,40,40,.12); border-color:var(--red); }
+  .mcq-opt.correct { background:rgba(46,139,87,.14); border-color:var(--green); font-weight:bold; }
+  .mcq-opt.wrong { background:rgba(192,57,43,.12); border-color:var(--red); }
   .mcq-opt[disabled] { cursor:default; }
   .mcq-rationale { margin-top:10px; font-size:13px; color:var(--muted); line-height:1.6;
                    border-top:1px dashed var(--border); padding-top:10px; display:none; }
@@ -103,18 +107,18 @@
   /* Open questions */
   .oq-block { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px 24px; margin-bottom:22px; }
   .oq-q { font-size:14.5px; line-height:1.6; margin-bottom:14px; }
-  .oq-input { width:100%; min-height:150px; box-sizing:border-box; resize:vertical; font-family:'Georgia',serif;
+  .oq-input { width:100%; min-height:150px; box-sizing:border-box; resize:vertical; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
               font-size:13.5px; line-height:1.6; color:var(--text); background:var(--bg);
               border:1px solid var(--border2); border-radius:8px; padding:12px 14px; }
   .oq-input:focus { outline:none; border-color:var(--accent); }
   .oq-copy { margin-top:12px; border:1px solid var(--accent); background:transparent; color:var(--accent);
-             font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer;
+             font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer;
              transition:all .15s; }
-  .oq-copy:hover { background:var(--accent); color:#fff; }
+  .oq-copy:hover { background:var(--accent); color:var(--on-accent); }
 
   /* Mock exam */
   .exam-intro { font-size:13px; color:var(--muted); font-style:italic; line-height:1.6; margin-bottom:22px;
-                padding:12px 16px; background:rgba(106,27,154,.06); border-left:3px solid var(--accent); border-radius:4px; }
+                padding:12px 16px; background:rgba(125,79,168,.06); border-left:3px solid var(--accent); border-radius:4px; }
   .exam-actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
 
   @media (max-width:760px) {

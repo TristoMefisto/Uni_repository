@@ -7,23 +7,27 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --border:#DDD9D0; --text:#1A1A2E; --muted:#75736B;
-    --accent:#1565C0;
-    --black:#1A1A1E; --orange:#E07B00; --red:#C62828; --blue:#1565C0;
-    --green:#2E7D32; --purple:#6A1B9A; --teal:#00838F;
+    --bg:#F6F5F1; --surface:#FFFFFF; --border:#DFDCD4; --text:#16162A; --muted:#6B6A78;
+    --accent:#2A3A8F;
+    --black:#16162A; --orange:#B8760F; --red:#C0392B; --blue:#2A6FD6;
+    --green:#2E8B57; --purple:#7D4FA8; --teal:#00838F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#242428; --border:#3A3A40; --text:#ECECEC; --muted:#9A9A9A;
-      --accent:#5B9BE8;
-      --black:#ECECEC; --orange:#FFB74D; --red:#EF6C6C; --blue:#5B9BE8;
-      --green:#66BB6A; --purple:#BA68C8; --teal:#4DD0E1;
+      --bg:#14141A; --surface:#1D1D24; --border:#33323C; --text:#ECEAE4; --muted:#9A98A4;
+      --accent:#8FA0FF;
+      --black:#ECEAE4; --orange:#F0A83A; --red:#EF6C6C; --blue:#6FA3FF;
+      --green:#5FC27E; --purple:#B98AF0; --teal:#4DD0E1;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:Georgia,serif; padding:26px 18px 50px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:26px 18px 50px; }
 
   .board {
     max-width:1700px; margin:0 auto; column-count:3; column-gap:22px;
@@ -61,11 +65,11 @@
   .katex-display > .katex { white-space:nowrap; }
   .card, .twocol .half { min-width:0; overflow-wrap:break-word; }
   .ring-red { border:2.2px solid #D32F2F; border-radius:50%; padding:2px 9px; display:inline-block; }
-  .ring-green { border:2.2px solid #2E7D32; border-radius:50%; padding:2px 8px; display:inline-block; }
+  .ring-green { border:2.2px solid #2E8B57; border-radius:50%; padding:2px 8px; display:inline-block; }
   .fullscreen-btn {
     position:fixed; top:14px; right:16px; z-index:999;
     background:var(--surface); border:1.3px solid var(--accent); color:var(--accent);
-    font-family:Georgia,serif; font-size:12.5px; font-weight:bold;
+    font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px; font-weight:bold;
     padding:7px 13px; border-radius:20px; text-decoration:none;
     box-shadow:0 2px 8px rgba(0,0,0,.12); letter-spacing:.02em;
     transition:transform .15s ease;
@@ -205,7 +209,7 @@
       $$\pi_\tau = \htmlClass{ring-red}{\frac{1}{1+\tau}}\big[qx - (c + \htmlClass{ring-green}{\tau c})x\big] = \htmlClass{ring-red}{\frac{1}{1+\tau}}\,\pi'$$
     </div>
     <div class="note">In monopoly, the ad-valorem tax is equivalent to the combination of:</div>
-    <div class="note">• a <b>specific tax</b> of value <span style="color:#2E7D32;font-weight:bold">τc</span><br>
+    <div class="note">• a <b>specific tax</b> of value <span style="color:#2E8B57;font-weight:bold">τc</span><br>
     • a <b>profit tax</b> at rate $\gamma = \dfrac{\tau}{1+\tau}$ &nbsp;→&nbsp; profit net of tax: $(1-\gamma)\pi' = \dfrac{1}{1+\tau}\pi'$</div>
     <div class="note" style="margin-top:6px">A profit tax has no effect on the firm's optimal Q and pre-tax price p — but it raises revenue.</div>
   </div>
