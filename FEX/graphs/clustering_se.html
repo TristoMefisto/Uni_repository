@@ -93,6 +93,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .tabs button{border-radius:20px}
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -134,13 +156,13 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <figure><canvas id="cCurve"></canvas>
     <figcaption id="capCurve"><strong>SE ratio against ρ.</strong> Dots: simulated ratio of the two SEs for this G and n at each ρ. Line: the design effect √(1 + (n−1)ρ), the textbook approximation for equal cluster sizes. At ρ = 0 clustering costs nothing; at ρ = 1 the design only has G observations.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Outcomes with a cluster component</b></div><div class="n">ρ is the intra-cluster correlation</div><div class="k" data-tex='\begin{aligned}Y_{ij}(0) &= 50 + c_j + e_{ij}\\ \rho &= \frac{Var(c_j)}{Var(c_j) + Var(e_{ij})}\end{aligned}'></div><span class="v" id="fRho"></span></div><div class="f"><div class="n"><b>Units and true effect</b></div><div class="k" data-tex='N = G \cdot n,\qquad Y_{ij}(1) = Y_{ij}(0) + 5'></div><span class="v" id="rN"></span></div><div class="f"><div class="n"><b>Design effect (equal cluster sizes)</b></div><div class="n">simulated ratio · formula</div><div class="k" data-tex='\frac{SE_{cluster}}{SE_{individual}} \approx \sqrt{1 + (n-1)\rho}'></div><span class="v" id="rRatio"></span></div><div class="f"><div class="n"><b>Effective sample size</b></div><div class="n">how many independent observations the cluster design is worth</div><div class="k" data-tex='N_{eff} = \frac{N}{1 + (n-1)\rho}'></div><span class="v" id="fNeff"></span></div></aside>
 
 <div class="note">
   <p>Potential outcomes are Y(0) = 50 + c<sub>j</sub> + e<sub>ij</sub> with a cluster effect c<sub>j</sub> of variance 100ρ and an individual part of variance 100(1−ρ), and Y(1) = Y(0) + 5. The ICC formula and the design effect are ahead of the notes (L4); here they only label what the histograms already show.</p>
   <p>With the unequal-sizes box ticked, cluster sizes range from small to large and bigger clusters have higher outcomes. The pooled difference in means then over-weights whichever large clusters happen to be treated: its average over assignments drifts from the ATE. The bias fades as G grows.</p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Outcomes with a cluster component</b></div><div class="n">ρ is the intra-cluster correlation</div><div class="k" data-tex='\begin{aligned}Y_{ij}(0) &= 50 + c_j + e_{ij}\\ \rho &= \frac{Var(c_j)}{Var(c_j) + Var(e_{ij})}\end{aligned}'></div><span class="v" id="fRho"></span></div><div class="f"><div class="n"><b>Units and true effect</b></div><div class="k" data-tex='N = G \cdot n,\qquad Y_{ij}(1) = Y_{ij}(0) + 5'></div><span class="v" id="rN"></span></div><div class="f"><div class="n"><b>Design effect (equal cluster sizes)</b></div><div class="n">simulated ratio · formula</div><div class="k" data-tex='\frac{SE_{cluster}}{SE_{individual}} \approx \sqrt{1 + (n-1)\rho}'></div><span class="v" id="rRatio"></span></div><div class="f"><div class="n"><b>Effective sample size</b></div><div class="n">how many independent observations the cluster design is worth</div><div class="k" data-tex='N_{eff} = \frac{N}{1 + (n-1)\rho}'></div><span class="v" id="fNeff"></span></div></aside>
 </div>
 </div>
 

@@ -105,6 +105,28 @@ button.pill{font-size:.8rem;padding:3px 10px;border-radius:20px}
 figure canvas{aspect-ratio:1/0.86}
 .readout .small{color:var(--muted)}
 
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.86}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -168,10 +190,6 @@ figure canvas{aspect-ratio:1/0.86}
     <figcaption><strong>Ten-fold cross-validation, both methods at once.</strong> The axis is logarithmic, because the error at the null model is twenty times the error at least squares. The cross is the budget with the lowest CV error and the circle the most shrinkage within one standard error of it (the grey band). With n = 400 and only 11 predictors there is very little variance to trade away, so the cross sits close to least squares, and the one standard error rule is what actually buys a smaller model.</figcaption></figure>
 
 </div>
-
-<div class="note">
-  <p>Limit and Rating have a correlation of 0.997, so on that pair the RSS contours are an extremely long thin ellipse: least squares can trade one predictor off against the other almost freely, which is what makes its estimates so unstable (&beta; on Limit is +440 and &beta; on Income is &minus;275 in the full fit, both far larger than the effects they are measuring). Ridge pulls the pair towards the origin together and keeps both, the lasso picks one and drops the other. Neither is right in general, and the cross-validation panel is what answers which one predicts better here.</p>
-</div>
 </div>
 <aside class="formulas"><h2>Formulas, with the current numbers</h2>
 <div class="f"><div class="n"><b>Ridge regression</b></div><div class="k" data-tex='\sum_{i=1}^n\Big(y_i-\beta_0-\sum_{j=1}^p\beta_j x_{ij}\Big)^2 + \lambda\sum_{j=1}^p \beta_j^2'></div><span class="v" id="fRidge"></span></div>
@@ -180,6 +198,10 @@ figure canvas{aspect-ratio:1/0.86}
 <div class="f"><div class="n"><b>Shrinkage ratio</b></div><div class="n">&#8467;&#8322; for ridge, &#8467;&#8321; for the lasso</div><div class="k" data-tex='\frac{\lVert \hat\beta_\lambda \rVert}{\lVert \hat\beta \rVert} \in [0,1]'></div><span class="v" id="fNorm"></span></div>
 <div class="f"><div class="n"><b>Standardizing</b></div><div class="k" data-tex='\tilde x_{ij} = \frac{x_{ij}}{\sqrt{\frac{1}{n}\sum_{i=1}^n (x_{ij}-\bar x_j)^2}}'></div><span class="v" id="fStd"></span></div>
 </aside>
+
+<div class="note">
+  <p>Limit and Rating have a correlation of 0.997, so on that pair the RSS contours are an extremely long thin ellipse: least squares can trade one predictor off against the other almost freely, which is what makes its estimates so unstable (&beta; on Limit is +440 and &beta; on Income is &minus;275 in the full fit, both far larger than the effects they are measuring). Ridge pulls the pair towards the origin together and keeps both, the lasso picks one and drops the other. Neither is right in general, and the cross-validation panel is what answers which one predicts better here.</p>
+</div>
 </div>
 
 </div>

@@ -97,6 +97,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 figure.tbl{display:flex;flex-direction:column}
 tr.blockA td:first-child{border-left:3px solid var(--blue)}
 tr.blockB td:first-child{border-left:3px solid var(--orange)}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -137,13 +159,13 @@ tr.blockB td:first-child{border-left:3px solid var(--orange)}
   <figure><canvas id="cEst"></canvas>
     <figcaption><strong>Estimation in the current blocked draw.</strong> Five ways to combine the two within-block differences. Filled bars: this draw. Hollow marks: the average of that estimator over all blocked assignments (its expectation). Only the N<sub>j</sub>/N weighting is unbiased when the treatment shares differ across blocks.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>ATE as a weighted average of block ATEs</b></div><div class="k" data-tex='ATE = \sum_{j} \frac{N_j}{N}\, ATE_j'></div><span class="v" id="rATE"></span></div><div class="f"><div class="n"><b>SE of the blocked estimator</b></div><div class="n">variance of a weighted sum of independent block estimates</div><div class="k" data-tex='SE = \sqrt{\sum_{j} SE_j^2 \left(\frac{N_j}{N}\right)^2}'></div><span class="v" id="rForm"></span></div><div class="f"><div class="n"><b>Block SEs</b></div><div class="k" data-tex='SE_A,\; SE_B'></div><span class="v" id="rSEj"></span></div><div class="f"><div class="n"><b>Regression with block fixed effects</b></div><div class="n">β̂₁ is the ATE only if the treated share is the same in every block</div><div class="k" data-tex='Y_i = \beta_0 + \beta_1 D_i + c_A X_{Ai} + u_i'></div><span class="v" id="fFE"></span></div><div class="f"><div class="n"><b>Fix 1: centred interaction</b></div><div class="k" data-tex='\begin{aligned}&+\ \delta_A D_i\,(X_{Ai} - \bar X_A)\\ \Rightarrow\; &\hat\beta_1 = \tfrac{N_A}{N}\widehat{ATE}_A + \tfrac{N_B}{N}\widehat{ATE}_B\end{aligned}'></div><span class="v" id="fInt"></span></div><div class="f"><div class="n"><b>Fix 2: weighted least squares</b></div><div class="k" data-tex='w_i = \begin{cases} 1/p_j & D_i = 1 \\ 1/(1-p_j) & D_i = 0\end{cases}'></div><span class="v" id="fW"></span></div></aside>
 
 <div class="note">
   <p>The blocked SE is √(Σ<sub>j</sub> SE<sub>j</sub>² (N<sub>j</sub>/N)²): the variance of a weighted sum of independent block estimates. It falls below the unblocked SE when potential outcomes are similar within block and different across blocks. Use the shift slider to make the regions alike (shift −11 puts region B on top of region A) and the gain disappears.</p>
   <p>With m<sub>A</sub>/8 = m<sub>B</sub>/6 the block-fixed-effects regression weights the blocks by N<sub>j</sub>/N and is fine. With unequal treatment shares (the default, 2/8 vs 2/6) its weights become ∝ N<sub>j</sub> p<sub>j</sub>(1−p<sub>j</sub>), so the coefficient's expectation drifts away from the ATE. Interacting D with the centred block dummy, or reweighting by 1/p<sub>j</sub> and 1/(1−p<sub>j</sub>), restores the N<sub>j</sub>/N weights exactly.</p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>ATE as a weighted average of block ATEs</b></div><div class="k" data-tex='ATE = \sum_{j} \frac{N_j}{N}\, ATE_j'></div><span class="v" id="rATE"></span></div><div class="f"><div class="n"><b>SE of the blocked estimator</b></div><div class="n">variance of a weighted sum of independent block estimates</div><div class="k" data-tex='SE = \sqrt{\sum_{j} SE_j^2 \left(\frac{N_j}{N}\right)^2}'></div><span class="v" id="rForm"></span></div><div class="f"><div class="n"><b>Block SEs</b></div><div class="k" data-tex='SE_A,\; SE_B'></div><span class="v" id="rSEj"></span></div><div class="f"><div class="n"><b>Regression with block fixed effects</b></div><div class="n">β̂₁ is the ATE only if the treated share is the same in every block</div><div class="k" data-tex='Y_i = \beta_0 + \beta_1 D_i + c_A X_{Ai} + u_i'></div><span class="v" id="fFE"></span></div><div class="f"><div class="n"><b>Fix 1: centred interaction</b></div><div class="k" data-tex='\begin{aligned}&+\ \delta_A D_i\,(X_{Ai} - \bar X_A)\\ \Rightarrow\; &\hat\beta_1 = \tfrac{N_A}{N}\widehat{ATE}_A + \tfrac{N_B}{N}\widehat{ATE}_B\end{aligned}'></div><span class="v" id="fInt"></span></div><div class="f"><div class="n"><b>Fix 2: weighted least squares</b></div><div class="k" data-tex='w_i = \begin{cases} 1/p_j & D_i = 1 \\ 1/(1-p_j) & D_i = 0\end{cases}'></div><span class="v" id="fW"></span></div></aside>
 </div>
 </div>
 

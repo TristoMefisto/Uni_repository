@@ -96,6 +96,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .tablewrap{max-height:420px;overflow:auto}
 figure.tbl{display:flex;flex-direction:column}
 td.filled{color:var(--purple);font-weight:500}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -141,13 +163,13 @@ td.filled{color:var(--purple);font-weight:500}
   <figure><canvas id="cTrace"></canvas>
     <figcaption><strong>p-value as placebos accumulate.</strong> With a full enumeration the p-value is exact; with Monte Carlo draws it settles around the exact value, and the adjusted (c+1)/(n+1) version guards against reporting exactly zero.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Sharp null hypothesis</b></div><div class="n">no effect for any unit, not just on average</div><div class="k" data-tex='H_0:\; Y_i(1) = Y_i(0)\quad \text{for every } i'></div></div><div class="f"><div class="n"><b>Placebo estimate</b></div><div class="n">ω is one possible assignment</div><div class="k" data-tex='\hat\tau(\omega) = \bar Y_{T(\omega)} - \bar Y_{C(\omega)}'></div><span class="v" id="fPl"></span></div><div class="f"><div class="n"><b>RI p-value</b></div><div class="k" data-tex='p = \frac{\#\{\omega:\ \hat\tau(\omega) \ge \hat\tau_{obs}\}}{|\Omega|}'></div><span class="v" id="fP"></span></div><div class="f"><div class="n"><b>Monte Carlo adjustment</b></div><div class="n">c extreme placebos out of n draws</div><div class="k" data-tex='p_{adj} = \frac{c+1}{n+1}'></div><span class="v" id="fAdj"></span></div><div class="f"><div class="n"><b>The t-test it replaces (weak null)</b></div><div class="k" data-tex='t = \frac{\hat\tau}{\widehat{SE}}\qquad (H_0:\ E[Y_i(1)] = E[Y_i(0)])'></div><span class="v" id="rT"></span></div></aside>
 
 <div class="note">
   <p>The sharp null is stronger than the weak null of the t-test: no unit at all is affected, not just the average. That is what makes the placebo outcomes computable. Drag τ up to add a real effect to the treated units and watch the observed estimate move into the tail of the placebo distribution.</p>
   <p id="noteC"></p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Sharp null hypothesis</b></div><div class="n">no effect for any unit, not just on average</div><div class="k" data-tex='H_0:\; Y_i(1) = Y_i(0)\quad \text{for every } i'></div></div><div class="f"><div class="n"><b>Placebo estimate</b></div><div class="n">ω is one possible assignment</div><div class="k" data-tex='\hat\tau(\omega) = \bar Y_{T(\omega)} - \bar Y_{C(\omega)}'></div><span class="v" id="fPl"></span></div><div class="f"><div class="n"><b>RI p-value</b></div><div class="k" data-tex='p = \frac{\#\{\omega:\ \hat\tau(\omega) \ge \hat\tau_{obs}\}}{|\Omega|}'></div><span class="v" id="fP"></span></div><div class="f"><div class="n"><b>Monte Carlo adjustment</b></div><div class="n">c extreme placebos out of n draws</div><div class="k" data-tex='p_{adj} = \frac{c+1}{n+1}'></div><span class="v" id="fAdj"></span></div><div class="f"><div class="n"><b>The t-test it replaces (weak null)</b></div><div class="k" data-tex='t = \frac{\hat\tau}{\widehat{SE}}\qquad (H_0:\ E[Y_i(1)] = E[Y_i(0)])'></div><span class="v" id="rT"></span></div></aside>
 </div>
 </div>
 

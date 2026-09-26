@@ -100,25 +100,28 @@ table.data td.diff{background:var(--hl)}
 .col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
 
 
-/* --- wide layout trial: controls on top, graphs full width, formulas underneath --- */
+
+/* wide layout */
 .wrap{max-width:1600px}
 .main{display:block;margin-top:18px}
 .col{min-width:0}
 .panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
 figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
   display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
 aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
 .f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
 .f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
 .note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
   border-radius:8px;padding:14px 18px}
-.note p{max-width:none;margin:0}
-/* prose runs the full width instead of breaking early or splitting across columns */
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
 header p{max-width:none}
-.f .v{overflow-wrap:normal}
-.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>

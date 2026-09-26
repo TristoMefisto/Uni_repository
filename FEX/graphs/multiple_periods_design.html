@@ -100,6 +100,28 @@ table.data td.diff{background:var(--hl)}
 
 
 
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -147,10 +169,6 @@ table.data td.diff{background:var(--hl)}
   <figure><canvas id="cGrid"></canvas>
     <figcaption><strong>Every allocation the budget allows.</strong> Rows are m, columns are r, colour is the standard error of the chosen estimator: the stronger the colour, the lower the standard error. The cross is the minimum, the ring is where the sliders are (they sit on top of each other when you are already on the best cell). With m = 0 only D is defined.</figcaption></figure>
 </div>
-
-<div class="note">
-  <p>Two regularities come out of the grid. When &rho; is high the minimum sits at a small number of rounds, because repeated observations of the same unit carry nearly the same information and units are worth more than rounds, but one baseline round is worth having (the same intuition as clustered randomization). When &rho; is low the baseline predicts nothing, DD is the worst of the three, and the money is better spent on follow-ups that average out noise, or on units if the estimator is D.</p>
-</div>
 </div>
 <aside class="formulas"><h2>Formulas, with the current numbers</h2>
 <div class="f"><div class="n"><b>Budget constraint</b></div><div class="k" data-tex='K = 2n \cdot T, \qquad T = m + r'></div><span class="v" id="fK"></span></div>
@@ -159,6 +177,10 @@ table.data td.diff{background:var(--hl)}
 <div class="f"><div class="n"><b>ANCOVA</b></div><div class="k" data-tex='SE_{ANCOVA} = \sqrt{\frac{2\sigma^2}{n}\left(\frac{1+(r-1)\rho}{r} - \frac{m\rho^2}{1+(m-1)\rho}\right)}'></div><span class="v" id="fAN"></span></div>
 <div class="f"><div class="n"><b>Two rounds only</b></div><div class="n">m = r = 1 recovers Proposition 4</div><div class="k" data-tex='\frac{SE_{DD}}{SE_{ANCOVA}} = \sqrt{\frac{2}{1+\rho}}'></div><span class="v" id="fP4"></span></div>
 </aside>
+
+<div class="note">
+  <p>Two regularities come out of the grid. When &rho; is high the minimum sits at a small number of rounds, because repeated observations of the same unit carry nearly the same information and units are worth more than rounds, but one baseline round is worth having (the same intuition as clustered randomization). When &rho; is low the baseline predicts nothing, DD is the worst of the three, and the money is better spent on follow-ups that average out noise, or on units if the estimator is D.</p>
+</div>
 </div>
 
 </div>

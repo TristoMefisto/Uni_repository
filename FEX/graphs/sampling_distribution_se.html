@@ -95,6 +95,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 .tablewrap{max-height:420px;overflow:auto}
 figure.tbl{display:flex;flex-direction:column}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -142,13 +164,13 @@ figure.tbl{display:flex;flex-direction:column}
   <figure><canvas id="cSE"></canvas>
     <figcaption><strong>The estimated SE across assignments.</strong> Each assignment shows only one column per unit, so the SE is estimated with √(V̂ar Y(0)/(N−m) + V̂ar Y(1)/m). Red dashed line: true SE. On average the estimate is at least as large: it is conservative.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Difference-in-means estimator</b></div><div class="k" data-tex='\hat\tau = \bar Y_{T} - \bar Y_{C}'></div><span class="v" id="fEst"></span></div><div class="f"><div class="n"><b>Number of possible assignments</b></div><div class="k" data-tex='J = \binom{N}{m} = \frac{N!}{m!\,(N-m)!}'></div><span class="v" id="fJ"></span></div><div class="f"><div class="n"><b>True standard error</b></div><div class="n">the SD of the sampling distribution</div><div class="k" data-tex='SE = \sqrt{\frac{1}{J}\sum_{j=1}^{J}\big(\hat\tau_j - \bar{\hat\tau}\big)^2}'></div><span class="v" id="fSE"></span></div><div class="f"><div class="n"><b>Conservative estimate from one experiment</b></div><div class="k" data-tex='\widehat{SE} = \sqrt{\tfrac{\widehat{Var}(Y_i(0))}{N-m} + \tfrac{\widehat{Var}(Y_i(1))}{m}}'></div><span class="v" id="rSEh"></span></div><div class="f"><div class="n"><b>Average of the estimate over all assignments</b></div><div class="n">this is what conservative means</div><div class="k" data-tex='E\big[\widehat{SE}\big] \ge SE'></div><span class="v" id="rSEm"></span></div></aside>
 
 <div class="note">
   <p id="noteJ"></p>
   <p>Four ways to make the true SE smaller, all visible here: more units (N), a balanced split (m = N/2), and less spread in Y(0) or in Y(1). Edit the table to make the villages more alike and watch the histogram tighten; move m away from N/2 and watch it widen.</p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Difference-in-means estimator</b></div><div class="k" data-tex='\hat\tau = \bar Y_{T} - \bar Y_{C}'></div><span class="v" id="fEst"></span></div><div class="f"><div class="n"><b>Number of possible assignments</b></div><div class="k" data-tex='J = \binom{N}{m} = \frac{N!}{m!\,(N-m)!}'></div><span class="v" id="fJ"></span></div><div class="f"><div class="n"><b>True standard error</b></div><div class="n">the SD of the sampling distribution</div><div class="k" data-tex='SE = \sqrt{\frac{1}{J}\sum_{j=1}^{J}\big(\hat\tau_j - \bar{\hat\tau}\big)^2}'></div><span class="v" id="fSE"></span></div><div class="f"><div class="n"><b>Conservative estimate from one experiment</b></div><div class="k" data-tex='\widehat{SE} = \sqrt{\tfrac{\widehat{Var}(Y_i(0))}{N-m} + \tfrac{\widehat{Var}(Y_i(1))}{m}}'></div><span class="v" id="rSEh"></span></div><div class="f"><div class="n"><b>Average of the estimate over all assignments</b></div><div class="n">this is what conservative means</div><div class="k" data-tex='E\big[\widehat{SE}\big] \ge SE'></div><span class="v" id="rSEm"></span></div></aside>
 </div>
 </div>
 

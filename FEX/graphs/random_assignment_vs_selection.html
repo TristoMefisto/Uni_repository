@@ -95,6 +95,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 
 figure.tbl{display:flex;flex-direction:column}
 table.data input[type=range]{width:56px;vertical-align:middle}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -134,13 +156,13 @@ table.data input[type=range]{width:56px;vertical-align:middle}
   <figure><canvas id="cDec"></canvas>
     <figcaption><strong>The decomposition.</strong> Δ = ATE + (ATT − ATE) + B₀. Selection on gains: the treated villages gain more or less than average. Baseline selection: the treated villages would have had a different Y(0) anyway. Both vanish under equal probabilities.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Expected outcome of the treated</b></div><div class="k" data-tex='E[Y(1)\mid D=1] = \sum_i p_i\, Y_i(1)'></div><span class="v" id="fE1"></span></div><div class="f"><div class="n"><b>Expected outcome of the controls</b></div><div class="k" data-tex='E[Y(0)\mid D=0] = \sum_i \frac{1-p_i}{N-1}\, Y_i(0)'></div><span class="v" id="fE0"></span></div><div class="f"><div class="n"><b>What the difference in means estimates</b></div><div class="k" data-tex='\Delta = ATE + \underbrace{(ATT - ATE)}_{\text{gains}} + \underbrace{B_0}_{\text{baseline}}'></div><span class="v" id="fDec"></span></div><div class="f"><div class="n"><b>Baseline selection</b></div><div class="n">would the treated have done differently anyway?</div><div class="k" data-tex='B_0 = E[Y(0)\mid D=1] - E[Y(0)\mid D=0]'></div><span class="v" id="fB0"></span></div><div class="f"><div class="n"><b>Selection on gains</b></div><div class="n">do the treated gain more than average?</div><div class="k" data-tex='ATT - ATE = E[\tau_i \mid D=1] - E[\tau_i]'></div><span class="v" id="fSoG"></span></div></aside>
 
 <div class="note">
   <p>Expected values are computed exactly from the probabilities: E[Y(1) | D=1] = Σᵢ pᵢ Y(1)ᵢ and E[Y(0) | D=0] = Σᵢ (1−pᵢ) Y(0)ᵢ / 6, where pᵢ is village i's chance of being treated. The Monte Carlo mean converges to the same number.</p>
   <p>This is the critique of non-experimental comparisons: when "nature" assigns the treatment, the probabilities vary with the potential outcomes and nobody knows them. With known unequal probabilities, weighting each observation by the inverse of its assignment probability recovers the ATE.</p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Expected outcome of the treated</b></div><div class="k" data-tex='E[Y(1)\mid D=1] = \sum_i p_i\, Y_i(1)'></div><span class="v" id="fE1"></span></div><div class="f"><div class="n"><b>Expected outcome of the controls</b></div><div class="k" data-tex='E[Y(0)\mid D=0] = \sum_i \frac{1-p_i}{N-1}\, Y_i(0)'></div><span class="v" id="fE0"></span></div><div class="f"><div class="n"><b>What the difference in means estimates</b></div><div class="k" data-tex='\Delta = ATE + \underbrace{(ATT - ATE)}_{\text{gains}} + \underbrace{B_0}_{\text{baseline}}'></div><span class="v" id="fDec"></span></div><div class="f"><div class="n"><b>Baseline selection</b></div><div class="n">would the treated have done differently anyway?</div><div class="k" data-tex='B_0 = E[Y(0)\mid D=1] - E[Y(0)\mid D=0]'></div><span class="v" id="fB0"></span></div><div class="f"><div class="n"><b>Selection on gains</b></div><div class="n">do the treated gain more than average?</div><div class="k" data-tex='ATT - ATE = E[\tau_i \mid D=1] - E[\tau_i]'></div><span class="v" id="fSoG"></span></div></aside>
 </div>
 </div>
 

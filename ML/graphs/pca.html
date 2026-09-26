@@ -104,6 +104,28 @@ figure canvas{aspect-ratio:1/0.88}
 #c3d{touch-action:none}
 header p a{color:var(--navy)}
 
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.88}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -161,10 +183,6 @@ header p a{color:var(--navy)}
     <figcaption><strong>All 11 standardized predictors.</strong> Bars are the share of variance each component carries and the line is the cumulative share. They fall off quickly at first and then flatten, which is what makes M &lt; p worth trying, and the last bar is empty for the same reason the third rod above is short.</figcaption></figure>
 
 </div>
-
-<div class="note">
-  <p>The normalisation of the loadings is what makes the problem well posed: without it the variance could be made arbitrarily large by scaling the coefficients up. Standardizing is a separate choice, and switching it off in the first panel shows why it is usually recommended, since the component then follows whichever variable is measured in the larger units rather than whichever one carries the most information. The three predictors in the middle panel are an extreme case of something that happens whenever predictors are correlated: the cloud occupies fewer dimensions than it has variables, and the components are just a set of axes lined up with the shape it actually has.</p>
-</div>
 </div>
 <aside class="formulas"><h2>Formulas, with the current numbers</h2>
 <div class="f"><div class="n"><b>First principal component</b></div><div class="n">maximum variance under a unit-length loading vector</div><div class="k" data-tex='\max \ Var\Big(\phi_{11}(X_1-\bar X_1) + \phi_{21}(X_2-\bar X_2)\Big) \ \text{s.t.} \ \phi_{11}^2+\phi_{21}^2=1'></div><span class="v" id="fPC"></span></div>
@@ -173,6 +191,10 @@ header p a{color:var(--navy)}
 <div class="f"><div class="n"><b>Share of variance explained</b></div><div class="k" data-tex='\frac{\lambda_m}{\sum_{k=1}^p \lambda_k}, \qquad \sum_{k=1}^p \lambda_k = p \ \text{ for standardized } X'></div><span class="v" id="fShare"></span></div>
 <div class="f"><div class="n"><b>The three predictors above</b></div><div class="k" data-tex='\lambda_1 \ge \lambda_2 \ge \lambda_3 \ge 0'></div><span class="v" id="f3"></span></div>
 </aside>
+
+<div class="note">
+  <p>The normalisation of the loadings is what makes the problem well posed: without it the variance could be made arbitrarily large by scaling the coefficients up. Standardizing is a separate choice, and switching it off in the first panel shows why it is usually recommended, since the component then follows whichever variable is measured in the larger units rather than whichever one carries the most information. The three predictors in the middle panel are an extreme case of something that happens whenever predictors are correlated: the cloud occupies fewer dimensions than it has variables, and the components are just a set of axes lined up with the shape it actually has.</p>
+</div>
 </div>
 
 </div>

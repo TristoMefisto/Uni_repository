@@ -96,6 +96,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 [hidden]{display:none!important}
 
 #cScat{cursor:crosshair}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -143,12 +165,12 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <figure><canvas id="cFRes"></canvas>
     <figcaption><strong>Residual plot.</strong> On the raw scale the residuals fan out with the fitted value: a funnel, the signature of heteroskedasticity (and a little curvature, since the mean is exponential). On the log scale the model is linear and the spread is constant.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Residuals and their size</b></div><div class="k" data-tex='e_i = y_i - \hat y_i,\qquad RSE = \sqrt{\frac{RSS}{n - p}}'></div><span class="v" id="fRSE"></span></div><div class="f"><div class="n"><b>Leverage (simple regression)</b></div><div class="n">in general h_i = xᵢᵀ(XᵀX)⁻¹xᵢ; average p/n</div><div class="k" data-tex='h_i = \frac{1}{n} + \frac{(x_i - \bar x)^2}{\sum_{i^\prime}(x_{i^\prime} - \bar x)^2}'></div><span class="v" id="fLev"></span></div><div class="f"><div class="n"><b>Studentized residual</b></div><div class="n">σ̂₍ᵢ₎ is the RSE refitted without point i</div><div class="k" data-tex='t_i = \frac{e_i}{\hat\sigma_{(i)}\sqrt{1 - h_i}}'></div><span class="v" id="fStud"></span></div><div class="f"><div class="n"><b>Dragged point: residual · t · leverage</b></div><div class="k" data-tex='e_i,\; t_i,\; h_i'></div><span class="v" id="rPt"></span></div><div class="f"><div class="n"><b>Non-constant variance</b></div><div class="n">the second tab: fit log Y, or weighted least squares</div><div class="k" data-tex='Var(\varepsilon_i) = \sigma_i^2 \ne \sigma^2'></div></div></aside>
 
 <div class="note">
   <p>Studentized residual: the residual divided by its estimated standard deviation, refitting without the point. Leverage: the diagonal of the hat matrix, h = x'(X'X)⁻¹x, between 1/n and 1. Try dragging a point far to the right at an ordinary mpg (leverage jumps, line follows) and then straight up at an ordinary horsepower (studentized residual jumps, line barely moves).</p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>Residuals and their size</b></div><div class="k" data-tex='e_i = y_i - \hat y_i,\qquad RSE = \sqrt{\frac{RSS}{n - p}}'></div><span class="v" id="fRSE"></span></div><div class="f"><div class="n"><b>Leverage (simple regression)</b></div><div class="n">in general h_i = xᵢᵀ(XᵀX)⁻¹xᵢ; average p/n</div><div class="k" data-tex='h_i = \frac{1}{n} + \frac{(x_i - \bar x)^2}{\sum_{i^\prime}(x_{i^\prime} - \bar x)^2}'></div><span class="v" id="fLev"></span></div><div class="f"><div class="n"><b>Studentized residual</b></div><div class="n">σ̂₍ᵢ₎ is the RSE refitted without point i</div><div class="k" data-tex='t_i = \frac{e_i}{\hat\sigma_{(i)}\sqrt{1 - h_i}}'></div><span class="v" id="fStud"></span></div><div class="f"><div class="n"><b>Dragged point: residual · t · leverage</b></div><div class="k" data-tex='e_i,\; t_i,\; h_i'></div><span class="v" id="rPt"></span></div><div class="f"><div class="n"><b>Non-constant variance</b></div><div class="n">the second tab: fit log Y, or weighted least squares</div><div class="k" data-tex='Var(\varepsilon_i) = \sigma_i^2 \ne \sigma^2'></div></div></aside>
 </div>
 </div>
 

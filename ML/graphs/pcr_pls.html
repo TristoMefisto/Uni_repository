@@ -104,6 +104,28 @@ figure canvas{aspect-ratio:1/0.88}
 
 header p a{color:var(--navy)}
 
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.88}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -160,10 +182,6 @@ header p a{color:var(--navy)}
     <figcaption><strong>Ten-fold cross-validation for PCR and PLS.</strong> The axis is logarithmic, because the two are an order of magnitude apart at small M. Components are recomputed inside each training fold. PCR stays flat until M = 10 lets the component above in, PLS gets there at M = 3 because it used Balance to build its directions, and at M = 11 both are plain least squares.</figcaption></figure>
 
 </div>
-
-<div class="note">
-  <p>PCA never looks at Balance: the directions come from the predictors alone, so PCR works only when the directions that explain the predictors are also the ones that explain the response. On the Credit data that assumption fails in a way the third panel makes visible. Balance goes up with Limit and down with Income, so the useful direction is the contrast between the two, and a contrast between correlated predictors is exactly a low variance direction (Limit and Rating correlate at 0.997, which is why the eleventh component carries no variance at all). PCR meets that direction only at M = 10, one short of least squares. PLS weights each predictor by its own simple regression coefficient on Balance, so it finds the contrast in three components. On this data set neither beats least squares by much, because n is 400 and p is 11: dimension reduction pays when p is large relative to n.</p>
-</div>
 </div>
 <aside class="formulas"><h2>Formulas, with the current numbers</h2>
 <div class="f"><div class="n"><b>Transformed predictors</b></div><div class="k" data-tex='Z_m = \sum_{j=1}^p \phi_{j,m} X_j, \qquad y_i = \theta_0 + \sum_{m=1}^M \theta_m z_{im} + \varepsilon_i'></div><span class="v" id="fZ"></span></div>
@@ -172,6 +190,10 @@ header p a{color:var(--navy)}
 <div class="f"><div class="n"><b>First PLS direction</b></div><div class="n">each loading is the simple regression of Y on that predictor</div><div class="k" data-tex='\phi_{j1} = \frac{\sum_i (x_{ij}-\bar x_j)(y_i-\bar y)}{\sum_i (x_{ij}-\bar x_j)^2}'></div><span class="v" id="fPLS"></span></div>
 <div class="f"><div class="n"><b>Constrained linear model</b></div><div class="n">what dimension reduction does to the p coefficients</div><div class="k" data-tex='\beta_j = \sum_{m=1}^M \theta_m \phi_{j,m}'></div><span class="v" id="fBeta"></span></div>
 </aside>
+
+<div class="note">
+  <p>PCA never looks at Balance: the directions come from the predictors alone, so PCR works only when the directions that explain the predictors are also the ones that explain the response. On the Credit data that assumption fails in a way the third panel makes visible. Balance goes up with Limit and down with Income, so the useful direction is the contrast between the two, and a contrast between correlated predictors is exactly a low variance direction (Limit and Rating correlate at 0.997, which is why the eleventh component carries no variance at all). PCR meets that direction only at M = 10, one short of least squares. PLS weights each predictor by its own simple regression coefficient on Balance, so it finds the contrast in three components. On this data set neither beats least squares by much, because n is 400 and p is 11: dimension reduction pays when p is large relative to n.</p>
+</div>
 </div>
 
 </div>

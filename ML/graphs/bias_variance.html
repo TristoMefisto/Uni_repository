@@ -93,6 +93,28 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
 .tabs button{border-radius:20px}
 .stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
 
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
@@ -139,12 +161,12 @@ table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(
   <figure><canvas id="cHist"></canvas>
     <figcaption><strong>f̂(x₀) across the R training sets.</strong> Histogram of the R predictions at x₀. Black tick: the true f(x₀). Distance from the tick to the histogram's centre is the bias at x₀; the histogram's width is the variance at x₀.</figcaption></figure>
 </div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>The decomposition</b></div><div class="k" data-tex='\begin{aligned}E\big[(y_0 - \hat f(x_0))^2\big] = \;&Var\big(\hat f(x_0)\big)\\ &+ \big[\mathrm{Bias}(\hat f(x_0))\big]^2\\ &+ Var(\varepsilon)\end{aligned}'></div><span class="v" id="fSum"></span></div><div class="f"><div class="n"><b>Bias at x₀</b></div><div class="n">average fit minus truth</div><div class="k" data-tex='\mathrm{Bias}\big(\hat f(x_0)\big) = E\big[\hat f(x_0)\big] - f(x_0)'></div><span class="v" id="fBias"></span></div><div class="f"><div class="n"><b>Variance at x₀</b></div><div class="n">how much the fit moves from sample to sample</div><div class="k" data-tex='Var\big(\hat f(x_0)\big) = E\Big[\big(\hat f(x_0) - E[\hat f(x_0)]\big)^2\Big]'></div><span class="v" id="fVar"></span></div><div class="f"><div class="n"><b>Irreducible error</b></div><div class="k" data-tex='Var(\varepsilon) = \sigma^2'></div><span class="v" id="rS"></span></div></aside>
 
 <div class="note">
   <p>A rigid model (degree 1) gives almost the same line whatever the sample: tiny variance, but the line cannot follow f, so large bias. A very flexible one passes close to f on average but each single fit wanders with its sample: small bias, large variance. Neither extreme minimises the sum. Switch preset: with a near-linear f the bias is already gone at degree 1 or 2, with a highly non-linear f it stays large until high degrees.</p>
 </div>
-</div>
-<aside class="formulas"><h2>Formulas, with the current numbers</h2><div class="f"><div class="n"><b>The decomposition</b></div><div class="k" data-tex='\begin{aligned}E\big[(y_0 - \hat f(x_0))^2\big] = \;&Var\big(\hat f(x_0)\big)\\ &+ \big[\mathrm{Bias}(\hat f(x_0))\big]^2\\ &+ Var(\varepsilon)\end{aligned}'></div><span class="v" id="fSum"></span></div><div class="f"><div class="n"><b>Bias at x₀</b></div><div class="n">average fit minus truth</div><div class="k" data-tex='\mathrm{Bias}\big(\hat f(x_0)\big) = E\big[\hat f(x_0)\big] - f(x_0)'></div><span class="v" id="fBias"></span></div><div class="f"><div class="n"><b>Variance at x₀</b></div><div class="n">how much the fit moves from sample to sample</div><div class="k" data-tex='Var\big(\hat f(x_0)\big) = E\Big[\big(\hat f(x_0) - E[\hat f(x_0)]\big)^2\Big]'></div><span class="v" id="fVar"></span></div><div class="f"><div class="n"><b>Irreducible error</b></div><div class="k" data-tex='Var(\varepsilon) = \sigma^2'></div><span class="v" id="rS"></span></div></aside>
 </div>
 </div>
 
