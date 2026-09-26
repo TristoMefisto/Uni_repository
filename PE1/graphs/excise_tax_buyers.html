@@ -330,7 +330,7 @@ function draw(){
     ctx.beginPath(); ctx.moveTo(qx(m.Qe)-4,py(m.Pb)); ctx.lineTo(qx(m.Qe)+4,py(m.Pb)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(qx(m.Qe)-4,py(m.Ps)); ctx.lineTo(qx(m.Qe)+4,py(m.Ps)); ctx.stroke();
     ctx.restore();
-    label("tax = $"+tax.toFixed(2),m.Qe,(m.Pb+m.Ps)/2,11,4,T.eqStroke,11.5,'bold','left',true);
+    label("tax = $"+tax.toFixed(2),m.Qe,(m.Pb+m.Ps)/2,11,4,T.text,11.5,'bold','left',true);
 
     dot(m.Qe,m.Pb,6.5,T.eq);
     label("C",m.Qe,m.Pb,-11,-8,T.buyers,13,'bold','right',true);
