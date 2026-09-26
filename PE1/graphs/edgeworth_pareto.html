@@ -4,21 +4,50 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pareto Efficiency & Contract Curve</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:       #F7F6F2;
+    --bg:       #F6F5F1;
     --surface:  #FFFFFF;
-    --border:   #DDD9D0;
-    --text:     #1A1A2E;
-    --muted:    #7A7870;
-    --c1:       #2E4A7A;   /* consumer 1 — deep indigo */
+    --border:   #DFDCD4;
+    --text:     #16162A;
+    --muted:    #6B6A78;
+    --c1:       #2A6FD6;   /* consumer 1 — deep indigo */
     --c1-light: #C7D5EC;
-    --c2:       #B85C1A;   /* consumer 2 — amber */
+    --c2:       #B8760F;   /* consumer 2 — amber */
     --c2-light: #F0D9C8;
-    --cc:       #2A6B42;   /* contract curve — forest green */
+    --cc:       #2E8B57;   /* contract curve — forest green */
     --cc-light: #B8DDC8;
-    --eq:       #8B1A1A;   /* endowment dot */
-    --alloc:    #5B3080;   /* current allocation dot */
+    --eq:       #C0392B;   /* endowment dot */
+    --alloc:    #7D4FA8;   /* current allocation dot */
+    --plot-bg:  #FCFCFA;
+    --axis:     #6B6A78;
+    --faint:    #C9C4B8;
+  }
+
+  /* this page shipped without a dark mode, so it stayed light-on-light */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:       #14141A;
+      --surface:  #1D1D24;
+      --border:   #33323C;
+      --text:     #ECEAE4;
+      --muted:    #9A98A4;
+      --c1:       #6FA3FF;
+      --c1-light: #2E3E5C;
+      --c2:       #F0A83A;
+      --c2-light: #4A3A22;
+      --cc:       #5FC27E;
+      --cc-light: #244434;
+      --eq:       #EF6C6C;
+      --alloc:    #B98AF0;
+      --plot-bg:  #17171D;
+      --axis:     #9A98A4;
+      --faint:    #4A4A52;
+    }
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,7 +55,7 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'Georgia', serif;
+    font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     min-height: 100vh;
     padding: 24px 16px 32px;
   }
@@ -115,7 +144,7 @@
   .slider-label .val {
     font-size: 13px;
     font-weight: bold;
-    font-family: 'Courier New', monospace;
+    font-variant-numeric:tabular-nums;
     min-width: 36px;
     text-align: right;
   }
@@ -147,7 +176,7 @@
   .stat-box.c1 .agent { color: var(--c1); }
   .stat-box.c2 .agent { color: var(--c2); }
   .stat-box .row { display: flex; justify-content: space-between; }
-  .stat-box .num { font-family: 'Courier New', monospace; font-weight: bold; }
+  .stat-box .num { font-variant-numeric:tabular-nums; font-weight: bold; }
 
   .verdict {
     border-radius: 4px;
@@ -192,7 +221,7 @@
   button {
     flex: 1;
     padding: 7px 0;
-    font-family: 'Georgia', serif;
+    font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
     font-size: 12.5px;
     border-radius: 4px;
     cursor: pointer;
@@ -325,11 +354,17 @@ let e11 = 5, e21 = 5;
 let x11 = 5, x21 = 5;
 
 // CSS colours
-const C1    = '#2E4A7A';
-const C2    = '#B85C1A';
-const CC    = '#2A6B42';
-const EQ_C  = '#8B1A1A';
-const ALLOC = '#5B3080';
+const cssvar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let CC, EQ_C, ALLOC, TC1, TC2, PLOTBG, AXIS, FAINT, RING;
+function loadTheme(){
+  CC=cssvar('--cc'); EQ_C=cssvar('--eq'); ALLOC=cssvar('--alloc');
+  TC1=cssvar('--c1'); TC2=cssvar('--c2');
+  PLOTBG=cssvar('--plot-bg'); AXIS=cssvar('--axis'); FAINT=cssvar('--faint');
+  RING=cssvar('--plot-bg');
+}
+loadTheme();
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)')
+  .addEventListener('change', () => { loadTheme(); draw(); });
 
 // ── Coordinate helpers ───────────────────────────────────────────────────────
 // Map allocation (x11, x21) → canvas pixel (from consumer 1's origin, bottom-left)
@@ -443,18 +478,18 @@ function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
 
   // Background
-  ctx.fillStyle = '#FAFAF8';
+  ctx.fillStyle = PLOTBG;
   ctx.fillRect(0, 0, cv.width, cv.height);
 
   // Box border
-  ctx.strokeStyle = '#BBBBBB';
+  ctx.strokeStyle = FAINT;
   ctx.lineWidth = 1.5;
   ctx.strokeRect(PAD, PAD, SIZE, SIZE);
 
   // Axes labels
   ctx.save();
-  ctx.font = '12px Georgia';
-  ctx.fillStyle = '#555';
+  ctx.font = '12px "Fira Sans", system-ui, sans-serif';
+  ctx.fillStyle = AXIS;
   ctx.textAlign = 'center';
   // Consumer 1 axes (bottom-left origin)
   ctx.fillText('Good 1 →', PAD + SIZE / 2, cv.height - 8);
@@ -462,25 +497,25 @@ function draw() {
   ctx.fillText('Good 2 →', 0, 0); ctx.restore();
 
   // Consumer 1 label
-  ctx.fillStyle = C1;
-  ctx.font = 'bold 11px Georgia';
+  ctx.fillStyle = TC1;
+  ctx.font = 'bold 11px "Fira Sans", system-ui, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('O₁', PAD - 18, PAD + SIZE + 16);
 
   // Consumer 2 label (inverted corner)
-  ctx.fillStyle = C2;
+  ctx.fillStyle = TC2;
   ctx.textAlign = 'right';
   ctx.fillText('O₂', PAD + SIZE + 18, PAD - 4);
   ctx.restore();
 
   // Axis tick marks (good 1)
-  ctx.strokeStyle = '#CCC';
+  ctx.strokeStyle = FAINT;
   ctx.lineWidth = 0.8;
   for (let v = 0; v <= W1; v += Math.max(1, Math.floor(W1 / 10))) {
     const px = PAD + (v / W1) * SIZE;
     ctx.beginPath(); ctx.moveTo(px, PAD + SIZE); ctx.lineTo(px, PAD + SIZE + 4); ctx.stroke();
     if (v > 0 && v < W1) {
-      ctx.save(); ctx.font = '9px Georgia'; ctx.fillStyle = '#AAA'; ctx.textAlign = 'center';
+      ctx.save(); ctx.font = '9px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle = AXIS; ctx.textAlign = 'center';
       ctx.fillText(v, px, PAD + SIZE + 13); ctx.restore();
     }
   }
@@ -488,7 +523,7 @@ function draw() {
     const py = PAD + SIZE - (v / W2) * SIZE;
     ctx.beginPath(); ctx.moveTo(PAD, py); ctx.lineTo(PAD - 4, py); ctx.stroke();
     if (v > 0 && v < W2) {
-      ctx.save(); ctx.font = '9px Georgia'; ctx.fillStyle = '#AAA'; ctx.textAlign = 'right';
+      ctx.save(); ctx.font = '9px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle = AXIS; ctx.textAlign = 'right';
       ctx.fillText(v, PAD - 6, py + 3); ctx.restore();
     }
   }
@@ -510,7 +545,7 @@ function draw() {
 
   // Contract curve label
   ctx.save();
-  ctx.font = 'bold 11px Georgia';
+  ctx.font = 'bold 11px "Fira Sans", system-ui, sans-serif';
   ctx.fillStyle = CC;
   const ccMidX2 = contractCurveX2(W1 * 0.7);
   const { px: ccLx, py: ccLy } = toCanvas(W1 * 0.7, ccMidX2);
@@ -527,11 +562,11 @@ function draw() {
 
   levels1.forEach((U, i) => {
     const isActive = i === 3;
-    drawIC(1, U, C1, isActive ? 0.9 : 0.18, isActive ? 2.2 : 1.2);
+    drawIC(1, U, TC1, isActive ? 0.9 : 0.18, isActive ? 2.2 : 1.2);
   });
   levels2.forEach((U, i) => {
     const isActive = i === 3;
-    drawIC(2, U, C2, isActive ? 0.9 : 0.18, isActive ? 2.2 : 1.2);
+    drawIC(2, U, TC2, isActive ? 0.9 : 0.18, isActive ? 2.2 : 1.2);
   });
 
   // ── Endowment point ───────────────────────────────────────────────────────
@@ -540,11 +575,11 @@ function draw() {
   ctx.arc(ep.px, ep.py, 7, 0, Math.PI * 2);
   ctx.fillStyle = EQ_C;
   ctx.fill();
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = RING;
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.save();
-  ctx.font = 'bold 12px Georgia';
+  ctx.font = 'bold 12px "Fira Sans", system-ui, sans-serif';
   ctx.fillStyle = EQ_C;
   ctx.fillText('ω', ep.px + 9, ep.py - 6);
   ctx.restore();
@@ -554,7 +589,7 @@ function draw() {
 
   // Dashed lines from axes to allocation
   ctx.setLineDash([4, 3]);
-  ctx.strokeStyle = '#9999BB';
+  ctx.strokeStyle = FAINT;
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(ap.px, PAD + SIZE); ctx.lineTo(ap.px, ap.py); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(PAD, ap.py); ctx.lineTo(ap.px, ap.py); ctx.stroke();
@@ -564,11 +599,11 @@ function draw() {
   ctx.arc(ap.px, ap.py, 7, 0, Math.PI * 2);
   ctx.fillStyle = ALLOC;
   ctx.fill();
-  ctx.strokeStyle = '#fff';
+  ctx.strokeStyle = RING;
   ctx.lineWidth = 2;
   ctx.stroke();
   ctx.save();
-  ctx.font = 'bold 12px Georgia';
+  ctx.font = 'bold 12px "Fira Sans", system-ui, sans-serif';
   ctx.fillStyle = ALLOC;
   ctx.fillText('A', ap.px + 9, ap.py - 6);
   ctx.restore();
@@ -586,7 +621,7 @@ function draw() {
   if (!onCC) {
     ctx.save();
     ctx.globalAlpha = 0.1;
-    ctx.fillStyle = '#7B4FD4';
+    ctx.fillStyle = ALLOC;
     ctx.beginPath();
     let started = false;
     const step = W1 / 300;
@@ -626,7 +661,7 @@ function draw() {
       const midX2 = (mid.lensLo + mid.lensHi) / 2;
       const { px: lx, py: ly } = toCanvas(mid.x1, midX2);
       ctx.save();
-      ctx.font = 'italic 10.5px Georgia';
+      ctx.font = 'italic 10.5px "Fira Sans", system-ui, sans-serif';
       ctx.fillStyle = '#5B3080';
       ctx.globalAlpha = 0.85;
       ctx.textAlign = 'center';

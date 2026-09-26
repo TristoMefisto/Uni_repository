@@ -4,31 +4,35 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Private Provision of Public Goods — Best-Response Derivation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0;
-    --text:#1A1A2E; --muted:#75736B;
-    --ic1:#1565C0; --ic1-light:#5B9BE8;
-    --ic2:#C62828; --ic2-light:#EF6C6C;
-    --eq:#F9A825; --eq-stroke:#4A3000;
-    --budget:#6A1B9A;
-    --xbracket:#00897B;
-    --accent:#1565C0;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4;
+    --text:#16162A; --muted:#6B6A78;
+    --ic1:#2A6FD6; --ic1-light:#5B9BE8;
+    --ic2:#C0392B; --ic2-light:#EF6C6C;
+    --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF;
+    --budget:#7D4FA8;
+    --xbracket:#00838F;
+    --accent:#2A3A8F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40;
-      --text:#ECECEC; --muted:#9A9A9A;
-      --ic1:#5B9BE8; --ic1-light:#8FC1F2;
-      --ic2:#EF6C6C; --ic2-light:#F4A0A0;
-      --eq:#FFD54F; --eq-stroke:#1A1A1E;
-      --budget:#B57BE0;
-      --xbracket:#4DB6AC;
-      --accent:#5B9BE8;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C;
+      --text:#ECEAE4; --muted:#9A98A4;
+      --ic1:#6FA3FF; --ic1-light:#8FC1F2;
+      --ic2:#EF6C6C; --ic2-light:#EF6C6C;
+      --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A;
+      --budget:#B98AF0;
+      --xbracket:#4DD0E1;
+      --accent:#8FA0FF;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:22px 16px 30px; }
   header { text-align:center; margin-bottom:6px; }
   header h1 { font-size:19px; font-weight:bold; }
   header .relation { font-size:14px; color:var(--muted); font-style:italic; margin-top:3px; }
@@ -40,7 +44,7 @@
   .card { background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:15px 16px; }
 
   .mode-row { display:flex; gap:8px; margin-bottom:14px; }
-  .mode-btn { flex:1; font-family:'Georgia',serif; font-size:12.5px; padding:8px 4px; border-radius:5px; cursor:pointer;
+  .mode-btn { flex:1; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px; padding:8px 4px; border-radius:5px; cursor:pointer;
     border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:all .15s; }
   .mode-btn.active.m1 { background:var(--ic1); color:#fff; border-color:var(--ic1); }
   .mode-btn.active.m2 { background:var(--ic2); color:#fff; border-color:var(--ic2); }
@@ -48,7 +52,7 @@
   .slider-card .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:9px; }
   .slider-label { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; }
   .slider-label .name { font-size:13px; font-weight:bold; }
-  .slider-label .val { font-family:'Courier New',monospace; font-size:14px; font-weight:bold; }
+  .slider-label .val { font-variant-numeric:tabular-nums; font-size:14px; font-weight:bold; }
   input[type=range] { width:100%; margin:6px 0 2px; accent-color:var(--accent); }
   .slider-ticks { display:flex; justify-content:space-between; font-size:10px; color:var(--muted); }
 
@@ -61,10 +65,10 @@
   .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
   .step-body { font-size:13px; line-height:1.62; }
   .nav-row { display:flex; gap:8px; margin-top:14px; }
-  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
+  button { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
   button:hover:not(:disabled) { background:var(--bg); }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary:hover:not(:disabled) { filter:brightness(.9); }
 
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
@@ -73,7 +77,7 @@
   .res-box.a { border-left:3px solid var(--ic1); background:color-mix(in srgb,var(--ic1) 11%,transparent); }
   .res-box.b { border-left:3px solid var(--xbracket); background:color-mix(in srgb,var(--xbracket) 11%,transparent); }
   .res-box .lbl { font-size:10px; font-weight:bold; margin-bottom:2px; color:var(--muted); }
-  .res-box .big { font-size:15px; font-weight:bold; font-family:'Courier New',monospace; }
+  .res-box .big { font-size:15px; font-weight:bold; font-variant-numeric:tabular-nums; }
 
   .legend { font-size:11.5px; line-height:1.8; }
   .legend .item { display:flex; align-items:center; gap:8px; }
@@ -225,7 +229,7 @@ function line(x1,y1,x2,y2,col,w,dash){ ctx.beginPath(); ctx.setLineDash(dash||[]
   ctx.moveTo(qx(x1),py(y1)); ctx.lineTo(qx(x2),py(y2)); ctx.stroke(); ctx.setLineDash([]); }
 function dotMark(g1,g2,r,f){ ctx.beginPath(); ctx.arc(qx(g1),py(g2),r,0,7); ctx.fillStyle=f; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=T.plotBg; ctx.stroke(); }
 function label(txt,g1,g2,dx,dy,col,sz,wt,al,halo){
-  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px Georgia'; ctx.textAlign=al||'left';
+  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px "Fira Sans", system-ui, sans-serif'; ctx.textAlign=al||'left';
   const px_=qx(g1)+dx, py_=py(g2)+dy;
   if(halo){ const w=ctx.measureText(txt).width; let lx=px_; if(al==='right')lx=px_-w; else if(al==='center')lx=px_-w/2;
     ctx.fillStyle=T.plotBg; ctx.globalAlpha=0.82; ctx.fillRect(lx-3,py_-sz+2,w+6,sz+4); ctx.globalAlpha=1; }
@@ -240,8 +244,8 @@ function strokeCurve(pts,col,w,dash){
   }
   ctx.stroke(); ctx.setLineDash([]); ctx.restore();
 }
-function xTick(g1,txt,col){ ctx.save(); ctx.font='11px Georgia'; ctx.fillStyle=col||T.muted; ctx.textAlign='center'; ctx.fillText(txt,qx(g1),padT+plotH+16); ctx.restore(); }
-function yTick(g2,txt,col){ ctx.save(); ctx.font='11px Georgia'; ctx.fillStyle=col||T.muted; ctx.textAlign='right'; ctx.fillText(txt,padL-7,py(g2)+4); ctx.restore(); }
+function xTick(g1,txt,col){ ctx.save(); ctx.font='11px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col||T.muted; ctx.textAlign='center'; ctx.fillText(txt,qx(g1),padT+plotH+16); ctx.restore(); }
+function yTick(g2,txt,col){ ctx.save(); ctx.font='11px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col||T.muted; ctx.textAlign='right'; ctx.fillText(txt,padL-7,py(g2)+4); ctx.restore(); }
 
 function sampleCurveMode1(Ubar1, n){
   const pts=[];
@@ -348,7 +352,7 @@ function drawBracket(gFrom, gTo, txt, col){
   ctx.moveTo(qx(gFrom), yTop); ctx.lineTo(qx(gFrom), yB);
   ctx.lineTo(qx(gTo), yB); ctx.lineTo(qx(gTo), yTop);
   ctx.stroke(); ctx.restore();
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=col; ctx.textAlign='center';
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col; ctx.textAlign='center';
   ctx.fillText(txt, (qx(gFrom)+qx(gTo))/2, yB+13);
   ctx.restore();
 }
@@ -361,7 +365,7 @@ function drawBracketVertical(gFrom, gTo, txt, col){
   ctx.moveTo(xRight, py(gFrom)); ctx.lineTo(xB, py(gFrom));
   ctx.lineTo(xB, py(gTo)); ctx.lineTo(xRight, py(gTo));
   ctx.stroke(); ctx.restore();
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=col; ctx.textAlign='center'; ctx.translate(xB-12,(py(gFrom)+py(gTo))/2);
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col; ctx.textAlign='center'; ctx.translate(xB-12,(py(gFrom)+py(gTo))/2);
   ctx.rotate(-Math.PI/2); ctx.fillText(txt,0,0);
   ctx.restore();
 }

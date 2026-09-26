@@ -4,23 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Rothschild–Stiglitz: Symmetric Information — PE1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root{
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#EDEAE2;
-    --text:#1A1A2E; --muted:#75736B;
-    --hi:#C62828; --lo:#1565C0; --line45:#9A968C; --teal:#159C97; --wedge:rgba(21,156,151,0.13);
-    --pt:#F9A825; --pt-stroke:#4A3000; --accent:#1565C0; --endow:#33312E;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#EDEAE2;
+    --text:#16162A; --muted:#6B6A78;
+    --hi:#C0392B; --lo:#2A6FD6; --line45:#9A968C; --teal:#00838F; --wedge:rgba(21,156,151,0.13);
+    --pt:#F2B705; --pt-stroke:#4A3000; --accent:#2A3A8F; --endow:#33312E;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#2E2E35;
-      --text:#ECECEC; --muted:#9A9A9A;
-      --hi:#EF6C6C; --lo:#5B9BE8; --line45:#6f6b62; --teal:#33D0C8; --wedge:rgba(51,208,200,0.13);
-      --pt:#FFD54F; --pt-stroke:#15171a; --accent:#5B9BE8; --endow:#DAD6D0;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2E2E35;
+      --text:#ECEAE4; --muted:#9A98A4;
+      --hi:#EF6C6C; --lo:#6FA3FF; --line45:#6f6b62; --teal:#4DD0E1; --wedge:rgba(51,208,200,0.13);
+      --pt:#FFD54F; --pt-stroke:#15171a; --accent:#8FA0FF; --endow:#DAD6D0;
     }
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:'Georgia',serif;padding:22px 16px 34px}
+  body{background:var(--bg);color:var(--text);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:22px 16px 34px}
   header{text-align:center;margin-bottom:4px}
   header h1{font-size:20px;font-weight:bold;color:var(--accent)}
   header .relation{font-size:13.5px;color:var(--muted);font-style:italic;margin-top:5px;line-height:1.5}
@@ -41,18 +45,18 @@
   .step-title{font-size:15px;font-weight:bold;margin-bottom:7px;color:var(--accent)}
   .step-body{font-size:13px;line-height:1.62}
   .step-body .k{font-style:italic}
-  .step-body .num{font-family:'Courier New',monospace;font-weight:bold}
+  .step-body .num{font-variant-numeric:tabular-nums;font-weight:bold}
   .nav-row{display:flex;gap:8px;margin-top:14px}
-  button{font-family:'Georgia',serif;font-size:13px;padding:8px 0;flex:1;border-radius:5px;cursor:pointer;
+  button{font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;padding:8px 0;flex:1;border-radius:5px;cursor:pointer;
     border:1.5px solid var(--border);background:var(--surface);color:var(--text);transition:background .15s}
   button:hover:not(:disabled){background:var(--bg)}
   button:disabled{opacity:.4;cursor:not-allowed}
-  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
   button.primary:hover{filter:brightness(.92)}
   .card-title{font-size:10.5px;font-weight:bold;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-bottom:11px}
   .slider-label{display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px;margin-top:10px}
   .slider-label:first-of-type{margin-top:0}
-  .slider-label .val{font-family:'Courier New',monospace;font-weight:bold}
+  .slider-label .val{font-variant-numeric:tabular-nums;font-weight:bold}
   .slider-label .val.hi{color:var(--hi)} .slider-label .val.lo{color:var(--lo)}
   input[type=range]{width:100%;height:4px;cursor:pointer}
   #s-ph{accent-color:var(--hi)} #s-pl{accent-color:var(--lo)}
@@ -63,7 +67,7 @@
   .res-box.gap{background:color-mix(in srgb,var(--teal) 14%,transparent);border-left:3px solid var(--teal);grid-column:1/3}
   .res-box .lbl{font-size:10px;font-weight:bold;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
   .res-box.hi .lbl{color:var(--hi)} .res-box.lo .lbl{color:var(--lo)} .res-box.gap .lbl{color:var(--teal)}
-  .res-box .big{font-family:'Courier New',monospace;font-weight:bold;font-size:13px}
+  .res-box .big{font-variant-numeric:tabular-nums;font-weight:bold;font-size:13px}
   .mini-wrap{display:flex;justify-content:center}
   .legend{font-size:11.5px;line-height:1.95}
   .legend .item{display:flex;align-items:center;gap:8px}
@@ -198,7 +202,7 @@
   function ptGold(x,y,r){ctx.save();ctx.beginPath();ctx.arc(gx(x),gy(y),r,0,7);ctx.fillStyle=T['--pt'];ctx.fill();
     ctx.lineWidth=2;ctx.strokeStyle=T['--pt-stroke'];ctx.stroke();ctx.restore();}
   function ptDark(x,y,r){ctx.save();ctx.beginPath();ctx.arc(gx(x),gy(y),r,0,7);ctx.fillStyle=T['--endow'];ctx.fill();ctx.restore();}
-  function lab(txt,x,y,col,sz,al,halo){ctx.save();sz=sz||13;ctx.font='bold '+sz+'px Georgia';
+  function lab(txt,x,y,col,sz,al,halo){ctx.save();sz=sz||13;ctx.font='bold '+sz+'px "Fira Sans", system-ui, sans-serif';
     ctx.textAlign=al||'left';ctx.textBaseline='middle';
     if(halo){const w=ctx.measureText(txt).width,ax=al==='center'?x-w/2:(al==='right'?x-w:x);
       ctx.fillStyle=T['--plot-bg'];ctx.globalAlpha=.85;ctx.fillRect(ax-3,y-sz/2-2,w+6,sz+4);ctx.globalAlpha=1;}
@@ -300,7 +304,7 @@
     const mx=I=>mL+(I/Imax)*(MW-mL-mR), my=v=>MH-mB-(v/premMax)*(MH-mT-mB);
     mctx.strokeStyle=T['--text'];mctx.lineWidth=1.3;
     mctx.beginPath();mctx.moveTo(mL,mT);mctx.lineTo(mL,MH-mB);mctx.lineTo(MW-mR,MH-mB);mctx.stroke();
-    mctx.fillStyle=T['--muted'];mctx.font='bold 10px Georgia';
+    mctx.fillStyle=T['--muted'];mctx.font='bold 10px "Fira Sans", system-ui, sans-serif';
     mctx.textAlign='left';mctx.fillText('π',mL-22,mT+7);
     mctx.textAlign='right';mctx.fillText('I',MW-mR,MH-mB+15);
     // I=M marker

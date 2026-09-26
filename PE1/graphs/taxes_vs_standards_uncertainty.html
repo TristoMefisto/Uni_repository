@@ -4,21 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Taxes vs Standards under Uncertainty — PE1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#E8E6DF;
-    --text:#1A1A2E; --muted:#75736B; --mb:#2E7D32; --cmean:#1A1A2E; --cband:#C62828; --dwl:#1565C0;
-    --inst:#6A1B9A; --eq:#F9A825; --eq-stroke:#4A3000; --accent:#8E1B1B; --win:#2E7D32; --band:#E67E22;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
+    --text:#16162A; --muted:#6B6A78; --mb:#2E8B57; --cmean:#16162A; --cband:#C0392B; --dwl:#2A6FD6;
+    --inst:#7D4FA8; --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --accent:#C0392B; --win:#2E8B57; --band:#B8760F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#33333A;
-      --text:#ECECEC; --muted:#9A9A9A; --mb:#66BB6A; --cmean:#ECECEC; --cband:#EF6C6C; --dwl:#5B9BE8;
-      --inst:#B57BE0; --eq:#FFD54F; --eq-stroke:#1A1A1E; --accent:#E57373; --win:#66BB6A; --band:#F0A860;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
+      --text:#ECEAE4; --muted:#9A98A4; --mb:#5FC27E; --cmean:#ECEAE4; --cband:#EF6C6C; --dwl:#6FA3FF;
+      --inst:#B98AF0; --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --accent:#EF6C6C; --win:#5FC27E; --band:#F0A83A;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:22px 16px 30px; }
   header { text-align:center; margin-bottom:6px; }
   header h1 { font-size:19px; font-weight:bold; color:var(--accent); }
   header .relation { font-size:14px; color:var(--muted); font-style:italic; margin-top:4px; line-height:1.5; }
@@ -36,23 +40,23 @@
   .step-counter { font-size:11px; color:var(--muted); letter-spacing:.04em; }
   .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
   .step-body { font-size:13px; line-height:1.62; }
-  .step-body .num { font-family:'Courier New',monospace; font-weight:bold; }
+  .step-body .num { font-variant-numeric:tabular-nums; font-weight:bold; }
   .nav-row { display:flex; gap:8px; margin-top:14px; }
-  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
+  button { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
   button:hover:not(:disabled) { background:var(--bg); }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary:hover:not(:disabled) { filter:brightness(.92); }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
   .slider-label { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px; margin-top:11px; }
   .slider-label:first-of-type { margin-top:0; }
-  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; }
+  .slider-label .val { font-variant-numeric:tabular-nums; font-weight:bold; }
   .slider-label .val.mb { color:var(--mb); } .slider-label .val.mc { color:var(--cband); }
   input[type=range] { width:100%; height:4px; cursor:pointer; }
   #s-b { accent-color:var(--mb); } #s-m { accent-color:var(--cband); } #s-u { accent-color:var(--muted); }
   .verdict { border-radius:5px; padding:11px 13px; font-size:13px; line-height:1.5; text-align:center; border:1.5px solid var(--win); background:color-mix(in srgb,var(--win) 12%,transparent); }
   .verdict b { color:var(--win); font-size:14px; }
-  .verdict .rule { font-size:11px; color:var(--muted); margin-top:4px; font-family:'Courier New',monospace; }
+  .verdict .rule { font-size:11px; color:var(--muted); margin-top:4px; font-variant-numeric:tabular-nums; }
   .dwlbars { display:flex; flex-direction:column; gap:7px; margin-top:10px; }
   .dwlbar { font-size:11px; }
   .dwlbar .track { height:10px; background:var(--grid); border-radius:5px; overflow:hidden; margin-top:2px; }
@@ -157,7 +161,7 @@ function hBracket(x0,qA,qB,pRef,color,label){
   const y=padT+plotH+30, xA=qx(x0,qA), xB=qx(x0,qB);
   ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.beginPath();
   ctx.moveTo(xA,y-5);ctx.lineTo(xA,y);ctx.lineTo(xB,y);ctx.lineTo(xB,y-5);ctx.stroke();ctx.restore();
-  ctx.save();ctx.font='bold 10.5px Georgia';ctx.fillStyle=color;ctx.textAlign='center';
+  ctx.save();ctx.font='bold 10.5px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=color;ctx.textAlign='center';
   ctx.fillText(label,(xA+xB)/2,y+13);ctx.restore();
 }
 function vBracket(x0,pA,pB,color,label){
@@ -165,12 +169,12 @@ function vBracket(x0,pA,pB,color,label){
   const x=x0-14, yA=py(pA), yB=py(pB);
   ctx.save();ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.beginPath();
   ctx.moveTo(x+5,yA);ctx.lineTo(x,yA);ctx.lineTo(x,yB);ctx.lineTo(x+5,yB);ctx.stroke();ctx.restore();
-  ctx.save();ctx.font='bold 10.5px Georgia';ctx.fillStyle=color;ctx.textAlign='center';ctx.translate(x-11,(yA+yB)/2);ctx.rotate(-Math.PI/2);
+  ctx.save();ctx.font='bold 10.5px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=color;ctx.textAlign='center';ctx.translate(x-11,(yA+yB)/2);ctx.rotate(-Math.PI/2);
   ctx.fillText(label,0,0);ctx.restore();
 }
 function dotP(x0,q,p,r,fill){ctx.beginPath();ctx.arc(qx(x0,q),py(p),r,0,7);ctx.fillStyle=fill;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=T.plotBg;ctx.stroke();}
 function lab(x0,txt,q,p,dx,dy,color,size,align,halo){
-  ctx.save();size=size||11;ctx.font='bold '+size+'px Georgia';ctx.textAlign=align||'left';
+  ctx.save();size=size||11;ctx.font='bold '+size+'px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';
   const X=qx(x0,q)+dx,Y=py(p)+dy;
   if(halo){const w=ctx.measureText(txt).width;let lx=X;if(align==='right')lx=X-w;else if(align==='center')lx=X-w/2;ctx.fillStyle=T.plotBg;ctx.globalAlpha=0.82;ctx.fillRect(lx-2,Y-size+2,w+4,size+3);ctx.globalAlpha=1;}
   ctx.fillStyle=color;ctx.fillText(txt,X,Y);ctx.restore();
@@ -241,9 +245,9 @@ function drawPanel(x0,mode){
   lab(x0,"C'_m",Q_MAX*0.78,Cm(Q_MAX*0.78),2,-2,T.cmean,10.5,'left',true);
   lab(x0,"B'",Math.max(2,(a-6)/b),6,2,-2,T.mb,11,'left',true);
   // panel title
-  ctx.save();ctx.font='bold 12.5px Georgia';ctx.fillStyle=(mode==='standard'?T.inst:T.inst);ctx.textAlign='center';
+  ctx.save();ctx.font='bold 12.5px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=(mode==='standard'?T.inst:T.inst);ctx.textAlign='center';
   ctx.fillText(mode==='standard'?'STANDARD (fix quantity q*)':'TAX (fix price p*)',x0+pw/2,padT-12);ctx.restore();
-  ctx.save();ctx.font='11px Georgia';ctx.fillStyle=T.muted;ctx.textAlign='right';ctx.fillText('q',qx(x0,Q_MAX),padT+plotH+16);ctx.restore();
+  ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=T.muted;ctx.textAlign='right';ctx.fillText('q',qx(x0,Q_MAX),padT+plotH+16);ctx.restore();
 }
 
 function draw(){
@@ -251,7 +255,7 @@ function draw(){
   drawPanel(X0L,'standard');
   drawPanel(X0R,'tax');
   // shared $ axis label
-  ctx.save();ctx.font='bold 11px Georgia';ctx.fillStyle=T.text;ctx.textAlign='left';ctx.fillText('$',2,padT+4);ctx.restore();
+  ctx.save();ctx.font='bold 11px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=T.text;ctx.textAlign='left';ctx.fillText('$',2,padT+4);ctx.restore();
 
   const M=model();
   document.getElementById('v-b').textContent=b.toFixed(2);

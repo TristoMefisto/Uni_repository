@@ -4,20 +4,24 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tâtonnement simulator — Edgeworth box</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root{
-    --bg:#ffffff; --surface:#f4f3ee; --text:#2b2b29; --muted:#6b6a64; --border:#e2e0d8;
-    --coral:#C0392B; --blue:#185FA5; --gray:#888780; --purp:#7F77DD;
-    --red:#A32D2D; --green:#3B6D11; --line:#777777; --tertiary:#b4b2a9;
+    --bg:#F6F5F1; --surface:#FFFFFF; --text:#16162A; --muted:#6B6A78; --border:#DFDCD4;
+    --coral:#C0392B; --blue:#2A6FD6; --gray:#6B7280; --purp:#7D4FA8;
+    --red:#C0392B; --green:#2E8B57; --line:#6B7280; --tertiary:#C9C4B8;
     --okbg:#e1f5ee; --okfg:#0F6E56;
   }
   @media (prefers-color-scheme: dark){
-    :root{ --bg:#1e1e1c; --surface:#2a2a27; --text:#e8e6dd; --muted:#a4a39b; --border:#3a3a36;
-           --tertiary:#5f5e5a; --line:#9c9a92; --okbg:#0F6E56; --okfg:#9FE1CB; }
+    :root{ --bg:#14141A; --surface:#1D1D24; --text:#ECEAE4; --muted:#9A98A4; --border:#33323C;
+           --tertiary:#4A4A52; --line:#8F94B3; --okbg:#5FC27E; --okfg:#9FE1CB; }
   }
   *{ box-sizing:border-box; }
   body{ margin:0; padding:18px; background:var(--bg); color:var(--text);
-        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+        font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
   .wrap{ max-width:700px; margin:0 auto; }
   svg{ width:100%; height:auto; display:block; }
   .t{ font-size:14px; fill:var(--text); }

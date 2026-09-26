@@ -4,23 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CV and EV in Consumer-Choice Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#E8E6DF;
-    --text:#1A1A2E; --muted:#75736B;
-    --ic0:#6A1B9A; --ic1:#B07BD0; --budget:#444049; --shifted:#C62828;
-    --cv:#2E7D32; --ev:#1565C0; --pt:#F9A825; --pt-stroke:#4A3000; --accent:#1565C0;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
+    --text:#16162A; --muted:#6B6A78;
+    --ic0:#7D4FA8; --ic1:#B07BD0; --budget:#444049; --shifted:#C0392B;
+    --cv:#2E8B57; --ev:#2A6FD6; --pt:#F2B705; --pt-stroke:#4A3000; --accent:#2A3A8F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#33333A;
-      --text:#ECECEC; --muted:#9A9A9A;
-      --ic0:#B57BE0; --ic1:#8E5BA8; --budget:#B8B4AE; --shifted:#EF6C6C;
-      --cv:#66BB6A; --ev:#5B9BE8; --pt:#FFD54F; --pt-stroke:#1A1A1E; --accent:#5B9BE8;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
+      --text:#ECEAE4; --muted:#9A98A4;
+      --ic0:#B98AF0; --ic1:#8E5BA8; --budget:#B8B4AE; --shifted:#EF6C6C;
+      --cv:#5FC27E; --ev:#6FA3FF; --pt:#FFD54F; --pt-stroke:#14141A; --accent:#8FA0FF;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:22px 16px 30px; }
   header { text-align:center; margin-bottom:6px; }
   header h1 { font-size:19px; font-weight:bold; }
   header .relation { font-size:13.5px; color:var(--muted); font-style:italic; margin-top:4px; line-height:1.5; }
@@ -40,16 +44,16 @@
   .step-counter { font-size:11px; color:var(--muted); letter-spacing:.04em; }
   .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
   .step-body { font-size:13px; line-height:1.62; }
-  .step-body .num { font-family:'Courier New',monospace; font-weight:bold; }
+  .step-body .num { font-variant-numeric:tabular-nums; font-weight:bold; }
   .nav-row { display:flex; gap:8px; margin-top:14px; }
-  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
+  button { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
   button:hover:not(:disabled) { background:var(--bg); }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary:hover:not(:disabled) { filter:brightness(.9); }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
   .slider-label { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:7px; }
-  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; }
+  .slider-label .val { font-variant-numeric:tabular-nums; font-weight:bold; }
   input[type=range] { width:100%; accent-color:var(--accent); height:4px; cursor:pointer; margin-bottom:2px; }
   .results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .res-box { border-radius:4px; padding:9px 11px; font-size:12px; line-height:1.4; }
@@ -58,7 +62,7 @@
   .res-box .lbl { font-size:10px; font-weight:bold; margin-bottom:2px; }
   .res-box.cv .lbl { color:var(--cv); }
   .res-box.ev .lbl { color:var(--ev); }
-  .res-box .big { font-size:15px; font-weight:bold; font-family:'Courier New',monospace; }
+  .res-box .big { font-size:15px; font-weight:bold; font-variant-numeric:tabular-nums; }
   .res-box .sub { font-size:10px; color:var(--muted); }
   .legend { font-size:11.5px; line-height:1.9; }
   .legend .item { display:flex; align-items:center; gap:8px; }
@@ -187,7 +191,7 @@ function line(x1,y1,x2,y2,col,w,dd){ ctx.beginPath(); ctx.setLineDash(dd||[]); c
   ctx.moveTo(gx(x1),gy(y1)); ctx.lineTo(gx(x2),gy(y2)); ctx.stroke(); ctx.setLineDash([]); }
 function dot(x,y,r,f){ ctx.beginPath(); ctx.arc(gx(x),gy(y),r,0,7); ctx.fillStyle=f; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=T.plotBg; ctx.stroke(); }
 function label(txt,x,y,dx,dy,col,sz,wt,al,halo){
-  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px Georgia'; ctx.textAlign=al||'left';
+  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px "Fira Sans", system-ui, sans-serif'; ctx.textAlign=al||'left';
   const px=gx(x)+dx, py=gy(y)+dy;
   if(halo){ const w=ctx.measureText(txt).width; let lx=px; if(al==='right')lx=px-w; else if(al==='center')lx=px-w/2;
     ctx.fillStyle=T.plotBg; ctx.globalAlpha=0.82; ctx.fillRect(lx-3,py-sz+2,w+6,sz+4); ctx.globalAlpha=1; }
@@ -235,7 +239,7 @@ function draw(){
   ctx.beginPath(); ctx.moveTo(padL,padT-2); ctx.lineTo(padL-4,padT+8); ctx.lineTo(padL+4,padT+8); ctx.fill();
   ctx.beginPath(); ctx.moveTo(padL+plotW+2,padT+plotH); ctx.lineTo(padL+plotW-8,padT+plotH-4); ctx.lineTo(padL+plotW-8,padT+plotH+4); ctx.fill();
   label('Good 2  (numeraire, $)',0,Y_MAX,-padL+4,-6,T.text,12,'bold','left');
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=T.text; ctx.textAlign='right'; ctx.fillText('Good 1',padL+plotW,padT+plotH+32); ctx.restore();
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=T.text; ctx.textAlign='right'; ctx.fillText('Good 1',padL+plotW,padT+plotH+32); ctx.restore();
 
   const ql = (step===5);
   const M = ql ? modelQL() : modelCD();
@@ -294,7 +298,7 @@ function draw(){
   }
 
   // intercept tick labels on y-axis
-  ctx.save(); ctx.font='10.5px Georgia'; ctx.textAlign='right'; ctx.fillStyle=T.muted;
+  ctx.save(); ctx.font='10.5px "Fira Sans", system-ui, sans-serif'; ctx.textAlign='right'; ctx.fillStyle=T.muted;
   ctx.fillText('m='+m, padL-6, gy(m)+4);
   ctx.restore();
 }

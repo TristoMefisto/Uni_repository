@@ -4,21 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Excise vs Lump-sum Tax — Excess Burden</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#E8E6DF;
-    --text:#1A1A2E; --muted:#75736B; --budget:#8A8780; --excise:#C62828; --lsrev:#2E7D32; --lsutil:#00897B;
-    --ic:#6A1B9A; --eq:#F9A825; --eq-stroke:#4A3000; --eb:#9E1B32; --accent:#1565C0;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
+    --text:#16162A; --muted:#6B6A78; --budget:#8A8780; --excise:#C0392B; --lsrev:#2E8B57; --lsutil:#00838F;
+    --ic:#7D4FA8; --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --eb:#9E1B32; --accent:#2A3A8F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#33333A;
-      --text:#ECECEC; --muted:#9A9A9A; --budget:#9A968C; --excise:#EF6C6C; --lsrev:#66BB6A; --lsutil:#4DB6AC;
-      --ic:#B57BE0; --eq:#FFD54F; --eq-stroke:#1A1A1E; --eb:#E5738A; --accent:#5B9BE8;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
+      --text:#ECEAE4; --muted:#9A98A4; --budget:#9A968C; --excise:#EF6C6C; --lsrev:#5FC27E; --lsutil:#4DD0E1;
+      --ic:#B98AF0; --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --eb:#EF6C6C; --accent:#8FA0FF;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:22px 16px 30px; }
   header { text-align:center; margin-bottom:6px; }
   header h1 { font-size:19px; font-weight:bold; }
   header .relation { font-size:14px; color:var(--muted); font-style:italic; margin-top:3px; }
@@ -36,16 +40,16 @@
   .step-counter { font-size:11px; color:var(--muted); letter-spacing:.04em; }
   .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
   .step-body { font-size:13px; line-height:1.62; }
-  .step-body .num { font-family:'Courier New',monospace; font-weight:bold; }
+  .step-body .num { font-variant-numeric:tabular-nums; font-weight:bold; }
   .nav-row { display:flex; gap:8px; margin-top:14px; }
-  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
+  button { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
   button:hover:not(:disabled) { background:var(--bg); }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary:hover:not(:disabled) { filter:brightness(.9); }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
   .slider-label { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:7px; }
-  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; }
+  .slider-label .val { font-variant-numeric:tabular-nums; font-weight:bold; }
   input[type=range] { width:100%; accent-color:var(--accent); height:4px; cursor:pointer; margin-bottom:13px; }
   input[type=range]:last-child { margin-bottom:0; }
   .results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
@@ -55,7 +59,7 @@
   .res-box .lbl { font-size:10px; font-weight:bold; margin-bottom:2px; }
   .res-box.r .lbl { color:var(--excise); }
   .res-box.e .lbl { color:var(--eb); }
-  .res-box .big { font-size:15px; font-weight:bold; font-family:'Courier New',monospace; }
+  .res-box .big { font-size:15px; font-weight:bold; font-variant-numeric:tabular-nums; }
   .res-box .sub { font-size:10px; color:var(--muted); }
   .legend { font-size:11.5px; line-height:1.8; }
   .legend .item { display:flex; align-items:center; gap:8px; }
@@ -189,7 +193,7 @@ function drawIC(U,col,w,al){
 }
 function dot(x,y,r,f){ ctx.beginPath(); ctx.arc(gx(x),gy(y),r,0,7); ctx.fillStyle=f; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=T.plotBg; ctx.stroke(); }
 function label(txt,x,y,dx,dy,col,sz,wt,al,halo){
-  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px Georgia'; ctx.textAlign=al||'left';
+  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px "Fira Sans", system-ui, sans-serif'; ctx.textAlign=al||'left';
   const X=gx(x)+dx,Y=gy(y)+dy;
   if(halo){ const w=ctx.measureText(txt).width; let lx=X; if(al==='right')lx=X-w; else if(al==='center')lx=X-w/2;
     ctx.fillStyle=T.plotBg; ctx.globalAlpha=0.82; ctx.fillRect(lx-3,Y-sz+2,w+6,sz+4); ctx.globalAlpha=1; }
@@ -210,7 +214,7 @@ function draw(){
   ctx.fillStyle=T.text;
   ctx.beginPath(); ctx.moveTo(padL,padT-2); ctx.lineTo(padL-4,padT+8); ctx.lineTo(padL+4,padT+8); ctx.fill();
   ctx.beginPath(); ctx.moveTo(padL+plotW+2,padT+plotH); ctx.lineTo(padL+plotW-8,padT+plotH-4); ctx.lineTo(padL+plotW-8,padT+plotH+4); ctx.fill();
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=T.text;
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=T.text;
   ctx.textAlign='right'; ctx.fillText('Good 1',padL+plotW,padT+plotH+32);
   ctx.textAlign='left'; ctx.fillText('Good 2',padL-38,padT+10); ctx.restore();
 

@@ -4,21 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monopoly Tax — Isoelastic Demand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#E8E6DF;
-    --text:#1A1A2E; --muted:#75736B; --demand:#6A1B9A; --mr:#00897B; --mc:#1565C0; --shifted:#C62828;
-    --eq:#F9A825; --eq-stroke:#4A3000; --buyers:#C62828; --sellers:#E07B00; --dwl:#9E1B32; --accent:#1565C0;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
+    --text:#16162A; --muted:#6B6A78; --demand:#7D4FA8; --mr:#00838F; --mc:#2A6FD6; --shifted:#C0392B;
+    --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --buyers:#C0392B; --sellers:#B8760F; --dwl:#9E1B32; --accent:#2A3A8F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#33333A;
-      --text:#ECECEC; --muted:#9A9A9A; --demand:#B57BE0; --mr:#4DB6AC; --mc:#5B9BE8; --shifted:#EF6C6C;
-      --eq:#FFD54F; --eq-stroke:#1A1A1E; --buyers:#EF6C6C; --sellers:#FFB74D; --dwl:#E5738A; --accent:#5B9BE8;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
+      --text:#ECEAE4; --muted:#9A98A4; --demand:#B98AF0; --mr:#4DD0E1; --mc:#6FA3FF; --shifted:#EF6C6C;
+      --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --buyers:#EF6C6C; --sellers:#F0A83A; --dwl:#EF6C6C; --accent:#8FA0FF;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:22px 16px 30px; }
   header { text-align:center; margin-bottom:6px; }
   header h1 { font-size:19px; font-weight:bold; }
   header .relation { font-size:14.5px; color:var(--muted); font-style:italic; margin-top:3px; }
@@ -36,20 +40,20 @@
   .step-counter { font-size:11px; color:var(--muted); letter-spacing:.04em; }
   .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
   .step-body { font-size:13px; line-height:1.62; }
-  .step-body .num { font-family:'Courier New',monospace; font-weight:bold; }
+  .step-body .num { font-variant-numeric:tabular-nums; font-weight:bold; }
   .nav-row { display:flex; gap:8px; margin-top:14px; }
-  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
+  button { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); transition:background .15s; }
   button:hover:not(:disabled) { background:var(--bg); }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   button.primary:hover:not(:disabled) { filter:brightness(.9); }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
   .slider-label { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:7px; }
-  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; }
+  .slider-label .val { font-variant-numeric:tabular-nums; font-weight:bold; }
   input[type=range] { width:100%; accent-color:var(--accent); height:4px; cursor:pointer; margin-bottom:13px; }
   input[type=range]:last-child { margin-bottom:0; }
   .pt-card { text-align:center; }
-  .pt-val { font-size:26px; font-weight:bold; font-family:'Courier New',monospace; }
+  .pt-val { font-size:26px; font-weight:bold; font-variant-numeric:tabular-nums; }
   .pt-tag { font-size:12px; font-style:italic; margin-top:2px; }
   .results { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
   .res-box { border-radius:4px; padding:9px 11px; font-size:12px; line-height:1.45; }
@@ -58,7 +62,7 @@
   .res-box .lbl { font-size:10px; font-weight:bold; margin-bottom:2px; }
   .res-box.b .lbl { color:var(--buyers); }
   .res-box.s .lbl { color:var(--sellers); }
-  .res-box .big { font-size:15px; font-weight:bold; font-family:'Courier New',monospace; }
+  .res-box .big { font-size:15px; font-weight:bold; font-variant-numeric:tabular-nums; }
   .caveat { background:color-mix(in srgb,var(--sellers) 11%,transparent); border:1px solid color-mix(in srgb,var(--sellers) 35%,transparent); border-radius:5px; padding:10px 12px; font-size:11.5px; line-height:1.5; font-style:italic; }
   .legend { font-size:11.5px; line-height:1.85; }
   .legend .item { display:flex; align-items:center; gap:8px; }
@@ -179,21 +183,21 @@ function curve(fn,col,w,qFrom,qTo){
 }
 function dot(q,p,r,f){ ctx.beginPath(); ctx.arc(qx(q),py(p),r,0,7); ctx.fillStyle=f; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=T.plotBg; ctx.stroke(); }
 function label(txt,q,p,dx,dy,col,sz,wt,al,halo){
-  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px Georgia'; ctx.textAlign=al||'left';
+  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px "Fira Sans", system-ui, sans-serif'; ctx.textAlign=al||'left';
   const x=qx(q)+dx,y=py(p)+dy;
   if(halo){ const w=ctx.measureText(txt).width; let lx=x; if(al==='right')lx=x-w; else if(al==='center')lx=x-w/2;
     ctx.fillStyle=T.plotBg; ctx.globalAlpha=0.82; ctx.fillRect(lx-3,y-sz+2,w+6,sz+4); ctx.globalAlpha=1; }
   ctx.fillStyle=col; ctx.fillText(txt,x,y); ctx.restore();
 }
-function priceTick(p,txt,col){ ctx.save(); ctx.font='11px Georgia'; ctx.fillStyle=col||T.muted; ctx.textAlign='right'; ctx.fillText(txt,padL-7,py(p)+4); ctx.restore(); }
-function qTick(q,txt,col){ ctx.save(); ctx.font='11px Georgia'; ctx.fillStyle=col||T.muted; ctx.textAlign='center'; ctx.fillText(txt,qx(q),padT+plotH+16); ctx.restore(); }
+function priceTick(p,txt,col){ ctx.save(); ctx.font='11px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col||T.muted; ctx.textAlign='right'; ctx.fillText(txt,padL-7,py(p)+4); ctx.restore(); }
+function qTick(q,txt,col){ ctx.save(); ctx.font='11px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col||T.muted; ctx.textAlign='center'; ctx.fillText(txt,qx(q),padT+plotH+16); ctx.restore(); }
 function projX(q,pTop,txt,col){ line(q,0,q,pTop,col||T.muted,1,DASH_PROJ); if(txt) qTick(q,txt,col); }
 function projY(p,qR,txt,col){ line(0,p,qR,p,col||T.muted,1,DASH_PROJ); if(txt) priceTick(p,txt,col); }
 function bracket(x,yA,yB,col,txt){
   const top=Math.min(yA,yB),bot=Math.max(yA,yB);
   ctx.save(); ctx.strokeStyle=col; ctx.lineWidth=1.6;
   ctx.beginPath(); ctx.moveTo(x+6,top); ctx.lineTo(x,top); ctx.lineTo(x,bot); ctx.lineTo(x+6,bot); ctx.stroke();
-  ctx.font='bold 10.5px Georgia'; ctx.fillStyle=col; ctx.textAlign='right'; ctx.fillText(txt,x-4,(top+bot)/2+3); ctx.restore();
+  ctx.font='bold 10.5px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=col; ctx.textAlign='right'; ctx.fillText(txt,x-4,(top+bot)/2+3); ctx.restore();
 }
 
 let step=0;
@@ -210,7 +214,7 @@ function draw(){
   ctx.beginPath(); ctx.moveTo(padL,padT-2); ctx.lineTo(padL-4,padT+8); ctx.lineTo(padL+4,padT+8); ctx.fill();
   ctx.beginPath(); ctx.moveTo(padL+plotW+2,padT+plotH); ctx.lineTo(padL+plotW-8,padT+plotH-4); ctx.lineTo(padL+plotW-8,padT+plotH+4); ctx.fill();
   label('Price',0,P_MAX,-padL+4,-4,T.text,12,'bold','left');
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=T.text; ctx.textAlign='right'; ctx.fillText('Quantity',padL+plotW,padT+plotH+34); ctx.restore();
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=T.text; ctx.textAlign='right'; ctx.fillText('Quantity',padL+plotW,padT+plotH+34); ctx.restore();
 
   const m=model();
   const qStart=Math.max(30, A()*Math.pow(P_MAX,-eps));

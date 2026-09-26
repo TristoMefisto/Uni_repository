@@ -4,23 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Coasian Bargaining — Steel and Fish</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
+  /* Bologna palette */
   :root {
-    --bg:#F7F6F2; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DDD9D0; --grid:#E8E6DF;
-    --text:#1A1A2E; --muted:#75736B;
-    --d:#C62828; --s:#1565C0; --smc:#2E7D32; --md:#2E7D32;
-    --gain:#F9A825; --damage:#7E57C2; --zigzag:#C2185B; --accent:#2E7D32;
+    --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
+    --text:#16162A; --muted:#6B6A78;
+    --d:#C0392B; --s:#2A6FD6; --smc:#2E8B57; --md:#2E8B57;
+    --gain:#F2B705; --damage:#7D4FA8; --zigzag:#C2185B; --accent:#2E8B57;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg:#1A1A1E; --surface:#252529; --plot-bg:#1E1E22; --border:#3A3A40; --grid:#33333A;
-      --text:#ECECEC; --muted:#9A9A9A;
-      --d:#EF6C6C; --s:#5B9BE8; --smc:#66BB6A; --md:#66BB6A;
-      --gain:#FFD54F; --damage:#B39DDB; --zigzag:#F06292; --accent:#66BB6A;
+      --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
+      --text:#ECEAE4; --muted:#9A98A4;
+      --d:#EF6C6C; --s:#6FA3FF; --smc:#5FC27E; --md:#5FC27E;
+      --gain:#FFD54F; --damage:#B98AF0; --zigzag:#EF6C6C; --accent:#5FC27E;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { background:var(--bg); color:var(--text); font-family:'Georgia',serif; padding:22px 16px 30px; }
+  body { background:var(--bg); color:var(--text); font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; padding:22px 16px 30px; }
   header { text-align:center; margin-bottom:6px; }
   header h1 { font-size:19px; font-weight:bold; }
   header .relation { font-size:13px; color:var(--muted); font-style:italic; margin-top:4px; }
@@ -38,15 +42,15 @@
   .step-counter { font-size:11px; color:var(--muted); }
   .step-title { font-size:15px; font-weight:bold; margin-bottom:7px; color:var(--accent); }
   .step-body { font-size:13px; line-height:1.62; }
-  .step-body .num { font-family:'Courier New',monospace; font-weight:bold; }
+  .step-body .num { font-variant-numeric:tabular-nums; font-weight:bold; }
   .nav-row { display:flex; gap:8px; margin-top:14px; }
-  button { font-family:'Georgia',serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); }
+  button { font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:13px; padding:8px 0; flex:1; border-radius:5px; cursor:pointer; border:1.5px solid var(--border); background:var(--surface); color:var(--text); }
   button:hover:not(:disabled) { background:var(--bg); }
   button:disabled { opacity:.4; cursor:not-allowed; }
-  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.primary { background:var(--accent); color:var(--on-accent); border-color:var(--accent); }
   .card-title { font-size:10.5px; font-weight:bold; text-transform:uppercase; letter-spacing:.09em; color:var(--muted); margin-bottom:11px; }
   .slider-label { display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:6px; }
-  .slider-label .val { font-family:'Courier New',monospace; font-weight:bold; }
+  .slider-label .val { font-variant-numeric:tabular-nums; font-weight:bold; }
   input[type=range] { width:100%; height:4px; cursor:pointer; margin-bottom:4px; }
   input[type=range]:disabled { opacity:.35; cursor:default; }
   .results { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
@@ -55,7 +59,7 @@
   .res-box.d2 { background:color-mix(in srgb,var(--damage) 16%,transparent); border-top:3px solid var(--damage); }
   .res-box .lbl { font-size:9.5px; font-weight:bold; margin-bottom:2px; }
   .res-box.g .lbl { color:var(--gain); } .res-box.d2 .lbl { color:var(--damage); }
-  .res-box .big { font-size:14px; font-weight:bold; font-family:'Courier New',monospace; }
+  .res-box .big { font-size:14px; font-weight:bold; font-variant-numeric:tabular-nums; }
   .res-box.dim { opacity:.3; }
   .legend { font-size:11.5px; line-height:1.85; }
   .legend .item { display:flex; align-items:center; gap:8px; }
@@ -144,7 +148,7 @@ function model(){
 
 function dot(Q,p,r,f){ ctx.beginPath(); ctx.arc(qx(Q),py(p),r,0,7); ctx.fillStyle=f; ctx.fill(); ctx.lineWidth=2; ctx.strokeStyle=T.plotBg; ctx.stroke(); }
 function label(txt,X,Y,col,sz,wt,al,halo){
-  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px Georgia'; ctx.textAlign=al||'left';
+  ctx.save(); sz=sz||12; ctx.font=(wt||'bold')+' '+sz+'px "Fira Sans", system-ui, sans-serif'; ctx.textAlign=al||'left';
   if(halo){ const w=ctx.measureText(txt).width; let lx=X; if(al==='right')lx=X-w; else if(al==='center')lx=X-w/2;
     ctx.fillStyle=T.plotBg; ctx.globalAlpha=0.82; ctx.fillRect(lx-3,Y-sz+2,w+6,sz+4); ctx.globalAlpha=1; }
   ctx.fillStyle=col; ctx.fillText(txt,X,Y); ctx.restore();
@@ -200,8 +204,8 @@ function draw(){
   for(let p=2;p<=P_MAX;p+=2){ ctx.beginPath(); ctx.moveTo(padL,py(p)); ctx.lineTo(padL+plotW,py(p)); ctx.stroke(); }
   ctx.strokeStyle=T.text; ctx.lineWidth=1.6;
   ctx.beginPath(); ctx.moveTo(padL,padT); ctx.lineTo(padL,padT+plotH); ctx.lineTo(padL+plotW,padT+plotH); ctx.stroke();
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=T.text; ctx.textAlign='left'; ctx.fillText('Price of steel',padL-44,padT-6); ctx.restore();
-  ctx.save(); ctx.font='bold 12px Georgia'; ctx.fillStyle=T.text; ctx.textAlign='right'; ctx.fillText('Q steel',padL+plotW,padT+plotH+24); ctx.restore();
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=T.text; ctx.textAlign='left'; ctx.fillText('Price of steel',padL-44,padT-6); ctx.restore();
+  ctx.save(); ctx.font='bold 12px "Fira Sans", system-ui, sans-serif'; ctx.fillStyle=T.text; ctx.textAlign='right'; ctx.fillText('Q steel',padL+plotW,padT+plotH+24); ctx.restore();
 
   const M=model();
 
