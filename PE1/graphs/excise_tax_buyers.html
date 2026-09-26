@@ -325,7 +325,7 @@ function draw(){
     projY(m.Pb,m.Qe,'$'+m.Pb.toFixed(1),T.buyers);
     projY(m.Ps,m.Qe,'$'+m.Ps.toFixed(1),T.sellers);
 
-    ctx.save(); ctx.strokeStyle=T.eqStroke; ctx.lineWidth=1.5;
+    ctx.save(); ctx.strokeStyle=T.text; ctx.lineWidth=1.5;
     ctx.beginPath(); ctx.moveTo(qx(m.Qe),py(m.Pb)); ctx.lineTo(qx(m.Qe),py(m.Ps)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(qx(m.Qe)-4,py(m.Pb)); ctx.lineTo(qx(m.Qe)+4,py(m.Pb)); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(qx(m.Qe)-4,py(m.Ps)); ctx.lineTo(qx(m.Qe)+4,py(m.Ps)); ctx.stroke();
