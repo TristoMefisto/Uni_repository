@@ -11,14 +11,14 @@
   /* Bologna palette */
   :root {
     --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
-    --text:#16162A; --muted:#6B6A78; --demand:#7D4FA8; --supply:#2A6FD6; --shifted:#C0392B;
-    --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --rev:#2A6FD6; --eb:#9E1B32; --accent:#2A3A8F; --buyers:#C0392B; --sellers:#B8760F;
+    --text:#16162A; --muted:#6B6A78; --demand:#2A6FD6; --supply:#2E8B57; --shifted:#C0392B;
+    --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --rev:#9C620C; --eb:#7D4FA8; --accent:#2A3A8F; --buyers:#2A6FD6; --sellers:#2E8B57;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
-      --text:#ECEAE4; --muted:#9A98A4; --demand:#B98AF0; --supply:#6FA3FF; --shifted:#EF6C6C;
-      --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --rev:#6FA3FF; --eb:#EF6C6C; --accent:#8FA0FF; --buyers:#EF6C6C; --sellers:#F0A83A;
+      --text:#ECEAE4; --muted:#9A98A4; --demand:#6FA3FF; --supply:#5FC27E; --shifted:#EF6C6C;
+      --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --rev:#F0A83A; --eb:#B98AF0; --accent:#8FA0FF; --buyers:#6FA3FF; --sellers:#5FC27E;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -351,7 +351,7 @@ function stepContent(){
     { t:"Step 5 · Why elasticity matters",
       b:`A flatter (more <b>elastic</b>) demand means a larger quantity response ΔQ for the same tax — a bigger triangle. Inelastic demand gives almost no excess burden. This is the Ramsey intuition: to minimise deadweight loss, tax the <b>least elastic</b> goods. Drag the elasticity slider to see it.` },
     { t:"Step 6 · Marginal excess burden: doubling the tax",
-      b:`Raise the tax from <b>t₁ = $${tax.toFixed(2)}</b> to <b>t₂ = 2t₁ = $${tax2.toFixed(2)}</b>. The orange triangle is the original <b>EB(t₁) = $${m.EB.toFixed(0)}</b>. The added yellow region — from (B,C) out to (B′,C′) — is the <b>extra</b> deadweight loss: <b style="color:var(--eb)">$${m.addedEB.toFixed(0)}</b>, which is <b>${(m.addedEB/m.EB).toFixed(1)}×</b> the original loss, even though the tax only doubled. Why: the added area is a <b>rectangle</b> (t₁ × ΔQ = $${m.rectPart.toFixed(0)}) <i>plus</i> a triangle (½(t₂−t₁) × ΔQ = $${m.triPart.toFixed(0)}) — a "square" component stacked on top of the usual triangle. This is exactly why <b>marginal</b> EB rises faster than average EB as taxes increase.` }
+      b:`Raise the tax from <b>t₁ = $${tax.toFixed(2)}</b> to <b>t₂ = 2t₁ = $${tax2.toFixed(2)}</b>. The orange triangle is the original <b>EB(t₁) = $${m.EB.toFixed(0)}</b>. The added purple region — from (B,C) out to (B′,C′) — is the <b>extra</b> deadweight loss: <b style="color:var(--eb)">$${m.addedEB.toFixed(0)}</b>, which is <b>${(m.addedEB/m.EB).toFixed(1)}×</b> the original loss, even though the tax only doubled. Why: the added area is a <b>rectangle</b> (t₁ × ΔQ = $${m.rectPart.toFixed(0)}) <i>plus</i> a triangle (½(t₂−t₁) × ΔQ = $${m.triPart.toFixed(0)}) — a "square" component stacked on top of the usual triangle. This is exactly why <b>marginal</b> EB rises faster than average EB as taxes increase.` }
   ];
 }
 

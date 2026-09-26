@@ -12,14 +12,14 @@
   :root {
     --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4;
     --text:#16162A; --muted:#6B6A78;
-    --mb:#2E8B57; --mc:#2A6FD6; --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --savings:#00838F;
+    --mb:#2A6FD6; --mc:#C0392B; --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF; --savings:#00838F;
     --accent:#2A3A8F;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C;
       --text:#ECEAE4; --muted:#9A98A4;
-      --mb:#5FC27E; --mc:#6FA3FF; --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --savings:#4DD0E1;
+      --mb:#6FA3FF; --mc:#EF6C6C; --eq:#FFD54F; --eq-stroke:#14141A; --on-accent:#14141A; --savings:#4DD0E1;
       --accent:#8FA0FF;
     }
   }
@@ -244,7 +244,7 @@ function stepContent(){
     { t:"Step 2 · Benefit of abatement",
       b:`<b style="color:var(--mb)">B′(Q)</b> is the social marginal benefit of abating — the counterpart of marginal damage. It's <b>declining</b>: removing the dirtiest, most damaging pollution first yields the biggest gains; later units matter less.` },
     { t:"Step 3 · Social optimum Q*",
-      b:`Maximizing B(Q) − C(Q) gives the condition <b>B′(Q*) = C′(Q*)</b>, here at <b>Q* = ${m.Qstar.toFixed(2)}</b>, with shadow value <b>$${m.tstar.toFixed(2)}</b> per unit reduced. The <b style="color:var(--mc)">blue triangle</b> is the total abatement cost of reaching Q*: <b>$${m.abateCost.toFixed(0)}</b>.` },
+      b:`Maximizing B(Q) − C(Q) gives the condition <b>B′(Q*) = C′(Q*)</b>, here at <b>Q* = ${m.Qstar.toFixed(2)}</b>, with shadow value <b>$${m.tstar.toFixed(2)}</b> per unit reduced. The <b style="color:var(--mc)">red triangle</b> is the total abatement cost of reaching Q*: <b>$${m.abateCost.toFixed(0)}</b>.` },
     { t:"Step 4 · Achieving it with a tax",
       b:`Set a price on pollution reduction of <b>p* = C′(Q*) = $${m.tstar.toFixed(2)}</b>, charged on whatever pollution remains. Abating up to Q* instead of paying tax on those units saves the firm <b style="color:var(--savings)">$${m.taxSavings.toFixed(0)}</b> — but it still owes a <b>residual tax bill of $${m.taxBill.toFixed(0)}</b> on the pollution it didn't eliminate. Total firm outlay: $${(m.abateCost+m.taxBill).toFixed(0)}.` },
     { t:"Step 5 · Achieving it with a standard",

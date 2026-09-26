@@ -12,17 +12,17 @@
   :root {
     --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
     --text:#16162A; --muted:#6B6A78;
-    --d:#16162A; --s:#16162A; --st:#16162A; --smc:#2E8B57; --md:#2E8B57;
-    --dwl:#C0392B; --residual:#F2B705; --revenue:#2A6FD6; --accent:#2E8B57;
-    --cons:#C0392B; --prod:#2A6FD6;
+    --d:#2A6FD6; --s:#2E8B57; --st:#9C620C; --smc:#7D4FA8; --md:#C0392B;
+    --dwl:#C0392B; --residual:#F2B705; --revenue:#9C620C; --accent:#2E8B57;
+    --cons:#2A6FD6; --prod:#2E8B57;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
       --text:#ECEAE4; --muted:#9A98A4;
-      --d:#ECEAE4; --s:#ECEAE4; --st:#ECEAE4; --smc:#5FC27E; --md:#5FC27E;
-      --dwl:#EF6C6C; --residual:#FFD54F; --revenue:#6FA3FF; --accent:#5FC27E;
-      --cons:#EF6C6C; --prod:#6FA3FF;
+      --d:#6FA3FF; --s:#5FC27E; --st:#F0A83A; --smc:#B98AF0; --md:#EF6C6C;
+      --dwl:#EF6C6C; --residual:#FFD54F; --revenue:#F0A83A; --accent:#5FC27E;
+      --cons:#6FA3FF; --prod:#5FC27E;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -111,7 +111,9 @@
     <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
-        <div class="item"><span class="sw" style="background:var(--text)"></span> D = PMB = SMB, S = PMC</div>
+        <div class="item"><span class="sw" style="background:var(--d)"></span> D = PMB = SMB
+        </div>
+        <div class="item"><span class="sw" style="background:var(--s)"></span> S = PMC</div>
         <div class="item"><span class="sw dash"></span> S = PMC + t (supply with tax)</div>
         <div class="item"><span class="sw" style="background:var(--smc)"></span> SMC = PMC + MD</div>
         <div class="item"><span class="sw" style="background:var(--md)"></span> MD — marginal damage</div>
@@ -126,7 +128,8 @@ function cssvar(n){ return getComputedStyle(document.documentElement).getPropert
 let T={};
 function loadTheme(){ T={ plotBg:cssvar('--plot-bg'),grid:cssvar('--grid'),text:cssvar('--text'),muted:cssvar('--muted'),
   smc:cssvar('--smc'),md:cssvar('--md'),dwl:cssvar('--dwl'),residual:cssvar('--residual'),revenue:cssvar('--revenue'),
-  cons:cssvar('--cons'),prod:cssvar('--prod') }; }
+  cons:cssvar('--cons'),prod:cssvar('--prod'),
+  d:cssvar('--d'),s:cssvar('--s'),st:cssvar('--st') }; }
 loadTheme();
 if(window.matchMedia) matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{loadTheme();draw();});
 
@@ -222,11 +225,11 @@ function draw(){
   }
 
   // ---------- curves ----------
-  dline(M.D, 0, X_MAX, T.text, 2.2);
-  dline(M.S, 0, X_MAX, T.text, 2.2);
+  dline(M.D, 0, X_MAX, T.d, 2.2);
+  dline(M.S, 0, X_MAX, T.s, 2.2);
   dline(M.SMC, 0, X_MAX, T.smc, 2.2);
   hline(d, 0, X_MAX, T.md, [3,3]);
-  if(step>=1) dline(M.St, 0, X_MAX, T.text, 2.0, [6,4]);
+  if(step>=1) dline(M.St, 0, X_MAX, T.st, 2.0, [6,4]);
 
   // ---------- reference points ----------
   vline(M.xM, 0, M.pM, T.text, [4,3]); hline(M.pM, 0, M.xM, T.text, [4,3]);
@@ -258,11 +261,11 @@ function draw(){
   }
 
 
-  label('D = PMB = SMB', qx(X_MAX-4), py(M.D(X_MAX-4))-6, T.text, 11, 'bold', 'right', true);
-  label('S = PMC', qx(X_MAX-4), py(M.S(X_MAX-4))-8, T.text, 11, 'bold', 'right', true);
+  label('D = PMB = SMB', qx(X_MAX-4), py(M.D(X_MAX-4))-6, T.d, 11, 'bold', 'right', true);
+  label('S = PMC', qx(X_MAX-4), py(M.S(X_MAX-4))-8, T.s, 11, 'bold', 'right', true);
   label('SMC = PMC + MD', qx(X_MAX-4), py(M.SMC(X_MAX-4))-8, T.smc, 11, 'bold', 'right', true);
   label('MD', qx(X_MAX-4), py(d)-6, T.md, 10.5, 'bold', 'right', true);
-  if(step>=1) label('S = PMC + t', qx(X_MAX-4), py(M.St(X_MAX-4))-8, T.text, 11, 'bold', 'right', true);
+  if(step>=1) label('S = PMC + t', qx(X_MAX-4), py(M.St(X_MAX-4))-8, T.st, 11, 'bold', 'right', true);
 
   // ---------- incidence brackets (step 3 only) ----------
   if(step===3){
@@ -282,7 +285,7 @@ function stepContent(){
     { t:"Step 0 · Before the tax",
       b:`The market settles at <b>x^M = ${M0.xM.toFixed(0)}</b>, where D = PMC — ignoring the externality entirely. The red triangle is the full deadweight loss, <b style="color:var(--dwl)">$${M0.residualLoss.toFixed(2)}</b>, the cost of overproducing relative to x^O.` },
     { t:"Step 1 · Introducing the tax",
-      b:`Drag the slider: the tax raises the supply curve to <b>S = PMC + t</b> (dashed). Consumers now pay <b>q^t</b>, producers keep <b>p^t = q^t − t</b>, and output falls to <b>x^t</b>, between x^O and x^M. The <b style="color:var(--residual)">yellow residual loss</b> shrinks as t rises; the <b style="color:var(--revenue)">blue rectangle</b> is new tax revenue, t · x^t = $${Mt.revenue.toFixed(2)}.` },
+      b:`Drag the slider: the tax raises the supply curve to <b>S = PMC + t</b> (dashed). Consumers now pay <b>q^t</b>, producers keep <b>p^t = q^t − t</b>, and output falls to <b>x^t</b>, between x^O and x^M. The <b style="color:var(--residual)">yellow residual loss</b> shrinks as t rises; the <b style="color:var(--revenue)">amber rectangle</b> is new tax revenue, t · x^t = $${Mt.revenue.toFixed(2)}.` },
     { t:"Step 2 · The optimal tax: t = MD",
       b:`Set <b>t = MD = $${d.toFixed(2)}</b> exactly: x^t collapses onto <b>x^O</b>, and the residual loss vanishes completely — <b style="color:var(--residual)">$0.00</b>. This is the whole point of a Pigouvian tax: it doesn't just shrink the externality's cost, it eliminates it, while raising revenue of <b style="color:var(--revenue)">$${model(d).revenue.toFixed(2)}</b>.` },
     { t:"Step 3 · Who actually pays the tax?",

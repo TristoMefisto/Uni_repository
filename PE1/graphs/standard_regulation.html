@@ -12,15 +12,15 @@
   :root {
     --bg:#F6F5F1; --surface:#FFFFFF; --plot-bg:#FCFCFA; --border:#DFDCD4; --grid:#E8E6DF;
     --text:#16162A; --muted:#6B6A78;
-    --smc:#2E8B57; --md:#2E8B57; --dwl:#C0392B; --residual:#C0392B;
-    --cap:#7D4FA8; --accent:#2E8B57; --cs:#F2B705; --ps:#2A6FD6; --dmg:#C0392B;
+    --smc:#7D4FA8; --md:#C0392B; --dwl:#C0392B; --residual:#9C620C;
+    --cap:#00838F; --accent:#2E8B57; --cs:#F2B705; --ps:#2A6FD6; --dmg:#C0392B;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#33323C; --grid:#2A2A32;
       --text:#ECEAE4; --muted:#9A98A4;
-      --smc:#5FC27E; --md:#5FC27E; --dwl:#EF6C6C; --residual:#EF6C6C;
-      --cap:#B98AF0; --accent:#5FC27E; --cs:#FFD54F; --ps:#6FA3FF; --dmg:#EF6C6C;
+      --smc:#B98AF0; --md:#EF6C6C; --dwl:#EF6C6C; --residual:#F0A83A;
+      --cap:#4DD0E1; --accent:#5FC27E; --cs:#FFD54F; --ps:#6FA3FF; --dmg:#EF6C6C;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -286,7 +286,7 @@ function stepContent(){
     { t:"Step 0 · Before regulation",
       b:`The market settles at <b>x^M = ${M0.xM.toFixed(0)}</b>, where D = PMC — the externality is ignored. <b style="color:var(--cs)">Gold</b> = consumer surplus, <b style="color:var(--ps)">blue</b> = producer surplus, light <b style="color:var(--dmg)">red</b> rectangle = total damage. The darker red triangle on top is the full deadweight loss, <b style="color:var(--dwl)">$${M0.residualLoss.toFixed(2)}</b> — the cost of overproducing relative to x^O, counted on top of (not instead of) CS, PS, and damage.` },
     { t:"Step 1 · Imposing the cap",
-      b:`Drag the slider: a legal ceiling <b style="color:var(--cap)">x^S</b> blocks output directly — no price mechanism, just a quantity limit. Below the cap, consumers bid the price up to <b>p^S = D(x^S)</b>, and producers receive that same price for every unit, so the gap between p^S and their marginal cost becomes extra producer surplus (scarcity rent) — CS/PS/Damage all update live as x^S falls toward x^O, and the <b style="color:var(--residual)">red residual loss</b> shrinks in step.` },
+      b:`Drag the slider: a legal ceiling <b style="color:var(--cap)">x^S</b> blocks output directly — no price mechanism, just a quantity limit. Below the cap, consumers bid the price up to <b>p^S = D(x^S)</b>, and producers receive that same price for every unit, so the gap between p^S and their marginal cost becomes extra producer surplus (scarcity rent) — CS/PS/Damage all update live as x^S falls toward x^O, and the <b style="color:var(--residual)">amber residual loss</b> shrinks in step.` },
     { t:"Step 2 · The optimal standard: x^S = x^O",
       b:`Set the cap exactly at <b>x^O = ${M0.xO.toFixed(1)}</b>: the residual loss vanishes completely — <b style="color:var(--residual)">$0.00</b>. Price rises to <b>p^S = p^O = $${Mopt.pO.toFixed(2)}</b>. Just like the optimal tax, a correctly-set standard restores full efficiency — CS + PS − Damage is now maximized.` },
     { t:"Step 3 · Standard vs. Pigouvian tax",
