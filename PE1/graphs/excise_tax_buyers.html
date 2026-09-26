@@ -64,6 +64,23 @@
   .legend .sw { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
   .legend .sw.dash { background:repeating-linear-gradient(90deg,var(--shifted) 0 5px,transparent 5px 9px); height:3px; }
   .legend .dt { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -74,10 +91,8 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head">
         <div class="step-dots" id="dots"></div>
         <div class="step-counter" id="counter">Step 0 / 5</div>
@@ -89,19 +104,19 @@
         <button id="next" class="primary">Next ▶</button>
       </div>
     </div>
-
-    <div class="results" id="results" style="display:none">
+  <div class="results" id="results" style="display:none">
       <div class="res-box b"><div class="lbl">Incidence on buyers</div><div class="big" id="inc-b">+$4.50</div></div>
       <div class="res-box s"><div class="lbl">Incidence on sellers</div><div class="big" id="inc-s">−$3.00</div></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Adjust the tax</div>
       <div class="slider-label"><span>Tax per unit (t)</span><span class="val" id="v-t">$7.50</span></div>
       <input type="range" id="s-t" min="0" max="15" step="0.5" value="7.5">
     </div>
-
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
         <div class="item"><span class="sw" style="background:var(--supply)"></span> c′(S) — supply (marginal cost)</div>
@@ -110,7 +125,7 @@
         <div class="item"><span class="dt" style="background:var(--eq);border:1.5px solid var(--eq-stroke)"></span> equilibrium / key points</div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -139,9 +154,10 @@ const py = p => padT + plotH - (p/P_MAX)*plotH;
 
 function setupCanvas(){
   const dpr = window.devicePixelRatio || 1;
-  const avail = Math.max(300, cv.parentElement.clientWidth - 16);
-  const cssW = Math.min(avail, 760);
+  const avail = Math.max(300, (cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth) - 16);
+  const cssW = Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100);
   const cssH = cssW * LH / LW;
+  cv.parentElement.style.maxWidth=(cssW+18)+'px';
   cv.style.width = cssW+'px';
   cv.style.height = cssH+'px';
   cv.width = Math.round(cssW*dpr);

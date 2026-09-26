@@ -66,6 +66,23 @@
   .legend .sw { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
   .legend .sw.dash { height:0; border-top:2.6px dashed var(--zigzag); }
   .note { font-size:11px; color:var(--muted); line-height:1.55; margin-top:4px; padding-top:10px; border-top:1px solid var(--border); }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -76,28 +93,30 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head"><div class="step-dots" id="dots"></div><div class="step-counter" id="counter">Step 0 / 4</div></div>
       <div class="step-title" id="stitle">—</div>
       <div class="step-body" id="sbody">—</div>
       <div class="nav-row"><button id="back" disabled>◀ Back</button><button id="next" class="primary">Next ▶</button></div>
     </div>
-    <div class="card">
+  <div class="card">
       <div class="card-title">Negotiate the next unit</div>
       <div class="slider-label"><span>Case 1 — units added (right on recipient)</span><span class="val" id="v-q1">0</span></div>
       <input type="range" id="s-q1" min="0" max="83" step="1" value="0">
       <div class="slider-label" style="margin-top:10px;"><span>Case 2 — units cut (right on emitter)</span><span class="val" id="v-q2">100</span></div>
       <input type="range" id="s-q2" min="84" max="100" step="1" value="100">
     </div>
-    <div class="card">
+  <div class="card">
       <div class="results">
         <div class="res-box g" id="b-g"><div class="lbl">Gain, this unit (Case 1)</div><div class="big" id="r-g">—</div></div>
         <div class="res-box d2" id="b-d2"><div class="lbl">Gain, this unit (Case 2)</div><div class="big" id="r-d2">—</div></div>
       </div>
     </div>
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
         <div class="item"><span class="sw" style="background:var(--d)"></span> D = PMB = SMB</div>
@@ -107,7 +126,7 @@
       </div>
       <div class="note" id="note">Case 1: fishery owns clean water, starts at Q=0, steelmaker buys permits unit by unit. Case 2: steelmaker owns the right to pollute, starts at Q₁, fishery pays to cut production unit by unit. Both converge to Q₂.</div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -128,7 +147,8 @@ const py=p=>padT+plotH-((p-P_MIN)/(P_MAX-P_MIN))*plotH;
 
 function setupCanvas(){
   const dpr=window.devicePixelRatio||1;
-  const avail=Math.max(300,cv.parentElement.clientWidth-16), cssW=Math.min(avail,760), cssH=cssW*LH/LW;
+  const avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16), cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100), cssH=cssW*LH/LW;
+  cv.parentElement.style.maxWidth=(cssW+18)+'px';
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);

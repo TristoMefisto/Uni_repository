@@ -83,6 +83,23 @@
   .legend .item { display:flex; align-items:center; gap:8px; }
   .legend .sw { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
   .legend .dt { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -93,10 +110,8 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="card-title">Which contribution moves?</div>
       <div class="mode-row">
         <button class="mode-btn m1 active" id="modeBtn1">Move g² → reaction of 1</button>
@@ -109,8 +124,7 @@
       <input type="range" id="slider" min="0" max="4.9" step="0.1" value="3">
       <div class="slider-ticks"><span>0</span><span id="sliderMaxLbl">corner at g² = 5</span></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="stepper-head">
         <div class="step-dots" id="dots"></div>
         <div class="step-counter" id="counter">Step 0 / 4</div>
@@ -122,13 +136,14 @@
         <button id="next" class="primary">Next ▶</button>
       </div>
     </div>
-
-    <div class="results" id="results">
+  <div class="results" id="results">
       <div class="res-box a"><div class="lbl" id="r-ghat-lbl">ĝ¹ (best response)</div><div class="big" id="r-ghat">0</div></div>
       <div class="res-box b"><div class="lbl" id="r-x-lbl">x¹ = M¹ − ĝ¹</div><div class="big" id="r-x">0</div></div>
     </div>
-
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend" id="legend">
         <div class="item"><span class="sw" style="background:var(--ic1)"></span> indifference curve through the tangency (U¹ at best response)</div>
@@ -138,7 +153,7 @@
         <div class="item"><span class="sw" style="background:var(--xbracket)"></span> x¹ = M¹ − ĝ¹ (private good left over)</div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -195,7 +210,8 @@ function py(g2){ return padT + plotH - (g2/AXIS_MAX)*plotH; } // vertical = g2
 
 function setupCanvas(){
   const dpr=window.devicePixelRatio||1;
-  const avail=Math.max(300,cv.parentElement.clientWidth-16), cssW=Math.min(avail,760), cssH=cssW*LH/LW;
+  const avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16), cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100), cssH=cssW*LH/LW;
+  cv.parentElement.style.maxWidth=(cssW+18)+'px';
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);

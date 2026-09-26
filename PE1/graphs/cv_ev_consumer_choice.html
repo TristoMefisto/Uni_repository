@@ -70,6 +70,23 @@
   .legend .sw.dash { height:0; border-top:2.6px dashed var(--shifted); }
   .legend .sw.dot { height:0; border-top:2.6px dotted var(--cv); }
   .note { font-size:11px; color:var(--muted); line-height:1.55; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -83,10 +100,8 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head">
         <div class="step-dots" id="dots"></div>
         <div class="step-counter" id="counter">Step 0 / 5</div>
@@ -98,13 +113,11 @@
         <button id="next" class="primary">Next ▶</button>
       </div>
     </div>
-
-    <div class="results" id="results" style="display:none">
+  <div class="results" id="results" style="display:none">
       <div class="res-box cv"><div class="lbl">CV (compensating)</div><div class="big" id="r-cv">—</div><div class="sub">give back at new prices</div></div>
       <div class="res-box ev"><div class="lbl">EV (equivalent)</div><div class="big" id="r-ev">—</div><div class="sub">take at old prices</div></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Adjust the model</div>
       <div class="slider-label"><span>Tax on good 1 (price rise)</span><span class="val" id="v-t" style="color:var(--shifted)">+$0.50</span></div>
       <input type="range" id="s-t" min="0.1" max="1.5" step="0.05" value="0.5" style="accent-color:var(--shifted)">
@@ -113,8 +126,10 @@
         Both goods normal, so income effects make CV ≠ EV.
       </div>
     </div>
-
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
         <div class="item"><span class="sw" style="background:var(--ic0)"></span> Indifference curve u⁰ (pre-tax)</div>
@@ -125,7 +140,7 @@
         <div class="item"><span class="sw" style="background:var(--ev);opacity:.85"></span> Compensated to u¹ at old prices → EV</div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -145,7 +160,8 @@ const gx=x=>padL+(x/X_MAX)*plotW, gy=y=>padT+plotH-(y/Y_MAX)*plotH;
 
 function setupCanvas(){
   const dpr=window.devicePixelRatio||1;
-  const avail=Math.max(300,cv.parentElement.clientWidth-16), cssW=Math.min(avail,760), cssH=cssW*LH/LW;
+  const avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16), cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100), cssH=cssW*LH/LW;
+  cv.parentElement.style.maxWidth=(cssW+18)+'px';
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);

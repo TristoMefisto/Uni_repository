@@ -64,6 +64,23 @@
   .res-box.d .lbl { color:var(--dirty); } .res-box.c .lbl { color:var(--clean); }
   .res-box .big { font-size:14px; font-weight:bold; font-variant-numeric:tabular-nums; }
   .res-box .sub { font-size:11px; color:var(--muted); }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -74,10 +91,8 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head">
         <div class="step-dots" id="dots"></div>
         <div class="step-counter" id="counter">Step 0 / 4</div>
@@ -89,13 +104,11 @@
         <button id="next" class="primary">Next ▶</button>
       </div>
     </div>
-
-    <div class="results">
+  <div class="results">
       <div class="res-box d"><div class="lbl">Dirty firm (buys permits)</div><div class="big" id="r-d">—</div><div class="sub" id="r-d2">—</div></div>
       <div class="res-box c"><div class="lbl">Clean firm (sells permits)</div><div class="big" id="r-c">—</div><div class="sub" id="r-c2">—</div></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Adjust the firms &amp; the allocation</div>
       <div class="slider-label"><span>Dirty firm MC slope</span><span class="val d" id="v-cd">1.50</span></div>
       <input type="range" id="s-cd" min="1.0" max="2.0" step="0.05" value="1.5">
@@ -107,7 +120,8 @@
         Total abatement required (cap) Q̄ = 100, split between the two firms. Each firm's own axis runs 0 → Q̄ = its own abatement; Q̄/2 marks the starting equal allocation.
       </div>
     </div>
-  </div>
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
 </div>
 
 <script>
@@ -128,8 +142,9 @@ const X0L=axL, X0R=axL+pw+GAP;
 const Qbar=100;
 let cD=1.5, cC=0.5, xD=50;   // xD = dirty firm's own abatement; clean firm's = Qbar-xD
 function setupCanvas(){
-  const dpr=window.devicePixelRatio||1, avail=Math.max(300,cv.parentElement.clientWidth-16);
-  const cssW=Math.min(avail,820), cssH=cssW*LH/LW;
+  const dpr=window.devicePixelRatio||1, avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16);
+  const cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100), cssH=cssW*LH/LW;
+  cv.parentElement.style.maxWidth=(cssW+18)+'px';
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   const s=(cssW/LW)*dpr; ctx.setTransform(s,0,0,s,0,0);

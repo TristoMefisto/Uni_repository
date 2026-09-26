@@ -78,6 +78,23 @@
   .legend .sw.fill{height:11px;width:16px;border-radius:2px}
   .note{font-size:11px;color:var(--muted);line-height:1.55;margin-top:11px;padding-top:11px;border-top:1px solid var(--border)}
   .note sup{font-size:8.5px}
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -92,10 +109,8 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head">
         <div class="step-dots" id="dots"></div>
         <div class="step-counter" id="counter">Step 1 / 5</div>
@@ -107,8 +122,7 @@
         <button id="next" class="primary">Next ▶</button>
       </div>
     </div>
-
-    <div class="results">
+  <div class="results">
       <div class="res-box hi"><div class="lbl">High risk (H)</div>
         <div class="big">pₕ = <span id="r-ph">—</span></div>
         <div class="big">premium pₕM = <span id="r-premh">—</span></div>
@@ -122,8 +136,7 @@
       <div class="res-box gap"><div class="lbl">Premium gap (low risk pays less)</div>
         <div class="big">pₕM − pₗM = <span id="r-gap">—</span> &nbsp;at every coverage I</div></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Adjust the model</div>
       <div class="slider-label"><span>Pr(sick), high risk &nbsp;pₕ</span><span class="val hi" id="v-ph">0.45</span></div>
       <input type="range" id="s-ph" min="0.35" max="0.65" step="0.01" value="0.45">
@@ -134,13 +147,14 @@
         full insurance for type i is Cᵢ = (Y−pᵢM, Y−pᵢM) on the 45° line.
       </div>
     </div>
-
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Fair premium vs coverage</div>
       <div class="mini-wrap"><canvas id="mini"></canvas></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
         <div class="item"><span class="sw thin"></span> 45° certainty line yₛ = yₕ</div>
@@ -151,7 +165,7 @@
         <div class="item"><span class="sw gold"></span> Cₕ, Cₗ — full-insurance optima</div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -185,8 +199,9 @@
   const gx=v=>padL+(v/AX)*PW, gy=v=>padT+PH-(v/AX)*PH;
   function setupCanvas(){
     const dpr=window.devicePixelRatio||1;
-    const avail=Math.max(300,cv.parentElement.clientWidth-16),cssW=Math.min(avail,640),cssH=cssW*LH/LW;
-    cv.style.width=cssW+'px';cv.style.height=cssH+'px';
+    const avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16),cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100),cssH=cssW*LH/LW;
+    cv.parentElement.style.maxWidth=(cssW+18)+'px';
+  cv.style.width=cssW+'px';cv.style.height=cssH+'px';
     cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);
     ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);
   }

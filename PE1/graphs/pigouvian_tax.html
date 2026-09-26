@@ -71,6 +71,23 @@
   .legend .sw { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
   .legend .sw.dash { height:0; border-top:2.6px dashed var(--text); }
   .note { font-size:11px; color:var(--muted); line-height:1.55; margin-top:4px; padding-top:10px; border-top:1px solid var(--border); }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -81,34 +98,36 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head"><div class="step-dots" id="dots"></div><div class="step-counter" id="counter">Step 0 / 3</div></div>
       <div class="step-title" id="stitle">—</div>
       <div class="step-body" id="sbody">—</div>
       <div class="nav-row"><button id="back" disabled>◀ Back</button><button id="next" class="primary">Next ▶</button></div>
     </div>
-    <div class="card">
+  <div class="card">
       <div class="card-title">Set the tax</div>
       <div class="slider-label"><span>Tax per unit, t</span><span class="val" id="v-t">$0.00</span></div>
       <input type="range" id="s-t" min="0" max="3" step="0.05" value="0">
       <div class="note" id="snote">MD = $3.00 per unit. Drag t up to MD to reach the social optimum.</div>
     </div>
-    <div class="card">
+  <div class="card">
       <div class="results">
         <div class="res-box r" id="b-r"><div class="lbl">Residual welfare loss</div><div class="big" id="r-r">—</div></div>
         <div class="res-box rv" id="b-rv"><div class="lbl">Tax revenue</div><div class="big" id="r-rv">—</div></div>
       </div>
     </div>
-    <div class="card" id="incidence-card" style="display:none;">
+  <div class="card" id="incidence-card" style="display:none;">
       <div class="card-title">Who bears the optimal tax</div>
       <div class="results">
         <div class="res-box c" id="b-c"><div class="lbl">Consumers (q^t − p^M)</div><div class="big" id="r-c">—</div></div>
         <div class="res-box p" id="b-p"><div class="lbl">Producers (p^M − p^t)</div><div class="big" id="r-p">—</div></div>
       </div>
     </div>
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
         <div class="item"><span class="sw" style="background:var(--d)"></span> D = PMB = SMB
@@ -119,7 +138,7 @@
         <div class="item"><span class="sw" style="background:var(--md)"></span> MD — marginal damage</div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -141,7 +160,8 @@ const py=p=>padT+plotH-((p-P_MIN)/(P_MAX-P_MIN))*plotH;
 
 function setupCanvas(){
   const dpr=window.devicePixelRatio||1;
-  const avail=Math.max(300,cv.parentElement.clientWidth-16), cssW=Math.min(avail,760), cssH=cssW*LH/LW;
+  const avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16), cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100), cssH=cssW*LH/LW;
+  cv.parentElement.style.maxWidth=(cssW+18)+'px';
   cv.style.width=cssW+'px'; cv.style.height=cssH+'px';
   cv.width=Math.round(cssW*dpr); cv.height=Math.round(cssH*dpr);
   ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);

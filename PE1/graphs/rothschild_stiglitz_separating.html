@@ -77,6 +77,23 @@
   .legend .sw.gold{height:11px;width:11px;border-radius:50%;border:1.5px solid var(--pt-stroke);background:var(--pt)}
   .legend .sw.ring{height:12px;width:12px;border-radius:50%;border:2px solid var(--pt);background:transparent}
   .legend .sw.endow{height:10px;width:10px;border-radius:50%;background:var(--endow)}
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
 </style>
 </head>
 <body>
@@ -91,16 +108,14 @@
 </header>
 
 <div class="layout">
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-  <div class="panel">
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="stepper-head"><div class="step-dots" id="dots"></div><div class="step-counter" id="counter">Step 1 / 5</div></div>
       <div class="step-title" id="stitle">—</div>
       <div class="step-body" id="sbody">—</div>
       <div class="nav-row"><button id="back">◀ Back</button><button id="next" class="primary">Next ▶</button></div>
     </div>
-
-    <div class="results">
+  <div class="results">
       <div class="res-box hi"><div class="lbl">High risk → Cₕ (full)</div>
         <div class="big">Cₕ = (<span id="r-ch">—</span>)</div>
         <div class="big">premium = <span id="r-premh">—</span></div></div>
@@ -110,8 +125,7 @@
       <div class="res-box ex" id="exbox"><div class="lbl" id="exlbl">Existence (depends on λ)</div>
         <div class="big" id="extext">—</div></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Adjust the model</div>
       <div class="slider-label"><span>Pr(sick), high risk pₕ</span><span class="val hi" id="v-ph">0.40</span></div>
       <input type="range" id="s-ph" min="0.32" max="0.60" step="0.01" value="0.40">
@@ -123,13 +137,14 @@
         Y = 100, M = 50, u(y) = ln y. C′ₗ is the intersection of the low-risk fair line with H's indifference curve through Cₕ (binding incentive constraint). λ sets the pooling line and tests existence.
       </div>
     </div>
-
-    <div class="card">
+</div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Low-risk welfare: separating vs pooling</div>
       <div class="mini-wrap"><canvas id="mini"></canvas></div>
     </div>
-
-    <div class="card">
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend">
         <div class="item"><span class="sw thin"></span> 45° line yₛ = yₕ</div>
@@ -141,7 +156,7 @@
         <div class="item"><span class="sw ring"></span> Cₗ — L's unattainable first best</div>
       </div>
     </div>
-  </div>
+</div>
 </div>
 
 <script>
@@ -178,8 +193,9 @@
   const LW=560,LH=560,padL=52,padR=26,padT=26,padB=46,AX=130;
   const PW=LW-padL-padR,PH=LH-padT-padB;
   const gx=v=>padL+(v/AX)*PW, gy=v=>padT+PH-(v/AX)*PH;
-  function setupCanvas(){const dpr=window.devicePixelRatio||1;const avail=Math.max(300,cv.parentElement.clientWidth-16),cssW=Math.min(avail,640),cssH=cssW*LH/LW;
-    cv.style.width=cssW+'px';cv.style.height=cssH+'px';cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);}
+  function setupCanvas(){const dpr=window.devicePixelRatio||1;const avail=Math.max(300,(cv.parentElement.style.maxWidth='',cv.parentElement.clientWidth)-16),cssW=Math.min(avail, Math.round(Math.min(760, Math.max(400, window.innerHeight - 250)) * LW / LH), 1100),cssH=cssW*LH/LW;
+    cv.parentElement.style.maxWidth=(cssW+18)+'px';
+  cv.style.width=cssW+'px';cv.style.height=cssH+'px';cv.width=Math.round(cssW*dpr);cv.height=Math.round(cssH*dpr);ctx.setTransform((cssW/LW)*dpr,0,0,(cssW/LW)*dpr,0,0);}
   function segE(x1,y1,x2,y2,c,w,d){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=w||1.4;ctx.setLineDash(d||[]);ctx.beginPath();ctx.moveTo(gx(x1),gy(y1));ctx.lineTo(gx(x2),gy(y2));ctx.stroke();ctx.restore();}
   function curveFn(fn,c,w,d){ctx.save();ctx.strokeStyle=c;ctx.lineWidth=w||2;ctx.setLineDash(d||[]);ctx.lineJoin='round';ctx.beginPath();let pen=false;
     for(let x=1;x<=AX;x+=AX/440){const y=fn(x);if(!isFinite(y)||y<-2||y>AX*1.12){pen=false;continue;}const Px=gx(x),Py=gy(y);if(!pen){ctx.moveTo(Px,Py);pen=true;}else ctx.lineTo(Px,Py);}ctx.stroke();ctx.restore();}

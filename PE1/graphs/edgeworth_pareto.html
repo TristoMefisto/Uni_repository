@@ -247,6 +247,25 @@
     .layout { flex-direction: column; }
     canvas { width: 100%; }
   }
+  /* pe1 wide layout */
+  /* the page's own .layout sets align-items:flex-start and .panel sets
+     flex-direction:column; both have to be undone explicitly here. */
+  .layout { display:flex; flex-direction:column; align-items:stretch; gap:16px;
+            max-width:1180px; margin:16px auto 0; }
+  .panel--top, .panel--bot { flex:0 0 auto; flex-direction:row; flex-wrap:wrap;
+                             gap:14px; align-items:flex-start;
+                             width:100%; min-width:0; }
+  .panel--top > .card, .panel--bot > .card { flex:1 1 320px; min-width:260px; }
+  /* the page's .canvas-wrap carries flex:1 1 580px, which in a column
+     container is a HEIGHT basis; reset it. max-width is set by setupCanvas. */
+  .canvas-wrap { flex:0 0 auto; align-self:center; width:100%; }
+  .note { max-width:none; }
+  header .relation, header p { max-width:none; }
+  @media (max-width:760px){
+    .panel--top > .card, .panel--bot > .card { flex:1 1 100%; }
+  }
+  .canvas-wrap { max-width:778px; }
+  .canvas-wrap canvas { width:100%; height:auto; }
 </style>
 </head>
 <body>
@@ -258,14 +277,8 @@
 
 <div class="layout">
 
-  <div class="canvas-wrap">
-    <canvas id="cv" width="500" height="500"></canvas>
-    <p class="hint">Click or drag inside the box to move the allocation ●</p>
-  </div>
-
-  <div class="panel">
-
-    <div class="card">
+  <div class="panel panel--top">
+  <div class="card">
       <div class="card-title">Endowment &amp; Preferences</div>
       <div class="slider-row">
         <div class="slider-label">
@@ -293,8 +306,17 @@
         <input type="range" id="s-a2" min="0.1" max="0.9" step="0.05" value="0.5" style="accent-color:var(--c2)">
       </div>
     </div>
-
-    <div class="card">
+  <div class="btn-row">
+      <button class="primary" id="btn-eq">Jump to Pareto Optimum</button>
+      <button id="btn-reset">Reset Endowment</button>
+    </div>
+</div>
+  <div class="canvas-wrap">
+    <canvas id="cv" width="760" height="760"></canvas>
+    <p class="hint">Click or drag inside the box to move the allocation ●</p>
+  </div>
+  <div class="panel panel--bot">
+  <div class="card">
       <div class="card-title">Allocation at Current Point</div>
       <div class="stat-grid">
         <div class="stat-box c1">
@@ -313,10 +335,8 @@
         </div>
       </div>
     </div>
-
-    <div id="verdict-box" class="verdict not-pareto">—</div>
-
-    <div class="card">
+  <div id="verdict-box" class="verdict not-pareto">—</div>
+  <div class="card">
       <div class="card-title">Legend</div>
       <div class="legend-row">
         <div class="legend-item"><div class="leg-swatch" style="background:var(--c1)"></div><span>Consumer 1's indifference curves</span></div>
@@ -326,13 +346,7 @@
         <div class="legend-item"><div class="leg-dot" style="background:var(--alloc); border:2px solid #fff; box-shadow:0 0 0 1.5px var(--alloc)"></div><span>Current allocation (drag me)</span></div>
       </div>
     </div>
-
-    <div class="btn-row">
-      <button class="primary" id="btn-eq">Jump to Pareto Optimum</button>
-      <button id="btn-reset">Reset Endowment</button>
-    </div>
-
-  </div>
+</div>
 </div>
 
 <script>
