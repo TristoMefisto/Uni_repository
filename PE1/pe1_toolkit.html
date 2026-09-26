@@ -299,6 +299,18 @@
   .aw-copy { border:1px solid var(--accent); background:transparent; color:var(--accent);
              font-family:'Georgia',serif; font-size:12.5px; padding:7px 16px; border-radius:20px; cursor:pointer; transition:all .15s; }
   .aw-copy:hover { background:var(--accent); color:#fff; }
+
+/* collapsible sidebar */
+body.sb-collapsed .sidebar,
+body.sb-collapsed .test-sidebar { width:0 !important; flex-basis:0 !important;
+  border-right:none !important; overflow:hidden !important; }
+.sidebar, .test-sidebar { transition:width .18s ease; }
+#sb-toggle { position:fixed; bottom:14px; left:calc(238px + 14px); z-index:900;
+  font:inherit; font-size:15px; line-height:1; padding:7px 11px; border-radius:7px;
+  border:1px solid var(--border2, #ccc); background:var(--surface, #fff); color:var(--text, #222);
+  cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.14); transition:left .18s ease; }
+body.sb-collapsed #sb-toggle { left:14px; }
+#sb-toggle:hover { border-color:var(--accent, #333); color:var(--accent, #333); }
 </style>
 </head>
 <body>
@@ -3694,6 +3706,31 @@ function copyText(text, btn, restore){
   } else fallbackCopy(text, done);
 }
 
+</script>
+
+<script>
+/* collapsible sidebar: press [ or use the button at the bottom left */
+(function(){
+  var b = document.createElement('button');
+  b.id = 'sb-toggle'; b.type = 'button';
+  b.setAttribute('aria-label', 'Show or hide the sidebar');
+  b.textContent = '\u2630';
+  document.body.appendChild(b);
+  function set(v){
+    document.body.classList.toggle('sb-collapsed', v);
+    b.title = (v ? 'Show' : 'Hide') + ' the sidebar  [';
+    try { localStorage.setItem('pe1-sb', v ? '1' : '0'); } catch(e){}
+    window.dispatchEvent(new Event('resize'));
+  }
+  b.addEventListener('click', function(){ set(!document.body.classList.contains('sb-collapsed')); });
+  document.addEventListener('keydown', function(e){
+    if (e.key === '[' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))
+      set(!document.body.classList.contains('sb-collapsed'));
+  });
+  var start = false;
+  try { start = localStorage.getItem('pe1-sb') === '1'; } catch(e){}
+  set(start);
+})();
 </script>
 </body>
 </html>
