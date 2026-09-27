@@ -67,6 +67,15 @@
   .tbl { width:100%; border-collapse:collapse; font-size:12.5px; margin:6px 0; }
   .tbl th, .tbl td { border-bottom:1px solid var(--border); padding:4px 6px; text-align:left; }
   .tbl th { font-size:11.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--muted); font-weight:bold; }
+  .back-btn {
+    position:fixed; top:14px; left:16px; z-index:999;
+    background:var(--surface); border:1.3px solid var(--border); color:var(--muted);
+    font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:12.5px;
+    padding:7px 13px; border-radius:20px; text-decoration:none;
+    box-shadow:0 2px 8px rgba(0,0,0,.12); letter-spacing:.02em;
+    transition:transform .15s ease;
+  }
+  .back-btn:hover { transform:translateY(-1px); border-color:var(--accent); color:var(--accent); }
   .fullscreen-btn {
     position:fixed; top:14px; right:16px; z-index:999;
     background:var(--surface); border:1.3px solid var(--accent); color:var(--accent);
@@ -81,6 +90,7 @@
 <body>
 
 <a class="fullscreen-btn" href="https://tristomefisto.github.io/Uni_repository/MATH/math_cheatsheet.html" target="_blank" rel="noopener">⤢ Open fullscreen</a>
+<a class="back-btn" href="../index.html" target="_top">&larr; All subjects</a>
 
 <div class="board">
 
