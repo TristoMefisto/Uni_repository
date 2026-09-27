@@ -189,9 +189,9 @@ body.sb-collapsed #sb-toggle { left:14px; }
     <div class="test-topbar">
       <div class="test-topbar-title" id="topic-title">&mdash;</div>
       <div class="test-tabs" id="tabs">
-        <button class="test-tab active" data-type="flashcards" onclick="setType('flashcards',this)">&#128451;&#65039; Flashcards</button>
-        <button class="test-tab" data-type="mcq" onclick="setType('mcq',this)">&#9745;&#65039; MCQ</button>
-        <button class="test-tab" data-type="open" onclick="setType('open',this)">&#9997;&#65039; Open Questions</button>
+        <button class="test-tab active" data-type="flashcards" onclick="setType('flashcards',this)">Flashcards</button>
+        <button class="test-tab" data-type="mcq" onclick="setType('mcq',this)">MCQ</button>
+        <button class="test-tab" data-type="open" onclick="setType('open',this)">Open Questions</button>
       </div>
     </div>
     <div class="test-content"><div class="test-inner" id="inner"></div></div>
@@ -1422,7 +1422,7 @@ function renderOpen(inner, items){
       <div class="oq-q">${i+1}. ${o.q}</div>
       <textarea class="oq-input" id="oq-${i}" placeholder="Write your answer here…"
                 oninput="saveAnswer(${i},this.value)">${esc(saved[i]||'')}</textarea>
-      <button class="oq-copy" onclick="copyAnswer(${i},this)">&#128203; Copy answer</button>
+      <button class="oq-copy" onclick="copyAnswer(${i},this)">Copy answer</button>
     </div>`).join('');
 }
 function saveAnswer(i,val){ (answers[topicIdx] = answers[topicIdx] || {})[i] = val; }
@@ -1458,13 +1458,13 @@ function renderPoolFlashcard(){
       <div class="fc-card${fcAnswer?' answer':''}" onclick="flipPoolCard()">
         <div class="fc-content">${fcAnswer ? item.a : item.q}</div>
       </div>
-      ${fcAnswer ? `<div class="fc-topic-tag">${PM_DATA[ti].icon} ${PM_DATA[ti].title}</div>` : ''}
+      ${fcAnswer ? `<div class="fc-topic-tag">${PM_DATA[ti].title}</div>` : ''}
       <div class="fc-hint">Click the card (or press Space) to ${fcAnswer?'see the question':'reveal the answer &amp; topic'}</div>
       <div class="fc-controls">
         <button class="fc-btn" onclick="prevPoolCard()">&larr; Prev</button>
         <button class="fc-btn primary" onclick="flipPoolCard()">Flip</button>
         <button class="fc-btn" onclick="nextPoolCard()">Next &rarr;</button>
-        <button class="fc-btn" onclick="reshufflePool()">&#127922; Shuffle</button>
+        <button class="fc-btn" onclick="reshufflePool()">Shuffle</button>
       </div>
     </div>`;
 }
@@ -1480,7 +1480,7 @@ function renderPoolMCQ(){
   inner.innerHTML = `
     <div class="mcq-score">
       <span>Answered ${answered} / ${pool.length} &middot; correct ${correct}</span>
-      <button onclick="openPool('mcq')">&#127922; Reshuffle &amp; reset</button>
+      <button onclick="openPool('mcq')">Reshuffle &amp; reset</button>
     </div>` + pool.map((p,i)=>{
       const chosen = poolMcq[i], done = chosen!==undefined, m = p.item;
       return `
@@ -1493,7 +1493,7 @@ function renderPoolMCQ(){
           return `<button class="${cls}" ${done?'disabled':''} onclick="answerPoolMCQ(${i},${oi})">${String.fromCharCode(97+oi)}. ${opt}</button>`;
         }).join('')}
         <div class="mcq-rationale${done?' shown':''}">
-          <div class="fc-topic-tag" style="margin-bottom:8px">${PM_DATA[p.ti].icon} ${PM_DATA[p.ti].title}</div>
+          <div class="fc-topic-tag" style="margin-bottom:8px">${PM_DATA[p.ti].title}</div>
           ${mdInline(m.rationale)}
         </div>
       </div>`;
@@ -1505,10 +1505,10 @@ function renderPoolOpen(){
   document.getElementById('inner').innerHTML = pool.map((p,i)=>`
     <div class="oq-block">
       <div class="oq-q">${i+1}. ${p.item.q}</div>
-      <div class="fc-topic-tag" style="margin-bottom:10px">${PM_DATA[p.ti].icon} ${PM_DATA[p.ti].title}</div>
+      <div class="fc-topic-tag" style="margin-bottom:10px">${PM_DATA[p.ti].title}</div>
       <textarea class="oq-input" id="pool-oq-${i}" placeholder="Write your answer here…"
                 oninput="poolAnswers[${i}]=this.value">${esc(poolAnswers[i]||'')}</textarea>
-      <button class="oq-copy" onclick="copyPoolAnswer(${i},this)">&#128203; Copy answer</button>
+      <button class="oq-copy" onclick="copyPoolAnswer(${i},this)">Copy answer</button>
     </div>`).join('');
 }
 function copyPoolAnswer(i, btn){
@@ -1542,11 +1542,11 @@ function renderMock(){
         <div class="oq-q"><b>Question ${i+1}.</b> ${m.q}</div>
         <textarea class="oq-input" id="mock-oq-${i}" placeholder="Write your answer here…"
                   oninput="mockAnswers[${i}]=this.value">${esc(mockAnswers[i]||'')}</textarea>
-        <button class="oq-copy" onclick="copyMockAnswer(${i},this)">&#128203; Copy this answer</button>
+        <button class="oq-copy" onclick="copyMockAnswer(${i},this)">Copy this answer</button>
       </div>`).join('')}
     <div class="exam-actions">
-      <button class="fc-btn primary" onclick="copyMockAll(this)">&#128203; Copy all 3 answers</button>
-      <button class="fc-btn" onclick="drawMock()">&#127922; Draw a new exam</button>
+      <button class="fc-btn primary" onclick="copyMockAll(this)">Copy all 3 answers</button>
+      <button class="fc-btn" onclick="drawMock()">Draw a new exam</button>
     </div>`;
 }
 function copyMockAnswer(i, btn){

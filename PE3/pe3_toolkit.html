@@ -356,8 +356,8 @@ body.sb-collapsed #sb-toggle { left:14px; }
       <div class="test-topbar">
         <div class="test-topbar-title" id="pe3-topic-title" style="color:var(--pe3-accent)">—</div>
         <div class="test-tabs" id="pe3-tabs">
-          <button class="test-tab pe3 active" data-type="flashcards" onclick="setPe3Type('flashcards',this)">🗂️ Flashcards</button>
-          <button class="test-tab pe3" data-type="open" onclick="setPe3Type('open',this)">✍️ Open Questions</button>
+          <button class="test-tab pe3 active" data-type="flashcards" onclick="setPe3Type('flashcards',this)">Flashcards</button>
+          <button class="test-tab pe3" data-type="open" onclick="setPe3Type('open',this)">Open Questions</button>
         </div>
       </div>
       <div class="test-content"><div class="test-inner" id="pe3-inner"></div></div>
@@ -618,7 +618,7 @@ function renderPe3Map(){
   const t=PE3_THEORY_TOPICS[pe3TheoryIdx];
   document.getElementById('pe3-topic-title').textContent = t.title;
   document.getElementById('pe3-map-wrap').innerHTML =
-    `<div class="pe3-map-title">${t.icon} ${t.title}</div>
+    `<div class="pe3-map-title">${t.title}</div>
      <div class="pe3-map-sub">${t.sub}</div>
      <div class="pe3-map-toolbar">
        <button onclick="pe3MapZoom(1.2)" title="Zoom in">+</button>
@@ -784,7 +784,7 @@ function renderPe3Open(inner, items){
       <div class="oq-q">${i+1}. ${o.q}</div>
       <textarea class="oq-input" id="oq-${i}" placeholder="Write your answer here…"
                 oninput="savePe3Answer(${i},this.value)">${(saved[i]||'').replace(/</g,'&lt;')}</textarea>
-      <button class="oq-copy" onclick="copyPe3Answer(${i},this)">📋 Copy answer</button>
+      <button class="oq-copy" onclick="copyPe3Answer(${i},this)">Copy answer</button>
     </div>`).join('');
 }
 function savePe3Answer(i, val){
@@ -838,13 +838,13 @@ function renderPe3PoolFlashcard(){
       <div class="fc-card${pe3FcAnswer?' answer':''}" onclick="flipPe3PoolCard()">
         <div class="fc-content">${pe3FcAnswer ? item.a : item.q}</div>
       </div>
-      ${pe3FcAnswer ? `<div class="fc-topic-tag">${PE3_DATA[ti].icon} ${PE3_DATA[ti].title}</div>` : ''}
+      ${pe3FcAnswer ? `<div class="fc-topic-tag">${PE3_DATA[ti].title}</div>` : ''}
       <div class="fc-hint">Click the card to ${pe3FcAnswer?'see the question':'reveal the answer & topic'}</div>
       <div class="fc-controls">
         <button class="fc-btn" onclick="prevPe3PoolCard()">← Prev</button>
         <button class="fc-btn primary" onclick="flipPe3PoolCard()">Flip</button>
         <button class="fc-btn" onclick="nextPe3PoolCard()">Next →</button>
-        <button class="fc-btn" onclick="reshufflePe3Pool()">🎲 Shuffle</button>
+        <button class="fc-btn" onclick="reshufflePe3Pool()">Shuffle</button>
       </div>
     </div>`;
   if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
@@ -859,10 +859,10 @@ function renderPe3PoolOpen(){
   inner.innerHTML = pe3Pool.map((p,i)=>`
     <div class="oq-block">
       <div class="oq-q">${i+1}. ${p.item.q}</div>
-      <div class="fc-topic-tag" style="margin-top:0;margin-bottom:10px">${PE3_DATA[p.ti].icon} ${PE3_DATA[p.ti].title}</div>
+      <div class="fc-topic-tag" style="margin-top:0;margin-bottom:10px">${PE3_DATA[p.ti].title}</div>
       <textarea class="oq-input" id="pool-oq-${i}" placeholder="Write your answer here…"
                 oninput="pe3PoolAnswers[${i}]=this.value">${(pe3PoolAnswers[i]||'').replace(/</g,'&lt;')}</textarea>
-      <button class="oq-copy" onclick="copyPe3PoolAnswer(${i},this)">📋 Copy answer</button>
+      <button class="oq-copy" onclick="copyPe3PoolAnswer(${i},this)">Copy answer</button>
     </div>`).join('');
   if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
 }
@@ -901,11 +901,11 @@ function renderPe3Mock(){
         <div class="oq-q"><b>Question ${i+1}.</b> ${m.q}</div>
         <textarea class="oq-input" id="mock-oq-${i}" placeholder="Write your answer here…"
                   oninput="pe3MockAnswers[${i}]=this.value">${(pe3MockAnswers[i]||'').replace(/</g,'&lt;')}</textarea>
-        <button class="oq-copy" onclick="copyPe3MockAnswer(${i},this)">📋 Copy this answer</button>
+        <button class="oq-copy" onclick="copyPe3MockAnswer(${i},this)">Copy this answer</button>
       </div>`).join('')}
     <div class="exam-actions">
-      <button class="fc-btn primary" onclick="copyPe3MockAll(this)">📋 Copy all 3 answers</button>
-      <button class="fc-btn" onclick="drawPe3Mock()">🎲 New mock</button>
+      <button class="fc-btn primary" onclick="copyPe3MockAll(this)">Copy all 3 answers</button>
+      <button class="fc-btn" onclick="drawPe3Mock()">New mock</button>
     </div>`;
   if(window.renderMathInElement) renderMathInElement(inner, KATEX_OPTS);
 }
