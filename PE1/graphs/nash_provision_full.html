@@ -119,7 +119,7 @@
 </div>
 
 <div class="layout">
-  <div class="panel panel--top">
+  <div class="panel panel--top" data-tab="A">
   <div class="indiv-toggle">
       <button class="i1 active" id="ind-1" onclick="setIndiv(1)">Individual 1 · chooses g¹</button>
       <button class="i2" id="ind-2" onclick="setIndiv(2)">Individual 2 · chooses g²</button>
@@ -148,14 +148,6 @@
       <div class="res-box a" id="resX" style="background:color-mix(in srgb,var(--xbracket) 13%,transparent);border-left-color:var(--xbracket)"><div class="lbl" id="resX-lbl" style="color:var(--xbracket)">private good x¹ = M¹−ĝ¹</div><div class="big" id="rX">—</div></div>
     </div>
 </div>
-  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
-  <div class="panel panel--bot">
-  <div class="card">
-      <div class="card-title">Legend</div>
-      <div class="legend" id="legendA"></div>
-    </div>
-</div>
-
   <div class="panel" id="panel-B" style="display:none">
     <div class="card">
       <div class="step-title">Reaction functions &amp; the Nash equilibrium</div>
@@ -176,6 +168,15 @@
       <div class="legend" id="legendB"></div>
     </div>
   </div>
+  <div class="canvas-wrap"><canvas id="cv"></canvas></div>
+  <div class="panel panel--bot" data-tab="A">
+  <div class="card">
+      <div class="card-title">Legend</div>
+      <div class="legend" id="legendA"></div>
+    </div>
+</div>
+
+  
 </div>
 
 <script>
@@ -474,7 +475,7 @@ function setTab(which){
   tab=which;
   document.getElementById('tab-A').classList.toggle('active',which==='A');
   document.getElementById('tab-B').classList.toggle('active',which==='B');
-  document.getElementById('panel-A').style.display = which==='A'?'':'none';
+  document.querySelectorAll('[data-tab="A"]').forEach(el => { el.style.display = which==='A'?'':'none'; });
   document.getElementById('panel-B').style.display = which==='B'?'':'none';
   setupCanvas();
   if(which==='A') renderA(); else renderB();
