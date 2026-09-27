@@ -309,6 +309,18 @@ body.sb-collapsed #sb-toggle { left:14px; }
   .side-foot a { color:var(--muted); text-decoration:none; }
   .side-foot a:hover { color:var(--accent); }
   #sb-toggle { left:calc(280px + 14px); }
+  /* stacked module layout */
+  .module-layout { display:flex; flex-direction:column; align-items:stretch;
+                   gap:18px; flex-wrap:nowrap; }
+  .iframe-col { order:1; flex:0 0 auto; width:100%; max-width:none; }
+  .formulas-col { order:2; flex:0 0 auto; width:100%; max-width:none;
+                  max-height:none; overflow:visible; padding-right:0; }
+  /* the board was a single column beside the graph; below it there is room */
+  .formulas-col .board { column-count:initial; display:grid; gap:16px;
+      grid-template-columns:repeat(auto-fit,minmax(330px,1fr)); align-items:start; }
+  .formulas-col .board > .card { margin-bottom:0; }
+  .module-note { margin:0 0 14px; max-width:none; }
+  .graph-tabs { margin-bottom:16px; }
 </style>
 </head>
 <body>
@@ -381,6 +393,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ TAX INCIDENCE PANEL ═══════════ -->
       <div class="panel active" id="panel-tax-incidence">
+        <div class="module-note">Statutory incidence is irrelevant in competitive markets — the burden split is set by relative elasticities alone. Under monopoly, pass-through depends on demand curvature: exactly &frac12; with linear demand, ε/(ε−1) &gt; 1 (overshifting) with isoelastic demand.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/Uni_repository/PE1/graphs/excise_tax_buyers.html',this)">Tax on Buyers</button>
             <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/Uni_repository/PE1/graphs/excise_tax_producers.html',this)">Tax on Producers</button>
@@ -388,8 +401,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
             <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/Uni_repository/PE1/graphs/monopoly_tax_linear.html',this)">Monopoly: Linear</button>
             <button class="gtab" onclick="setGraphTab('iframe-tax-incidence','https://tristomefisto.github.io/Uni_repository/PE1/graphs/monopoly_tax_isoelastic.html',this)">Monopoly: Isoelastic</button>
         </div>
-<div class="module-note">Statutory incidence is irrelevant in competitive markets — the burden split is set by relative elasticities alone. Under monopoly, pass-through depends on demand curvature: exactly &frac12; with linear demand, ε/(ε−1) &gt; 1 (overshifting) with isoelastic demand.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 2. Tax incidence - competitive markets -->
@@ -991,6 +1003,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ EFFICIENCY COST OF TAXES PANEL ═══════════ -->
       <div class="panel" id="panel-efficiency-cost">
+        <div class="module-note">Same underlying quasilinear model throughout — a lump-sum tax has only an income effect (no EB); an excise tax adds a substitution effect, which is the source of the excess burden triangle.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-efficiency-cost','https://tristomefisto.github.io/Uni_repository/PE1/graphs/excise_vs_lumpsum.html',this)">Excise vs. Lump-sum</button>
             <button class="gtab" onclick="setGraphTab('iframe-efficiency-cost','https://tristomefisto.github.io/Uni_repository/PE1/graphs/excess_burden_partial_eq.html',this)">Partial-Eq Excess Burden</button>
@@ -998,8 +1011,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
             <button class="gtab" onclick="setGraphTab('iframe-efficiency-cost','https://tristomefisto.github.io/Uni_repository/PE1/graphs/cv_ev_welfare.html',this)">CV/EV: Welfare</button>
             <button class="gtab" onclick="setGraphTab('iframe-efficiency-cost','https://tristomefisto.github.io/Uni_repository/PE1/graphs/cv_ev_excess_burden.html',this)">CV/EV: Excess Burden</button>
         </div>
-<div class="module-note">Same underlying quasilinear model throughout — a lump-sum tax has only an income effect (no EB); an excise tax adds a substitution effect, which is the source of the excess burden triangle.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 8. Harberger Triangle -->
@@ -1076,14 +1088,14 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ EXTERNALITY POLICY COMPARISON PANEL ═══════════ -->
       <div class="panel" id="panel-externality-policy">
+        <div class="module-note">Same PMC/SMC/PMB diagram under three regimes, plus a two-firm tradable-permit market. The tax (t=d) and the standard (Q*) both implement the social optimum — the difference only shows up once costs are uncertain (see Taxes vs. Standards module). Cap and trade decentralizes the same optimum via a market-clearing permit price.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-externality-policy','https://tristomefisto.github.io/Uni_repository/PE1/graphs/negative_production_externality.html',this)">No Policy</button>
             <button class="gtab" onclick="setGraphTab('iframe-externality-policy','https://tristomefisto.github.io/Uni_repository/PE1/graphs/pigouvian_tax.html',this)">Pigouvian Tax</button>
             <button class="gtab" onclick="setGraphTab('iframe-externality-policy','https://tristomefisto.github.io/Uni_repository/PE1/graphs/standard_regulation.html',this)">Standard</button>
             <button class="gtab" onclick="setGraphTab('iframe-externality-policy','https://tristomefisto.github.io/Uni_repository/PE1/graphs/cap_and_trade.html',this)">Cap and Trade</button>
         </div>
-<div class="module-note">Same PMC/SMC/PMB diagram under three regimes, plus a two-firm tradable-permit market. The tax (t=d) and the standard (Q*) both implement the social optimum — the difference only shows up once costs are uncertain (see Taxes vs. Standards module). Cap and trade decentralizes the same optimum via a market-clearing permit price.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 11. Externalities -->
@@ -1137,13 +1149,13 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ ABATEMENT EFFICIENCY FRAMEWORK PANEL ═══════════ -->
       <div class="panel" id="panel-abatement-efficiency">
+        <div class="module-note">Recasts policy on abatement Q directly (B'(Q)=C'(Q)) rather than the taxed activity. Static efficiency compares uniform standards vs. taxes across heterogeneous firms; dynamic efficiency compares innovation incentives.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-abatement-efficiency','https://tristomefisto.github.io/Uni_repository/PE1/graphs/abatement_full_information.html',this)">Full Information</button>
             <button class="gtab" onclick="setGraphTab('iframe-abatement-efficiency','https://tristomefisto.github.io/Uni_repository/PE1/graphs/static_efficiency.html',this)">Static Efficiency</button>
             <button class="gtab" onclick="setGraphTab('iframe-abatement-efficiency','https://tristomefisto.github.io/Uni_repository/PE1/graphs/dynamic_efficiency.html',this)">Dynamic Efficiency</button>
         </div>
-<div class="module-note">Recasts policy on abatement Q directly (B'(Q)=C'(Q)) rather than the taxed activity. Static efficiency compares uniform standards vs. taxes across heterogeneous firms; dynamic efficiency compares innovation incentives.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 12. General Abatement Framework -->
@@ -1186,12 +1198,12 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ PRIVATE REMEDIES PANEL ═══════════ -->
       <div class="panel" id="panel-private-remedies">
+        <div class="module-note">Both are private (non-governmental) responses to an externality — bargaining under well-defined property rights, and the over-exploitation that results when property rights are absent altogether.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-private-remedies','https://tristomefisto.github.io/Uni_repository/PE1/graphs/coasian_bargaining.html',this)">Coasian Bargaining</button>
             <button class="gtab" onclick="setGraphTab('iframe-private-remedies','https://tristomefisto.github.io/Uni_repository/PE1/graphs/tragedy_of_commons.html',this)">Tragedy of the Commons</button>
         </div>
-<div class="module-note">Both are private (non-governmental) responses to an externality — bargaining under well-defined property rights, and the over-exploitation that results when property rights are absent altogether.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <div class="card" style="--c-accent:var(--cs-green)">
@@ -1268,13 +1280,13 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ PRIVATE PROVISION OF PUBLIC GOODS PANEL ═══════════ -->
       <div class="panel" id="panel-public-goods">
+        <div class="module-note">A single narrative: individual best responses → Nash equilibrium → why it under-provides relative to the Pareto-efficient (Samuelson) quantity → how a planner would reach that quantity instead.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/Uni_repository/PE1/graphs/nash_provision_full.html',this)">Best Response & Nash</button>
             <button class="gtab" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/Uni_repository/PE1/graphs/pareto_lens.html',this)">Pareto Lens</button>
             <button class="gtab" onclick="setGraphTab('iframe-public-goods','https://tristomefisto.github.io/Uni_repository/PE1/graphs/planner_optimal_provision.html',this)">Planner's Optimum</button>
         </div>
-<div class="module-note">A single narrative: individual best responses → Nash equilibrium → why it under-provides relative to the Pareto-efficient (Samuelson) quantity → how a planner would reach that quantity instead.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 13. Public Goods - Private Provision -->
@@ -1370,6 +1382,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ SOCIAL INSURANCE & ADVERSE SELECTION PANEL ═══════════ -->
       <div class="panel" id="panel-social-insurance">
+        <div class="module-note">One continuous story in the (yₕ,yₛ) plane: first-best full insurance → symmetric-info benchmark → why pooling can't survive competition → the separating equilibrium's rationing of low risks → the Pareto improvement from mandatory pooling + supplementary insurance.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-social-insurance','https://tristomefisto.github.io/Uni_repository/PE1/graphs/social_insurance_full_insurance.html',this)">Full Insurance Benchmark</button>
             <button class="gtab" onclick="setGraphTab('iframe-social-insurance','https://tristomefisto.github.io/Uni_repository/PE1/graphs/rothschild_stiglitz_symmetric.html',this)">RS Symmetric Info</button>
@@ -1377,8 +1390,7 @@ body.sb-collapsed #sb-toggle { left:14px; }
             <button class="gtab" onclick="setGraphTab('iframe-social-insurance','https://tristomefisto.github.io/Uni_repository/PE1/graphs/rothschild_stiglitz_separating.html',this)">Separating Equilibrium</button>
             <button class="gtab" onclick="setGraphTab('iframe-social-insurance','https://tristomefisto.github.io/Uni_repository/PE1/graphs/rothschild_stiglitz_govt_intervention.html',this)">Govt. Intervention</button>
         </div>
-<div class="module-note">One continuous story in the (yₕ,yₛ) plane: first-best full insurance → symmetric-info benchmark → why pooling can't survive competition → the separating equilibrium's rationing of low risks → the Pareto improvement from mandatory pooling + supplementary insurance.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 17. Indemnity Insurance Model -->
@@ -1468,12 +1480,12 @@ body.sb-collapsed #sb-toggle { left:14px; }
 
       <!-- ═══════════ EDGEWORTH BOX & TÂTONNEMENT PANEL ═══════════ -->
       <div class="panel" id="panel-edgeworth">
+        <div class="module-note">The contract curve is the set of Pareto-efficient allocations (equal MRS); tâtonnement shows how competitive price adjustment finds one such allocation without any planner.</div>
         <div class="graph-tabs">
             <button class="gtab active" onclick="setGraphTab('iframe-edgeworth','https://tristomefisto.github.io/Uni_repository/PE1/graphs/edgeworth_pareto.html',this)">Edgeworth Box & Contract Curve</button>
             <button class="gtab" onclick="setGraphTab('iframe-edgeworth','https://tristomefisto.github.io/Uni_repository/PE1/graphs/tatonnement.html',this)">Tâtonnement (Walrasian Adjustment)</button>
         </div>
-<div class="module-note">The contract curve is the set of Pareto-efficient allocations (equal MRS); tâtonnement shows how competitive price adjustment finds one such allocation without any planner.</div>
-        <div class="module-layout">
+<div class="module-layout">
           <div class="formulas-col">
             <div class="cheatsheet-scope"><div class="board">
   <!-- 1. Utility / MRS -->
