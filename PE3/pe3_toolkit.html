@@ -741,7 +741,7 @@ function renderPe3Topic(){
   document.querySelectorAll('#pe3-tabs .test-tab').forEach(tab=>{
     const type = tab.dataset.type;
     const n = t[type] ? t[type].length : 0;
-    const label = {flashcards:'Flashcards', open:'✍️ Open Questions'}[type];
+    const label = {flashcards:'Flashcards', open:'Open Questions'}[type];
     tab.innerHTML = `${label}<span class="cnt">(${n})</span>`;
   });
   renderPe3Content();

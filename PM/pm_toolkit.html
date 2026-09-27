@@ -1340,7 +1340,7 @@ function renderTopic(){
   document.getElementById('topic-title').textContent = t.title;
   document.querySelectorAll('#tabs .test-tab').forEach(tab=>{
     const k = tab.dataset.type, n = (t[k]||[]).length;
-    const label = {flashcards:'\u{1F5C3}️ Flashcards', mcq:'☑️ MCQ', open:'✍️ Open Questions'}[k];
+    const label = {flashcards:'Flashcards', mcq:'MCQ', open:'Open Questions'}[k];
     tab.innerHTML = `${label}<span class="cnt">(${n})</span>`;
   });
   renderContent();
@@ -1421,7 +1421,7 @@ function renderOpen(inner, items){
 function saveAnswer(i,val){ (answers[topicIdx] = answers[topicIdx] || {})[i] = val; }
 function copyAnswer(i, btn){
   const t = PM_DATA[topicIdx];
-  copyText(`Public Management — ${t.title}\n\nQuestion: ${t.open[i].q}\n\nMy answer:\n${document.getElementById('oq-'+i).value}`, btn, '\u{1F4CB} Copy answer');
+  copyText(`Public Management — ${t.title}\n\nQuestion: ${t.open[i].q}\n\nMy answer:\n${document.getElementById('oq-'+i).value}`, btn, 'Copy answer');
 }
 
 /* ── pooled views ────────────────────────────────────────────────────────── */
@@ -1506,7 +1506,7 @@ function renderPoolOpen(){
 }
 function copyPoolAnswer(i, btn){
   const p = pool[i];
-  copyText(`Public Management — ${PM_DATA[p.ti].title}\n\nQuestion: ${p.item.q}\n\nMy answer:\n${document.getElementById('pool-oq-'+i).value}`, btn, '\u{1F4CB} Copy answer');
+  copyText(`Public Management — ${PM_DATA[p.ti].title}\n\nQuestion: ${p.item.q}\n\nMy answer:\n${document.getElementById('pool-oq-'+i).value}`, btn, 'Copy answer');
 }
 
 /* ── mock exam: 3 open questions, one each from 3 distinct random topics ──── */
@@ -1544,13 +1544,13 @@ function renderMock(){
 }
 function copyMockAnswer(i, btn){
   const m = mock[i];
-  copyText(`Public Management Mock — ${PM_DATA[m.ti].title}\n\nQuestion: ${m.q}\n\nMy answer:\n${document.getElementById('mock-oq-'+i).value}`, btn, '\u{1F4CB} Copy this answer');
+  copyText(`Public Management Mock — ${PM_DATA[m.ti].title}\n\nQuestion: ${m.q}\n\nMy answer:\n${document.getElementById('mock-oq-'+i).value}`, btn, 'Copy this answer');
 }
 function copyMockAll(btn){
   const payload = 'PUBLIC MANAGEMENT MOCK EXAM — my answers\n\n' + mock.map((m,i)=>
     `Question ${i+1} (${PM_DATA[m.ti].title}): ${m.q}\n\nMy answer:\n${document.getElementById('mock-oq-'+i).value}`
   ).join('\n\n──────────\n\n');
-  copyText(payload, btn, '\u{1F4CB} Copy all 3 answers');
+  copyText(payload, btn, 'Copy all 3 answers');
 }
 
 /* ── clipboard ───────────────────────────────────────────────────────────── */
