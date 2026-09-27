@@ -18,8 +18,7 @@
     --accent:#2A3A8F; --accent2:#1F2C6E; --pe3-accent:#2E8B57;
     --buyer:#C0392B; --seller:#9C620C; --demand:#2A6FD6; --supply:#2E8B57; --mr:#7D4FA8; --mc:#C0392B;
     --eq:#F2B705; --cs-ink:#2A3A8F; --ic2:#C0392B; --eq-stroke:#4A3000; --on-accent:#FFFFFF;
-    --green:#2E8B57; --amber:#9C620C; --red:#C0392B;
-  }
+    --green:#2E8B57; --amber:#9C620C; --red:#C0392B; --hl:#EDEAE4;}
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#2A2A32; --border2:#3D3C47; --grid:#2A2A32;
@@ -27,8 +26,7 @@
       --accent:#8FA0FF; --accent2:#6FA3FF; --pe3-accent:#5FC27E;
       --buyer:#EF6C6C; --seller:#F0A83A; --demand:#6FA3FF; --supply:#5FC27E; --mr:#B98AF0; --mc:#EF6C6C;
       --eq:#FFD54F; --cs-ink:#8FA0FF; --ic2:#EF6C6C; --eq-stroke:#16162A;
-      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C;
-    }
+      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C; --hl:#2A2A32;}
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
@@ -37,13 +35,6 @@
   /* ── Theory / Testing mode split ── */
   .mode-switch-inline { display:flex; gap:2px; background:var(--bg); border:1px solid var(--border); border-radius:7px; padding:2px; margin-top:8px; }
   /* Subject switch (PE1 ↔ PE3) — sits under the mode pills in each sidebar header */
-  .subject-switch { display:block; width:100%; margin-top:8px; padding:7px 10px; font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-                    font-size:11.5px; font-weight:bold; letter-spacing:.02em; cursor:pointer; text-align:left;
-                    border:1px solid var(--border2); border-radius:7px; background:var(--surface); color:var(--muted);
-                    transition:all .15s; }
-  .subject-switch:hover { border-color:var(--pe3-accent); color:var(--pe3-accent); background:rgba(46,139,87,.06); }
-  .subject-switch.pe3 { border-color:var(--pe3-accent); color:var(--pe3-accent); }
-  .subject-switch.pe3:hover { background:rgba(46,139,87,.10); }
   /* PE3 uses a purple accent to distinguish it from the blue PE1 toolkit */
   .test-tab.pe3.active { background:var(--pe3-accent); border-color:var(--pe3-accent); color:#fff; }
   .test-nav-item.active { border-left-color:var(--pe3-accent); }
@@ -312,6 +303,27 @@ body.sb-collapsed .test-sidebar { width:0 !important; flex-basis:0 !important;
   cursor:pointer; box-shadow:0 2px 10px rgba(0,0,0,.14); transition:left .18s ease; }
 body.sb-collapsed #sb-toggle { left:14px; }
 #sb-toggle:hover { border-color:var(--accent, #333); color:var(--accent, #333); }
+  /* unified sidebar */
+  /* matches FEX/ML: aside.side 280px, .side-head, nav.side-nav, .side-foot */
+  .sidebar, .test-sidebar { width:280px; }
+  .sidebar-header, .test-sidebar-header { padding:16px 16px 12px; }
+  .sidebar-logo, .test-sidebar-logo { font-size:12px; font-weight:600;
+      letter-spacing:.09em; margin-bottom:0; }
+  .sidebar-sub, .test-sidebar-sub { font-size:11.5px; line-height:1.5;
+      font-style:normal; margin-top:3px; }
+  .sidebar-nav, .test-nav { padding:8px 8px 14px; }
+  .nav-label { font-size:10px; font-weight:600; letter-spacing:.09em;
+      color:var(--muted); padding:13px 10px 5px; }
+  .nav-item, .test-nav-item { padding:7px 10px; border-radius:6px; font-size:13.5px;
+      line-height:1.35; margin-bottom:1px; border-left:2.5px solid transparent; }
+  .nav-item:hover, .test-nav-item:hover { background:var(--hl); color:var(--text); }
+  .nav-item.active, .test-nav-item.active { background:var(--hl); color:var(--accent);
+      border-left-color:var(--accent); font-weight:500; }
+  .side-foot { padding:10px 16px; border-top:1px solid var(--border); margin-top:auto;
+      font-size:11.5px; color:var(--muted); }
+  .side-foot a { color:var(--muted); text-decoration:none; }
+  .side-foot a:hover { color:var(--accent); }
+  #sb-toggle { left:calc(280px + 14px); }
 </style>
 </head>
 <body>
@@ -325,8 +337,6 @@ body.sb-collapsed #sb-toggle { left:14px; }
           <button class="mode-btn active" id="pe3-mode-theory" onclick="setPe3Mode('theory')">🗺️ Theory</button>
           <button class="mode-btn" id="pe3-mode-testing" onclick="setPe3Mode('testing')">✏️ Testing</button>
         </div>
-        <a class="subject-switch pe3" href="../PE1/pe1_toolkit.html">← PE1 Toolkit</a>
-        <a class="subject-switch pe3" href="../index.html">← All subjects</a>
       </div>
       <nav class="test-nav" id="pe3-theory-nav"></nav>
       <nav class="test-nav" id="pe3-nav" style="display:none"></nav>
@@ -341,7 +351,8 @@ body.sb-collapsed #sb-toggle { left:14px; }
           <span class="test-nav-icon">📝</span>Mock Exam
         </div>
       </div>
-    </aside>
+      <div class="side-foot"><a href="../index.html">&larr; All subjects</a></div>
+  </aside>
     <div class="test-main">
       <div class="test-topbar">
         <div class="test-topbar-title" id="pe3-topic-title" style="color:var(--pe3-accent)">—</div>
