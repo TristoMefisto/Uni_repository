@@ -18,7 +18,7 @@
     --accent:#2A3A8F; --accent2:#1F2C6E; --pe3-accent:#2E8B57;
     --buyer:#C0392B; --seller:#9C620C; --demand:#2A6FD6; --supply:#2E8B57; --mr:#7D4FA8; --mc:#C0392B;
     --eq:#F2B705; --eq-stroke:#4A3000; --on-accent:#FFFFFF;
-    --green:#2E8B57; --amber:#9C620C; --red:#C0392B; --hl:#EDEAE4;}
+    --green:#2E8B57; --amber:#9C620C; --red:#C0392B; --hover:#EDEAE4;}
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#2A2A32; --border2:#3D3C47; --grid:#2A2A32;
@@ -26,7 +26,7 @@
       --accent:#8FA0FF; --accent2:#6FA3FF; --pe3-accent:#5FC27E;
       --buyer:#EF6C6C; --seller:#F0A83A; --demand:#6FA3FF; --supply:#5FC27E; --mr:#B98AF0; --mc:#EF6C6C;
       --eq:#FFD54F; --eq-stroke:#16162A;
-      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C; --hl:#2A2A32;}
+      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C; --hover:#2A2A32;}
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
@@ -299,8 +299,8 @@ body.sb-collapsed #sb-toggle { left:14px; }
       color:var(--muted); padding:13px 10px 5px; }
   .nav-item, .test-nav-item { padding:7px 10px; border-radius:6px; font-size:13.5px;
       line-height:1.35; margin-bottom:1px; border-left:2.5px solid transparent; }
-  .nav-item:hover, .test-nav-item:hover { background:var(--hl); color:var(--text); }
-  .nav-item.active, .test-nav-item.active { background:var(--hl); color:var(--accent);
+  .nav-item:hover, .test-nav-item:hover { background:var(--hover); color:var(--text); }
+  .nav-item.active, .test-nav-item.active { background:var(--hover); color:var(--accent);
       border-left-color:var(--accent); font-weight:500; }
   .side-foot { padding:10px 16px; border-top:1px solid var(--border); margin-top:auto;
       font-size:11.5px; color:var(--muted); }
@@ -2977,7 +2977,7 @@ function openMockExam(){
   inExamMode = true;
   document.querySelectorAll('.test-nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('mock-exam-nav').classList.add('active');
-  document.getElementById('test-topic-title').textContent = '📝 Mock Exam';
+  document.getElementById('test-topic-title').textContent = 'Mock Exam';
   document.getElementById('test-tabs').style.display = 'none';
   generateMockExam();
 }
@@ -3096,7 +3096,7 @@ function savePe1Answer(id, val){ pe1Answers[id]=val; }
 function copyPe1Answer(id, topic, question, btn){
   const a = (document.getElementById(id)||{}).value || '';
   const payload = `PE1 — ${topic}\n\nQuestion: ${question}\n\nMy answer:\n${a}`;
-  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent='📋 Copy answer',1400); };
+  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent='Copy answer',1400); };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(payload).then(done).catch(()=>fallbackCopy(payload,done));
   } else fallbackCopy(payload, done);

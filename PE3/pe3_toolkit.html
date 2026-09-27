@@ -18,7 +18,7 @@
     --accent:#2A3A8F; --accent2:#1F2C6E; --pe3-accent:#2E8B57;
     --buyer:#C0392B; --seller:#9C620C; --demand:#2A6FD6; --supply:#2E8B57; --mr:#7D4FA8; --mc:#C0392B;
     --eq:#F2B705; --cs-ink:#2A3A8F; --ic2:#C0392B; --eq-stroke:#4A3000; --on-accent:#FFFFFF;
-    --green:#2E8B57; --amber:#9C620C; --red:#C0392B; --hl:#EDEAE4;}
+    --green:#2E8B57; --amber:#9C620C; --red:#C0392B; --hover:#EDEAE4;}
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --plot-bg:#17171D; --border:#2A2A32; --border2:#3D3C47; --grid:#2A2A32;
@@ -26,7 +26,7 @@
       --accent:#8FA0FF; --accent2:#6FA3FF; --pe3-accent:#5FC27E;
       --buyer:#EF6C6C; --seller:#F0A83A; --demand:#6FA3FF; --supply:#5FC27E; --mr:#B98AF0; --mc:#EF6C6C;
       --eq:#FFD54F; --cs-ink:#8FA0FF; --ic2:#EF6C6C; --eq-stroke:#16162A;
-      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C; --hl:#2A2A32;}
+      --green:#5FC27E; --amber:#F0A83A; --red:#EF6C6C; --hover:#2A2A32;}
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html,body { height:100%; }
@@ -311,8 +311,8 @@ body.sb-collapsed #sb-toggle { left:14px; }
       color:var(--muted); padding:13px 10px 5px; }
   .nav-item, .test-nav-item { padding:7px 10px; border-radius:6px; font-size:13.5px;
       line-height:1.35; margin-bottom:1px; border-left:2.5px solid transparent; }
-  .nav-item:hover, .test-nav-item:hover { background:var(--hl); color:var(--text); }
-  .nav-item.active, .test-nav-item.active { background:var(--hl); color:var(--accent);
+  .nav-item:hover, .test-nav-item:hover { background:var(--hover); color:var(--text); }
+  .nav-item.active, .test-nav-item.active { background:var(--hover); color:var(--accent);
       border-left-color:var(--accent); font-weight:500; }
   .side-foot { padding:10px 16px; border-top:1px solid var(--border); margin-top:auto;
       font-size:11.5px; color:var(--muted); }
@@ -741,7 +741,7 @@ function renderPe3Topic(){
   document.querySelectorAll('#pe3-tabs .test-tab').forEach(tab=>{
     const type = tab.dataset.type;
     const n = t[type] ? t[type].length : 0;
-    const label = {flashcards:'🗂️ Flashcards', open:'✍️ Open Questions'}[type];
+    const label = {flashcards:'Flashcards', open:'✍️ Open Questions'}[type];
     tab.innerHTML = `${label}<span class="cnt">(${n})</span>`;
   });
   renderPe3Content();
@@ -795,7 +795,7 @@ function copyPe3Answer(i, btn){
   const q = PE3_DATA[pe3TopicIdx].open[i].q;
   const a = document.getElementById('oq-'+i).value;
   const payload = `PE3 — ${PE3_DATA[pe3TopicIdx].title}\n\nQuestion: ${q}\n\nMy answer:\n${a}`;
-  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent='📋 Copy answer',1400); };
+  const done = ()=>{ btn.textContent='✓ Copied'; setTimeout(()=>btn.textContent='Copy answer',1400); };
   if(navigator.clipboard && navigator.clipboard.writeText){
     navigator.clipboard.writeText(payload).then(done).catch(()=>fallbackCopy(payload,done));
   } else fallbackCopy(payload, done);
@@ -821,10 +821,10 @@ function openPe3Pool(type){
   pe3Pool = shuffle(pe3Pool);
   pe3PoolIdx = 0; pe3FcAnswer = false;
   if(type==='flashcards'){
-    document.getElementById('pe3-topic-title').textContent = '🎲 All flashcards — pooled ('+pe3Pool.length+')';
+    document.getElementById('pe3-topic-title').textContent = 'All flashcards — pooled ('+pe3Pool.length+')';
     renderPe3PoolFlashcard();
   } else {
-    document.getElementById('pe3-topic-title').textContent = '🎲 All open questions — pooled ('+pe3Pool.length+')';
+    document.getElementById('pe3-topic-title').textContent = 'All open questions — pooled ('+pe3Pool.length+')';
     renderPe3PoolOpen();
   }
 }
@@ -889,7 +889,7 @@ function drawPe3Mock(){
     return {ti, qi, q: PE3_DATA[ti].open[qi].q};
   });
   for(const k in pe3MockAnswers) delete pe3MockAnswers[k];
-  document.getElementById('pe3-topic-title').textContent = '📝 Mock Exam — 3 open questions';
+  document.getElementById('pe3-topic-title').textContent = 'Mock Exam — 3 open questions';
   renderPe3Mock();
 }
 function renderPe3Mock(){
@@ -913,14 +913,14 @@ function copyPe3MockAnswer(i, btn){
   const m = pe3Mock[i];
   const a = document.getElementById('mock-oq-'+i).value;
   const payload = `PE3 Mock — ${PE3_DATA[m.ti].title}\n\nQuestion: ${m.q}\n\nMy answer:\n${a}`;
-  copyText(payload, btn, '📋 Copy this answer');
+  copyText(payload, btn, 'Copy this answer');
 }
 function copyPe3MockAll(btn){
   const payload = 'PE3 MOCK EXAM — my answers\n\n' + pe3Mock.map((m,i)=>{
     const a = document.getElementById('mock-oq-'+i).value;
     return `Question ${i+1} (${PE3_DATA[m.ti].title}): ${m.q}\n\nMy answer:\n${a}`;
   }).join('\n\n──────────\n\n');
-  copyText(payload, btn, '📋 Copy all 3 answers');
+  copyText(payload, btn, 'Copy all 3 answers');
 }
 /* shared copy helper */
 function copyText(text, btn, restore){
