@@ -44,7 +44,6 @@
   .test-nav-item.pool.active { background:rgba(125,79,168,.08); color:var(--accent); border-left-color:var(--accent); }
   .test-nav-item.exam { color:var(--accent); font-weight:bold; }
   .test-nav-item.exam.active, .test-nav-item.exam:hover { background:rgba(125,79,168,.08); color:var(--accent); }
-  .test-nav-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
   .nav-count { flex-shrink:0; font-size:10px; color:var(--muted2); font-variant-numeric:tabular-nums;
                padding-top:2px; letter-spacing:.02em; }
 
@@ -154,6 +153,10 @@ body.sb-collapsed #sb-toggle { left:14px; }
   .side-foot a { color:var(--muted); text-decoration:none; }
   .side-foot a:hover { color:var(--accent); }
   #sb-toggle { left:calc(280px + 14px); }
+  /* toggle in the title bar */
+  #sb-toggle { top:12px; bottom:auto; box-shadow:none; }
+  /* room for the button, in both the expanded and collapsed positions */
+  .topbar, .test-topbar { padding-left:66px; }
 </style>
 </head>
 <body>
@@ -167,16 +170,16 @@ body.sb-collapsed #sb-toggle { left:14px; }
     <nav class="test-nav" id="nav"></nav>
     <div class="test-sidebar-footer">
       <div class="test-nav-item pool" id="pool-flashcards-nav" onclick="openPool('flashcards')">
-        <span class="test-nav-icon">&#127922;</span><span class="nav-label">All flashcards (pooled)</span>
+        <span class="nav-label">All flashcards (pooled)</span>
       </div>
       <div class="test-nav-item pool" id="pool-mcq-nav" onclick="openPool('mcq')">
-        <span class="test-nav-icon">&#127922;</span><span class="nav-label">All MCQ (pooled)</span>
+        <span class="nav-label">All MCQ (pooled)</span>
       </div>
       <div class="test-nav-item pool" id="pool-open-nav" onclick="openPool('open')">
-        <span class="test-nav-icon">&#127922;</span><span class="nav-label">All open questions (pooled)</span>
+        <span class="nav-label">All open questions (pooled)</span>
       </div>
       <div class="test-nav-item exam" id="mock-nav" onclick="openMock()">
-        <span class="test-nav-icon">&#128221;</span><span class="nav-label">Mock Exam</span>
+        <span class="nav-label">Mock Exam</span>
       </div>
     </div>
     <div class="side-foot"><a href="../index.html">&larr; All subjects</a></div>
@@ -1313,7 +1316,6 @@ const mockAnswers = {};
 function initNav(){
   document.getElementById('nav').innerHTML = PM_DATA.map((t,i)=>
     `<div class="test-nav-item${i===0?' active':''}" data-idx="${i}" onclick="setTopic(${i},this)">
-       <span class="test-nav-icon">${t.icon}</span>
        <span class="nav-label">${t.title}</span>
        <span class="nav-count" title="flashcards / MCQ / open">${t.flashcards.length}&middot;${t.mcq.length}&middot;${t.open.length}</span>
      </div>`).join('');
@@ -1342,7 +1344,7 @@ function setType(t, el){
 }
 function renderTopic(){
   const t = PM_DATA[topicIdx];
-  document.getElementById('topic-title').textContent = t.icon+' '+t.title;
+  document.getElementById('topic-title').textContent = t.title;
   document.querySelectorAll('#tabs .test-tab').forEach(tab=>{
     const k = tab.dataset.type, n = (t[k]||[]).length;
     const label = {flashcards:'\u{1F5C3}️ Flashcards', mcq:'☑️ MCQ', open:'✍️ Open Questions'}[k];
@@ -1441,7 +1443,7 @@ function openPool(kind){
   poolIdx = 0; fcAnswer = false;
   syncTabs();
   const label = {flashcards:'flashcards',mcq:'MCQ',open:'open questions'}[kind];
-  document.getElementById('topic-title').textContent = `\u{1F3B2} All ${label} — pooled (${pool.length})`;
+  document.getElementById('topic-title').textContent = `All ${label} — pooled (${pool.length})`;
   if(kind==='flashcards') renderPoolFlashcard();
   else if(kind==='mcq')   renderPoolMCQ();
   else                    renderPoolOpen();
@@ -1529,7 +1531,7 @@ function drawMock(){
     return {ti, qi, q: PM_DATA[ti].open[qi].q};
   });
   for(const k in mockAnswers) delete mockAnswers[k];
-  document.getElementById('topic-title').textContent = '\u{1F4DD} Mock Exam — 3 open questions';
+  document.getElementById('topic-title').textContent = 'Mock Exam — 3 open questions';
   renderMock();
 }
 function renderMock(){
@@ -1589,7 +1591,7 @@ renderTopic();
 </script>
 
 <script>
-/* collapsible sidebar: press [ or use the button at the bottom left */
+/* collapsible sidebar: press [ or use the button in the title bar */
 (function(){
   var b = document.createElement('button');
   b.id = 'sb-toggle'; b.type = 'button';

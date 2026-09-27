@@ -71,7 +71,6 @@
   .nav-item:hover { background:var(--bg); color:var(--text); }
   .nav-item.active { background:var(--bg); color:var(--text); border-left-color:var(--accent); font-weight:bold; }
   .nav-item.stub { opacity:.6; }
-  .nav-icon { font-size:13px; width:16px; text-align:center; flex-shrink:0; }
   .nav-count { margin-left:auto; font-size:10px; color:var(--muted2); font-variant-numeric:tabular-nums; }
 
   /* ── Main ── */
@@ -202,7 +201,6 @@
                     font-size:13px; color:var(--muted); transition:all .15s; margin-bottom:1px; border-left:2.5px solid transparent; }
   .test-nav-item:hover { background:var(--bg); color:var(--text); }
   .test-nav-item.active { background:var(--bg); color:var(--text); border-left-color:var(--accent); font-weight:bold; }
-  .test-nav-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
 
   .test-main { flex:1; overflow:hidden; display:flex; flex-direction:column; min-width:0; }
   .test-topbar { padding:14px 26px; border-bottom:1px solid var(--border); background:var(--surface); flex-shrink:0; }
@@ -321,6 +319,10 @@ body.sb-collapsed #sb-toggle { left:14px; }
   .side-foot a { color:var(--muted); text-decoration:none; }
   .side-foot a:hover { color:var(--accent); }
   #sb-toggle { left:calc(280px + 14px); }
+  /* toggle in the title bar */
+  #sb-toggle { top:12px; bottom:auto; box-shadow:none; }
+  /* room for the button, in both the expanded and collapsed positions */
+  .topbar, .test-topbar { padding-left:66px; }
 </style>
 </head>
 <body>
@@ -331,21 +333,21 @@ body.sb-collapsed #sb-toggle { left:14px; }
         <div class="test-sidebar-logo" style="color:var(--pe3-accent)">Competition Policy</div>
         <div class="test-sidebar-sub">PE3 · Argentesi</div>
         <div class="mode-switch-inline">
-          <button class="mode-btn active" id="pe3-mode-theory" onclick="setPe3Mode('theory')">🗺️ Theory</button>
-          <button class="mode-btn" id="pe3-mode-testing" onclick="setPe3Mode('testing')">✏️ Testing</button>
+          <button class="mode-btn active" id="pe3-mode-theory" onclick="setPe3Mode('theory')">Theory</button>
+          <button class="mode-btn" id="pe3-mode-testing" onclick="setPe3Mode('testing')">Testing</button>
         </div>
       </div>
       <nav class="test-nav" id="pe3-theory-nav"></nav>
       <nav class="test-nav" id="pe3-nav" style="display:none"></nav>
       <div class="test-sidebar-footer" id="pe3-testing-footer" style="display:none">
         <div class="test-nav-item pe3-pool" id="pe3-pool-fc-nav" onclick="openPe3Pool('flashcards')">
-          <span class="test-nav-icon">🎲</span>All flashcards (pooled)
+          All flashcards (pooled)
         </div>
         <div class="test-nav-item pe3-pool" id="pe3-pool-open-nav" onclick="openPe3Pool('open')">
-          <span class="test-nav-icon">🎲</span>All open questions (pooled)
+          All open questions (pooled)
         </div>
         <div class="test-nav-item exam pe3" id="pe3-mock-nav" onclick="openPe3Mock()">
-          <span class="test-nav-icon">📝</span>Mock Exam
+          Mock Exam
         </div>
       </div>
       <div class="side-foot"><a href="../index.html">&larr; All subjects</a></div>
@@ -603,7 +605,7 @@ function initPe3Theory(){
   const nav=document.getElementById('pe3-theory-nav');
   nav.innerHTML = PE3_THEORY_TOPICS.map((t,i)=>
     `<div class="test-nav-item${i===0?' active':''}" data-tidx="${i}" onclick="setPe3TheoryTopic(${i},this)">
-       <span class="test-nav-icon">${t.icon}</span>${t.title}
+       ${t.title}
      </div>`).join('');
 }
 function setPe3TheoryTopic(i,el){
@@ -614,7 +616,7 @@ function setPe3TheoryTopic(i,el){
 }
 function renderPe3Map(){
   const t=PE3_THEORY_TOPICS[pe3TheoryIdx];
-  document.getElementById('pe3-topic-title').textContent = t.icon+' '+t.title;
+  document.getElementById('pe3-topic-title').textContent = t.title;
   document.getElementById('pe3-map-wrap').innerHTML =
     `<div class="pe3-map-title">${t.icon} ${t.title}</div>
      <div class="pe3-map-sub">${t.sub}</div>
@@ -714,7 +716,7 @@ function initPe3(){
   const nav = document.getElementById('pe3-nav');
   nav.innerHTML = PE3_DATA.map((t,i)=>
     `<div class="test-nav-item${i===0?' active':''}" data-idx="${i}" onclick="setPe3Topic(${i},this)">
-       <span class="test-nav-icon">${t.icon}</span>${t.title}
+       ${t.title}
      </div>`).join('');
   renderPe3Topic();
 }
@@ -735,7 +737,7 @@ function setPe3Type(type, el){
 }
 function renderPe3Topic(){
   const t = PE3_DATA[pe3TopicIdx];
-  document.getElementById('pe3-topic-title').textContent = t.icon+' '+t.title;
+  document.getElementById('pe3-topic-title').textContent = t.title;
   document.querySelectorAll('#pe3-tabs .test-tab').forEach(tab=>{
     const type = tab.dataset.type;
     const n = t[type] ? t[type].length : 0;
@@ -943,7 +945,7 @@ renderPe3Map();
 </script>
 
 <script>
-/* collapsible sidebar: press [ or use the button at the bottom left */
+/* collapsible sidebar: press [ or use the button in the title bar */
 (function(){
   var b = document.createElement('button');
   b.id = 'sb-toggle'; b.type = 'button';
