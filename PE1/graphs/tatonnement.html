@@ -22,14 +22,19 @@
   *{ box-sizing:border-box; }
   body{ margin:0; padding:18px; background:var(--bg); color:var(--text);
         font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
-  .wrap{ max-width:700px; margin:0 auto; }
+  .wrap{ max-width:1180px; margin:0 auto; }
+  /* the svg is 680x432, so height is the binding constraint on a wide
+     screen: cap the width at whatever the viewport can show. */
+  #stage{ max-width:calc((100vh - 300px) * 1.574); margin:16px auto 0;
+          background:var(--surface); border:1px solid var(--border);
+          border-radius:5px; padding:8px; }
   svg{ width:100%; height:auto; display:block; }
   .t{ font-size:14px; fill:var(--text); }
   .ts{ font-size:12px; fill:var(--muted); }
   .th{ font-size:14px; font-weight:500; fill:var(--text); }
   h1{ font-size:17px; font-weight:600; margin:0 0 4px; }
-  p.sub{ font-size:13px; color:var(--muted); margin:0 0 14px; }
-  .ctrlbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:12px 0 4px; }
+  p.sub{ font-size:13px; color:var(--muted); margin:0 0 14px; max-width:none; }
+  .ctrlbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin:14px 0 0; }
   button{ padding:6px 14px; font-size:13px; border:1px solid var(--border); background:var(--bg);
           color:var(--text); border-radius:8px; cursor:pointer; }
   button:hover{ background:var(--surface); }
@@ -40,14 +45,13 @@
   .stat{ background:var(--surface); border-radius:8px; padding:8px 12px; }
   .stat .k{ font-size:11px; color:var(--muted); }
   .stat .v{ font-size:17px; font-weight:500; margin-top:2px; }
+  /* pe1 wide layout */ /* svg page: restructured in place, see .wrap and #stage above */
 </style>
 </head>
 <body>
 <div class="wrap">
   <h1>Tâtonnement in the Edgeworth box</h1>
   <p class="sub">Step the price adjustment: the auctioneer raises p&#8321; when good 1 is in shortage, the budget line rotates around &#969;, and the two agents' chosen points converge onto the contract curve.</p>
-
-  <div id="stage"></div>
 
   <div class="ctrlbar">
     <button onclick="doStep()">Step &#8599;</button>
@@ -66,6 +70,8 @@
     <div class="stat"><div class="k">excess demand good 2</div><div class="v" id="r-z2">&mdash;</div></div>
     <div class="stat"><div class="k">status</div><div class="v" id="r-s" style="font-size:14px">&mdash;</div></div>
   </div>
+
+  <div id="stage"></div>
 </div>
 
 <script>
