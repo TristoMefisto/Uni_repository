@@ -16,14 +16,14 @@
     --bg:#F6F5F1; --surface:#FFFFFF; --border:#DFDCD4; --text:#16162A; --muted:#6B6A78;
     --accent:#2A3A8F;
     --black:#16162A; --orange:#9C620C; --red:#C0392B; --blue:#2A6FD6;
-    --green:#2E8B57; --purple:#7D4FA8; --teal:#00838F;
+    --green:#2E8B57; --purple:#7D4FA8; --teal:#00838F; --rose:#A8386B;
   }
   @media (prefers-color-scheme: dark) {
     :root {
       --bg:#14141A; --surface:#1D1D24; --border:#33323C; --text:#ECEAE4; --muted:#9A98A4;
       --accent:#8FA0FF;
       --black:#ECEAE4; --orange:#F0A83A; --red:#EF6C6C; --blue:#6FA3FF;
-      --green:#5FC27E; --purple:#B98AF0; --teal:#4DD0E1;
+      --green:#5FC27E; --purple:#B98AF0; --teal:#4DD0E1; --rose:#EE8FB5;
     }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -623,6 +623,226 @@
         $$V(W) = \max_{0 \le c \le W}\ \big[\,\ln(c) + \beta\,V(W-c)\,\big]$$
       </div>
       <div class="note">$V$ appears on both sides, so the equation defines the value function rather than computing it. Solved numerically by iterating from $V_0=0$. For log utility the closed form is $c^*(W) = (1-\beta)W$, which is the check on the numerical answer.</div>
+    </div>
+  </div>
+
+  <!-- 28. Eigenvalues & diagonalisation -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 L20 4" stroke-linecap="round"/><path d="M4 20 L16 14" stroke-linecap="round" stroke-dasharray="3 2"/><circle cx="20" cy="4" r="1.6" fill="currentColor" stroke="none"/></svg> Eigenvalues &amp; Diagonalisation</h2>
+    <div class="block">
+      $$Av = \lambda v, \qquad v \neq 0$$
+      <div class="sub-lbl">A non zero solution needs a singular matrix</div>
+      <div class="eq-block">
+        $$\det(A - \lambda I) = 0$$
+      </div>
+      <div class="note">$n$ eigenvalues counted with multiplicity. $\sum_i \lambda_i = \operatorname{tr}(A)$ and $\prod_i \lambda_i = \det A$, which is the fast arithmetic check. $A$ is singular exactly when one eigenvalue is 0.</div>
+      <hr class="div">
+      <div class="lbl">Diagonalisation</div>
+      $$A = P\Lambda P^{-1}, \qquad A^k = P\Lambda^k P^{-1}$$
+      <div class="lbl">Symmetric case (spectral theorem)</div>
+      $$A = Q\Lambda Q', \qquad Q'Q = I$$
+      <div class="note">Real eigenvalues, orthonormal eigenvectors. Setting $x = Qz$ turns $x'Ax$ into $\sum_i \lambda_i z_i^2$, so positive definite means every eigenvalue positive. Same statement as the minors test, in cleaner form.</div>
+    </div>
+  </div>
+
+  <!-- 29. Principal components -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="15" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1.3" fill="currentColor" stroke="none"/><circle cx="11" cy="16" r="1.3" fill="currentColor" stroke="none"/><path d="M4 19 L20 7" stroke-linecap="round"/></svg> Principal Components</h2>
+    <div class="block">
+      <div class="sub-lbl">$X$ centred and standardised, $S$ its variance covariance matrix</div>
+      $$S = \tfrac{1}{n-1}X'X$$
+      $$\max_{w}\ w'Sw \quad \text{s.t.} \quad w'w = 1$$
+      <div class="eq-block">
+        $$Sw = \lambda w$$
+      </div>
+      <div class="note">The first order condition of the Lagrangian, so the direction of maximum variance is an eigenvector of $S$ and the variance along it is the eigenvalue. Components come in decreasing order of $\lambda$ and are mutually orthogonal.</div>
+      <hr class="div">
+      <div class="lbl">Share of variance explained</div>
+      $$\frac{\lambda_k}{\sum_{j=1}^{p}\lambda_j}$$
+      <div class="note">The share usually collapses fast, which is the whole point: a few components carry most of what $p$ variables were saying.</div>
+    </div>
+  </div>
+
+  <!-- 30. Singular value decomposition -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="5" height="14" rx="1"/><rect x="10" y="5" width="4" height="14" rx="1"/><rect x="16" y="5" width="5" height="14" rx="1"/></svg> Singular Value Decomposition</h2>
+    <div class="block">
+      $$X = U D V'$$
+      <div class="sub-lbl">$U$ ($n \times n$) and $V$ ($p \times p$) orthogonal, $D$ diagonal with $d_1 \geq d_2 \geq \dots \geq 0$</div>
+      $$X'X = V D^2 V' \ \Rightarrow\ \lambda_j = d_j^2$$
+      <div class="note">The right singular vectors are the principal component directions. Keeping the first $k$ singular values gives the best rank $k$ approximation of $X$. A small $d_j$ is a direction along which the data barely move, which is multicollinearity seen from the other side.</div>
+      <hr class="div">
+      <div class="lbl">What a ridge penalty does in this basis</div>
+      $$\frac{d_j^2}{d_j^2 + \lambda}$$
+      <div class="note">Directions with large variance are left almost alone, directions with small variance are shrunk hard. Least squares is $\lambda = 0$, where a small $d_j$ blows the variance up.</div>
+    </div>
+  </div>
+
+  <!-- 31. Projection & rank -->
+  <div class="card" style="--c-accent:var(--blue)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19 H21" stroke-linecap="round"/><path d="M8 5 L8 19" stroke-dasharray="2 2"/><path d="M4 16 L18 6" stroke-linecap="round"/><circle cx="8" cy="5" r="1.5" fill="currentColor" stroke="none"/></svg> Projection &amp; Rank</h2>
+    <div class="block">
+      $$P = X(X'X)^{-1}X', \qquad M = I - P$$
+      <div class="note">Both symmetric and idempotent. A projection has eigenvalues 0 and 1 only, and the number of ones is the dimension of the space projected onto, which is where the degrees of freedom of a regression come from.</div>
+      <hr class="div">
+      <div class="lbl">Rouché-Capelli, for $Ax = b$ with $n$ unknowns</div>
+      <table class="tbl">
+        <tr><th></th><th>Condition on the ranks</th></tr>
+        <tr><td>no solution</td><td>$\operatorname{rank}(A) &lt; \operatorname{rank}([A \mid b])$</td></tr>
+        <tr><td>one solution</td><td>$\operatorname{rank}(A) = \operatorname{rank}([A \mid b]) = n$</td></tr>
+        <tr><td>infinitely many</td><td>ranks equal to $r &lt; n$, with $n-r$ free parameters</td></tr>
+      </table>
+      <div class="note">The square non singular case is the middle row. High dimensional regression lives in the third: with $p &gt; n$ infinitely many coefficient vectors fit exactly, so a penalty or a selection rule has to choose one.</div>
+    </div>
+  </div>
+
+  <!-- 32. Maximum likelihood -->
+  <div class="card" style="--c-accent:var(--rose)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19 C 8 19, 9 6, 12 6 C 15 6, 16 19, 21 19" stroke-linecap="round"/><path d="M12 6 V19" stroke-dasharray="2 2"/><circle cx="12" cy="6" r="1.5" fill="currentColor" stroke="none"/></svg> Maximum Likelihood</h2>
+    <div class="block">
+      $$\ell(\theta) = \sum_{i=1}^{n}\log f(y_i \mid x_i; \theta)$$
+      <div class="sub-lbl">The first order condition sets the score to zero</div>
+      <div class="eq-block">
+        $$s(\theta) = \frac{\partial \ell(\theta)}{\partial \theta} = 0$$
+      </div>
+      <hr class="div">
+      <div class="lbl">Information matrix</div>
+      $$I(\theta) = -E\!\left[\frac{\partial^2 \ell(\theta)}{\partial\theta\,\partial\theta'}\right]$$
+      $$\widehat{\operatorname{Var}}(\hat\theta) = I(\hat\theta)^{-1}$$
+      <div class="note">Consistent, asymptotically normal and asymptotically efficient. The Cramér-Rao bound says no unbiased estimator beats $I(\theta)^{-1}$. A sharply curved log likelihood locates $\theta$ precisely, so the standard error is small. No closed form in general, so the maximum is found numerically.</div>
+    </div>
+  </div>
+
+  <!-- 33. Generalised method of moments -->
+  <div class="card" style="--c-accent:var(--rose)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 V21" stroke-linecap="round"/><path d="M5 8 H19" stroke-linecap="round"/><circle cx="5" cy="8" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="8" r="1.4" fill="currentColor" stroke="none"/><path d="M8 21 H16" stroke-linecap="round"/></svg> Method of Moments (GMM)</h2>
+    <div class="block">
+      $$E\!\left[g(y_i, x_i, \theta_0)\right] = 0$$
+      <div class="sub-lbl">Replace the expectation with the sample mean $\bar g(\theta)$ and make it as small as possible</div>
+      <div class="eq-block">
+        $$\hat\theta = \arg\min_{\theta}\ \bar g(\theta)'\,W\,\bar g(\theta)$$
+      </div>
+      <div class="note">$W$ positive definite. Exactly identified: the minimum is zero and $W$ is irrelevant. Overidentified: $W$ matters, the efficient choice is the inverse variance of the moments, and the extra restrictions can be tested, which is the one thing exact identification cannot do.</div>
+      <hr class="div">
+      <table class="tbl">
+        <tr><th>Estimator</th><th>Moment condition</th></tr>
+        <tr><td>OLS</td><td>$E[x_i u_i] = 0$</td></tr>
+        <tr><td>IV</td><td>$E[z_i u_i] = 0$</td></tr>
+        <tr><td>2SLS</td><td>overidentified IV, with a particular $W$</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- 34. Penalised regression -->
+  <div class="card" style="--c-accent:var(--rose)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="8" cy="12" r="5"/><path d="M19 7 L14 12 L19 17 L 14 12 Z" stroke-linejoin="round"/></svg> Penalised Regression</h2>
+    <div class="block">
+      $$\hat\beta^{\,ridge} = \arg\min_\beta \sum_{i}\left(y_i - x_i'\beta\right)^2 + \lambda\sum_{j}\beta_j^2$$
+      $$\hat\beta^{\,lasso} = \arg\min_\beta \sum_{i}\left(y_i - x_i'\beta\right)^2 + \lambda\sum_{j}\left|\beta_j\right|$$
+      <div class="eq-block">
+        $$\hat\beta^{\,ridge} = (X'X + \lambda I)^{-1}X'y$$
+      </div>
+      <div class="note">Ridge has a closed form and exists even when $X'X$ is singular. The lasso does not, because the absolute value is not differentiable at zero, and that kink is exactly what sets coefficients to zero. So the lasso selects and ridge only shrinks. $\lambda$ is chosen by cross validation, not by the fit.</div>
+      <hr class="div">
+      <div class="lbl">Bias-variance, which is what the penalty buys</div>
+      $$E\!\left[(y_0 - \hat f(x_0))^2\right] = \operatorname{Var}(\hat f(x_0)) + \left[\operatorname{Bias}(\hat f(x_0))\right]^2 + \operatorname{Var}(\varepsilon)$$
+      <div class="note">The first two terms move in opposite directions as $\lambda$ rises, the third is irreducible, and the minimum of the sum sits at some $\lambda &gt; 0$ whenever the variance term is large.</div>
+    </div>
+  </div>
+
+  <!-- 35. Limited dependent variables -->
+  <div class="card" style="--c-accent:var(--rose)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 19 H21" stroke-linecap="round"/><path d="M3 19 H11" stroke-width="3" stroke-linecap="round"/><path d="M11 19 L20 7" stroke-linecap="round"/><path d="M3 12 L11 12" stroke-dasharray="2 2"/></svg> Limited Dependent Variables</h2>
+    <div class="block">
+      <div class="twocol">
+        <div class="half">
+          <div class="h">Censoring</div>
+          The unit is in the sample, only the value is capped (hours worked recorded as 0 for everyone who does not work)
+        </div>
+        <div class="half">
+          <div class="h">Truncation</div>
+          The unit is missing entirely (a survey of firms with at least ten employees never sees the smaller ones)
+        </div>
+      </div>
+      <hr class="div">
+      <div class="lbl">Tobit</div>
+      $$y_i^* = x_i'\beta + u_i, \qquad y_i = \max(0,\, y_i^*)$$
+      <div class="note">$u_i \sim N(0,\sigma^2)$ is what makes the likelihood writable, combining the probability of a zero with the density of the positive values. OLS on a censored $y$ biases the slope toward zero, since $y$ stops moving while $x$ keeps moving. As in the binary case, $\beta$ is not the effect on $y$: the marginal effect is computed on the observed variable.</div>
+    </div>
+  </div>
+
+  <!-- 36. Kernel, bootstrap & delta method -->
+  <div class="card" style="--c-accent:var(--rose)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 18 C 7 18, 7 9, 11 9 C 15 9, 15 15, 19 15" stroke-linecap="round"/><circle cx="6" cy="16" r="1.2" fill="currentColor" stroke="none"/><circle cx="11" cy="7" r="1.2" fill="currentColor" stroke="none"/><circle cx="17" cy="16" r="1.2" fill="currentColor" stroke="none"/></svg> Kernel, Bootstrap &amp; Delta</h2>
+    <div class="block">
+      <div class="lbl">Kernel regression</div>
+      $$\hat m(x) = \frac{\sum_i K\!\left(\frac{x_i - x}{h}\right) y_i}{\sum_i K\!\left(\frac{x_i - x}{h}\right)}$$
+      <div class="note">A weighted average of nearby observations. The bandwidth $h$ is the bias-variance trade-off in one number: small uses few observations and is noisy, large borrows from far away and is biased.</div>
+      <hr class="div">
+      <div class="lbl">Bootstrap</div>
+      $$\widehat{SE}_B(\hat\theta) = \sqrt{\frac{1}{B-1}\sum_{r=1}^{B}\left(\hat\theta^{*r} - \bar{\hat\theta}^{*}\right)^2}$$
+      <div class="note">Resample the sample with replacement $B$ times, recompute the statistic each time, and take the spread as the standard error. No formula and no distribution needed, which is why it is the default for anything estimated in two stages or selected before being estimated.</div>
+      <hr class="div">
+      <div class="lbl">Delta method</div>
+      $$\operatorname{Var}\!\left(g(\hat\theta)\right) \approx \left[g'(\theta)\right]^2 \operatorname{Var}(\hat\theta)$$
+      <div class="note">A first order Taylor expansion around $\theta$, needing $g'(\theta) \neq 0$. This is the standard error of an elasticity, of a ratio of coefficients, or of a partial effect computed from estimated parameters.</div>
+    </div>
+  </div>
+
+  <!-- 37. Kuhn-Tucker -->
+  <div class="card" style="--c-accent:var(--red)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20 H20 V4" stroke-linecap="round"/><path d="M4 20 L20 4" stroke-linecap="round" stroke-dasharray="3 2"/><circle cx="20" cy="9" r="1.8" fill="currentColor" stroke="none"/></svg> Kuhn-Tucker</h2>
+    <div class="block">
+      <div class="sub-lbl">Maximise $f(x)$ subject to $g_j(x) \leq c_j$, $j = 1,\dots,m$</div>
+      $$\mathcal{L}(x,\lambda) = f(x) + \sum_{j=1}^{m}\lambda_j\left[c_j - g_j(x)\right]$$
+      <div class="eq-block">
+        $$\frac{\partial \mathcal{L}}{\partial x_i} = 0, \qquad \lambda_j \geq 0, \qquad \lambda_j\left[c_j - g_j(x)\right] = 0$$
+      </div>
+      <div class="note">The last one is complementary slackness: either the constraint binds and its multiplier can be positive, or it is slack and the multiplier is zero. The sign restriction says that relaxing a binding constraint cannot hurt. With $m$ constraints there are $2^m$ candidate patterns, so guess the pattern, solve, and check the signs.</div>
+      <hr class="div">
+      <div class="lbl">Constraint qualification</div>
+      <div class="note">The conditions are necessary only if the gradients of the binding constraints are linearly independent at the candidate point. Without it the multipliers are not defined and the conditions can fail at a genuine optimum (the standard counterexample is a feasible set with a cusp). With a concave objective and convex constraints they are also sufficient, which is why convexity is assumed so often.</div>
+    </div>
+  </div>
+
+  <!-- 38. Stability of a dynamic system -->
+  <div class="card" style="--c-accent:var(--teal)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12 H21" stroke-dasharray="2 2"/><path d="M3 4 C 8 4, 8 12, 12 12 C 16 12, 16 19, 21 19" stroke-linecap="round"/></svg> Stability &amp; Phase Diagrams</h2>
+    <div class="block">
+      <div class="lbl">Discrete time</div>
+      $$x_{t+1} = a x_t + b$$
+      $$x_t = a^t\left(x_0 - \bar x\right) + \bar x, \qquad \bar x = \frac{b}{1-a}$$
+      <div class="lbl">Continuous time</div>
+      $$\dot x = a x + b \ \Rightarrow\ x(t) = e^{at}\left(x_0 - \bar x\right) + \bar x$$
+      <table class="tbl">
+        <tr><th></th><th>Stable when</th></tr>
+        <tr><td>difference equation</td><td>$\left|a\right| &lt; 1$ (oscillating on the way if $a &lt; 0$)</td></tr>
+        <tr><td>differential equation</td><td>$a &lt; 0$</td></tr>
+      </table>
+      <hr class="div">
+      <div class="lbl">Several variables</div>
+      <div class="note">The coefficient becomes a matrix and the condition becomes a statement about its eigenvalues. $x_{t+1} = Ax_t$ is stable when every eigenvalue has modulus below 1, $\dot x = Ax$ when every one has negative real part. Mixed signs give a saddle path, stable along some directions and explosive along the others, which is the normal case in a growth model.</div>
+      <hr class="div">
+      <div class="lbl">Phase diagram</div>
+      <div class="note">Draw the two loci where each variable stops moving, mark the arrows region by region, and the steady state is where the loci cross. It gives the qualitative answer (does it converge, from which side, does it overshoot) without solving anything.</div>
+    </div>
+  </div>
+
+  <!-- 39. Contraction & optimal control -->
+  <div class="card" style="--c-accent:var(--teal)">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4 C 14 4, 14 12, 12 12 C 10 12, 10 20, 20 20" stroke-linecap="round"/><circle cx="12" cy="12" r="2"/></svg> Contraction &amp; Optimal Control</h2>
+    <div class="block">
+      <div class="sub-lbl">Why value function iteration works</div>
+      $$\lVert TV - TW \rVert \leq \beta \lVert V - W \rVert$$
+      <div class="note">The Bellman operator $T$ is a contraction for a discount factor $\beta &lt; 1$, in the sup distance between functions. The contraction mapping theorem then gives exactly one fixed point, reached from any starting guess at geometric rate $\beta$. That is the whole justification for starting at $V_0 = 0$ and stopping when the change is small.</div>
+      <hr class="div">
+      <div class="lbl">Hamiltonian, continuous time</div>
+      <div class="sub-lbl">$\max \int_0^T e^{-\rho t}f(x,u,t)\,dt$ subject to $\dot x = g(x,u,t)$</div>
+      <div class="eq-block">
+        $$H = f(x,u,t) + \mu(t)\,g(x,u,t)$$
+      </div>
+      $$\frac{\partial H}{\partial u} = 0, \qquad \dot\mu = \rho\mu - \frac{\partial H}{\partial x}, \qquad \dot x = \frac{\partial H}{\partial \mu}$$
+      <div class="note">$\mu(t)$ is the costate, the continuous time shadow price of the state. Add a transversality condition, $\mu(T)x(T) = 0$ for a finite horizon and $\lim_{t\to\infty}e^{-\rho t}\mu(t)x(t) = 0$ for an infinite one. Leaving it out is the usual way to end up with a path that satisfies every first order condition and is still wrong.</div>
     </div>
   </div>
 
