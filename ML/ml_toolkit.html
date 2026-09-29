@@ -9,13 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
-  --navy:#2A3A8F; --hover:#EDEAE4;
+  --bg:#f7f8fc; --panel:#ffffff; --ink:#1b1d33; --muted:#5b5f7a; --rule:#d9dcea;
+  --navy:#12127a; --hl:#eef0f8;
 }
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
-    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
-    --navy:#8FA0FF; --hover:#2A2A32;
+    --bg:#101226; --panel:#181b36; --ink:#e7e8f3; --muted:#a3a7c4; --rule:#2e3258;
+    --navy:#9fa8ff; --hl:#20244a;
   }
 }
 *{box-sizing:border-box}
@@ -35,8 +35,8 @@ nav.side-nav{flex:1;overflow-y:auto;padding:8px 8px 14px;min-width:280px}
   padding:13px 10px 5px}
 a.item{display:block;padding:7px 10px;border-radius:6px;cursor:pointer;font-size:13.5px;color:var(--muted);
   text-decoration:none;border-left:2.5px solid transparent;margin-bottom:1px;line-height:1.35}
-a.item:hover{background:var(--hover);color:var(--ink)}
-a.item.active{background:var(--hover);color:var(--navy);border-left-color:var(--navy);font-weight:500}
+a.item:hover{background:var(--hl);color:var(--ink)}
+a.item.active{background:var(--hl);color:var(--navy);border-left-color:var(--navy);font-weight:500}
 .side-foot{padding:10px 16px;border-top:1px solid var(--rule);min-width:280px;
   font-size:11.5px;color:var(--muted)}
 .side-foot a{color:var(--muted)}
