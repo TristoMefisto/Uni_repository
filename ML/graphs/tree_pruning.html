@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pruning a regression tree</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Growing and pruning a regression tree</h1>
+  <p>The Hitters data from the slides: the log salary of 263 baseball players, predicted from the years they have played in the major leagues and the hits they made in the previous year. The tree is grown by recursive binary splitting until the nodes are small, then pruned back with cost complexity pruning. Moving &alpha; walks along the sequence of nested subtrees, and 6-fold cross-validation picks one of them.</p>
+</header>
+<ol class="steps"><li>Start from the unpruned tree: many small boxes in the left panel, a deep tree in the middle one.</li><li>Raise &alpha;. Each step collapses the weakest link, and the boxes merge back into larger ones.</li><li>Compare the training, cross-validation and test errors on the right, and jump to the size cross-validation picks.</li></ol>
+<div class="main"><div class="col">
+<div class="tabs"><button id="tHalf" class="on">Training half (132 players)</button><button id="tAll">All 263 players</button></div>
+<section class="controls" aria-label="Pruning">
+  <div class="slider"><label for="sA">Cost complexity &alpha; <b id="vA"></b></label><input id="sA" type="range" min="0" max="100" step="1" value="0"></div>
+  <div class="slider"><label for="sSeed">Random split and folds (seed) <b id="vSeed"></b></label><input id="sSeed" type="range" min="1" max="20" step="1" value="4"></div>
+</section>
+<div class="stats">
+  <div class="stat"><span class="small">Terminal nodes |T|</span><span class="big" id="rT"></span></div>
+  <div class="stat"><span class="small">Training MSE</span><span class="big" id="rTr"></span></div>
+  <div class="stat"><span class="small">Cross-validation MSE</span><span class="big" id="rCV"></span></div>
+  <div class="stat"><span class="small">Test MSE</span><span class="big" id="rTe"></span></div>
+</div>
+<div class="buttons">
+  <button id="bFull">Unpruned tree (&alpha; = 0)</button>
+  <button class="primary" id="bCV">Jump to the cross-validation minimum</button>
+  <button id="b3">The 3-leaf tree of the slides</button>
+  <button id="bAnim">Prune step by step</button>
+  <button id="bStop">Stop</button>
+</div>
+<div class="panels">
+  <figure><canvas id="cPart" style="height:340px"></canvas>
+    <figcaption><strong>The boxes in the predictor space.</strong> Each rectangle is a terminal node, shaded by its prediction (blue for low log salaries, red for high), with the prediction and the salary it implies written inside when there is room. Filled dots are the players the tree is fit on, hollow ones the test players. Every boundary is parallel to an axis, because each split uses one predictor at a time.</figcaption></figure>
+  <figure><canvas id="cTree" style="height:340px"></canvas>
+    <figcaption><strong>The same tree, drawn upside down.</strong> Internal nodes carry the splitting rule (left branch when it is true), leaves the mean log salary of their players. As &alpha; grows the bottom branches disappear first, in a nested order: the subtree for a larger &alpha; is always contained in the one for a smaller &alpha;.</figcaption></figure>
+  <figure><canvas id="cErr" style="height:340px"></canvas>
+    <figcaption><strong>Error against tree size.</strong> Navy: the training MSE, which can only fall as the tree grows. Red: the 6-fold cross-validation MSE of Algorithm 8.1. Green: the test MSE on the other half of the players. The orange line is the current tree and the red dot the size with the smallest cross-validation error.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>RSS of the boxes</b></div><div class="n">the fit of the current tree on the data it was grown on</div><div class="k" data-tex='\sum_{j=1}^{J} \sum_{i \in R_j} \left(y_i - \hat y_{R_j}\right)^2'></div><span class="v" id="fRSS"></span></div>
+<div class="f"><div class="n"><b>Cost complexity criterion</b></div><div class="n">minimised by the current subtree</div><div class="k" data-tex='\sum_{m=1}^{|T|} \sum_{i:\, x_i \in R_m} \left(y_i - \hat y_{R_m}\right)^2 + \alpha |T|'></div><span class="v" id="fCC"></span></div>
+<div class="f"><div class="n"><b>The first split</b></div><div class="n">the predictor and cutpoint with the largest drop in RSS</div><div class="k" data-tex='\sum_{i:\, x_i \in R_1(j,s)} (y_i - \hat y_{R_1})^2 + \sum_{i:\, x_i \in R_2(j,s)} (y_i - \hat y_{R_2})^2'></div><span class="v" id="fSplit"></span></div>
+</aside>
+<div class="note">
+  <p>The tree is grown with stopping rules modelled on the defaults of R's <code>tree()</code> (a node is split only if it holds at least 10 players, each child keeps at least 5, and the node's deviance is at least 1% of the root's), and the unpruned tree on all 263 players has 29 leaves. Pruning it to 3 leaves gives exactly the tree of the slides: Years &lt; 4.5 with a mean log salary of 5.107 (about 165 thousand dollars), then Hits &lt; 117.5 with 5.998 and 6.740.</p>
+  <p>The training MSE always prefers the largest tree. Cross-validation does not, because a small box fits the noise of the few players inside it. The cross-validation curve is fairly flat near its minimum, so the size it picks moves with the random split and folds. The default seed lands on 3 leaves, as on the slides; other seeds pick anything from 3 to about 12, and what stays the same is that a handful of leaves does as well as twenty.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+const HIT={years:[14,3,11,2,11,2,3,2,13,10,9,4,6,13,15,5,8,1,1,6,18,6,7,10,5,14,3,5,7,14,2,2,4,6,3,5,6,17,2,9,12,6,4,12,6,1,16,4,4,17,3,4,17,14,18,15,9,4,6,4,15,5,11,9,14,2,16,4,5,4,1,3,12,14,3,7,10,8,14,5,1,14,5,13,3,6,4,16,9,8,15,20,5,5,11,5,8,5,7,7,5,18,4,9,3,6,15,2,2,4,12,17,6,14,5,11,15,2,1,10,10,5,13,3,6,3,13,14,3,4,6,4,13,3,11,5,1,8,14,13,6,10,4,2,9,10,7,3,1,7,2,12,15,6,7,10,13,3,10,1,5,7,2,2,13,6,9,1,3,6,3,3,2,7,3,3,4,7,4,5,2,2,9,7,4,14,1,9,24,5,6,5,12,5,12,16,3,18,9,8,20,5,11,6,12,10,9,1,7,4,6,6,4,3,1,12,1,10,13,6,3,4,2,2,6,18,4,2,4,6,8,8,6,4,8,4,5,7,8,4,1,7,6,17,7,3,5,10,19,4,7,2,6,7,7,5,1,1,5,12,6,8,11],hits:[81,130,141,87,169,37,73,81,92,159,53,113,60,43,158,46,32,92,109,116,168,163,73,129,152,137,108,168,49,106,60,41,46,68,132,57,146,101,53,168,101,102,58,78,177,113,44,56,53,139,53,142,81,131,122,137,119,97,103,96,70,238,163,83,174,82,41,114,83,123,78,138,119,148,115,110,151,49,154,198,51,128,76,125,152,171,118,77,94,85,96,77,139,84,126,78,120,158,169,104,54,70,99,39,40,170,103,103,144,200,55,133,132,39,183,136,70,41,86,95,147,102,94,163,174,39,200,66,76,157,92,73,91,101,47,184,58,118,150,171,147,74,161,91,159,136,85,223,64,127,127,70,141,52,149,84,128,92,157,54,179,131,56,93,148,131,65,54,71,77,120,60,1,94,43,75,167,110,76,93,137,152,144,80,163,83,135,123,52,56,154,72,77,96,56,70,108,68,110,160,101,82,145,76,52,90,135,68,119,27,68,178,86,57,101,113,149,63,163,117,66,140,112,145,159,142,96,103,122,210,169,76,152,213,103,70,211,68,141,120,4,43,47,61,147,138,113,42,32,69,112,139,186,81,124,207,117,172,127,136,126,144,170],lsal:[6.1633,6.1738,6.2146,4.5163,6.6201,4.2485,4.6052,4.3175,7.0031,6.2483,6.2393,6.3099,6.5511,5.4806,6.6529,5.1648,4.9053,4.6052,4.7449,6.3969,6.655,6.6399,6.5629,6.6201,6.4378,6.8024,4.7005,6.4175,5.7038,6.7452,4.4998,4.2121,5.193,5.7203,5.3706,5.5114,6.7032,6.7742,4.2485,7.0901,6.5147,6.0283,5.8289,6.0323,7.2079,4.4998,5.6168,5.4381,5.4161,6.8565,4.3175,4.654,5.7683,6.7452,6.2823,6.8388,6.7452,5.3471,5.7838,5.6168,6.1092,7.5883,7.5496,6.3969,6.9486,4.7005,5.5607,6.1633,6.0673,7.1066,4.2485,4.9767,6.3886,7.5291,5.7038,6.1944,7.8079,5.9269,6.6201,7.069,4.2485,7.3132,5.9532,7.563,5.3706,6.8024,5.0434,6.5511,6.2823,5.893,6.5976,5.2983,5.9915,5.9915,6.6033,6.2146,6.3969,6.496,6.8565,6.6201,5.6954,5.7838,4.4716,5.1648,4.4998,7.1208,6.0638,4.6052,5.1059,5.5215,7.1701,6.6507,6.9161,5.6168,6.6529,6.7452,5.8999,4.5539,4.7005,4.6052,5.6258,4.382,6.3969,5.2983,6.4877,4.3175,7.7884,5.5215,5.0434,6.4615,5.7038,4.7005,6.7154,5.273,6.1092,6.4457,4.4601,7.1701,6.9078,7.4955,7.1778,6.6033,6.4378,4.8283,6.9502,6.5862,5.7038,5.8999,4.3175,7.0761,5.3107,5.4161,6.2634,5.5797,6.6689,6.6846,6.3759,4.9767,6.0403,4.3175,6.3544,6.6593,4.4998,5.0106,6.5511,6.3099,6.477,4.2195,4.6052,6.5073,5.1648,4.92,7.6626,6.7742,4.7875,4.9416,5.3471,6.6846,5.4806,5.8579,5.1648,5.2983,7.5704,6.5511,6.6201,6.1092,5.1475,7.1389,6.6201,5.247,6.363,4.8675,6.1092,5.7038,5.5215,6.9565,5.3706,5.9915,6.3279,7.4206,6.1893,6.0521,6.2146,5.5215,5.9915,6.1092,6.6201,4.2485,6.7742,5.247,5.2523,6.6067,5.5215,4.9416,4.5799,6.6067,4.9416,5.8338,6.9078,4.6052,4.4998,5.2983,4.9053,5.0434,6.1633,7.2793,5.0106,4.654,5.8579,4.4998,6.2729,5.8338,6.8459,5.8579,5.7889,5.5215,6.6067,6.0521,6.8298,5.2204,6.8244,5.6583,5.5013,5.4596,7.0475,5.0752,6.0521,6.8024,6.2146,5.6258,6.6201,5.0752,7.1701,6.2634,6.3099,7.3778,4.7875,5.1059,6.5511,6.7742,5.9532,6.8669,6.9078]};
+/* Regression trees: recursive binary splitting, weakest link pruning, prediction.
+   X is an array of feature columns (X[j][i]), y the response, idx the rows to use. */
+let NODE_ID=0;
+function growTree(X,y,idx,o,depth){
+  depth=depth||0;
+  const n=idx.length;let s=0,s2=0;for(const i of idx){s+=y[i];s2+=y[i]*y[i];}
+  const mean=s/n,dev=Math.max(0,s2-s*s/n);
+  const node={id:NODE_ID++,n,mean,dev,depth,leaf:true};
+  if(o.rootDev===undefined)o.rootDev=dev;
+  if(n<o.minsplit||dev<=1e-12||depth>=(o.maxdepth||99)||(o.mindev&&dev<o.mindev*o.rootDev))return node;
+  const p=X.length;let feats=Array.from({length:p},(_,j)=>j);
+  if(o.mtry&&o.mtry<p){const r=o.rng;for(let i=0;i<o.mtry;i++){const k=i+Math.floor(r()*(p-i));[feats[i],feats[k]]=[feats[k],feats[i]];}feats=feats.slice(0,o.mtry);}
+  let best=null;
+  for(const j of feats){
+    const col=X[j];const ord=idx.slice().sort((a,b)=>col[a]-col[b]);
+    let ls=0,ls2=0;
+    for(let k=0;k<n-1;k++){const yi=y[ord[k]];ls+=yi;ls2+=yi*yi;
+      const nl=k+1,nr=n-nl;if(nl<o.minbucket||nr<o.minbucket)continue;
+      const a=col[ord[k]],b=col[ord[k+1]];if(a===b)continue;
+      const rs=s-ls,rs2=s2-ls2;const sse=(ls2-ls*ls/nl)+(rs2-rs*rs/nr);
+      if(!best||sse<best.sse-1e-12)best={j,s:(a+b)/2,sse};}
+  }
+  if(!best||best.sse>=dev-1e-12)return node;
+  const L=[],R=[];for(const i of idx)(X[best.j][i]<best.s?L:R).push(i);
+  node.leaf=false;node.j=best.j;node.s=best.s;node.gain=dev-best.sse;
+  node.left=growTree(X,y,L,o,depth+1);node.right=growTree(X,y,R,o,depth+1);
+  return node;
+}
+/* prediction, optionally stopping at collapsed nodes (a Set of ids) */
+function predictRow(node,X,i,cut){while(!node.leaf&&!(cut&&cut.has(node.id)))node=X[node.j][i]<node.s?node.left:node.right;return node.mean;}
+function predictPoint(node,x,cut){while(!node.leaf&&!(cut&&cut.has(node.id)))node=x[node.j]<node.s?node.left:node.right;return node.mean;}
+function leavesOf(node,cut,out){out=out||[];if(node.leaf||(cut&&cut.has(node.id)))out.push(node);else{leavesOf(node.left,cut,out);leavesOf(node.right,cut,out);}return out;}
+function internalOf(node,cut,out){out=out||[];if(!(node.leaf||(cut&&cut.has(node.id)))){out.push(node);internalOf(node.left,cut,out);internalOf(node.right,cut,out);}return out;}
+/* weakest link pruning: returns [{alpha, cut:Set, size}], from the full tree (alpha 0) to the root */
+function pruneSequence(root){
+  const seq=[];let cut=new Set();seq.push({alpha:0,cut:new Set(cut),size:leavesOf(root,cut).length});
+  while(true){
+    const ints=internalOf(root,cut);if(!ints.length)break;
+    let gmin=Infinity;const g=new Map();
+    for(const t of ints){const lv=leavesOf(t,cut);const RT=lv.reduce((a,l)=>a+l.dev,0);const v=(t.dev-RT)/(lv.length-1);g.set(t,v);if(v<gmin)gmin=v;}
+    for(const t of ints)if(g.get(t)<=gmin*(1+1e-9)+1e-12)cut.add(t.id);
+    /* drop descendants of collapsed nodes from the cut set (keeps it small) */
+    seq.push({alpha:gmin,cut:new Set(cut),size:leavesOf(root,cut).length});
+  }
+  return seq;
+}
+function subtreeAt(seq,alpha){let k=0;for(let i=0;i<seq.length;i++)if(seq[i].alpha<=alpha+1e-12)k=i;return seq[k];}
+function rssOf(root,cut,X,y,idx){let r=0;for(const i of idx){const e=y[i]-predictRow(root,X,i,cut);r+=e*e;}return r;}
+
+/* Growing and pruning a regression tree, Hitters (ML L8) */
+const FN=['Years','Hits'];
+const X=[HIT.years,HIT.hits],Y=HIT.lsal,NALL=Y.length;
+const OPT=()=>({minsplit:10,minbucket:5,mindev:0.01});
+const S={mode:'half',v:0,seed:4};
+let M=null;
+function shuffle(n,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=n-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function fit(){
+  const rng=mulberry32(S.seed*7919+1);const perm=shuffle(NALL,rng);
+  const train=S.mode==='all'?perm.slice():perm.slice(0,132),test=S.mode==='all'?[]:perm.slice(132);
+  NODE_ID=0;const root=growTree(X,Y,train,OPT());const seq=pruneSequence(root);
+  /* alpha grid: geometric means of consecutive breakpoints, as cv.tree does */
+  const grid=seq.map((s,k)=>k===0?0:(k<seq.length-1?Math.sqrt(s.alpha*seq[k+1].alpha):s.alpha*1.5));
+  const K=6,folds=shuffle(train.length,rng).map(i=>train[i]);const cvs=grid.map(()=>0);
+  for(let f=0;f<K;f++){
+    const ho=folds.filter((_,i)=>i%K===f),fi=folds.filter((_,i)=>i%K!==f);
+    const r=growTree(X,Y,fi,OPT()),sq=pruneSequence(r);
+    grid.forEach((a,k)=>{cvs[k]+=rssOf(r,subtreeAt(sq,a).cut,X,Y,ho);});
+  }
+  const rows=seq.map((s,k)=>({size:s.size,alpha:s.alpha,grid:grid[k],cut:s.cut,
+    tr:rssOf(root,s.cut,X,Y,train)/train.length,cv:cvs[k]/train.length,
+    te:test.length?rssOf(root,s.cut,X,Y,test)/test.length:NaN}));
+  let best=0;rows.forEach((r,k)=>{if(r.cv<rows[best].cv-1e-12)best=k;});
+  const aMin=seq[1]?seq[1].alpha*0.4:0.01,aMax=seq[seq.length-1].alpha*1.3;
+  M={root,seq,rows,best,train,test,aMin,aMax};
+}
+const alphaOf=v=>v<=0?0:M.aMin*Math.pow(M.aMax/M.aMin,(v-1)/99);
+const vOf=a=>a<=0?0:Math.max(1,Math.min(100,Math.round(1+99*Math.log(a/M.aMin)/Math.log(M.aMax/M.aMin))));
+function cur(){const a=alphaOf(S.v);let k=0;for(let i=0;i<M.rows.length;i++)if(M.rows[i].alpha<=a+1e-12)k=i;return{a,k,row:M.rows[k]};}
+/* colours */
+function rgb(c){c=c.trim();if(c[0]==='#'){if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return[1,3,5].map(i=>parseInt(c.substr(i,2),16));}const m=c.match(/\d+/g);return m?m.slice(0,3).map(Number):[128,128,128];}
+function mix(a,b,t){const A=rgb(a),B=rgb(b);return`rgb(${A.map((x,i)=>Math.round(x+(B[i]-x)*t)).join(',')})`;}
+const LO=4.2,HI=7.8;const shade=m=>mix(css('--blue'),css('--red'),Math.max(0,Math.min(1,(m-LO)/(HI-LO))));
+function boxes(node,cut,b,out){if(node.leaf||cut.has(node.id)){out.push({node,b});return out;}
+  const L=b.slice(),R=b.slice();if(node.j===0){L[1]=node.s;R[0]=node.s;}else{L[3]=node.s;R[2]=node.s;}
+  boxes(node.left,cut,L,out);boxes(node.right,cut,R,out);return out;}
+function drawPart(){
+  const c=$('cPart'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const{row}=cur();
+  const A=axes(ctx,w,h,{xlim:[0,25],ylim:[0,240],xt:[0,5,10,15,20,25],yt:[0,60,120,180,240],xl:'Years',yl:'Hits',L:44});
+  A.clip();
+  const bx=boxes(M.root,row.cut,[0,25,0,240],[]);
+  bx.forEach(({node,b})=>{ctx.globalAlpha=.32;ctx.fillStyle=shade(node.mean);ctx.fillRect(A.px(b[0]),A.py(b[3]),A.px(b[1])-A.px(b[0]),A.py(b[2])-A.py(b[3]));ctx.globalAlpha=1;
+    ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.strokeRect(A.px(b[0]),A.py(b[3]),A.px(b[1])-A.px(b[0]),A.py(b[2])-A.py(b[3]));});
+  const inTest=new Set(M.test);
+  for(let i=0;i<NALL;i++){const x=A.px(X[0][i]+((i*37)%10-4.5)*0.035),y=A.py(X[1][i]);
+    if(inTest.has(i)){ctx.beginPath();ctx.arc(x,y,2.4,0,6.2832);ctx.strokeStyle=css('--muted');ctx.lineWidth=1;ctx.stroke();}
+    else dot(ctx,x,y,2.4,css('--point'));}
+  bx.forEach(({node,b})=>{const pw=A.px(b[1])-A.px(b[0]),ph=A.py(b[2])-A.py(b[3]);
+    if(pw>58&&ph>22)label(ctx,fmt(node.mean,2)+' ($'+Math.round(Math.exp(node.mean))+'k)',(A.px(b[0])+A.px(b[1]))/2,(A.py(b[2])+A.py(b[3]))/2,css('--ink'),'center');});
+  A.unclip();
+}
+function drawTree(){
+  const c=$('cTree'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const{row}=cur();
+  const lv=leavesOf(M.root,row.cut);const maxD=Math.max(...lv.map(l=>l.depth));
+  const pos=new Map();lv.forEach((l,i)=>pos.set(l.id,lv.length===1?w/2:24+(w-48)*i/(lv.length-1)));
+  const dy=Math.min(64,(h-50)/Math.max(1,maxD)),Y0=22;
+  function place(n){if(n.leaf||row.cut.has(n.id))return pos.get(n.id);const x=(place(n.left)+place(n.right))/2;pos.set(n.id,x);return x;}
+  place(M.root);
+  ctx.font=FONT;
+  function draw(n){const x=pos.get(n.id),y=Y0+n.depth*dy;
+    if(n.leaf||row.cut.has(n.id)){dot(ctx,x,y,4,shade(n.mean),css('--ink'));if(lv.length<=14){ctx.fillStyle=css('--ink');ctx.textAlign='center';ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.fillText(fmt(n.mean,2),x,y+16);}return;}
+    for(const ch of [n.left,n.right]){const cx=pos.get(ch.id),cy=Y0+ch.depth*dy;line(ctx,[[x,y],[x,cy-8],[cx,cy-8],[cx,cy]],css('--muted'),1.2);draw(ch);}
+    if(lv.length<=18||n.depth<3)label(ctx,FN[n.j]+' < '+(Math.round(n.s*10)/10),x,y-3,css('--navy'),'center');}
+  draw(M.root);
+}
+function drawErr(){
+  const c=$('cErr'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const{row}=cur();
+  const R=M.rows,mx=R[0].size;const all=R.flatMap(r=>[r.tr,r.cv,r.te]).filter(v=>isFinite(v));
+  const hi=Math.ceil(Math.max(...all)*10)/10+0.05;
+  const A=axes(ctx,w,h,{xlim:[0,mx+1],ylim:[0,hi],xt:[1,5,10,15,20,25,30].filter(v=>v<=mx+1),yt:[0,hi/4,hi/2,3*hi/4,hi].map(v=>+v.toFixed(2)),yf:v=>fmt(v,2),xl:'tree size (terminal nodes)',yl:'MSE (log salary)'});
+  A.clip();
+  const pts=key=>R.slice().sort((a,b)=>a.size-b.size).map(r=>[A.px(r.size),A.py(r[key])]);
+  line(ctx,pts('tr'),css('--navy'),2);pts('tr').forEach(p=>dot(ctx,p[0],p[1],2.6,css('--navy')));
+  line(ctx,pts('cv'),css('--red'),2);pts('cv').forEach(p=>dot(ctx,p[0],p[1],2.6,css('--red')));
+  if(M.test.length){line(ctx,pts('te'),css('--green'),2);pts('te').forEach(p=>dot(ctx,p[0],p[1],2.6,css('--green')));}
+  line(ctx,[[A.px(row.size),A.py(0)],[A.px(row.size),A.py(hi)]],css('--orange'),1.5,[4,3]);
+  const b=R[M.best];dot(ctx,A.px(b.size),A.py(b.cv),5.5,css('--red'),css('--panel'));
+  A.unclip();
+  label(ctx,'training',A.L+A.pw-4,A.py(R[0].tr)-6,css('--navy'),'right');
+  label(ctx,'CV min, size '+b.size,A.px(b.size)+7,A.py(b.cv)-8,css('--red'),'left');
+}
+function drawAll(){
+  const{a,row}=cur();
+  $('vA').textContent=a===0?'0':fmt(a,a<1?3:2);$('vSeed').textContent=S.seed;
+  $('rT').textContent=row.size;$('rTr').textContent=fmt(row.tr,3);$('rCV').textContent=fmt(row.cv,3);
+  $('rTe').textContent=M.test.length?fmt(row.te,3):'n/a';
+  const n=M.train.length,rss=row.tr*n;
+  $('fRSS').textContent=`${row.size} boxes, RSS = ${fmt(rss,2)} on ${n} players (MSE ${fmt(row.tr,3)})`;
+  $('fCC').textContent=`${fmt(rss,2)} + ${fmt(a,3)} × ${row.size} = ${fmt(rss+a*row.size,2)}`;
+  const r=M.root;$('fSplit').textContent=r.leaf?'no split':`j = ${FN[r.j]}, s = ${r.s}: the RSS falls from ${fmt(r.dev,2)} to ${fmt(r.dev-r.gain,2)}`;
+  drawPart();drawTree();drawErr();
+}
+function setV(v){S.v=v;$('sA').value=v;drawAll();}
+$('sA').addEventListener('input',e=>{stopAnim();setV(+e.target.value);});
+$('sSeed').addEventListener('input',e=>{stopAnim();S.seed=+e.target.value;fit();drawAll();});
+function mode(m){S.mode=m;$('tHalf').classList.toggle('on',m==='half');$('tAll').classList.toggle('on',m==='all');fit();setV(S.v);}
+$('tHalf').onclick=()=>mode('half');$('tAll').onclick=()=>mode('all');
+$('bFull').onclick=()=>{stopAnim();setV(0);};
+$('bCV').onclick=()=>{stopAnim();setV(vOf(M.rows[M.best].grid));};
+$('b3').onclick=()=>{stopAnim();const k=M.rows.findIndex(r=>r.size===3);if(k>=0)setV(vOf(M.rows[k].grid));else{const j=M.rows.reduce((b,r,i)=>Math.abs(r.size-3)<Math.abs(M.rows[b].size-3)?i:b,0);setV(vOf(M.rows[j].grid));}};
+$('bAnim').onclick=()=>{const v0=S.v>=95?0:S.v;animate(t=>setV(Math.round(v0+(100-v0)*t)),7000);};
+$('bStop').onclick=stopAnim;
+fit();
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

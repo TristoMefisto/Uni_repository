@@ -91,6 +91,9 @@ kbd{font:inherit;font-size:11px;border:1px solid var(--rule);border-radius:4px;p
       <div class="grp">07 · Moving beyond linearity</div>
       <a class="item" data-slug="splines_wage" href="#splines_wage">Knots, constraints and degrees of freedom</a>
       <a class="item" data-slug="smoothing_local" href="#smoothing_local">The smoothing parameter and the span</a>
+      <div class="grp">08 · Tree-based methods</div>
+      <a class="item" data-slug="tree_pruning" href="#tree_pruning">Growing and pruning a regression tree</a>
+      <a class="item" data-slug="ensembles" href="#ensembles">Bagging, random forests and boosting</a>
     </nav>
     <div class="side-foot"><a href="../index.html">&larr; All subjects</a></div>
   </aside>
@@ -105,7 +108,7 @@ kbd{font:inherit;font-size:11px;border:1px solid var(--rule);border-radius:4px;p
   </div>
 </div>
 <script>
-const ITEMS = [{"slug": "train_test_error", "name": "Training vs test error"}, {"slug": "bias_variance", "name": "Bias-variance trade-off"}, {"slug": "bayes_knn", "name": "Bayes classifier and KNN"}, {"slug": "rss_landscape_ols", "name": "Least squares as a landscape"}, {"slug": "residual_analysis", "name": "Residual plots"}, {"slug": "collinearity_credit", "name": "Collinearity on the Credit data"}, {"slug": "knn_regression_vs_ols", "name": "KNN regression vs linear regression"}, {"slug": "logistic_default", "name": "Logistic regression on Default"}, {"slug": "cross_validation", "name": "Cross-validation"}, {"slug": "bootstrap", "name": "The bootstrap"}, {"slug": "subset_selection_credit", "name": "Subset selection"}, {"slug": "ridge_lasso", "name": "Ridge and the lasso"}, {"slug": "pca", "name": "Principal components"}, {"slug": "pcr_pls", "name": "PCR and partial least squares"}, {"slug": "splines_wage", "name": "Knots, constraints and degrees of freedom"}, {"slug": "smoothing_local", "name": "The smoothing parameter and the span"}];
+const ITEMS = [{"slug": "train_test_error", "name": "Training vs test error"}, {"slug": "bias_variance", "name": "Bias-variance trade-off"}, {"slug": "bayes_knn", "name": "Bayes classifier and KNN"}, {"slug": "rss_landscape_ols", "name": "Least squares as a landscape"}, {"slug": "residual_analysis", "name": "Residual plots"}, {"slug": "collinearity_credit", "name": "Collinearity on the Credit data"}, {"slug": "knn_regression_vs_ols", "name": "KNN regression vs linear regression"}, {"slug": "logistic_default", "name": "Logistic regression on Default"}, {"slug": "cross_validation", "name": "Cross-validation"}, {"slug": "bootstrap", "name": "The bootstrap"}, {"slug": "subset_selection_credit", "name": "Subset selection"}, {"slug": "ridge_lasso", "name": "Ridge and the lasso"}, {"slug": "pca", "name": "Principal components"}, {"slug": "pcr_pls", "name": "PCR and partial least squares"}, {"slug": "splines_wage", "name": "Knots, constraints and degrees of freedom"}, {"slug": "smoothing_local", "name": "The smoothing parameter and the span"}, {"slug": "tree_pruning", "name": "Growing and pruning a regression tree"}, {"slug": "ensembles", "name": "Bagging, random forests and boosting"}];
 const fr = document.getElementById('fr'), ttl = document.getElementById('ttl'), pop = document.getElementById('pop');
 
 function show(slug, push){
