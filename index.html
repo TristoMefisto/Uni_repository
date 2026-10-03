@@ -11,11 +11,11 @@
   /* Bologna palette */
   :root { --bg:#F6F5F1; --surface:#FFFFFF; --border:#DFDCD4; --text:#16162A; --muted:#6B6A78;
           --accent:#2A3A8F;
-          --pe1:#2A3A8F; --pe3:#2E8B57; --pm:#7D4FA8; --fex:#9C620C; --ml:#2A6FD6; --math:#00838F; }
+          --pe1:#2A3A8F; --pe3:#2E8B57; --pm:#7D4FA8; --fex:#9C620C; --ml:#2A6FD6; --math:#00838F; --cppi:#B3261E; }
   @media (prefers-color-scheme: dark) {
     :root { --bg:#14141A; --surface:#1D1D24; --border:#33323C; --text:#ECEAE4; --muted:#9A98A4;
             --accent:#8FA0FF;
-            --pe1:#8FA0FF; --pe3:#5FC27E; --pm:#B98AF0; --fex:#F0A83A; --ml:#6FA3FF; --math:#4DD0E1; }
+            --pe1:#8FA0FF; --pe3:#5FC27E; --pm:#B98AF0; --fex:#F0A83A; --ml:#6FA3FF; --math:#4DD0E1; --cppi:#F28B82; }
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); color:var(--text);
@@ -27,14 +27,14 @@
   h2 { font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:.09em;
        margin:32px 0 12px; padding-bottom:7px; border-bottom:1px solid var(--border); }
   h2.pe1 { color:var(--pe1); } h2.pe3 { color:var(--pe3); } h2.pm { color:var(--pm); }
-  h2.fex { color:var(--fex); } h2.ml { color:var(--ml); } h2.math { color:var(--math); }
+  h2.fex { color:var(--fex); } h2.ml { color:var(--ml); } h2.math { color:var(--math); } h2.cppi { color:var(--cppi); }
   .apps { display:flex; gap:12px; flex-wrap:wrap; }
   .app { flex:1 1 250px; background:var(--surface); border:1px solid var(--border); border-radius:9px;
          padding:15px 18px; text-decoration:none; color:var(--text); display:block; }
   .app:hover { border-color:currentColor; }
   .app .t { font-weight:600; font-size:15px; margin-bottom:3px; }
   .app.pe1 .t { color:var(--pe1); } .app.pe3 .t { color:var(--pe3); } .app.pm .t { color:var(--pm); }
-  .app.fex .t { color:var(--fex); } .app.ml .t { color:var(--ml); } .app.math .t { color:var(--math); }
+  .app.fex .t { color:var(--fex); } .app.ml .t { color:var(--ml); } .app.math .t { color:var(--math); } .app.cppi .t { color:var(--cppi); }
   .app .d { font-size:12.5px; color:var(--muted); }
   .foot { margin-top:42px; padding-top:14px; border-top:1px solid var(--border);
           font-size:12.5px; color:var(--muted); }
@@ -99,6 +99,14 @@
     <a class="app math" href="MATH/math_cheatsheet.html">
       <div class="t">Math refresher cheat sheet</div>
       <div class="d">Calculus, optimisation, linear algebra, probability and discounting, plus the advanced tier (eigenvalues and PCA, estimators past OLS, dynamics and optimal control)</div>
+    </a>
+  </div>
+
+  <h2 class="cppi">CPPI project</h2>
+  <div class="apps">
+    <a class="app cppi" href="CPPI/tobacco_tax_cvd_model.html">
+      <div class="t">Tobacco tax and heart disease simulator</div>
+      <div class="d">From an excise increase to the pack price, smoking prevalence, CVD cases and costs in Italy, with editable inputs (by Alessandro)</div>
     </a>
   </div>
 
