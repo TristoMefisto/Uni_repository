@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pruning a regression tree</title>
+<title>Growing and pruning trees</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -120,6 +120,21 @@ aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
 header p{max-width:none}
 @media (max-width:820px){.wrap{max-width:none}}
 
+.panels.tree{grid-template-columns:repeat(6,minmax(0,1fr))}
+.panels.tree figure{grid-column:span 2}
+.panels.tree figure.half{grid-column:span 3}
+@media (max-width:1150px){.panels.tree{grid-template-columns:repeat(2,minmax(0,1fr))}.panels.tree figure,.panels.tree figure.half{grid-column:span 1}}
+@media (max-width:720px){.panels.tree{grid-template-columns:minmax(0,1fr)}}
+.narr{margin-top:16px;background:var(--hl);border:1px solid var(--rule);border-radius:8px;padding:11px 15px;font-size:.95rem;line-height:1.5;min-height:5.2em}
+.narr .ph{display:inline-block;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600;padding:1px 7px;border-radius:4px;margin-right:8px;color:var(--panel);vertical-align:1px}
+.narr .ph.grow{background:var(--green)}
+.narr .ph.prune{background:var(--orange)}
+.narr b{font-weight:600}
+.view{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.view button{font-size:.8rem;padding:3px 10px;border-radius:14px}
+#c3d{cursor:grab}
+#c3d:active{cursor:grabbing}
+.note b{color:var(--ink);font-weight:500}
 
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
@@ -129,13 +144,13 @@ header p{max-width:none}
 <div class="wrap">
 <header>
   <h1>Growing and pruning a regression tree</h1>
-  <p>The Hitters data from the slides: the log salary of 263 baseball players, predicted from the years they have played in the major leagues and the hits they made in the previous year. The tree is grown by recursive binary splitting until the nodes are small, then pruned back with cost complexity pruning. Moving &alpha; walks along the sequence of nested subtrees, and 6-fold cross-validation picks one of them.</p>
+  <p>The Hitters data from the slides: the log salary of 263 baseball players, predicted from the years they have played in the major leagues and the hits they made in the previous year. The page goes through Algorithm 8.1 one step at a time. First the tree is grown by recursive binary splitting, one split per step, until the stopping rules bite. Then it is pruned back with cost complexity pruning, one weakest link per step, until only the root is left. Every panel shows the same tree at the current step, and the box under the buttons says in words what just happened.</p>
 </header>
-<ol class="steps"><li>Start from the unpruned tree: many small boxes in the left panel, a deep tree in the middle one.</li><li>Raise &alpha;. Each step collapses the weakest link, and the boxes merge back into larger ones.</li><li>Compare the training, cross-validation and test errors on the right, and jump to the size cross-validation picks.</li></ol>
+<ol class="steps"><li>Press Next (or Play) from the start. Each step makes one split: watch the orange box in the predictor space, the new branch in the tree, the new cliff in the 3D surface.</li><li>Keep going past the unpruned tree. Each step now removes the weakest link, and the bar chart shows why that one goes first.</li><li>Drag the 3D surface to rotate it, and jump to the size cross-validation picks to compare the training, cross-validation and test errors.</li></ol>
 <div class="main"><div class="col">
 <div class="tabs"><button id="tHalf" class="on">Training half (132 players)</button><button id="tAll">All 263 players</button></div>
-<section class="controls" aria-label="Pruning">
-  <div class="slider"><label for="sA">Cost complexity &alpha; <b id="vA"></b></label><input id="sA" type="range" min="0" max="100" step="1" value="0"></div>
+<section class="controls" aria-label="Steps">
+  <div class="slider"><label for="sT">Step <b id="vT"></b></label><input id="sT" type="range" min="0" max="40" step="1" value="0"></div>
   <div class="slider"><label for="sSeed">Random split and folds (seed) <b id="vSeed"></b></label><input id="sSeed" type="range" min="1" max="20" step="1" value="4"></div>
 </section>
 <div class="stats">
@@ -145,29 +160,41 @@ header p{max-width:none}
   <div class="stat"><span class="small">Test MSE</span><span class="big" id="rTe"></span></div>
 </div>
 <div class="buttons">
-  <button id="bFull">Unpruned tree (&alpha; = 0)</button>
-  <button class="primary" id="bCV">Jump to the cross-validation minimum</button>
-  <button id="b3">The 3-leaf tree of the slides</button>
-  <button id="bAnim">Prune step by step</button>
+  <button id="bRoot">Start: one box</button>
+  <button id="bBack">&#9664; Back</button>
+  <button id="bNext">Next &#9654;</button>
+  <button class="primary" id="bPlay">Play: grow, then prune</button>
   <button id="bStop">Stop</button>
+  <button id="bFull">Unpruned tree</button>
+  <button id="bCV">Cross-validation choice</button>
+  <button id="b3">The 3-leaf tree of the slides</button>
 </div>
-<div class="panels">
-  <figure><canvas id="cPart" style="height:340px"></canvas>
-    <figcaption><strong>The boxes in the predictor space.</strong> Each rectangle is a terminal node, shaded by its prediction (blue for low log salaries, red for high), with the prediction and the salary it implies written inside when there is room. Filled dots are the players the tree is fit on, hollow ones the test players. Every boundary is parallel to an axis, because each split uses one predictor at a time.</figcaption></figure>
-  <figure><canvas id="cTree" style="height:340px"></canvas>
-    <figcaption><strong>The same tree, drawn upside down.</strong> Internal nodes carry the splitting rule (left branch when it is true), leaves the mean log salary of their players. As &alpha; grows the bottom branches disappear first, in a nested order: the subtree for a larger &alpha; is always contained in the one for a smaller &alpha;.</figcaption></figure>
-  <figure><canvas id="cErr" style="height:340px"></canvas>
-    <figcaption><strong>Error against tree size.</strong> Navy: the training MSE, which can only fall as the tree grows. Red: the 6-fold cross-validation MSE of Algorithm 8.1. Green: the test MSE on the other half of the players. The orange line is the current tree and the red dot the size with the smallest cross-validation error.</figcaption></figure>
+<div class="narr" id="narr" aria-live="polite"></div>
+<div class="panels tree">
+  <figure><canvas id="cPart" style="height:360px"></canvas>
+    <figcaption><strong>The boxes in the predictor space.</strong> Each rectangle is a terminal node, shaded by its prediction (blue for low log salaries, red for high), with the prediction and the salary it implies written inside when there is room. Filled dots are the players the tree is fit on, hollow ones the test players. While growing, the orange line is the cut just made and the orange outlines the two new boxes. While pruning, the orange box is the one just merged, and the dashed lines are the cuts that disappeared with it.</figcaption></figure>
+  <figure><canvas id="cTree" style="height:360px"></canvas>
+    <figcaption><strong>The same tree, drawn upside down.</strong> Internal nodes carry the splitting rule (left branch when it is true), leaves the mean log salary of their players. The orange node is the one split (or collapsed) at this step. During pruning the bottom branches go first, and the order is nested: the subtree for a larger &alpha; is always contained in the one for a smaller &alpha;.</figcaption></figure>
+  <figure><div class="view"><button id="vSlide">View of the slides</button><button id="vTop">From above</button><button id="vSide">From the side</button><button id="vSpin">Spin</button></div><canvas id="c3d" style="height:324px"></canvas>
+    <figcaption><strong>The prediction surface, in 3D.</strong> Drag to rotate it (double-click to reset). The height over each point (Years, Hits) is the tree's prediction there, so the surface is flat inside every box and jumps at every cut, like the bottom-right panel of the slide figure. From above it turns back into the boxes of the first panel. The orange edges are the boxes changed at this step.</figcaption></figure>
+  <figure class="half"><canvas id="cMech" style="height:400px"></canvas>
+    <figcaption id="mechCap"></figcaption></figure>
+  <figure class="half"><canvas id="cErr" style="height:400px"></canvas>
+    <figcaption><strong>Error against tree size.</strong> The lines are the subtrees of the pruning sequence. Navy: the training MSE, which can only fall as the tree grows. Red: the 6-fold cross-validation MSE of Algorithm 8.1 (each fold grows and prunes its own tree). Green: the test MSE on the other half of the players. The orange dashed line and hollow dots are the current tree. While growing they can sit off the lines, because the tree with k leaves reached by growing is not always the k-leaf subtree that pruning keeps.</figcaption></figure>
 </div>
 </div>
 <aside class="formulas"><h2>Formulas, with the current numbers</h2>
-<div class="f"><div class="n"><b>RSS of the boxes</b></div><div class="n">the fit of the current tree on the data it was grown on</div><div class="k" data-tex='\sum_{j=1}^{J} \sum_{i \in R_j} \left(y_i - \hat y_{R_j}\right)^2'></div><span class="v" id="fRSS"></span></div>
-<div class="f"><div class="n"><b>Cost complexity criterion</b></div><div class="n">minimised by the current subtree</div><div class="k" data-tex='\sum_{m=1}^{|T|} \sum_{i:\, x_i \in R_m} \left(y_i - \hat y_{R_m}\right)^2 + \alpha |T|'></div><span class="v" id="fCC"></span></div>
-<div class="f"><div class="n"><b>The first split</b></div><div class="n">the predictor and cutpoint with the largest drop in RSS</div><div class="k" data-tex='\sum_{i:\, x_i \in R_1(j,s)} (y_i - \hat y_{R_1})^2 + \sum_{i:\, x_i \in R_2(j,s)} (y_i - \hat y_{R_2})^2'></div><span class="v" id="fSplit"></span></div>
+<div class="f"><div class="n"><b>RSS of the boxes</b></div><div class="n">the fit of the current tree on the players it was grown on</div><div class="k" data-tex='\sum_{j=1}^{J} \sum_{i \in R_j} \left(y_i - \hat y_{R_j}\right)^2'></div><span class="v" id="fRSS"></span></div>
+<div class="f"><div class="n"><b>Choosing a split</b></div><div class="n">the predictor j and cutpoint s with the lowest RSS for the two halves of the box</div><div class="k" data-tex='\min_{j,\,s}\; \sum_{i:\, x_i \in R_1(j,s)} (y_i - \hat y_{R_1})^2 + \sum_{i:\, x_i \in R_2(j,s)} (y_i - \hat y_{R_2})^2'></div><span class="v" id="fSplit"></span></div>
+<div class="f"><div class="n"><b>Cost complexity criterion</b></div><div class="n">the current subtree is the one that minimises it, from this &alpha; up to the next breakpoint</div><div class="k" data-tex='\sum_{m=1}^{|T|} \sum_{i:\, x_i \in R_m} \left(y_i - \hat y_{R_m}\right)^2 + \alpha |T|'></div><span class="v" id="fCC"></span></div>
+<div class="f"><div class="n"><b>The weakest link</b></div><div class="n">collapsing node t saves &alpha;(|T<sub>t</sub>| &minus; 1) in penalty and costs the RSS its branch was buying, so it goes once &alpha; passes</div><div class="k" data-tex='\alpha_t = \frac{\mathrm{RSS}(t) - \mathrm{RSS}(T_t)}{|T_t| - 1}'></div><span class="v" id="fLink"></span></div>
 </aside>
 <div class="note">
-  <p>The tree is grown with stopping rules modelled on the defaults of R's <code>tree()</code> (a node is split only if it holds at least 10 players, each child keeps at least 5, and the node's deviance is at least 1% of the root's), and the unpruned tree on all 263 players has 29 leaves. Pruning it to 3 leaves gives exactly the tree of the slides: Years &lt; 4.5 with a mean log salary of 5.107 (about 165 thousand dollars), then Hits &lt; 117.5 with 5.998 and 6.740.</p>
-  <p>The training MSE always prefers the largest tree. Cross-validation does not, because a small box fits the noise of the few players inside it. The cross-validation curve is fairly flat near its minimum, so the size it picks moves with the random split and folds. The default seed lands on 3 leaves, as on the slides; other seeds pick anything from 3 to about 12, and what stays the same is that a handful of leaves does as well as twenty.</p>
+  <p><b>Growing.</b> Recursive binary splitting is top-down and greedy. At each step it looks at every box, every predictor and every cutpoint between two observed values, and makes the single split that lowers the RSS the most (the bottom-left panel shows that search for the box just split). It never looks ahead, so a cut that looks poor now is never made, even if it would open the way to a very good one later. Here the boxes are split in order of how much they gain (the "split one of the regions" of the slides). Splitting them depth-first instead would give exactly the same final tree, only in a different order. The stopping rules are modelled on the defaults of R's <code>tree()</code>: a box is split only if it holds at least 10 players, each child keeps at least 5, and the split saves at least 1% of the root's RSS. On all 263 players the unpruned tree has 29 leaves.</p>
+  <p><b>Why prune.</b> Every split lowers the training RSS, so the training MSE falls at every step of the growing phase. The test MSE does not. The first two splits do almost all the work, and the late ones fit the noise of the few players inside a small box. Stopping early (only split when the RSS drop is large) would be short-sighted, for the reason above, so the tree is grown large and then cut back.</p>
+  <p><b>Pruning.</b> For a given &alpha;, cost complexity pruning keeps the subtree that minimises RSS + &alpha;|T|. Take an internal node t with |T<sub>t</sub>| leaves under it. Collapsing it into one leaf raises the RSS by RSS(t) &minus; RSS(T<sub>t</sub>) and removes |T<sub>t</sub>| &minus; 1 leaves from the penalty, so it pays off once &alpha; is larger than the ratio in the last formula card. The node with the smallest ratio (the weakest link) is the first to go as &alpha; rises. After it collapses the ratios are recomputed and the next weakest goes, and so on up to the root. This is why the subtrees are nested, and why only about as many subtrees as leaves need checking, not every possible subtree.</p>
+  <p><b>Choosing &alpha;.</b> Each of the 6 folds grows and prunes its own tree, and its subtree for each &alpha; is scored on the left-out players. Pruning the 263-player tree to 3 leaves gives exactly the tree of the slides: Years &lt; 4.5 with a mean log salary of 5.107 (about 165 thousand dollars), then Hits &lt; 117.5 with 5.998 and 6.740. The cross-validation curve is flat near its minimum, so the size it picks moves with the seed. The default seed lands on 3 leaves, as on the slides, other seeds anything from 3 to about 12. What stays the same is that a handful of leaves does as well as twenty.</p>
+  <p><b>The surface.</b> A regression tree is a step function of the predictors: flat over each box, with a cliff at every cut. The 3D panel makes two things visible that the tree diagram hides. The Hits cliff exists only on the Years &ge; 4.5 side, which is the interaction the tree builds by itself (hits matter only for experienced players). And every cliff runs parallel to an axis, because each split uses one predictor at a time.</p>
 </div>
 </div>
 
@@ -219,7 +246,7 @@ function growTree(X,y,idx,o,depth){
   depth=depth||0;
   const n=idx.length;let s=0,s2=0;for(const i of idx){s+=y[i];s2+=y[i]*y[i];}
   const mean=s/n,dev=Math.max(0,s2-s*s/n);
-  const node={id:NODE_ID++,n,mean,dev,depth,leaf:true};
+  const node={id:NODE_ID++,n,mean,dev,depth,leaf:true,idx};
   if(o.rootDev===undefined)o.rootDev=dev;
   if(n<o.minsplit||dev<=1e-12||depth>=(o.maxdepth||99)||(o.mindev&&dev<o.mindev*o.rootDev))return node;
   const p=X.length;let feats=Array.from({length:p},(_,j)=>j);
@@ -260,19 +287,28 @@ function pruneSequence(root){
 }
 function subtreeAt(seq,alpha){let k=0;for(let i=0;i<seq.length;i++)if(seq[i].alpha<=alpha+1e-12)k=i;return seq[k];}
 function rssOf(root,cut,X,y,idx){let r=0;for(const i of idx){const e=y[i]-predictRow(root,X,i,cut);r+=e*e;}return r;}
-
-/* Growing and pruning a regression tree, Hitters (ML L8) */
-const FN=['Years','Hits'];
+/* Growing and pruning a regression tree step by step, Hitters (ML L8): the model */
+const FN=['Years','Hits'],XR=[0,25],YR=[0,240];
 const X=[HIT.years,HIT.hits],Y=HIT.lsal,NALL=Y.length;
 const OPT=()=>({minsplit:10,minbucket:5,mindev:0.01});
-const S={mode:'half',v:0,seed:4};
+const S={mode:'half',seed:4,t:0,az:-0.62,el:0.52};
 let M=null;
 function shuffle(n,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=n-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/* best-first order of the splits: always split the open box whose best cut lowers the RSS the most.
+   The stopping rules are local to a node, so the final tree is the same as the depth-first one. */
+function growOrder(root){const out=[],open=[root];
+  while(true){let b=-1;open.forEach((n,i)=>{if(!n.leaf&&(b<0||n.gain>open[b].gain))b=i;});if(b<0)break;
+    const n=open.splice(b,1)[0];out.push(n);open.push(n.left,n.right);}
+  return out;}
+function allInternal(n,out){out=out||[];if(!n.leaf){out.push(n);allInternal(n.left,out);allInternal(n.right,out);}return out;}
+function setBounds(n,b){n.b=b;if(n.leaf)return;const L=b.slice(),R=b.slice();
+  if(n.j===0){L[1]=n.s;R[0]=n.s;}else{L[3]=n.s;R[2]=n.s;}setBounds(n.left,L);setBounds(n.right,R);}
 function fit(){
   const rng=mulberry32(S.seed*7919+1);const perm=shuffle(NALL,rng);
   const train=S.mode==='all'?perm.slice():perm.slice(0,132),test=S.mode==='all'?[]:perm.slice(132);
   NODE_ID=0;const root=growTree(X,Y,train,OPT());const seq=pruneSequence(root);
-  /* alpha grid: geometric means of consecutive breakpoints, as cv.tree does */
+  setBounds(root,[-Infinity,Infinity,-Infinity,Infinity]);
+  /* alpha grid for cross-validation: geometric means of consecutive breakpoints, as cv.tree does */
   const grid=seq.map((s,k)=>k===0?0:(k<seq.length-1?Math.sqrt(s.alpha*seq[k+1].alpha):s.alpha*1.5));
   const K=6,folds=shuffle(train.length,rng).map(i=>train[i]);const cvs=grid.map(()=>0);
   for(let f=0;f<K;f++){
@@ -280,54 +316,198 @@ function fit(){
     const r=growTree(X,Y,fi,OPT()),sq=pruneSequence(r);
     grid.forEach((a,k)=>{cvs[k]+=rssOf(r,subtreeAt(sq,a).cut,X,Y,ho);});
   }
-  const rows=seq.map((s,k)=>({size:s.size,alpha:s.alpha,grid:grid[k],cut:s.cut,
+  const rows=seq.map((s,k)=>({size:s.size,alpha:s.alpha,cut:s.cut,
     tr:rssOf(root,s.cut,X,Y,train)/train.length,cv:cvs[k]/train.length,
     te:test.length?rssOf(root,s.cut,X,Y,test)/test.length:NaN}));
   let best=0;rows.forEach((r,k)=>{if(r.cv<rows[best].cv-1e-12)best=k;});
-  const aMin=seq[1]?seq[1].alpha*0.4:0.01,aMax=seq[seq.length-1].alpha*1.3;
-  M={root,seq,rows,best,train,test,aMin,aMax};
+  const order=growOrder(root),ints=allInternal(root);
+  M={root,seq,rows,best,train,test,order,ints,G:order.length,P:seq.length-1};
 }
-const alphaOf=v=>v<=0?0:M.aMin*Math.pow(M.aMax/M.aMin,(v-1)/99);
-const vOf=a=>a<=0?0:Math.max(1,Math.min(100,Math.round(1+99*Math.log(a/M.aMin)/Math.log(M.aMax/M.aMin))));
-function cur(){const a=alphaOf(S.v);let k=0;for(let i=0;i<M.rows.length;i++)if(M.rows[i].alpha<=a+1e-12)k=i;return{a,k,row:M.rows[k]};}
-/* colours */
+/* everything about step t: 0..G grows the tree one split at a time, G+1..G+P prunes it back */
+function state(t){
+  if(t<=M.G){const done=new Set(M.order.slice(0,t).map(n=>n.id));
+    const cut=new Set(M.ints.filter(n=>!done.has(n.id)).map(n=>n.id));
+    return{phase:'grow',k:t,cut,node:t>0?M.order[t-1]:null,next:t<M.G?M.order[t]:null,row:t===M.G?M.rows[0]:null,alpha:0};}
+  const p=t-M.G,cut=M.seq[p].cut,prev=M.seq[p-1].cut;
+  const collapsed=leavesOf(M.root,cut).filter(n=>cut.has(n.id)&&!prev.has(n.id));
+  return{phase:'prune',p,cut,prev,collapsed,alpha:M.seq[p].alpha,row:M.rows[p]};
+}
+/* weakest link: the alpha above which collapsing node n into one leaf lowers the criterion */
+function linkOf(n,cut){const lv=leavesOf(n,cut);const RT=lv.reduce((a,l)=>a+l.dev,0);return{n,g:(n.dev-RT)/(lv.length-1),drop:n.dev-RT,m:lv.length};}
+/* RSS of the box after cutting at every candidate point s of predictor j */
+function splitCurve(node,j){const col=X[j],ord=node.idx.slice().sort((a,b)=>col[a]-col[b]),o=OPT();
+  let s=0,s2=0;for(const i of ord){s+=Y[i];s2+=Y[i]*Y[i];}
+  const n=ord.length,pts=[];let ls=0,ls2=0;
+  for(let k=0;k<n-1;k++){const yi=Y[ord[k]];ls+=yi;ls2+=yi*yi;const nl=k+1,nr=n-nl;
+    const a=col[ord[k]],b=col[ord[k+1]];if(a===b)continue;
+    const rs=s-ls,rs2=s2-ls2;pts.push({s:(a+b)/2,sse:(ls2-ls*ls/nl)+(rs2-rs*rs/nr),ok:nl>=o.minbucket&&nr>=o.minbucket,nl,nr});}
+  return{pts,lo:col[ord[0]],hi:col[ord[n-1]]};}
+const cutTxt=v=>String(Math.round(v*10)/10);
+const ruleOf=n=>FN[n.j]+' < '+cutTxt(n.s);
+function region(n){const b=n.b,parts=[];
+  const d=(name,lo,hi)=>{if(isFinite(lo)&&isFinite(hi))return cutTxt(lo)+' ≤ '+name+' < '+cutTxt(hi);if(isFinite(lo))return name+' ≥ '+cutTxt(lo);if(isFinite(hi))return name+' < '+cutTxt(hi);return null;};
+  [d('Years',b[0],b[1]),d('Hits',b[2],b[3])].forEach(x=>{if(x)parts.push(x);});
+  return parts.length?parts.join(', '):'all players';}
+
+/* drawing */
 function rgb(c){c=c.trim();if(c[0]==='#'){if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return[1,3,5].map(i=>parseInt(c.substr(i,2),16));}const m=c.match(/\d+/g);return m?m.slice(0,3).map(Number):[128,128,128];}
 function mix(a,b,t){const A=rgb(a),B=rgb(b);return`rgb(${A.map((x,i)=>Math.round(x+(B[i]-x)*t)).join(',')})`;}
 const LO=4.2,HI=7.8;const shade=m=>mix(css('--blue'),css('--red'),Math.max(0,Math.min(1,(m-LO)/(HI-LO))));
-function boxes(node,cut,b,out){if(node.leaf||cut.has(node.id)){out.push({node,b});return out;}
-  const L=b.slice(),R=b.slice();if(node.j===0){L[1]=node.s;R[0]=node.s;}else{L[3]=node.s;R[2]=node.s;}
-  boxes(node.left,cut,L,out);boxes(node.right,cut,R,out);return out;}
-function drawPart(){
-  const c=$('cPart'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const{row}=cur();
-  const A=axes(ctx,w,h,{xlim:[0,25],ylim:[0,240],xt:[0,5,10,15,20,25],yt:[0,60,120,180,240],xl:'Years',yl:'Hits',L:44});
+const clampB=b=>[Math.max(b[0],XR[0]),Math.min(b[1],XR[1]),Math.max(b[2],YR[0]),Math.min(b[3],YR[1])];
+const money=m=>'$'+Math.round(Math.exp(m))+'k';
+/* the boxes to outline in orange: the two new boxes after a split, the merged box after a prune */
+function hiBoxes(st){if(st.phase==='grow')return st.node?[st.node.left.b,st.node.right.b]:[];return st.collapsed.map(n=>n.b);}
+
+function drawPart(st){
+  const c=$('cPart'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const A=axes(ctx,w,h,{xlim:XR,ylim:YR,xt:[0,5,10,15,20,25],yt:[0,60,120,180,240],xl:'Years',yl:'Hits',L:44});
+  const rect=b=>{b=clampB(b);return[A.px(b[0]),A.py(b[3]),A.px(b[1])-A.px(b[0]),A.py(b[2])-A.py(b[3])];};
   A.clip();
-  const bx=boxes(M.root,row.cut,[0,25,0,240],[]);
-  bx.forEach(({node,b})=>{ctx.globalAlpha=.32;ctx.fillStyle=shade(node.mean);ctx.fillRect(A.px(b[0]),A.py(b[3]),A.px(b[1])-A.px(b[0]),A.py(b[2])-A.py(b[3]));ctx.globalAlpha=1;
-    ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.strokeRect(A.px(b[0]),A.py(b[3]),A.px(b[1])-A.px(b[0]),A.py(b[2])-A.py(b[3]));});
+  const lv=leavesOf(M.root,st.cut);
+  lv.forEach(n=>{const r=rect(n.b);ctx.globalAlpha=.32;ctx.fillStyle=shade(n.mean);ctx.fillRect(...r);ctx.globalAlpha=1;
+    ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.strokeRect(...r);});
+  /* after a prune, the cuts that just disappeared, dashed */
+  if(st.phase==='prune')st.collapsed.forEach(n=>internalOf(n,st.prev).forEach(m=>{const b=clampB(m.b);
+    const pts=m.j===0?[[A.px(m.s),A.py(b[2])],[A.px(m.s),A.py(b[3])]]:[[A.px(b[0]),A.py(m.s)],[A.px(b[1]),A.py(m.s)]];line(ctx,pts,css('--orange'),1.5,[5,4]);}));
   const inTest=new Set(M.test);
   for(let i=0;i<NALL;i++){const x=A.px(X[0][i]+((i*37)%10-4.5)*0.035),y=A.py(X[1][i]);
-    if(inTest.has(i)){ctx.beginPath();ctx.arc(x,y,2.4,0,6.2832);ctx.strokeStyle=css('--muted');ctx.lineWidth=1;ctx.stroke();}
-    else dot(ctx,x,y,2.4,css('--point'));}
-  bx.forEach(({node,b})=>{const pw=A.px(b[1])-A.px(b[0]),ph=A.py(b[2])-A.py(b[3]);
-    if(pw>58&&ph>22)label(ctx,fmt(node.mean,2)+' ($'+Math.round(Math.exp(node.mean))+'k)',(A.px(b[0])+A.px(b[1]))/2,(A.py(b[2])+A.py(b[3]))/2,css('--ink'),'center');});
+    if(inTest.has(i)){ctx.beginPath();ctx.arc(x,y,2.3,0,6.2832);ctx.strokeStyle=css('--muted');ctx.lineWidth=1;ctx.stroke();}
+    else dot(ctx,x,y,2.3,css('--point'));}
+  hiBoxes(st).forEach(b=>{ctx.strokeStyle=css('--orange');ctx.lineWidth=3;ctx.strokeRect(...rect(b));});
+  if(st.phase==='grow'&&st.node){const n=st.node,b=clampB(n.b);
+    const pts=n.j===0?[[A.px(n.s),A.py(b[2])],[A.px(n.s),A.py(b[3])]]:[[A.px(b[0]),A.py(n.s)],[A.px(b[1]),A.py(n.s)]];line(ctx,pts,css('--orange'),3.5);}
+  lv.forEach(n=>{const r=rect(n.b);if(r[2]>64&&r[3]>22)label(ctx,fmt(n.mean,2)+' ('+money(n.mean)+')',r[0]+r[2]/2,r[1]+r[3]/2,css('--ink'),'center');});
   A.unclip();
 }
-function drawTree(){
-  const c=$('cTree'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const{row}=cur();
-  const lv=leavesOf(M.root,row.cut);const maxD=Math.max(...lv.map(l=>l.depth));
-  const pos=new Map();lv.forEach((l,i)=>pos.set(l.id,lv.length===1?w/2:24+(w-48)*i/(lv.length-1)));
-  const dy=Math.min(64,(h-50)/Math.max(1,maxD)),Y0=22;
-  function place(n){if(n.leaf||row.cut.has(n.id))return pos.get(n.id);const x=(place(n.left)+place(n.right))/2;pos.set(n.id,x);return x;}
-  place(M.root);
-  ctx.font=FONT;
-  function draw(n){const x=pos.get(n.id),y=Y0+n.depth*dy;
-    if(n.leaf||row.cut.has(n.id)){dot(ctx,x,y,4,shade(n.mean),css('--ink'));if(lv.length<=14){ctx.fillStyle=css('--ink');ctx.textAlign='center';ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.fillText(fmt(n.mean,2),x,y+16);}return;}
-    for(const ch of [n.left,n.right]){const cx=pos.get(ch.id),cy=Y0+ch.depth*dy;line(ctx,[[x,y],[x,cy-8],[cx,cy-8],[cx,cy]],css('--muted'),1.2);draw(ch);}
-    if(lv.length<=18||n.depth<3)label(ctx,FN[n.j]+' < '+(Math.round(n.s*10)/10),x,y-3,css('--navy'),'center');}
-  draw(M.root);
+
+function drawTree(st){
+  const c=$('cTree'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const lv=leavesOf(M.root,st.cut);const maxD=Math.max(...lv.map(l=>l.depth));
+  const pos=new Map();lv.forEach((l,i)=>pos.set(l.id,lv.length===1?w/2:22+(w-44)*i/(lv.length-1)));
+  const dy=Math.min(70,(h-46)/Math.max(1,maxD)),Y0=24;
+  const isLeaf=n=>n.leaf||st.cut.has(n.id);
+  (function place(n){if(isLeaf(n))return pos.get(n.id);const x=(place(n.left)+place(n.right))/2;pos.set(n.id,x);return x;})(M.root);
+  const hot=new Set(st.phase==='grow'?(st.node?[st.node.id]:[]):st.collapsed.map(n=>n.id));
+  const fresh=new Set(st.phase==='grow'&&st.node?[st.node.left.id,st.node.right.id]:[]);
+  const small='11px "Fira Sans", system-ui, sans-serif';
+  (function draw(n){const x=pos.get(n.id),y=Y0+n.depth*dy;
+    if(isLeaf(n)){
+      if(hot.has(n.id)||fresh.has(n.id))dot(ctx,x,y,8,css('--hl'),css('--orange'));
+      dot(ctx,x,y,4.5,shade(n.mean),css('--ink'));
+      if(lv.length<=16){ctx.fillStyle=css('--ink');ctx.textAlign='center';ctx.font=small;ctx.fillText(fmt(n.mean,2),x,y+17);}
+      return;}
+    for(const ch of [n.left,n.right]){const cx=pos.get(ch.id),cy=Y0+ch.depth*dy;
+      line(ctx,[[x,y],[x,cy-9],[cx,cy-9],[cx,cy]],fresh.has(ch.id)?css('--orange'):css('--muted'),fresh.has(ch.id)?2.4:1.2);draw(ch);}
+    if(hot.has(n.id))dot(ctx,x,y,6,css('--orange'));
+    if(lv.length<=18||n.depth<3)label(ctx,ruleOf(n),x,y-4,hot.has(n.id)?css('--orange'):css('--navy'),'center');})(M.root);
+  if(lv.length===1)label(ctx,'one box: predict '+fmt(M.root.mean,2)+' for everyone',w/2,Y0+26,css('--muted'),'center');
 }
-function drawErr(){
-  const c=$('cErr'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const{row}=cur();
+
+/* the rotatable 3D surface: a heightfield on the rectilinear grid made by the cuts of the current tree */
+function draw3d(st){
+  const c=$('c3d'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const xs=new Set(XR),ys=new Set(YR);internalOf(M.root,st.cut).forEach(n=>(n.j===0?xs:ys).add(n.s));
+  const gx=[...xs].filter(v=>v>=XR[0]&&v<=XR[1]).sort((a,b)=>a-b),gy=[...ys].filter(v=>v>=YR[0]&&v<=YR[1]).sort((a,b)=>a-b);
+  const Z0=4,Z1=7.5,ca=Math.cos(S.az),sa=Math.sin(S.az),ce=Math.cos(S.el),se=Math.sin(S.el);
+  const sc=Math.min(w*(w<420?0.52:0.6),h*0.72),cx=w*0.53,cy=h*0.49;
+  const P=(x,y,z)=>{const u=(x-XR[0])/(XR[1]-XR[0])-.5,v=(y-YR[0])/(YR[1]-YR[0])-.5,q=(z-Z0)/(Z1-Z0)*.55-.25;
+    const a=u*ca-v*sa,b=u*sa+v*ca;return[cx+sc*a,cy-sc*(q*ce+b*se),b];};
+  const poly=(pts,fill,stroke,lw)=>{ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.closePath();
+    if(fill){ctx.fillStyle=fill;ctx.fill();ctx.strokeStyle=fill;ctx.lineWidth=.7;ctx.stroke();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=lw||1;ctx.stroke();}};
+  const seg=(p,q,col,lw)=>{ctx.beginPath();ctx.moveTo(p[0],p[1]);ctx.lineTo(q[0],q[1]);ctx.strokeStyle=col;ctx.lineWidth=lw||1;ctx.stroke();};
+  /* the box behind the surface */
+  const rule=css('--rule'),ink=css('--ink'),panel=css('--panel'),dk=rgb(panel).reduce((a,b)=>a+b,0)<300,mesh=mix(panel,ink,.2),hot=css('--orange');
+  const cor=[[XR[0],YR[0]],[XR[1],YR[0]],[XR[1],YR[1]],[XR[0],YR[1]]];
+  for(let i=0;i<4;i++){const a=cor[i],b=cor[(i+1)%4];seg(P(a[0],a[1],Z0),P(b[0],b[1],Z0),rule);seg(P(a[0],a[1],Z1),P(b[0],b[1],Z1),rule);seg(P(a[0],a[1],Z0),P(a[0],a[1],Z1),rule);}
+  /* cells, far ones first */
+  const cells=[];for(let i=0;i<gx.length-1;i++)for(let j=0;j<gy.length-1;j++){const x0=gx[i],x1=gx[i+1],y0=gy[j],y1=gy[j+1];
+    const m=predictPoint(M.root,[(x0+x1)/2,(y0+y1)/2],st.cut);cells.push({x0,x1,y0,y1,m,b:P((x0+x1)/2,(y0+y1)/2,Z0)[2]});}
+  cells.sort((a,b)=>b.b-a.b);
+  const hb=hiBoxes(st).map(clampB),eps=1e-9;
+  const MX=[],MY=[];for(let v=1;v<25;v++)MX.push(v);for(let v=10;v<240;v+=10)MY.push(v);
+  for(const k of cells){const top=mix(panel,shade(k.m),.8),sideA=mix(top,'#000000',dk?.22:.12),sideB=mix(top,'#000000',dk?.38:.24);
+    /* the two vertical faces that look towards the viewer */
+    const fx=sa<0?k.x1:k.x0,fy=ca<0?k.y1:k.y0;
+    poly([P(fx,k.y0,Z0),P(fx,k.y1,Z0),P(fx,k.y1,k.m),P(fx,k.y0,k.m)],sideA);
+    MY.forEach(v=>{if(v>k.y0&&v<k.y1)seg(P(fx,v,Z0),P(fx,v,k.m),mix(sideA,ink,.12),.5);});
+    poly([P(k.x0,fy,Z0),P(k.x1,fy,Z0),P(k.x1,fy,k.m),P(k.x0,fy,k.m)],sideB);
+    MX.forEach(v=>{if(v>k.x0&&v<k.x1)seg(P(v,fy,Z0),P(v,fy,k.m),mix(sideB,ink,.12),.5);});
+    poly([P(k.x0,k.y0,k.m),P(k.x1,k.y0,k.m),P(k.x1,k.y1,k.m),P(k.x0,k.y1,k.m)],top);
+    MX.forEach(v=>{if(v>k.x0&&v<k.x1)seg(P(v,k.y0,k.m),P(v,k.y1,k.m),mesh,.5);});
+    MY.forEach(v=>{if(v>k.y0&&v<k.y1)seg(P(k.x0,v,k.m),P(k.x1,v,k.m),mesh,.5);});
+    /* orange edges where this cell's top touches the border of a highlighted box */
+    hb.forEach(b=>{if(k.x0<b[0]-eps||k.x1>b[1]+eps||k.y0<b[2]-eps||k.y1>b[3]+eps)return;
+      if(Math.abs(k.x0-b[0])<eps)seg(P(k.x0,k.y0,k.m),P(k.x0,k.y1,k.m),hot,2.5);
+      if(Math.abs(k.x1-b[1])<eps)seg(P(k.x1,k.y0,k.m),P(k.x1,k.y1,k.m),hot,2.5);
+      if(Math.abs(k.y0-b[2])<eps)seg(P(k.x0,k.y0,k.m),P(k.x1,k.y0,k.m),hot,2.5);
+      if(Math.abs(k.y1-b[3])<eps)seg(P(k.x0,k.y1,k.m),P(k.x1,k.y1,k.m),hot,2.5);});
+  }
+  /* axis names and ticks along the front edges of the floor */
+  const yF=ca>0?YR[0]:YR[1],xF=sa>0?XR[0]:XR[1],mu=css('--muted');
+  ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=mu;ctx.textAlign='center';
+  const away=(p,q)=>{const d=[p[0]-cx,p[1]-cy],n=Math.hypot(...d)||1;return[p[0]+d[0]/n*q,p[1]+d[1]/n*q];};
+  {
+    [5,10,15,20,25].forEach(v=>{const p=away(P(v,yF,Z0),13);ctx.fillText(v,p[0],p[1]+4);});
+    [60,120,180,240].forEach(v=>{const p=away(P(xF,v,Z0),14);ctx.fillText(v,p[0],p[1]+4);});
+    ctx.font='500 12px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=ink;
+    let p=away(P(12.5,yF,Z0),32);ctx.fillText('Years',p[0],p[1]+4);p=away(P(xF,120,Z0),34);ctx.fillText('Hits',p[0],p[1]+4);}
+  /* log salary ticks on the leftmost vertical edge of the box */
+  if(S.el<1.4){const lc=cor.reduce((a,b)=>P(b[0],b[1],Z0)[0]<P(a[0],a[1],Z0)[0]?b:a);
+    ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=mu;ctx.textAlign='right';
+    [5,6,7].forEach(v=>{const p=P(lc[0],lc[1],v);ctx.fillText(v,p[0]-6,p[1]+4);});
+    const p=P(lc[0],lc[1],Z1),tw=ctx.measureText('log salary').width;ctx.textAlign='left';ctx.fillText('log salary',Math.max(4,p[0]-tw/2),p[1]-8);}
+}
+
+/* how the split was chosen (growing) or which link is weakest (pruning) */
+function drawMech(st){
+  const c=$('cMech'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  if(st.phase==='grow'){
+    const node=st.node||st.next;if(!node){label(ctx,'no box left to split',w/2,h/2,css('--muted'),'center');return;}
+    $('mechCap').innerHTML=st.node?'<strong>How split '+st.k+' was chosen.</strong> For the box that was just split (outlined in orange), the RSS after cutting it at every possible point, on Years (top) and on Hits (bottom). The dashed line is the RSS of the box left whole. Greedy splitting takes the lowest point of the two curves. Grey points are cuts that would leave fewer than 5 players on one side.'
+      :'<strong>How the first split will be chosen.</strong> The RSS of the whole data set after cutting it at every possible point, on Years (top) and on Hits (bottom). The dashed line is the RSS with no split. Step 1 takes the lowest point of the two curves.';
+    const cv=[splitCurve(node,0),splitCurve(node,1)];
+    const all=cv.flatMap(q=>q.pts.filter(p=>p.ok).map(p=>p.sse)).concat([node.dev]);
+    const lo=Math.min(...all),hi=node.dev,pad=(hi-lo)*.12||1,yl=[Math.max(0,lo-pad),hi+pad];
+    const H=h/2;
+    cv.forEach((q,j)=>{ctx.save();ctx.translate(0,j*H);
+      const xr=j===0?[Math.floor(q.lo)-.5,Math.ceil(q.hi)+.5]:[Math.floor(q.lo/10)*10-5,Math.ceil(q.hi/10)*10+5];
+      const step=j===0?(xr[1]-xr[0]>12?5:xr[1]-xr[0]>6?2:1):(xr[1]-xr[0]>120?40:xr[1]-xr[0]>50?20:10);
+      const xt=[];for(let v=Math.ceil(xr[0]/step)*step;v<=xr[1];v+=step)xt.push(v);
+      const dd=Math.max(1,Math.ceil(-Math.log10(yl[1]-yl[0]))+1),yt=[yl[0],(yl[0]+yl[1])/2,yl[1]];
+      const A=axes(ctx,w,H,{xlim:xr,ylim:yl,xt,yt,yf:v=>fmt(v,dd),xl:'cutpoint s on '+FN[j],yl:'RSS',L:56,B:34,T:10});
+      A.clip();
+      line(ctx,[[A.px(xr[0]),A.py(node.dev)],[A.px(xr[1]),A.py(node.dev)]],css('--muted'),1.2,[4,3]);
+      const ok=q.pts.filter(p=>p.ok);line(ctx,ok.map(p=>[A.px(p.s),A.py(p.sse)]),css('--navy'),1.6);
+      q.pts.forEach(p=>dot(ctx,A.px(p.s),A.py(Math.min(p.sse,yl[1])),2.2,p.ok?css('--navy'):css('--rule')));
+      if(ok.length){const b=ok.reduce((a,b)=>b.sse<a.sse?b:a);const win=node.j===j;
+        dot(ctx,A.px(b.s),A.py(b.sse),5,win?css('--orange'):css('--panel'),win?css('--orange'):css('--navy'));
+        const txt=FN[j]+' < '+cutTxt(b.s)+': '+fmt(b.sse,2)+(win?' (best)':'');
+        const ly=A.py(b.sse)-10<A.T+24?A.py(b.sse)+18:A.py(b.sse)-10;label(ctx,txt,Math.min(A.px(b.s)+8,A.L+A.pw-4-ctx.measureText(txt).width),ly,win?css('--orange'):css('--navy'),'left');}
+      label(ctx,'no split: '+fmt(node.dev,2),A.L+A.pw-4,A.py(node.dev)-6,css('--muted'),'right');
+      A.unclip();ctx.restore();});
+    return;}
+  /* pruning: every internal node of the tree before this step, by the alpha that would cut it */
+  $('mechCap').innerHTML='<strong>Which link is the weakest.</strong> Every split still in the tree before this step, with the &alpha; above which it stops paying for itself: the drop in RSS it buys, divided by the extra leaves it costs. The shortest bar goes first (orange). The axis is logarithmic, because the root split is worth far more than the rest.';
+  const links=internalOf(M.root,st.prev).map(n=>linkOf(n,st.prev)).sort((a,b)=>a.g-b.g);
+  const gone=new Set(st.collapsed.map(n=>n.id)),show=links.slice(0,12),more=links.length-show.length;
+  const gmin=Math.max(1e-3,show[0].g),gmax=show[show.length-1].g;
+  const l0=Math.floor(Math.log10(gmin)),l1=Math.max(l0+1,Math.ceil(Math.log10(gmax*1.15)));
+  const L=150,R=16,T=10,B=more>0?44:30,pw=w-L-R,rowH=Math.min(30,(h-T-B)/show.length);
+  const px=g=>L+(Math.log10(Math.max(g,gmin))-l0)/(l1-l0)*pw;
+  ctx.font=FONT;ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.fillStyle=css('--muted');ctx.textAlign='center';
+  for(let e=l0;e<=l1;e++){const x=px(10**e);line(ctx,[[x,T],[x,T+rowH*show.length]],css('--rule'),1);ctx.fillText(e>=0?String(10**e):(10**e).toFixed(-e),x,T+rowH*show.length+14);}
+  ctx.fillText('α at which the split is pruned (log scale)',L+pw/2,T+rowH*show.length+28);
+  show.forEach((k,i)=>{const y=T+i*rowH,isGone=gone.has(k.n.id);
+    ctx.fillStyle=isGone?css('--orange'):css('--navy');ctx.globalAlpha=isGone?1:.55;ctx.fillRect(L,y+3,Math.max(2,px(k.g)-L),rowH-6);ctx.globalAlpha=1;
+    ctx.textAlign='right';ctx.fillStyle=isGone?css('--orange'):css('--ink');ctx.font=(isGone?'600 ':'')+'11px "Fira Sans", system-ui, sans-serif';
+    ctx.fillText(ruleOf(k.n)+' ('+k.m+' leaves)',L-6,y+rowH/2+4);
+    ctx.textAlign='left';ctx.fillStyle=css('--muted');ctx.font='11px "Fira Sans", system-ui, sans-serif';
+    const tx=px(k.g)+5;if(tx<w-40)ctx.fillText(fmt(k.g,k.g<1?3:2),tx,y+rowH/2+4);});
+  if(more>0){ctx.textAlign='left';ctx.fillStyle=css('--muted');ctx.fillText('… and '+more+' stronger links',8,h-6);}
+}
+
+function drawErr(st){
+  const c=$('cErr'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
   const R=M.rows,mx=R[0].size;const all=R.flatMap(r=>[r.tr,r.cv,r.te]).filter(v=>isFinite(v));
   const hi=Math.ceil(Math.max(...all)*10)/10+0.05;
   const A=axes(ctx,w,h,{xlim:[0,mx+1],ylim:[0,hi],xt:[1,5,10,15,20,25,30].filter(v=>v<=mx+1),yt:[0,hi/4,hi/2,3*hi/4,hi].map(v=>+v.toFixed(2)),yf:v=>fmt(v,2),xl:'tree size (terminal nodes)',yl:'MSE (log salary)'});
@@ -336,34 +516,79 @@ function drawErr(){
   line(ctx,pts('tr'),css('--navy'),2);pts('tr').forEach(p=>dot(ctx,p[0],p[1],2.6,css('--navy')));
   line(ctx,pts('cv'),css('--red'),2);pts('cv').forEach(p=>dot(ctx,p[0],p[1],2.6,css('--red')));
   if(M.test.length){line(ctx,pts('te'),css('--green'),2);pts('te').forEach(p=>dot(ctx,p[0],p[1],2.6,css('--green')));}
-  line(ctx,[[A.px(row.size),A.py(0)],[A.px(row.size),A.py(hi)]],css('--orange'),1.5,[4,3]);
+  const cs=cur(st);
+  line(ctx,[[A.px(cs.size),A.py(0)],[A.px(cs.size),A.py(hi)]],css('--orange'),1.5,[4,3]);
   const b=R[M.best];dot(ctx,A.px(b.size),A.py(b.cv),5.5,css('--red'),css('--panel'));
+  dot(ctx,A.px(cs.size),A.py(cs.tr),5,css('--panel'),css('--orange'));
+  if(M.test.length)dot(ctx,A.px(cs.size),A.py(cs.te),5,css('--panel'),css('--orange'));
   A.unclip();
-  label(ctx,'training',A.L+A.pw-4,A.py(R[0].tr)-6,css('--navy'),'right');
-  label(ctx,'CV min, size '+b.size,A.px(b.size)+7,A.py(b.cv)-8,css('--red'),'left');
+  label(ctx,'training',A.L+A.pw-4,A.py(R[0].tr)-7,css('--navy'),'right');
+  if(M.test.length)label(ctx,'test',A.L+A.pw-4,A.py(R[0].te)-7,css('--green'),'right');
+  label(ctx,'CV min, size '+b.size,A.px(b.size)+7,A.py(b.cv)-9,css('--red'),'left');
 }
+/* numbers of the current tree */
+function cur(st){const lv=leavesOf(M.root,st.cut),n=M.train.length,rss=rssOf(M.root,st.cut,X,Y,M.train);
+  return{size:lv.length,rss,tr:rss/n,te:M.test.length?rssOf(M.root,st.cut,X,Y,M.test)/M.test.length:NaN,cv:st.row?st.row.cv:NaN};}
+
+function narrate(st,cs){const n=M.train.length,G=M.G,P=M.P;let ph,txt;
+  if(st.phase==='grow'){ph='<span class="ph grow">Growing</span>';
+    if(st.k===0)txt=`One box holds all ${n} training players. The tree predicts their mean log salary, ${fmt(M.root.mean,2)} (about ${money(M.root.mean)}), for everyone, and the RSS is ${fmt(M.root.dev,2)}. Press Next to make the first split.`;
+    else{const d=st.node,l=d.left,r=d.right;
+      txt=`<b>Split ${st.k} of ${G}.</b> `+(st.k===1?`There is only one box, holding all ${d.n} players.`:`Of the boxes the stopping rules still allow to split, the one whose best cut lowers the RSS the most is <i>${region(d)}</i> (${d.n} players).`)+` Its best cut is <b>${ruleOf(d)}</b>: the RSS of the box falls from ${fmt(d.dev,2)} to ${fmt(d.dev-d.gain,2)}, with ${l.n} players and a mean of ${fmt(l.mean,2)} on the left, ${r.n} and ${fmt(r.mean,2)} on the right. The tree now has ${st.k+1} leaves and a training MSE of ${fmt(cs.tr,3)}.`;
+      if(st.k===G)txt+=` No box can be split any more (each is too small, or its best cut would save less than 1% of the root's RSS), so this is the unpruned tree T<sub>0</sub>. Next comes pruning.`;}}
+  else{ph='<span class="ph prune">Pruning</span>';const k=st.collapsed.map(c=>linkOf(c,st.prev));const a=k[0];
+    if(a.n===M.root)txt=`<b>Step ${st.p} of ${P}.</b> Only the root split is left, <b>${ruleOf(a.n)}</b>. Its 2 leaves lower the RSS by ${fmt(a.drop,3)} compared with one box, far more than any other split did, so it survives until &alpha; passes ${fmt(st.alpha,3)}. Above that the best subtree is a single box, which predicts the mean of all players.`;
+    else txt=`<b>Step ${st.p} of ${P}.</b> The weakest link is <b>${ruleOf(a.n)}</b>, inside <i>${region(a.n)}</i>. Its ${a.m} leaves lower the RSS by only ${fmt(a.drop,3)} compared with one leaf, ${fmt(a.g,3)} per extra leaf, less than any other split in the tree. So once &alpha; passes ${fmt(st.alpha,3)}, those leaves cost more (&alpha; each) than they save, and the node collapses into a single leaf.`;
+    if(k.length>1)txt+=k.length>2?` ${k.length-1} other nodes tie at the same &alpha; and collapse too.`:' One other node ties at the same &alpha; and collapses too.';
+    if(a.n!==M.root)txt+=` The tree now has ${cs.size} leaves.`;
+    if(st.p===M.best)txt+=' <b>This is the subtree with the smallest cross-validation error.</b>';}
+  return ph+txt;}
+
 function drawAll(){
-  const{a,row}=cur();
-  $('vA').textContent=a===0?'0':fmt(a,a<1?3:2);$('vSeed').textContent=S.seed;
-  $('rT').textContent=row.size;$('rTr').textContent=fmt(row.tr,3);$('rCV').textContent=fmt(row.cv,3);
-  $('rTe').textContent=M.test.length?fmt(row.te,3):'n/a';
-  const n=M.train.length,rss=row.tr*n;
-  $('fRSS').textContent=`${row.size} boxes, RSS = ${fmt(rss,2)} on ${n} players (MSE ${fmt(row.tr,3)})`;
-  $('fCC').textContent=`${fmt(rss,2)} + ${fmt(a,3)} × ${row.size} = ${fmt(rss+a*row.size,2)}`;
-  const r=M.root;$('fSplit').textContent=r.leaf?'no split':`j = ${FN[r.j]}, s = ${r.s}: the RSS falls from ${fmt(r.dev,2)} to ${fmt(r.dev-r.gain,2)}`;
-  drawPart();drawTree();drawErr();
+  const st=state(S.t),cs=cur(st);
+  $('vT').textContent=st.phase==='grow'?(st.k===0?'start':'grow '+st.k+' / '+M.G):'prune '+st.p+' / '+M.P;
+  $('vSeed').textContent=S.seed;
+  $('rT').textContent=cs.size;$('rTr').textContent=fmt(cs.tr,3);
+  $('rCV').textContent=isFinite(cs.cv)?fmt(cs.cv,3):'(growing)';
+  $('rTe').textContent=M.test.length?fmt(cs.te,3):'n/a';
+  $('narr').innerHTML=narrate(st,cs);
+  const n=M.train.length;
+  $('fRSS').textContent=`${cs.size} boxes, RSS = ${fmt(cs.rss,2)} on ${n} players (MSE ${fmt(cs.tr,3)})`;
+  const sp=st.phase==='grow'?(st.node||st.next):null;
+  $('fSplit').textContent=sp?`${st.node?'split '+st.k:'first split'}: ${ruleOf(sp)}, the RSS of the box (${sp.n} players) falls from ${fmt(sp.dev,2)} to ${fmt(sp.left.dev,2)} + ${fmt(sp.right.dev,2)} = ${fmt(sp.dev-sp.gain,2)}`:'not used while pruning';
+  $('fCC').textContent=st.phase==='prune'?`α = ${fmt(st.alpha,3)}: ${fmt(cs.rss,2)} + ${fmt(st.alpha,3)} × ${cs.size} = ${fmt(cs.rss+st.alpha*cs.size,2)}`:'α = 0 while growing: only the RSS counts, so every split is kept';
+  if(st.phase==='prune'){const a=linkOf(st.collapsed[0],st.prev);$('fLink').textContent=`${ruleOf(a.n)}: (${fmt(a.n.dev,3)} − ${fmt(a.n.dev-a.drop,3)}) / (${a.m} − 1) = ${fmt(a.g,3)}`;}
+  else $('fLink').textContent='used once pruning starts';
+  drawPart(st);drawTree(st);draw3d(st);drawMech(st);drawErr(st);
 }
-function setV(v){S.v=v;$('sA').value=v;drawAll();}
-$('sA').addEventListener('input',e=>{stopAnim();setV(+e.target.value);});
-$('sSeed').addEventListener('input',e=>{stopAnim();S.seed=+e.target.value;fit();drawAll();});
-function mode(m){S.mode=m;$('tHalf').classList.toggle('on',m==='half');$('tAll').classList.toggle('on',m==='all');fit();setV(S.v);}
+const TMAX=()=>M.G+M.P;
+function setT(t){S.t=Math.max(0,Math.min(TMAX(),t));$('sT').max=TMAX();$('sT').value=S.t;drawAll();}
+$('sT').addEventListener('input',e=>{stopAnim();setT(+e.target.value);});
+$('sSeed').addEventListener('input',e=>{stopAnim();const g=S.t>=M.G;S.seed=+e.target.value;fit();setT(g?M.G+Math.min(S.t-M.G,M.P):Math.min(S.t,M.G));});
+function mode(m){S.mode=m;$('tHalf').classList.toggle('on',m==='half');$('tAll').classList.toggle('on',m==='all');fit();setT(Math.min(S.t,TMAX()));}
 $('tHalf').onclick=()=>mode('half');$('tAll').onclick=()=>mode('all');
-$('bFull').onclick=()=>{stopAnim();setV(0);};
-$('bCV').onclick=()=>{stopAnim();setV(vOf(M.rows[M.best].grid));};
-$('b3').onclick=()=>{stopAnim();const k=M.rows.findIndex(r=>r.size===3);if(k>=0)setV(vOf(M.rows[k].grid));else{const j=M.rows.reduce((b,r,i)=>Math.abs(r.size-3)<Math.abs(M.rows[b].size-3)?i:b,0);setV(vOf(M.rows[j].grid));}};
-$('bAnim').onclick=()=>{const v0=S.v>=95?0:S.v;animate(t=>setV(Math.round(v0+(100-v0)*t)),7000);};
+$('bBack').onclick=()=>{stopAnim();setT(S.t-1);};
+$('bNext').onclick=()=>{stopAnim();setT(S.t+1);};
+$('bRoot').onclick=()=>{stopAnim();setT(0);};
+$('bFull').onclick=()=>{stopAnim();setT(M.G);};
+$('bCV').onclick=()=>{stopAnim();setT(M.G+M.best);};
+$('b3').onclick=()=>{stopAnim();let k=M.rows.findIndex(r=>r.size===3);if(k<0)k=M.rows.reduce((b,r,i)=>Math.abs(r.size-3)<Math.abs(M.rows[b].size-3)?i:b,0);setT(M.G+k);};
+$('bPlay').onclick=()=>{const t0=S.t>=TMAX()?0:S.t,n=TMAX()-t0;animate(u=>{const t=Math.min(TMAX(),t0+Math.floor(u*(n+.999)));if(t!==S.t)setT(t);},n*900);};
 $('bStop').onclick=stopAnim;
+/* rotating the surface */
+const VIEW={az:-0.62,el:0.52};let drag=null,spin=null;
+function view3d(){draw3d(state(S.t));}
+function stopSpin(){if(spin){cancelAnimationFrame(spin);spin=null;}$('vSpin').classList.remove('on');}
+$('c3d').addEventListener('pointerdown',e=>{stopSpin();drag={x:e.clientX,y:e.clientY,az:S.az,el:S.el};$('c3d').setPointerCapture(e.pointerId);});
+$('c3d').addEventListener('pointermove',e=>{if(!drag)return;S.az=drag.az-(e.clientX-drag.x)*0.01;S.el=Math.max(0.02,Math.min(Math.PI/2,drag.el+(e.clientY-drag.y)*0.01));view3d();});
+$('c3d').addEventListener('pointerup',()=>{drag=null;});
+$('c3d').addEventListener('dblclick',()=>{stopSpin();S.az=VIEW.az;S.el=VIEW.el;view3d();});
+$('vSlide').onclick=()=>{stopSpin();S.az=VIEW.az;S.el=VIEW.el;view3d();};
+$('vTop').onclick=()=>{stopSpin();S.az=0;S.el=Math.PI/2;view3d();};
+$('vSide').onclick=()=>{stopSpin();S.az=0;S.el=0.02;view3d();};
+$('vSpin').onclick=()=>{if(spin){stopSpin();return;}$('vSpin').classList.add('on');let last=performance.now();const go=now=>{S.az-=(now-last)*0.0005;last=now;view3d();spin=requestAnimationFrame(go);};spin=requestAnimationFrame(go);};
 fit();
+$('sT').max=TMAX();
 hookTheme(drawAll);
 drawAll();
 
