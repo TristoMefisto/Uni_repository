@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convolution and pooling</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+.panels.cnn{grid-template-columns:repeat(6,minmax(0,1fr))}
+.panels.cnn figure{grid-column:span 2}
+.panels.cnn figure.half{grid-column:span 3}
+@media (max-width:1150px){.panels.cnn{grid-template-columns:repeat(2,minmax(0,1fr))}.panels.cnn figure,.panels.cnn figure.half{grid-column:span 1}}
+@media (max-width:720px){.panels.cnn{grid-template-columns:minmax(0,1fr)}}
+.tabs+.tabs{margin-top:8px}
+.view{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.view span{font-size:.85rem;color:var(--muted);margin:0 2px 0 6px}
+.view button{font-size:.8rem;padding:3px 10px;border-radius:14px}
+#cImg{cursor:crosshair}
+#cConv,#cRelu,#cPool,#cBank{cursor:pointer}
+.fil{display:grid;gap:8px;max-width:300px;margin:6px auto 0}
+.fil .fc{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:.85rem;color:var(--muted)}
+.fil input{width:100%;font:inherit;font-size:1.15rem;font-variant-numeric:tabular-nums;text-align:center;padding:12px 4px;border:1px solid var(--rule);border-radius:6px;color:var(--ink);background:var(--panel)}
+.calc{font-size:.88rem;min-height:290px}
+.calc p{margin:.35rem 0}
+.calc p.h{font-weight:500;color:var(--ink);margin-top:0}
+.calc p.hint{color:var(--muted)}
+.calc .ops{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:.4rem 0}
+.calc .ops>span{font-size:1.1rem;color:var(--muted)}
+.calc table{border-collapse:collapse;font-variant-numeric:tabular-nums}
+.calc td{border:1px solid var(--rule);padding:3px 5px;text-align:right;min-width:2.6em;font-size:.8rem}
+.calc table.pt td{background:var(--fill)}
+.calc table.pr td{background:var(--hl)}
+.calc b{font-weight:600}
+.poolex{display:flex;justify-content:center;padding:18px 0 8px}
+.pe{display:flex;align-items:center;gap:18px}
+.pe .arr{font-size:1.6rem;color:var(--muted)}
+.pe table{border-collapse:collapse}
+.pe td{padding:3px}
+.pe input{width:3.2em;font:inherit;font-size:1.1rem;text-align:center;padding:8px 2px;border:1px solid var(--rule);border-radius:6px;background:var(--panel);color:var(--ink)}
+.pe input.alt{background:var(--fill)}
+.pe input.win{background:var(--orange);color:var(--panel);border-color:var(--orange);font-weight:600}
+.pe table.out td{width:3.4em;height:2.9em;text-align:center;font-size:1.25rem;font-weight:600;border:2px solid var(--orange);border-radius:6px;color:var(--ink)}
+.note b{color:var(--ink);font-weight:500}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Convolution and pooling, pixel by pixel</h1>
+  <p>The first layers of a convolutional neural network on a 28 &times; 28 grayscale image, the size of the MNIST digits. A filter slides over the image and gives the convolved image, the ReLU of the detector layer keeps its positive part, and max pooling halves it. Draw your own image or pick one, edit the filter, and hover any pixel of the result to see the multiplications and the sum behind it. In a real CNN the filter values are parameters learned for the task; here you set them by hand.</p>
+</header>
+<ol class="steps"><li>Pick a digit and the vertical edge filter. The convolved image lights up red on one side of every vertical stroke and blue on the other.</li><li>Hover a pixel of the convolved image: the box at the bottom right shows the image patch under the filter, the products and their sum.</li><li>Draw on the image (drag; right-drag or the eraser to rub out), shift it by one pixel, or type your own filter values and watch every layer update.</li></ol>
+<div class="main"><div class="col">
+<div class="tabs" id="imgTabs"><button data-img="3" class="on">Digit 3</button><button data-img="7">Digit 7</button><button data-img="8">Digit 8</button><button data-img="0">Digit 0</button><button data-img="plus">A cross</button><button data-img="vstripes">Vertical stripes</button><button data-img="hstripes">Horizontal stripes</button><button data-img="blank">Blank: draw your own</button></div>
+<div class="tabs" id="filTabs"><button data-f="vedge" class="on">Vertical edge</button><button data-f="hedge">Horizontal edge</button><button data-f="vstrip">Vertical strip</button><button data-f="hstrip">Horizontal strip</button><button data-f="diag">Diagonal edge</button><button data-f="blur">Blur</button><button data-f="sharpen">Sharpen</button><button data-f="slides">2 &times; 2, the slides (&alpha; &beta; / &gamma; &delta;)</button></div>
+<div class="stats">
+  <div class="stat"><span class="small">Filter weights (shared by every position)</span><span class="big" id="rW"></span></div>
+  <div class="stat"><span class="small">A fully connected layer would need</span><span class="big" id="rFC"></span></div>
+  <div class="stat"><span class="small">Convolved image</span><span class="big" id="rC"></span></div>
+  <div class="stat"><span class="small">After 2 &times; 2 max pooling</span><span class="big" id="rP"></span></div>
+</div>
+<div class="panels cnn">
+  <figure><div class="view"><button id="bDraw" class="on">Brush</button><button id="bErase">Eraser</button><button id="bClear">Clear</button><span>shift</span><button data-sh="-1,0">&larr;</button><button data-sh="1,0">&rarr;</button><button data-sh="0,-1">&uarr;</button><button data-sh="0,1">&darr;</button><button id="bInv">Invert</button></div><canvas id="cImg" style="height:300px"></canvas>
+    <figcaption><strong>The input image.</strong> 28 &times; 28 pixels, each a number from 0 (white) to 1 (black). Drag to draw, right-drag or use the eraser to rub out. The orange square is the patch the filter is on for the pixel you are hovering in the results.</figcaption></figure>
+  <figure><div id="filEd" class="fil"></div><div class="view" style="margin-top:10px"><button id="bNeg">Flip the sign</button><button id="bZero">All zero</button><button id="bRand">Random filter</button><button id="bSize">Switch to 2 &times; 2</button></div>
+    <figcaption><strong>The filter.</strong> Type any number in a cell (or scroll over it to nudge it). A filter is a template: a patch of the image that looks like it gives a large positive value, the opposite pattern a large negative one, and a flat patch something near 0 when the weights sum to 0. In a CNN these numbers are what the network learns.</figcaption></figure>
+  <figure><canvas id="cConv" style="height:300px"></canvas>
+    <figcaption><strong>The convolved image.</strong> Each pixel is the sum of the products of the filter with the image patch under it, for every position of the filter. Red is positive, blue negative, white 0, scaled to the largest absolute value. It is smaller than the image, because the filter has to fit inside it. Hover a pixel to see its arithmetic.</figcaption></figure>
+  <figure><canvas id="cRelu" style="height:300px"></canvas>
+    <figcaption><strong>The detector layer (ReLU).</strong> The same image with every negative value set to 0: only the places where the patch resembles the filter survive. Flip the sign of the filter to keep the other side of the edges instead.</figcaption></figure>
+  <figure><canvas id="cPool" style="height:300px"></canvas>
+    <figcaption><strong>After 2 &times; 2 max pooling.</strong> Each pixel is the largest of a 2 &times; 2 block of the detector layer, so the image is halved in each direction. Hover a pixel to see its block (orange in the detector layer). Shift the input by one pixel: the convolved image moves with it, while the pooled image changes much less, because a large value anywhere in a block still registers.</figcaption></figure>
+  <figure><div id="calc" class="calc"></div>
+    <figcaption><strong>The arithmetic of one pixel.</strong> For the pixel under the mouse: the image patch, the filter, their products and the sum, then the ReLU and the pooling block it falls in. This is the slides' aα + bβ + dγ + eδ with numbers.</figcaption></figure>
+  <figure class="half"><canvas id="cBank" style="height:290px"></canvas>
+    <figcaption><strong>A convolution layer is a bank of filters.</strong> Four fixed filters applied to the same image, each followed by the ReLU and max pooling. Each gives its own map, one channel, so the layer's output is a three-dimensional feature map (here 13 &times; 13 &times; 4). The vertical-edge channel lights up on the vertical strokes, the horizontal one on the horizontal strokes. Click a channel to load its filter into the editor.</figcaption></figure>
+  <figure class="half"><div id="poolEx" class="poolex"></div>
+    <figcaption><strong>Max pooling, the example of the slides.</strong> A 4 &times; 4 matrix condensed to 2 &times; 2 by taking the maximum of each non-overlapping 2 &times; 2 block (the winners in orange). Edit any number: only the largest value of a block matters, the other three can change freely without changing the output.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>One entry of the convolved image</b></div><div class="n">for an l<sub>1</sub> &times; l<sub>2</sub> filter, the products of the filter with the patch under it, added up (the slides' 2 &times; 2 case is a&alpha; + b&beta; + d&gamma; + e&delta;)</div><div class="k" data-tex='\text{Conv}_{rc} = \sum_{u=1}^{l_1} \sum_{v=1}^{l_2} \text{Image}_{r+u-1,\, c+v-1} \cdot \text{Filter}_{uv}'></div><span class="v" id="fConv"></span></div>
+<div class="f"><div class="n"><b>Detector layer</b></div><div class="n">the ReLU applied to every pixel of the convolved image</div><div class="k" data-tex='g(z) = (z)_+ = \max(0, z)'></div><span class="v" id="fRelu"></span></div>
+<div class="f"><div class="n"><b>Max pooling</b></div><div class="n">each output pixel is the largest of a non-overlapping 2 &times; 2 block</div><div class="k" data-tex='\text{Pool}_{rc} = \max\{z_{2r-1,2c-1},\; z_{2r-1,2c},\; z_{2r,2c-1},\; z_{2r,2c}\}'></div><span class="v" id="fPool"></span></div>
+<div class="f"><div class="n"><b>Sizes</b></div><div class="n">the filter must fit inside the image, and pooling halves each side</div><div class="k" data-tex='28 \times 28 \;\to\; (28 - l_1 + 1) \times (28 - l_2 + 1) \;\to\; \text{half of each side}'></div><span class="v" id="fSize"></span></div>
+</aside>
+<div class="note">
+  <p><b>What a filter detects.</b> Each pixel of the convolved image is a weighted sum of a small patch of the image, with the filter values as weights. It is large when the patch looks like the filter. The vertical edge filter has +1 in its left column and &minus;1 in its right one, so it gives a large positive value where the image is dark on the left and light on the right, a large negative value for the opposite, and 0 on any flat patch (its weights sum to 0). The vertical strip filter is the 3 &times; 3 version of the slides' 15 &times; 15 filter with a narrow strip of ones, the one that picks out the tiger's vertical stripes. The same 9 numbers are used at every position (weight sharing), which is why a convolution layer has so few parameters compared with a fully connected one, and why a pattern is detected wherever it appears in the image.</p>
+  <p><b>From here to a CNN.</b> A convolution layer uses a whole bank of filters, each giving one channel, and in a CNN their values are not chosen by hand: they are learned by gradient descent for the classification task, like the weights of any other layer. The ReLU keeps the positive matches, and pooling shrinks each channel and makes the result less sensitive to exactly where a feature sits. Deeper convolution layers then apply filters to these channels, so they detect combinations of edges (corners, loops, the eyes and ears of the tiger), and the last feature maps are flattened into an ordinary fully connected layer with a softmax output.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+/* Convolution and pooling on a 28 x 28 image (ML L9) */
+const NPX=28;
+const FIL={
+  vedge:[[1,0,-1],[1,0,-1],[1,0,-1]],
+  hedge:[[1,1,1],[0,0,0],[-1,-1,-1]],
+  vstrip:[[0,1,0],[0,1,0],[0,1,0]],
+  hstrip:[[0,0,0],[1,1,1],[0,0,0]],
+  diag:[[0,1,2],[-1,0,1],[-2,-1,0]],
+  diag2:[[2,1,0],[1,0,-1],[0,-1,-2]],
+  blur:[[0.11,0.11,0.11],[0.11,0.11,0.11],[0.11,0.11,0.11]],
+  sharpen:[[0,-1,0],[-1,5,-1],[0,-1,0]],
+  slides:[[1,-1],[1,-1]]
+};
+const S={img:new Float64Array(NPX*NPX),fil:FIL.vedge.map(r=>r.slice()),sel:null,pool:null,tool:'draw',paint:0,ex:[[1,2,5,3],[3,0,1,2],[2,1,3,4],[1,1,2,0]]};
+let L=null;   /* the layers for the current image and filter */
+
+/* images */
+function glyph(ch){const c=document.createElement('canvas');c.width=c.height=NPX;const x=c.getContext('2d');
+  x.fillStyle='#000';x.font='bold 24px "Helvetica Neue", Arial, sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(ch,14,15.5);
+  const d=x.getImageData(0,0,NPX,NPX).data,o=new Float64Array(NPX*NPX);for(let i=0;i<NPX*NPX;i++)o[i]=Math.round(d[4*i+3]/255*100)/100;return o;}
+function makeImg(k){const o=new Float64Array(NPX*NPX);
+  if(/^[0-9]$/.test(k))return glyph(k);
+  for(let r=0;r<NPX;r++)for(let c=0;c<NPX;c++){let v=0;
+    if(k==='plus')v=((r>=12&&r<=15&&c>=5&&c<=22)||(c>=12&&c<=15&&r>=5&&r<=22))?1:0;
+    if(k==='vstripes')v=(r>=4&&r<24&&c>=4&&c<24&&Math.floor((c-4)/3)%2===0)?1:0;
+    if(k==='hstripes')v=(c>=4&&c<24&&r>=4&&r<24&&Math.floor((r-4)/3)%2===0)?1:0;
+    o[r*NPX+c]=v;}
+  return o;}
+
+/* the layers */
+function convolve(img,f){const l1=f.length,l2=f[0].length,R=NPX-l1+1,C=NPX-l2+1,o=new Float64Array(R*C);
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){let s=0;for(let u=0;u<l1;u++)for(let v=0;v<l2;v++)s+=img[(r+u)*NPX+c+v]*f[u][v];o[r*C+c]=s;}
+  return{R,C,v:o};}
+const relu=m=>({R:m.R,C:m.C,v:m.v.map(x=>x>0?x:0)});
+function maxpool(m){const R=Math.floor(m.R/2),C=Math.floor(m.C/2),o=new Float64Array(R*C),arg=new Int32Array(R*C);
+  for(let r=0;r<R;r++)for(let c=0;c<C;c++){let b=-Infinity,bi=0;for(let u=0;u<2;u++)for(let v=0;v<2;v++){const i=(2*r+u)*m.C+2*c+v;if(m.v[i]>b){b=m.v[i];bi=i;}}o[r*C+c]=b;arg[r*C+c]=bi;}
+  return{R,C,v:o,arg};}
+function layers(){const cv=convolve(S.img,S.fil),rl=relu(cv),pl=maxpool(rl);L={cv,rl,pl};}
+
+/* drawing a matrix as a grid of squares; returns the geometry for hit tests */
+function rgb(c){c=c.trim();if(c[0]==='#'){if(c.length===4)c='#'+c[1]+c[1]+c[2]+c[2]+c[3]+c[3];return[1,3,5].map(i=>parseInt(c.substr(i,2),16));}const m=c.match(/\d+/g);return m?m.slice(0,3).map(Number):[128,128,128];}
+function mix(a,b,t){const A=rgb(a),B=rgb(b);t=Math.max(0,Math.min(1,t));return`rgb(${A.map((x,i)=>Math.round(x+(B[i]-x)*t)).join(',')})`;}
+const G={};
+function grid(id,R,C,colOf,title){const c=$(id),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const top=title?22:6,cs=Math.floor(Math.min((w-12)/C,(h-top-6)/R)),x0=Math.round((w-cs*C)/2),y0=top;
+  for(let r=0;r<R;r++)for(let k=0;k<C;k++){ctx.fillStyle=colOf(r*C+k);ctx.fillRect(x0+k*cs,y0+r*cs,cs,cs);}
+  if(cs>=7){ctx.strokeStyle=css('--rule');ctx.globalAlpha=.5;ctx.lineWidth=.5;ctx.beginPath();
+    for(let r=0;r<=R;r++){ctx.moveTo(x0,y0+r*cs);ctx.lineTo(x0+C*cs,y0+r*cs);}for(let k=0;k<=C;k++){ctx.moveTo(x0+k*cs,y0);ctx.lineTo(x0+k*cs,y0+R*cs);}ctx.stroke();ctx.globalAlpha=1;}
+  ctx.strokeStyle=css('--ink');ctx.lineWidth=1;ctx.strokeRect(x0,y0,C*cs,R*cs);
+  if(title){ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.textAlign='center';ctx.fillText(title,w/2,14);}
+  G[id]={ctx,x0,y0,cs,R,C};return G[id];}
+function box(g,r,c,nr,nc,col,lw){g.ctx.strokeStyle=col;g.ctx.lineWidth=lw||2.5;g.ctx.strokeRect(g.x0+c*g.cs,g.y0+r*g.cs,nc*g.cs,nr*g.cs);}
+function cellAt(id,e){const g=G[id];if(!g)return null;const b=$(id).getBoundingClientRect(),x=e.clientX-b.left-g.x0,y=e.clientY-b.top-g.y0;
+  const c=Math.floor(x/g.cs),r=Math.floor(y/g.cs);return r>=0&&r<g.R&&c>=0&&c<g.C?{r,c}:null;}
+const amax=a=>{let m=0;for(const x of a)m=Math.max(m,Math.abs(x));return m||1;};
+const f2=v=>(Math.abs(v)<0.005?0:v).toFixed(2);
+
+function drawImg(){const ink=css('--ink'),pan=css('--panel'),g=grid('cImg',NPX,NPX,i=>mix(pan,ink,S.img[i]));
+  if(S.sel){const l1=S.fil.length,l2=S.fil[0].length;box(g,S.sel.r,S.sel.c,l1,l2,css('--orange'),3);}}
+function drawConv(){const m=amax(L.cv.v),pan=css('--panel'),red=css('--red'),blue=css('--blue');
+  const g=grid('cConv',L.cv.R,L.cv.C,i=>{const v=L.cv.v[i];return v>=0?mix(pan,red,v/m):mix(pan,blue,-v/m);},`${L.cv.R} × ${L.cv.C}, from ${f2(-m)} (blue) to ${f2(m)} (red)`);
+  if(S.sel)box(g,S.sel.r,S.sel.c,1,1,css('--orange'),3);}
+function drawRelu(){const m=amax(L.rl.v),pan=css('--panel'),red=css('--red');
+  const g=grid('cRelu',L.rl.R,L.rl.C,i=>mix(pan,red,L.rl.v[i]/m),`${L.rl.R} × ${L.rl.C}, negatives set to 0`);
+  if(S.sel){const pr=S.sel.r>>1,pc=S.sel.c>>1;if(pr<L.pl.R&&pc<L.pl.C)box(g,2*pr,2*pc,2,2,css('--orange'),2);box(g,S.sel.r,S.sel.c,1,1,css('--ink'),1.5);}}
+function drawPool(){const m=amax(L.pl.v),pan=css('--panel'),red=css('--red');
+  const g=grid('cPool',L.pl.R,L.pl.C,i=>mix(pan,red,L.pl.v[i]/m),`${L.pl.R} × ${L.pl.C}`);
+  if(S.sel){const pr=S.sel.r>>1,pc=S.sel.c>>1;if(pr<L.pl.R&&pc<L.pl.C)box(g,pr,pc,1,1,css('--orange'),3);}}
+
+/* the filter editor */
+const GREEK=[['α','β'],['γ','δ']];
+function buildEditor(){const ed=$('filEd'),l1=S.fil.length,l2=S.fil[0].length;ed.innerHTML='';ed.style.gridTemplateColumns=`repeat(${l2},minmax(0,1fr))`;
+  for(let u=0;u<l1;u++)for(let v=0;v<l2;v++){const cell=document.createElement('label');cell.className='fc';
+    if(l1===2)cell.innerHTML=`<span>${GREEK[u][v]}</span>`;
+    const inp=document.createElement('input');inp.type='number';inp.step='0.5';inp.value=S.fil[u][v];inp.dataset.u=u;inp.dataset.v=v;
+    inp.addEventListener('input',()=>{const x=parseFloat(inp.value);S.fil[u][v]=isFinite(x)?x:0;update(false);});
+    inp.addEventListener('wheel',e=>{e.preventDefault();S.fil[u][v]=Math.round((S.fil[u][v]+(e.deltaY<0?0.5:-0.5))*100)/100;inp.value=S.fil[u][v];update(false);},{passive:false});
+    cell.appendChild(inp);ed.appendChild(cell);}
+  shadeEditor();$('bSize').innerHTML=l1===2?'Switch to 3 &times; 3':'Switch to 2 &times; 2';}
+function shadeEditor(){const m=amax(S.fil.flat()),pan=css('--panel'),red=css('--red'),blue=css('--blue');
+  $('filEd').querySelectorAll('input').forEach(inp=>{const v=S.fil[+inp.dataset.u][+inp.dataset.v];inp.style.background=v>=0?mix(pan,red,.55*v/m):mix(pan,blue,-.55*v/m);});}
+function setFilter(key){S.fil=FIL[key].map(r=>r.slice());$('filTabs').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.f===key));S.sel=null;buildEditor();update(true);}
+
+/* the arithmetic box */
+function drawCalc(){const el=$('calc');
+  if(!S.sel){el.innerHTML='<p class="hint">Hover a pixel of the convolved image, the detector layer or the pooled image to see how it is computed.</p>';return;}
+  const {r,c}=S.sel,l1=S.fil.length,l2=S.fil[0].length;let sum=0;
+  const tab=(fn,cls)=>{let t=`<table class="${cls||''}">`;for(let u=0;u<l1;u++){t+='<tr>';for(let v=0;v<l2;v++)t+=`<td>${fn(u,v)}</td>`;t+='</tr>';}return t+'</table>';};
+  const pv=(u,v)=>S.img[(r+u)*NPX+c+v];
+  for(let u=0;u<l1;u++)for(let v=0;v<l2;v++)sum+=pv(u,v)*S.fil[u][v];
+  const pr=r>>1,pc=c>>1,inPool=pr<L.pl.R&&pc<L.pl.C;
+  let poolTxt='';if(inPool){const blk=[];for(let u=0;u<2;u++)for(let v=0;v<2;v++)blk.push(L.rl.v[(2*pr+u)*L.rl.C+2*pc+v]);const mx=Math.max(...blk);
+    poolTxt=`<p>Pooling block (${pr+1}, ${pc+1}): max(${blk.map(f2).join(', ')}) = <b>${f2(mx)}</b>. ${mx<=0?'All four values are 0, so the pooled pixel is 0.':Math.abs(Math.max(0,sum)-mx)<1e-9?'This pixel is the largest of its block, so its value is what reaches the pooled image.':'This pixel is not the largest of its block, so it does not reach the pooled image.'}</p>`;}
+  else poolTxt='<p>This pixel is in the last row or column, which pooling drops because the side is odd.</p>';
+  el.innerHTML=`<p class="h">Pixel (${r+1}, ${c+1}) of the convolved image</p><div class="ops">${tab((u,v)=>f2(pv(u,v)),'pt')}<span>&times;</span>${tab((u,v)=>f2(S.fil[u][v]),'ft')}<span>=</span>${tab((u,v)=>f2(pv(u,v)*S.fil[u][v]),'pr')}</div>
+    <p>Sum of the ${l1*l2} products: <b>${f2(sum)}</b>. Detector layer: max(0, ${f2(sum)}) = <b>${f2(Math.max(0,sum))}</b>.</p>${poolTxt}`;}
+
+/* the bank of four filters */
+const BANK=[['vedge','vertical'],['hedge','horizontal'],['diag','diagonal ↘'],['diag2','diagonal ↗']];
+let BANKG=[];
+function drawBank(){const c=$('cBank'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const pan=css('--panel'),red=css('--red');
+  const n=BANK.length,gap=14,cw=(w-gap*(n+1))/n,top=22,cs=Math.floor(Math.min(cw/13,(h-top-30)/13));BANKG=[];
+  BANK.forEach(([k,name],i)=>{const pl=maxpool(relu(convolve(S.img,FIL[k]))),m=amax(pl.v),x0=gap+i*(cw+gap)+Math.round((cw-cs*13)/2),y0=top;
+    for(let r=0;r<pl.R;r++)for(let q=0;q<pl.C;q++){ctx.fillStyle=mix(pan,red,pl.v[r*pl.C+q]/m);ctx.fillRect(x0+q*cs,y0+r*cs,cs,cs);}
+    const on=JSON.stringify(FIL[k])===JSON.stringify(S.fil);ctx.strokeStyle=on?css('--orange'):css('--ink');ctx.lineWidth=on?3:1;ctx.strokeRect(x0,y0,13*cs,13*cs);
+    ctx.font=FONT;ctx.fillStyle=css('--ink');ctx.textAlign='center';ctx.fillText((i+1)+' · '+name,x0+6.5*cs,14);
+    ctx.fillStyle=css('--muted');ctx.fillText('largest '+f2(m),x0+6.5*cs,y0+13*cs+16);BANKG.push({k,x0,y0,s:13*cs});});}
+
+/* the pooling example of the slides */
+function buildPoolEx(){const el=$('poolEx');let t='<div class="pe"><table class="in">';
+  for(let r=0;r<4;r++){t+='<tr>';for(let c=0;c<4;c++)t+=`<td><input type="number" step="1" data-r="${r}" data-c="${c}" value="${S.ex[r][c]}"></td>`;t+='</tr>';}
+  t+='</table><span class="arr">&rarr;</span><table class="out" id="peOut"></table></div>';el.innerHTML=t;
+  el.querySelectorAll('input').forEach(inp=>inp.addEventListener('input',()=>{const x=parseFloat(inp.value);S.ex[+inp.dataset.r][+inp.dataset.c]=isFinite(x)?x:0;drawPoolEx();}));drawPoolEx();}
+function drawPoolEx(){const el=$('poolEx'),hot=new Set();let o='';
+  for(let br=0;br<2;br++){o+='<tr>';for(let bc=0;bc<2;bc++){let b=-Infinity,bi='';for(let u=0;u<2;u++)for(let v=0;v<2;v++){const x=S.ex[2*br+u][2*bc+v];if(x>b){b=x;bi=(2*br+u)+','+(2*bc+v);}}hot.add(bi);o+=`<td>${b}</td>`;}o+='</tr>';}
+  $('peOut').innerHTML=o;
+  el.querySelectorAll('input').forEach(inp=>{const k=inp.dataset.r+','+inp.dataset.c,blk=((+inp.dataset.r>>1)+(+inp.dataset.c>>1))%2;
+    inp.classList.toggle('win',hot.has(k));inp.classList.toggle('alt',blk===1);});}
+
+function drawStats(){const l1=S.fil.length,l2=S.fil[0].length,R=L.cv.R,C=L.cv.C;
+  $('rW').textContent=l1*l2;$('rFC').textContent=(NPX*NPX*R*C).toLocaleString('en-US');$('rC').textContent=R+' × '+C;$('rP').textContent=L.pl.R+' × '+L.pl.C;
+  const neg=L.cv.v.filter(x=>x<0).length;
+  if(S.sel){const {r,c}=S.sel;const z=L.cv.v[r*C+c];
+    $('fConv').textContent=`pixel (${r+1}, ${c+1}): the sum of ${l1*l2} products = ${f2(z)}`;
+    $('fRelu').textContent=`max(0, ${f2(z)}) = ${f2(Math.max(0,z))}; overall ${neg} of the ${R*C} convolved pixels are negative and become 0`;
+    const pr=r>>1,pc=c>>1;$('fPool').textContent=pr<L.pl.R&&pc<L.pl.C?`block (${pr+1}, ${pc+1}) of the detector layer: its maximum is ${f2(L.pl.v[pr*L.pl.C+pc])}`:'this pixel is dropped by pooling (odd side)';}
+  else{$('fConv').textContent='hover a pixel of the results to see its sum';$('fRelu').textContent=`${neg} of the ${R*C} convolved pixels are negative and become 0`;$('fPool').textContent=`${L.pl.R*L.pl.C} pooled pixels, each the largest of 4`;}
+  $('fSize').textContent=`${NPX} × ${NPX} → ${R} × ${C} → ${L.pl.R} × ${L.pl.C}`+(R%2?` (${R} is odd, so pooling drops the last row and column)`:'')+`; ${l1*l2} filter weights against ${(NPX*NPX*R*C).toLocaleString('en-US')} for a fully connected layer of the same size`;}
+
+function drawAll(){if(!L)layers();drawImg();drawConv();drawRelu();drawPool();drawCalc();drawBank();drawStats();shadeEditor();}
+function update(){layers();drawAll();}
+
+/* interaction: hover the results */
+function hover(id,e){const p=cellAt(id,e);if(!p)return;
+  if(id==='cPool'){const i=L.pl.arg[p.r*L.pl.C+p.c];S.sel={r:Math.floor(i/L.rl.C),c:i%L.rl.C};}else S.sel=p;
+  drawImg();drawConv();drawRelu();drawPool();drawCalc();drawStats();}
+['cConv','cRelu','cPool'].forEach(id=>$(id).addEventListener('pointermove',e=>hover(id,e)));
+/* painting */
+function paintAt(e){const p=cellAt('cImg',e);if(!p)return;const er=S.paint===2;
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){const r=p.r+dr,c=p.c+dc;if(r<0||c<0||r>=NPX||c>=NPX)continue;const i=r*NPX+c,d=Math.abs(dr)+Math.abs(dc);
+    if(er)S.img[i]=0;else S.img[i]=Math.max(S.img[i],d===0?1:d===1?0.7:0.35);}
+  update();}
+$('cImg').addEventListener('contextmenu',e=>e.preventDefault());
+$('cImg').addEventListener('pointerdown',e=>{S.paint=(e.button===2||S.tool==='erase')?2:1;$('cImg').setPointerCapture(e.pointerId);$('imgTabs').querySelectorAll('button').forEach(b=>b.classList.remove('on'));paintAt(e);});
+$('cImg').addEventListener('pointermove',e=>{if(S.paint)paintAt(e);});
+$('cImg').addEventListener('pointerup',()=>{S.paint=0;});
+$('bDraw').onclick=()=>{S.tool='draw';$('bDraw').classList.add('on');$('bErase').classList.remove('on');};
+$('bErase').onclick=()=>{S.tool='erase';$('bErase').classList.add('on');$('bDraw').classList.remove('on');};
+$('bClear').onclick=()=>{S.img=new Float64Array(NPX*NPX);update();};
+$('bInv').onclick=()=>{S.img=S.img.map(v=>Math.round((1-v)*100)/100);update();};
+document.querySelectorAll('[data-sh]').forEach(b=>b.onclick=()=>{const [dx,dy]=b.dataset.sh.split(',').map(Number),o=new Float64Array(NPX*NPX);
+  for(let r=0;r<NPX;r++)for(let c=0;c<NPX;c++){const sr=r-dy,sc=c-dx;if(sr>=0&&sc>=0&&sr<NPX&&sc<NPX)o[r*NPX+c]=S.img[sr*NPX+sc];}S.img=o;update();});
+$('imgTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.img=makeImg(b.dataset.img);$('imgTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));update();});
+$('filTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>setFilter(b.dataset.f));
+const clearFilTabs=()=>$('filTabs').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+$('bNeg').onclick=()=>{S.fil=S.fil.map(r=>r.map(v=>v===0?0:-v));clearFilTabs();buildEditor();update();};
+$('bZero').onclick=()=>{S.fil=S.fil.map(r=>r.map(()=>0));clearFilTabs();buildEditor();update();};
+$('bRand').onclick=()=>{S.fil=S.fil.map(r=>r.map(()=>Math.round((Math.random()*4-2)*2)/2));clearFilTabs();buildEditor();update();};
+$('bSize').onclick=()=>{S.fil=S.fil.length===2?FIL.vedge.map(r=>r.slice()):FIL.slides.map(r=>r.slice());
+  $('filTabs').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.f===(S.fil.length===2?'slides':'vedge')));S.sel=null;buildEditor();update();};
+$('cBank').addEventListener('click',e=>{const b=$('cBank').getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;
+  const hit=BANKG.find(g=>x>=g.x0&&x<=g.x0+g.s&&y>=g.y0&&y<=g.y0+g.s);if(hit){if(FIL[hit.k]&&$('filTabs').querySelector(`[data-f="${hit.k}"]`))setFilter(hit.k);else{S.fil=FIL[hit.k].map(r=>r.slice());clearFilTabs();S.sel=null;buildEditor();update();}}});
+S.img=makeImg('3');
+buildEditor();buildPoolEx();
+hookTheme(drawAll);
+if(document.fonts)document.fonts.ready.then(()=>{if($('imgTabs').querySelector('.on')?.dataset.img==='3'){S.img=makeImg('3');update();}});
+update();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

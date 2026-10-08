@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A single-layer network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+.panels.nn{grid-template-columns:repeat(6,minmax(0,1fr))}
+.panels.nn figure{grid-column:span 2}
+.panels.nn figure.half{grid-column:span 3}
+@media (max-width:1150px){.panels.nn{grid-template-columns:repeat(2,minmax(0,1fr))}.panels.nn figure,.panels.nn figure.half{grid-column:span 1}}
+@media (max-width:720px){.panels.nn{grid-template-columns:minmax(0,1fr)}}
+.narr{margin-top:16px;background:var(--hl);border:1px solid var(--rule);border-radius:8px;padding:11px 15px;font-size:.95rem;line-height:1.5;min-height:3.4em}
+.narr b{font-weight:600}
+.view{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.view span{font-size:.85rem;color:var(--muted);margin:0 2px 0 4px}
+.view button{font-size:.8rem;padding:3px 10px;border-radius:14px}
+#chips button{background:var(--panel);font-weight:500}
+#cGD{cursor:crosshair}
+.note b{color:var(--ink);font-weight:500}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>A single-layer neural network, trained live</h1>
+  <p>The Wage data of the R lab: the wage (in thousands of dollars) of 3,000 male workers against their age, the same data as the splines page. A neural network with one hidden layer of K units learns the curve in the browser by stochastic gradient descent. 1,000 workers are kept aside as a validation set (for early stopping) and 1,000 as a test set; the network is trained on n of the remaining ones. Every number on the page comes from the network as it is right now, so the page changes while it trains.</p>
+</header>
+<ol class="steps"><li>Press Train. Watch the hidden units (top right) move their kinks and slopes, and the fit (top left), which is their weighted sum, bend into the shape of the data.</li><li>Press "Overfit": 30 workers and 20 units, trained for long. The training error keeps falling while the validation error turns up. Then try early stopping, or a ridge penalty.</li><li>Move the mouse over the fit to see which units fire at each age (the network, bottom left), and click a unit to switch it off.</li></ol>
+<div class="main"><div class="col">
+<div class="tabs"><button id="aRelu" class="on">ReLU activation</button><button id="aSig">Sigmoid activation</button></div>
+<section class="controls" aria-label="Network">
+  <div class="slider"><label for="sK">Hidden units K <b id="vK"></b></label><input id="sK" type="range" min="1" max="20" step="1" value="6"></div>
+  <div class="slider"><label for="sN">Training workers n <b id="vN"></b></label><input id="sN" type="range" min="0" max="4" step="1" value="3"></div>
+  <div class="slider"><label for="sLR">Learning rate &rho; <b id="vLR"></b></label><input id="sLR" type="range" min="0" max="6" step="1" value="3"></div>
+  <div class="slider"><label for="sLam">Ridge penalty &lambda; <b id="vLam"></b></label><input id="sLam" type="range" min="0" max="6" step="1" value="0"></div>
+  <div class="slider"><label for="sSeed">Starting weights and split (seed) <b id="vSeed"></b></label><input id="sSeed" type="range" min="1" max="20" step="1" value="3"></div>
+  <div class="slider"><label for="sSp">Training speed, epochs <b id="vSp"></b></label><input id="sSp" type="range" min="0" max="5" step="1" value="1"></div>
+</section>
+<div class="stats">
+  <div class="stat"><span class="small">Epochs</span><span class="big" id="rE"></span></div>
+  <div class="stat"><span class="small">Training MSE</span><span class="big" id="rTr"></span></div>
+  <div class="stat"><span class="small">Validation MSE</span><span class="big" id="rVa"></span></div>
+  <div class="stat"><span class="small">Test MSE</span><span class="big" id="rTe"></span></div>
+</div>
+<div class="buttons">
+  <button class="primary" id="bTrain">Train</button>
+  <button id="bStep">One epoch</button>
+  <button id="bRestart">Restart from new weights</button>
+  <button id="bBest">Early stopping: back to the best validation epoch</button>
+  <button id="bOver">Overfit: 30 workers, 20 units</button>
+  <button id="bDef">Back to the default</button>
+</div>
+<div class="narr" id="narr" aria-live="polite"></div>
+<div class="panels nn">
+  <figure class="half"><canvas id="cFit" style="height:380px"></canvas>
+    <figcaption><strong>The fit.</strong> Dark dots are the n training workers, light ones the 2,000 held-out workers (validation and test). The thick curve is the network's prediction f(age). The small marks on the age axis are where each hidden unit bends: its kink for ReLU, the midpoint of its S for the sigmoid, in the unit's colour. With ReLU the fit is a linear spline whose knots the network chooses itself. Move the mouse over the panel to follow one age through the network.</figcaption></figure>
+  <figure class="half"><div class="view" id="chips"></div><canvas id="cUnits" style="height:344px"></canvas>
+    <figcaption><strong>The hidden units, one curve each.</strong> Each curve is one unit's contribution &beta;<sub>k</sub> g(w<sub>k0</sub> + w<sub>k1</sub> age) to the prediction, in thousands of dollars. The fit on the left is &beta;<sub>0</sub> plus the sum of these curves. Hover a chip to pick out a unit; click it to switch the unit off (its &beta;<sub>k</sub> set to 0) and see what the fit loses without it.</figcaption></figure>
+  <figure><canvas id="cNet" style="height:360px"></canvas>
+    <figcaption><strong>The network at one age.</strong> Input, hidden layer, output. Line widths are the sizes of the weights (blue positive, red negative). Each hidden node is filled by its activation A<sub>k</sub> at the age under the mouse (or at 40): dark when it fires, empty when it is silent. With ReLU a unit is silent on one whole side of its kink. Click a node to switch the unit off.</figcaption></figure>
+  <figure><canvas id="cErr" style="height:360px"></canvas>
+    <figcaption><strong>Error against epochs.</strong> One epoch is one pass through the n training workers, in minibatches of 32. Navy: training MSE. Red: validation MSE. Green: test MSE. Dashed grey: the MSE of predicting the mean wage for everyone. The epoch axis is logarithmic, because the interesting part is early. The red dot is the epoch with the lowest validation error, where early stopping would stop.</figcaption></figure>
+  <figure><div class="view" id="gdBar"><span>&rho;</span><button data-r="0.01">0.01</button><button data-r="0.03" class="on">0.03</button><button data-r="0.06">0.06</button><button data-r="0.095">0.095</button><button data-r="0.11">0.11</button><button id="gStep">Step</button><button id="gRun">Run</button><button id="gReset">Reset</button></div><canvas id="cGD" style="height:324px"></canvas>
+    <figcaption id="capGD"><strong>Gradient descent in one dimension.</strong> The slides' picture made live: an objective R(&theta;) with a local minimum at &theta; = &minus;0.46 and the global one at 1.02 (a quartic with the same two minima as the slide figure). Click anywhere on the curve to choose the start &theta;<sup>0</sup>, then Step or Run. Each step moves against the slope by &rho; times the slope. Start left of the bump and the steps end in the local minimum. With &rho; = 0.095 the steps overshoot and bounce around the minimum before settling; with 0.11 they never settle.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>The network</b></div><div class="n">one predictor (age), K hidden units, a linear output layer</div><div class="k" data-tex='f(X) = \beta_0 + \sum_{k=1}^{K} \beta_k\, g\left(w_{k0} + w_{k1} X\right)'></div><span class="v" id="fNet"></span></div>
+<div class="f"><div class="n"><b id="fActT">The activation (ReLU)</b></div><div class="n">what each hidden unit does to its linear combination of the input</div><div class="k" id="fActK" data-tex='A_k = g(z) = (z)_+ = \max(0, z)'></div><span class="v" id="fAct"></span></div>
+<div class="f"><div class="n"><b>The objective</b></div><div class="n">squared error averaged over the n training workers, plus a ridge penalty on the weights (not the intercepts)</div><div class="k" data-tex='R(\theta) = \frac{1}{2n}\sum_{i=1}^{n} \left(y_i - f_\theta(x_i)\right)^2 + \lambda \sum_{k=1}^{K} \left(w_{k1}^2 + \beta_k^2\right)'></div><span class="v" id="fObj"></span></div>
+<div class="f"><div class="n"><b>Gradient descent</b></div><div class="n">each step moves all the parameters a little against the slope of R, computed on a minibatch of 32 workers</div><div class="k" data-tex='\theta^{t+1} = \theta^{t} + \delta, \qquad \delta = -\rho\, \nabla R(\theta^{t})'></div><span class="v" id="fGD"></span></div>
+</aside>
+<div class="note">
+  <p><b>What the network is.</b> Each hidden unit takes a linear combination of the input, w<sub>k0</sub> + w<sub>k1</sub> age, and passes it through g. With ReLU this gives a hinge: flat at 0 on one side of the age &minus;w<sub>k0</sub>/w<sub>k1</sub>, a straight line on the other. The output layer is a linear regression on the K activations, so the fit is a sum of K hinges plus a constant, which is a piecewise-linear curve with (at most) K kinks. That is a linear spline, the same family as on the splines page, with one difference: there the knots were fixed before fitting, here they are parameters that gradient descent moves around. With the sigmoid each unit is a smooth step instead, and the fit is a sum of K smooth steps. Without a nonlinear g the units would add up to a straight line, whatever K is.</p>
+  <p><b>How it is trained.</b> Age and wage are standardised inside the fit (every number shown is back in years and dollars), and the starting weights put each unit's kink at a random age inside the data. An epoch shuffles the training workers, cuts them into minibatches of 32 and takes one gradient step per minibatch, so with n = 1,000 an epoch is 32 steps and with n = 30 it is one step. This is the stochastic gradient descent of the slides: each step uses the slope on a minibatch, not on the whole training set, which is cheaper and noisier. The objective is not convex, so different seeds (different starting weights) end in different fits with similar errors.</p>
+  <p><b>Overfitting, early stopping, ridge.</b> With 400 or 1,000 workers and a few units the network cannot overfit much: the three errors move together. With 30 workers and 20 units it has 61 parameters for 30 points, and the late epochs fit the noise of those 30 wages: the training error keeps falling while the validation error rises. Two fixes from the slides. Slow learning with early stopping keeps the weights of the epoch with the lowest validation error (the button jumps back to them), and the test error then says how well that choice does on workers used for nothing else. A ridge penalty shrinks the weights towards 0 and keeps the units from bending sharply around single points. The wage data are noisy (the MSE of the best fits stays around 1,600, a typical error of about 40 thousand dollars), so the validation and test errors also differ a little between seeds just because each set gets a different share of the very high earners.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+const WAGE={age:[18, 24, 45, 43, 50, 54, 44, 30, 41, 52, 45, 34, 35, 39, 54, 51, 37, 50, 56, 37, 38, 40, 75, 40, 38, 49, 43, 34, 57, 18, 55, 51, 33, 34, 36, 56, 70, 25, 32, 27, 28, 27, 43, 50, 39, 52, 35, 57, 25, 33, 57, 71, 43, 23, 30, 22, 59, 28, 61, 34, 43, 54, 69, 41, 48, 49, 42, 37, 55, 21, 58, 31, 25, 32, 40, 44, 60, 23, 63, 44, 47, 61, 55, 24, 42, 25, 34, 53, 53, 70, 47, 46, 33, 34, 22, 74, 40, 45, 43, 33, 62, 37, 54, 34, 50, 46, 41, 63, 38, 35, 29, 66, 37, 39, 42, 51, 55, 51, 38, 49, 42, 43, 38, 59, 57, 25, 49, 41, 38, 61, 49, 52, 43, 60, 46, 21, 61, 32, 58, 35, 26, 32, 37, 22, 51, 44, 35, 60, 40, 35, 35, 47, 43, 33, 60, 38, 53, 55, 57, 64, 43, 35, 54, 45, 58, 48, 46, 46, 55, 51, 49, 34, 53, 40, 50, 37, 39, 52, 50, 48, 47, 27, 39, 44, 37, 52, 26, 39, 25, 31, 58, 30, 27, 40, 55, 35, 48, 29, 25, 40, 27, 44, 49, 22, 45, 33, 63, 49, 39, 25, 29, 37, 35, 46, 58, 39, 41, 29, 37, 62, 27, 37, 56, 36, 23, 46, 26, 43, 36, 54, 62, 40, 53, 48, 23, 34, 43, 55, 59, 60, 49, 45, 31, 34, 26, 22, 40, 41, 36, 38, 48, 47, 47, 35, 49, 40, 32, 57, 56, 73, 29, 49, 30, 29, 36, 39, 48, 45, 50, 42, 58, 48, 48, 45, 41, 27, 44, 32, 46, 52, 22, 53, 34, 38, 42, 25, 29, 28, 46, 55, 56, 41, 61, 47, 52, 27, 33, 58, 27, 52, 45, 22, 25, 25, 41, 54, 23, 36, 31, 52, 46, 45, 40, 33, 42, 41, 25, 24, 24, 51, 41, 42, 30, 55, 23, 60, 40, 41, 80, 53, 40, 35, 55, 24, 39, 30, 68, 54, 27, 34, 53, 48, 59, 30, 45, 39, 45, 43, 30, 57, 53, 42, 23, 58, 43, 33, 56, 37, 41, 33, 50, 43, 53, 37, 20, 26, 29, 57, 47, 54, 38, 23, 31, 43, 33, 48, 33, 52, 30, 44, 38, 51, 47, 28, 52, 23, 65, 27, 33, 49, 27, 48, 38, 58, 40, 46, 53, 25, 42, 40, 35, 50, 34, 48, 49, 41, 37, 58, 28, 33, 50, 38, 48, 30, 49, 44, 50, 58, 45, 44, 35, 59, 45, 51, 61, 45, 34, 33, 45, 50, 50, 39, 26, 49, 20, 31, 49, 56, 61, 56, 51, 42, 45, 30, 48, 33, 50, 31, 48, 35, 47, 45, 52, 46, 47, 49, 36, 51, 46, 37, 23, 43, 34, 58, 44, 61, 40, 37, 33, 38, 41, 30, 51, 39, 56, 44, 51, 35, 27, 47, 51, 41, 63, 61, 46, 33, 35, 28, 50, 41, 23, 45, 63, 59, 30, 30, 45, 42, 57, 52, 54, 30, 47, 38, 47, 39, 50, 47, 45, 44, 52, 42, 18, 56, 50, 50, 53, 38, 27, 56, 50, 56, 50, 49, 42, 50, 53, 28, 45, 24, 25, 38, 47, 38, 33, 39, 52, 46, 42, 61, 32, 42, 61, 27, 45, 58, 25, 34, 44, 40, 51, 50, 64, 54, 42, 31, 25, 32, 51, 75, 28, 28, 32, 53, 36, 43, 51, 35, 46, 38, 43, 39, 37, 59, 33, 23, 37, 40, 25, 27, 47, 52, 23, 33, 37, 34, 51, 40, 50, 64, 54, 50, 32, 37, 19, 32, 42, 26, 46, 18, 43, 62, 44, 40, 43, 32, 48, 35, 61, 47, 55, 28, 52, 27, 22, 20, 42, 29, 31, 59, 36, 32, 32, 25, 43, 44, 57, 49, 41, 38, 58, 59, 39, 60, 56, 44, 70, 27, 47, 41, 29, 42, 51, 47, 48, 39, 23, 31, 59, 19, 42, 35, 38, 45, 58, 26, 30, 54, 38, 44, 52, 73, 65, 28, 53, 53, 52, 27, 57, 32, 51, 43, 50, 53, 54, 24, 40, 30, 45, 55, 45, 44, 37, 41, 44, 52, 55, 43, 27, 43, 46, 30, 43, 48, 33, 29, 24, 52, 50, 24, 42, 53, 49, 46, 40, 41, 41, 36, 34, 24, 44, 33, 25, 40, 48, 56, 25, 44, 27, 58, 52, 60, 39, 51, 31, 45, 43, 45, 40, 46, 51, 47, 52, 31, 40, 26, 49, 38, 50, 63, 35, 29, 33, 29, 62, 45, 56, 58, 39, 49, 24, 61, 58, 47, 41, 71, 47, 38, 31, 56, 44, 33, 36, 31, 55, 48, 50, 42, 25, 55, 28, 30, 46, 48, 42, 23, 60, 34, 45, 28, 33, 58, 47, 24, 56, 56, 23, 56, 45, 58, 30, 46, 48, 50, 43, 37, 49, 31, 54, 52, 70, 30, 44, 34, 38, 28, 38, 39, 52, 34, 33, 45, 58, 38, 63, 38, 31, 53, 21, 38, 18, 28, 33, 32, 29, 28, 42, 28, 36, 47, 53, 48, 36, 55, 37, 68, 65, 37, 33, 19, 50, 22, 40, 45, 36, 37, 24, 66, 35, 33, 44, 48, 47, 41, 55, 74, 33, 62, 56, 29, 56, 47, 45, 44, 25, 45, 40, 56, 56, 47, 39, 38, 48, 44, 42, 55, 61, 39, 30, 49, 33, 31, 35, 55, 36, 37, 33, 48, 47, 60, 28, 28, 48, 29, 40, 32, 33, 40, 42, 36, 39, 44, 43, 44, 29, 49, 47, 46, 41, 52, 43, 38, 42, 56, 39, 29, 33, 33, 41, 44, 45, 58, 29, 42, 68, 47, 30, 39, 42, 49, 36, 44, 54, 42, 39, 30, 33, 28, 38, 30, 25, 52, 26, 54, 62, 57, 32, 60, 40, 49, 54, 48, 35, 46, 42, 58, 30, 27, 55, 50, 55, 40, 32, 27, 49, 50, 50, 44, 57, 72, 23, 31, 36, 63, 48, 46, 55, 44, 44, 32, 60, 42, 48, 36, 31, 54, 29, 46, 35, 50, 25, 33, 34, 51, 33, 59, 62, 28, 40, 52, 29, 34, 25, 66, 43, 45, 35, 43, 49, 60, 46, 55, 32, 53, 57, 51, 59, 45, 56, 30, 21, 60, 60, 48, 39, 32, 51, 47, 44, 46, 28, 24, 37, 31, 72, 50, 36, 27, 27, 41, 20, 49, 25, 41, 53, 45, 32, 47, 26, 31, 32, 50, 46, 47, 55, 49, 25, 60, 62, 63, 31, 29, 51, 28, 36, 28, 38, 35, 46, 37, 41, 59, 51, 26, 34, 32, 23, 50, 25, 43, 36, 50, 34, 34, 55, 39, 40, 32, 63, 38, 67, 39, 31, 41, 47, 61, 61, 21, 22, 53, 47, 36, 36, 42, 54, 27, 36, 35, 60, 42, 41, 35, 34, 22, 47, 59, 29, 32, 49, 30, 33, 51, 37, 46, 63, 41, 40, 46, 45, 48, 28, 65, 50, 53, 48, 30, 37, 51, 55, 35, 33, 41, 34, 33, 49, 62, 31, 43, 43, 43, 48, 48, 50, 29, 52, 46, 40, 43, 54, 38, 32, 28, 33, 44, 41, 31, 48, 50, 47, 31, 40, 54, 24, 34, 65, 28, 30, 45, 35, 46, 47, 71, 39, 41, 33, 76, 20, 34, 26, 51, 25, 62, 37, 37, 32, 55, 36, 39, 46, 48, 34, 39, 50, 54, 60, 48, 47, 20, 60, 37, 46, 54, 51, 32, 35, 46, 38, 62, 47, 28, 61, 26, 49, 28, 61, 42, 31, 50, 44, 46, 54, 40, 38, 43, 43, 30, 58, 60, 45, 47, 47, 59, 36, 39, 40, 42, 29, 38, 58, 18, 35, 30, 48, 27, 40, 34, 54, 20, 50, 42, 45, 59, 44, 67, 26, 40, 42, 22, 43, 34, 44, 53, 54, 55, 30, 48, 48, 30, 38, 25, 59, 38, 40, 36, 60, 40, 28, 34, 39, 26, 28, 27, 34, 38, 51, 58, 42, 32, 27, 51, 50, 25, 60, 62, 53, 39, 23, 47, 32, 57, 40, 57, 31, 28, 58, 47, 41, 53, 27, 19, 47, 44, 32, 23, 31, 42, 50, 52, 20, 33, 26, 40, 29, 35, 34, 37, 37, 22, 39, 42, 44, 45, 42, 52, 27, 46, 59, 52, 19, 64, 38, 45, 53, 28, 39, 52, 41, 44, 48, 47, 31, 28, 45, 56, 47, 41, 49, 28, 19, 48, 47, 57, 39, 45, 52, 51, 46, 45, 40, 48, 47, 45, 49, 57, 77, 48, 56, 39, 44, 49, 58, 46, 39, 26, 61, 62, 47, 40, 35, 61, 38, 18, 45, 27, 22, 29, 50, 25, 35, 41, 38, 49, 36, 66, 23, 28, 42, 20, 37, 58, 45, 64, 45, 52, 42, 32, 40, 55, 46, 55, 53, 33, 45, 54, 32, 42, 35, 54, 38, 31, 41, 45, 49, 50, 40, 29, 25, 32, 51, 29, 32, 42, 59, 31, 29, 52, 35, 28, 50, 49, 39, 26, 31, 50, 62, 35, 22, 55, 63, 63, 39, 28, 43, 58, 38, 49, 62, 36, 54, 26, 46, 58, 22, 58, 63, 67, 44, 51, 46, 43, 40, 31, 41, 21, 51, 43, 34, 45, 35, 33, 46, 38, 44, 50, 55, 49, 47, 40, 21, 60, 56, 61, 44, 43, 29, 38, 26, 28, 38, 45, 39, 33, 44, 48, 45, 56, 40, 71, 30, 45, 41, 40, 59, 46, 38, 26, 53, 46, 42, 28, 30, 34, 46, 22, 37, 27, 52, 43, 52, 54, 47, 21, 42, 72, 38, 53, 35, 60, 39, 45, 61, 64, 39, 46, 25, 80, 51, 58, 52, 45, 41, 42, 31, 49, 47, 39, 53, 37, 52, 41, 39, 63, 23, 62, 43, 29, 43, 34, 38, 25, 64, 49, 46, 30, 33, 29, 32, 54, 40, 24, 30, 49, 47, 25, 44, 41, 54, 59, 25, 63, 49, 35, 24, 66, 57, 47, 44, 56, 34, 23, 30, 38, 43, 58, 36, 48, 35, 22, 50, 58, 20, 44, 50, 55, 39, 32, 50, 24, 53, 35, 25, 24, 57, 43, 33, 40, 39, 32, 48, 29, 35, 41, 52, 50, 35, 27, 57, 48, 41, 59, 55, 54, 34, 43, 43, 62, 45, 40, 33, 45, 21, 54, 43, 54, 35, 23, 61, 51, 43, 20, 51, 65, 37, 24, 36, 45, 33, 36, 32, 45, 51, 33, 47, 37, 41, 23, 57, 61, 47, 29, 37, 57, 39, 59, 31, 26, 51, 38, 51, 50, 32, 38, 49, 40, 60, 30, 41, 32, 26, 41, 53, 35, 50, 43, 50, 19, 42, 53, 22, 49, 33, 31, 43, 57, 40, 48, 46, 58, 50, 38, 33, 52, 48, 53, 37, 43, 54, 41, 57, 54, 25, 35, 29, 36, 43, 41, 52, 48, 51, 55, 37, 48, 42, 43, 32, 33, 48, 20, 43, 58, 38, 23, 54, 66, 47, 35, 39, 35, 40, 41, 40, 50, 35, 43, 26, 23, 61, 24, 66, 50, 22, 62, 55, 41, 54, 29, 39, 71, 22, 48, 35, 46, 51, 55, 36, 57, 21, 60, 41, 56, 32, 32, 36, 28, 60, 41, 55, 36, 46, 62, 44, 36, 41, 22, 51, 57, 55, 36, 43, 38, 27, 32, 44, 56, 38, 36, 28, 39, 42, 51, 55, 39, 42, 33, 23, 40, 40, 51, 76, 57, 27, 26, 25, 27, 33, 51, 22, 47, 34, 47, 31, 46, 47, 49, 40, 51, 31, 58, 48, 54, 56, 61, 32, 60, 42, 22, 46, 53, 43, 32, 30, 50, 40, 55, 42, 35, 33, 33, 38, 41, 42, 58, 45, 47, 30, 34, 43, 58, 44, 28, 46, 36, 37, 47, 56, 38, 41, 62, 40, 44, 56, 51, 41, 52, 27, 52, 51, 51, 28, 49, 61, 39, 23, 53, 55, 48, 50, 31, 53, 49, 49, 43, 20, 46, 48, 19, 56, 44, 23, 42, 32, 32, 43, 57, 26, 67, 31, 49, 29, 41, 35, 39, 33, 53, 43, 36, 38, 58, 45, 34, 30, 21, 39, 28, 54, 24, 57, 48, 31, 47, 44, 30, 41, 26, 32, 39, 42, 24, 44, 30, 58, 33, 56, 28, 41, 22, 37, 18, 37, 43, 49, 36, 47, 52, 34, 62, 44, 48, 51, 35, 42, 34, 50, 50, 55, 56, 50, 44, 30, 34, 50, 51, 53, 40, 34, 36, 44, 54, 36, 62, 33, 44, 80, 45, 58, 51, 60, 33, 28, 37, 56, 59, 56, 34, 37, 36, 45, 36, 23, 56, 33, 48, 28, 37, 56, 22, 60, 30, 50, 38, 55, 26, 39, 42, 71, 33, 49, 45, 41, 59, 33, 47, 34, 23, 32, 30, 54, 46, 52, 50, 57, 46, 30, 32, 53, 48, 31, 50, 41, 47, 37, 24, 53, 39, 47, 36, 34, 45, 60, 43, 20, 27, 35, 50, 56, 19, 35, 23, 45, 54, 43, 42, 51, 49, 48, 50, 37, 38, 58, 41, 51, 51, 44, 43, 34, 43, 59, 61, 40, 49, 55, 54, 41, 29, 66, 61, 34, 41, 48, 26, 54, 44, 60, 57, 53, 54, 37, 62, 40, 39, 55, 57, 45, 41, 28, 58, 47, 60, 26, 52, 31, 63, 42, 30, 52, 38, 29, 42, 57, 46, 21, 34, 39, 26, 42, 48, 54, 80, 37, 31, 41, 37, 43, 54, 39, 45, 21, 59, 29, 29, 33, 45, 53, 63, 56, 21, 39, 30, 42, 40, 47, 43, 42, 50, 39, 50, 60, 57, 38, 49, 51, 33, 59, 41, 33, 28, 49, 51, 36, 26, 22, 47, 59, 41, 32, 45, 39, 64, 36, 61, 34, 52, 33, 36, 34, 39, 59, 49, 40, 49, 25, 59, 39, 40, 51, 63, 53, 25, 53, 23, 36, 19, 47, 43, 40, 38, 63, 45, 32, 37, 37, 41, 45, 22, 58, 44, 39, 40, 33, 35, 63, 45, 31, 41, 66, 45, 47, 35, 52, 62, 47, 40, 41, 48, 55, 64, 29, 49, 32, 41, 58, 41, 34, 43, 23, 40, 46, 35, 42, 47, 45, 34, 57, 32, 55, 22, 51, 26, 27, 34, 48, 23, 41, 49, 47, 35, 50, 55, 69, 45, 40, 47, 22, 42, 47, 48, 28, 49, 51, 58, 32, 55, 49, 46, 44, 25, 73, 18, 52, 28, 51, 44, 44, 29, 48, 62, 40, 24, 48, 54, 69, 48, 73, 30, 41, 48, 63, 29, 40, 52, 54, 33, 42, 31, 46, 44, 45, 40, 31, 19, 43, 56, 55, 59, 49, 42, 27, 34, 47, 35, 33, 35, 40, 53, 47, 45, 34, 25, 56, 54, 41, 46, 44, 44, 46, 38, 36, 27, 33, 56, 52, 33, 32, 39, 22, 53, 36, 37, 40, 51, 40, 56, 50, 49, 32, 21, 48, 48, 32, 30, 30, 33, 56, 46, 49, 24, 48, 37, 53, 56, 34, 56, 48, 47, 52, 40, 25, 35, 40, 22, 50, 48, 40, 45, 30, 46, 34, 32, 53, 32, 39, 51, 40, 66, 40, 52, 36, 32, 45, 37, 47, 49, 53, 66, 33, 58, 41, 54, 26, 24, 62, 63, 26, 45, 23, 31, 44, 43, 48, 48, 55, 45, 48, 63, 57, 69, 31, 38, 43, 19, 44, 31, 49, 29, 26, 37, 30, 35, 40, 44, 65, 54, 56, 48, 37, 30, 46, 37, 58, 52, 45, 33, 51, 50, 42, 46, 43, 47, 47, 44, 36, 39, 29, 40, 20, 32, 36, 31, 28, 41, 54, 42, 19, 59, 64, 31, 37, 30, 24, 26, 44, 39, 48, 53, 42, 44, 25, 46, 52, 33, 30, 38, 29, 57, 50, 23, 46, 61, 70, 59, 57, 25, 48, 52, 44, 40, 43, 51, 43, 42, 28, 54, 34, 50, 36, 36, 71, 31, 43, 20, 23, 42, 41, 27, 29, 41, 41, 22, 39, 50, 49, 42, 38, 55, 47, 52, 56, 30, 56, 46, 43, 35, 58, 69, 68, 52, 46, 39, 66, 30, 30, 43, 49, 54, 48, 37, 46, 53, 31, 18, 49, 39, 40, 37, 24, 35, 27, 44, 46, 40, 39, 42, 37, 58, 40, 27, 31, 44, 38, 34, 41, 20, 28, 55, 38, 33, 43, 50, 55, 24, 41, 37, 42, 25, 45, 40, 43, 50, 42, 38, 44, 19, 44, 26, 54, 32, 49, 35, 34, 23, 60, 54, 31, 47, 48, 48, 35, 55, 35, 37, 27, 64, 52, 47, 26, 41, 22, 76, 46, 39, 39, 23, 49, 44, 20, 43, 42, 46, 33, 62, 38, 43, 46, 18, 63, 43, 44, 53, 58, 23, 50, 35, 38, 36, 32, 56, 41, 40, 26, 26, 47, 25, 58, 57, 30, 44, 29, 51, 37, 67, 34, 50, 38, 55, 27, 39, 54, 55, 49, 42, 39, 32, 39, 50, 47, 40, 51, 28, 53, 54, 51, 33, 55, 44, 30, 40, 26, 49, 43, 43, 44, 32, 34, 36, 51, 42, 60, 36, 47, 60, 22, 41, 56, 44, 49, 45, 25, 52, 30, 29, 23, 48, 44, 62, 33, 51, 36, 23, 51, 47, 34, 34, 43, 43, 40, 59, 53, 32, 48, 37, 20, 32, 40, 48, 43, 56, 55, 38, 52, 40, 29, 45, 39, 50, 50, 57, 30, 56, 43, 43, 67, 50, 49, 50, 59, 51, 39, 54, 55, 45, 54, 23, 74, 52, 25, 45, 37, 55, 25, 66, 47, 36, 63, 44, 37, 32, 43, 37, 26, 39, 45, 40, 51, 52, 43, 52, 50, 54, 28, 28, 26, 45, 34, 73, 31, 29, 40, 38, 42, 50, 51, 40, 25, 47, 27, 53, 67, 40, 44, 33, 29, 32, 27, 40, 36, 48, 56, 24, 53, 34, 61, 38, 55, 70, 24, 22, 38, 29, 30, 38, 49, 71, 32, 40, 32, 33, 40, 25, 36, 46, 59, 49, 41, 42, 59, 27, 30, 54, 31, 34, 47, 40, 29, 58, 41, 56, 52, 53, 37, 30, 35, 40, 54, 22, 37, 39, 62, 47, 51, 47, 28, 65, 42, 58, 32, 34, 49, 39, 44, 38, 48, 47, 40, 27, 42, 30, 31, 29, 53, 37, 48, 56, 44, 63, 25, 31, 51, 25, 50, 34, 20, 30, 40, 34, 57, 42, 30, 37, 50, 26, 59, 29, 22, 54, 46, 51, 35, 49, 53, 61, 40, 52, 40, 56, 39, 30, 58, 33, 51, 32, 50, 26, 35, 31, 31, 44, 30, 27, 27, 55],wage:[75.0, 70.5, 131.0, 154.7, 75.0, 127.1, 169.5, 111.7, 118.9, 128.7, 117.1, 81.3, 89.5, 134.7, 134.7, 90.5, 82.7, 212.8, 129.2, 98.6, 200.5, 50.4, 85.4, 160.6, 94.1, 277.6, 84.0, 65.1, 116.3, 70.5, 195.7, 101.4, 81.3, 111.7, 89.9, 88.0, 88.0, 103.9, 105.9, 66.2, 34.6, 109.8, 45.3, 73.8, 81.3, 154.7, 267.9, 177.0, 66.2, 116.3, 200.5, 101.8, 272.3, 35.0, 114.5, 81.3, 200.5, 148.4, 99.7, 111.7, 152.8, 117.1, 77.7, 88.0, 125.5, 123.3, 158.3, 200.5, 99.7, 70.5, 94.1, 81.3, 81.3, 100.8, 94.1, 99.7, 268.3, 81.3, 113.6, 88.0, 128.7, 106.7, 66.0, 51.5, 85.4, 76.9, 90.5, 68.1, 131.0, 127.9, 131.2, 99.7, 76.9, 107.9, 81.3, 99.7, 98.6, 200.5, 156.5, 144.9, 118.9, 121.4, 111.7, 68.7, 114.5, 95.2, 88.0, 64.3, 128.7, 114.5, 112.6, 81.3, 75.9, 112.1, 85.4, 94.1, 114.5, 177.0, 276.8, 101.8, 91.7, 86.7, 162.9, 139.2, 95.2, 67.0, 131.2, 90.5, 114.5, 79.1, 104.6, 132.5, 141.8, 123.1, 134.7, 55.8, 106.9, 118.9, 88.0, 88.9, 81.3, 94.1, 106.9, 59.1, 65.1, 120.6, 157.7, 129.5, 177.0, 59.1, 94.1, 134.7, 81.3, 81.3, 153.5, 136.9, 75.0, 130.2, 104.9, 49.6, 123.9, 123.1, 78.2, 73.8, 138.3, 127.1, 68.7, 84.4, 85.4, 128.7, 70.5, 76.9, 148.4, 148.4, 176.0, 98.6, 145.1, 99.7, 141.1, 123.1, 129.5, 111.7, 103.9, 118.9, 151.6, 101.8, 99.7, 99.7, 99.7, 94.1, 152.2, 104.9, 65.1, 95.2, 173.9, 193.4, 114.5, 160.6, 89.5, 120.6, 73.8, 127.1, 118.9, 34.6, 114.5, 85.4, 318.3, 141.8, 131.0, 73.8, 131.0, 75.0, 155.0, 104.9, 73.1, 123.1, 157.7, 81.3, 107.3, 79.0, 73.8, 94.1, 99.7, 177.0, 73.8, 99.7, 94.1, 95.2, 127.1, 99.7, 95.7, 109.8, 118.9, 177.0, 61.2, 81.3, 256.4, 81.3, 81.3, 55.8, 75.4, 131.0, 43.7, 114.5, 114.5, 81.3, 68.6, 109.8, 97.5, 62.4, 97.5, 134.7, 61.2, 118.9, 65.1, 109.8, 104.9, 73.8, 141.8, 90.5, 73.8, 134.7, 109.8, 91.7, 95.2, 156.5, 104.9, 99.7, 54.6, 32.4, 118.9, 109.8, 109.8, 118.9, 110.8, 93.6, 109.8, 118.9, 118.9, 52.2, 43.7, 117.1, 118.9, 148.4, 101.8, 94.1, 86.7, 141.8, 67.0, 118.9, 105.8, 118.9, 177.0, 65.1, 85.4, 72.2, 89.2, 65.1, 145.8, 88.0, 41.1, 68.4, 81.3, 73.8, 131.0, 148.4, 81.2, 63.2, 94.1, 92.7, 76.9, 118.9, 79.9, 86.7, 134.0, 125.5, 92.9, 72.2, 118.9, 70.5, 127.1, 114.5, 88.0, 54.6, 84.0, 85.4, 141.8, 110.8, 79.9, 97.5, 171.8, 137.5, 75.4, 73.8, 148.4, 95.2, 88.0, 109.8, 81.3, 118.9, 127.1, 85.4, 81.3, 118.9, 163.5, 104.9, 99.7, 281.7, 138.3, 177.0, 136.9, 186.9, 90.5, 85.4, 145.1, 120.6, 101.8, 108.9, 38.6, 92.9, 126.3, 191.6, 155.9, 88.0, 59.1, 73.8, 90.5, 118.9, 151.6, 272.3, 97.5, 68.1, 127.1, 272.3, 111.7, 127.1, 88.0, 114.5, 69.8, 94.1, 127.3, 160.6, 171.8, 141.8, 115.4, 72.2, 73.8, 127.1, 20.9, 79.9, 102.9, 115.4, 97.5, 104.9, 115.4, 93.5, 123.1, 118.9, 96.4, 84.0, 127.1, 95.2, 81.3, 102.9, 111.7, 94.1, 127.1, 104.9, 68.1, 128.7, 143.9, 103.9, 91.7, 95.2, 138.3, 118.6, 94.1, 114.5, 150.0, 97.5, 90.5, 81.3, 131.0, 151.0, 131.0, 145.1, 90.5, 113.6, 88.0, 157.7, 109.8, 84.0, 160.6, 47.9, 59.1, 81.3, 88.0, 88.0, 143.8, 110.8, 118.9, 120.6, 272.3, 105.4, 69.0, 88.0, 89.2, 171.8, 133.2, 200.5, 92.9, 148.4, 119.7, 82.7, 105.9, 267.9, 104.9, 127.1, 157.7, 148.4, 65.1, 104.9, 78.4, 139.2, 112.6, 79.9, 65.1, 111.7, 104.9, 177.0, 99.7, 104.9, 70.8, 94.1, 127.1, 97.5, 109.8, 75.2, 65.1, 146.5, 81.3, 127.1, 73.8, 65.1, 99.7, 79.9, 73.8, 88.0, 118.9, 284.5, 118.9, 106.9, 100.0, 108.9, 114.5, 115.4, 131.0, 79.9, 106.9, 23.0, 115.2, 103.9, 184.5, 314.3, 99.7, 128.7, 88.0, 54.6, 99.7, 118.9, 92.2, 127.1, 41.7, 109.8, 82.7, 277.8, 99.7, 177.0, 84.0, 163.5, 81.3, 131.0, 127.1, 72.2, 104.9, 186.9, 177.0, 139.7, 73.8, 66.2, 81.3, 104.9, 109.8, 154.7, 106.9, 277.8, 88.0, 90.5, 106.9, 56.9, 81.3, 107.9, 196.1, 91.7, 200.5, 32.4, 104.9, 100.8, 85.4, 82.7, 97.5, 121.0, 134.0, 148.4, 104.9, 81.3, 90.5, 106.9, 114.5, 53.4, 88.0, 66.2, 96.4, 272.4, 97.2, 200.5, 123.1, 99.7, 94.1, 81.3, 154.7, 109.8, 123.1, 73.8, 107.9, 73.8, 88.0, 27.1, 94.1, 102.5, 272.3, 94.1, 81.3, 88.0, 109.8, 80.4, 148.4, 148.4, 81.3, 118.9, 80.5, 91.7, 109.4, 104.9, 65.1, 76.9, 99.7, 99.7, 157.7, 49.6, 90.5, 111.7, 148.4, 133.2, 134.7, 118.9, 88.0, 109.8, 131.0, 89.2, 102.9, 76.9, 149.7, 102.9, 90.5, 69.9, 106.9, 88.0, 109.8, 151.6, 148.4, 67.0, 103.9, 99.7, 134.7, 43.7, 116.7, 141.8, 144.5, 134.7, 118.9, 189.2, 160.6, 96.0, 111.1, 148.4, 99.7, 81.3, 118.9, 127.1, 104.9, 112.6, 281.7, 114.5, 111.7, 134.7, 75.4, 119.7, 118.9, 27.1, 182.0, 65.1, 141.8, 114.5, 135.6, 117.1, 99.7, 277.8, 94.1, 94.1, 96.4, 75.4, 104.9, 95.2, 54.6, 89.2, 145.1, 96.9, 131.0, 84.0, 148.2, 49.6, 141.8, 115.4, 65.1, 85.4, 101.8, 95.2, 99.7, 147.1, 140.4, 109.8, 127.1, 115.4, 59.1, 76.9, 141.8, 70.9, 200.5, 97.5, 99.7, 186.9, 81.3, 160.6, 64.0, 88.0, 73.8, 145.1, 141.8, 76.9, 123.9, 118.9, 279.2, 54.6, 154.7, 180.0, 118.9, 88.0, 91.7, 59.1, 123.9, 109.8, 94.1, 117.1, 65.1, 97.5, 118.0, 141.8, 116.2, 75.4, 95.2, 111.7, 103.9, 147.1, 88.0, 118.9, 100.8, 120.6, 193.9, 118.9, 267.9, 174.4, 134.0, 154.7, 154.7, 118.9, 95.2, 109.8, 111.7, 134.7, 85.9, 118.9, 88.0, 92.9, 109.8, 124.7, 127.9, 97.5, 198.4, 92.9, 94.1, 148.4, 79.9, 118.9, 88.0, 94.1, 150.1, 177.0, 73.8, 125.1, 277.8, 107.9, 60.7, 92.0, 109.8, 67.0, 114.5, 170.7, 131.0, 127.1, 117.1, 123.1, 120.6, 131.0, 81.3, 36.7, 104.9, 74.4, 129.1, 84.1, 185.9, 105.9, 163.5, 63.2, 134.7, 120.9, 94.1, 132.5, 133.2, 145.1, 118.9, 150.3, 279.0, 98.3, 99.7, 94.1, 177.0, 166.3, 94.1, 139.7, 78.4, 141.8, 116.3, 148.4, 88.0, 90.5, 141.8, 63.1, 65.1, 151.6, 123.1, 118.9, 79.9, 104.0, 55.5, 99.7, 99.7, 193.5, 102.9, 164.6, 69.6, 99.7, 114.5, 99.7, 95.2, 82.7, 116.9, 54.6, 138.3, 131.0, 281.7, 163.5, 179.2, 126.3, 70.5, 118.0, 71.3, 114.5, 138.3, 54.6, 94.1, 80.4, 89.2, 117.1, 127.1, 81.3, 52.4, 99.7, 63.2, 196.1, 101.8, 107.9, 51.2, 99.7, 63.2, 148.4, 99.7, 131.0, 101.8, 99.7, 79.9, 160.6, 134.7, 160.6, 91.7, 75.4, 136.2, 134.7, 82.0, 177.0, 118.9, 121.3, 94.1, 99.7, 123.9, 118.9, 82.7, 81.3, 104.9, 99.7, 136.2, 81.3, 68.5, 81.3, 114.5, 118.0, 99.7, 118.9, 118.9, 123.1, 109.8, 102.9, 163.5, 117.1, 92.3, 100.0, 55.1, 101.8, 148.4, 115.4, 73.8, 267.9, 129.5, 96.4, 88.0, 104.9, 131.0, 190.5, 118.0, 79.9, 72.5, 148.4, 74.4, 118.9, 128.7, 88.0, 267.9, 104.9, 92.9, 70.5, 200.5, 102.9, 102.9, 65.1, 109.8, 127.1, 94.1, 67.9, 125.5, 165.2, 81.3, 112.6, 76.9, 75.0, 128.7, 59.1, 63.8, 84.0, 93.9, 82.7, 118.9, 81.3, 67.0, 166.3, 99.7, 141.8, 143.1, 35.0, 109.8, 111.0, 132.5, 148.4, 73.8, 143.7, 99.7, 272.3, 200.5, 85.4, 109.8, 61.1, 118.9, 145.8, 112.6, 106.9, 106.9, 127.1, 88.0, 144.5, 160.4, 88.0, 65.1, 177.0, 54.6, 109.8, 81.7, 114.5, 142.6, 160.6, 94.1, 54.6, 73.8, 160.6, 148.4, 88.0, 101.8, 111.7, 106.9, 126.3, 109.8, 92.9, 54.6, 96.4, 114.5, 94.1, 95.2, 139.0, 81.3, 94.1, 88.0, 138.3, 89.5, 92.9, 54.6, 94.1, 68.7, 92.9, 114.5, 109.8, 109.8, 77.0, 94.1, 101.8, 118.9, 133.2, 157.1, 281.7, 182.0, 119.1, 71.7, 85.4, 72.2, 138.3, 101.8, 109.8, 88.0, 115.4, 191.6, 86.7, 75.9, 166.3, 56.9, 99.7, 92.9, 99.7, 92.9, 101.8, 145.1, 76.9, 90.5, 127.1, 82.7, 99.7, 64.2, 89.5, 88.0, 127.1, 67.0, 148.4, 123.1, 133.2, 118.9, 120.2, 115.4, 112.6, 118.9, 148.4, 61.2, 95.7, 89.2, 127.9, 128.7, 109.8, 114.5, 76.1, 123.1, 99.7, 102.9, 96.4, 117.1, 90.5, 104.9, 73.8, 107.9, 99.7, 60.2, 123.1, 81.3, 143.1, 69.1, 79.0, 128.7, 54.6, 134.7, 104.9, 277.6, 78.2, 82.7, 117.1, 118.9, 109.8, 59.1, 116.3, 61.2, 114.5, 78.4, 122.3, 148.4, 54.6, 66.0, 127.0, 81.3, 127.9, 88.0, 123.1, 104.9, 88.0, 131.7, 73.8, 104.9, 91.6, 123.1, 131.7, 309.6, 70.7, 84.9, 102.9, 103.9, 94.1, 128.7, 106.3, 99.3, 133.2, 78.4, 131.0, 109.8, 96.4, 109.8, 281.7, 94.1, 200.5, 88.0, 88.0, 97.5, 107.9, 95.7, 109.8, 87.4, 88.8, 166.3, 94.7, 122.3, 132.5, 96.4, 89.2, 81.3, 73.8, 109.8, 100.1, 134.3, 91.7, 109.5, 70.5, 144.2, 99.7, 94.1, 88.0, 94.1, 81.3, 115.4, 107.9, 101.4, 144.5, 145.1, 163.5, 81.3, 40.4, 97.5, 117.1, 118.9, 84.0, 88.8, 86.7, 75.4, 98.6, 88.0, 109.6, 79.9, 166.3, 139.0, 145.1, 85.4, 99.7, 131.0, 68.7, 139.7, 177.0, 76.9, 134.7, 99.7, 148.4, 79.9, 128.7, 180.8, 94.1, 89.5, 130.2, 77.5, 148.4, 185.3, 128.7, 147.1, 106.9, 115.4, 91.7, 148.4, 111.7, 126.3, 65.1, 107.9, 54.6, 134.7, 72.5, 131.0, 91.7, 154.7, 114.5, 88.0, 80.6, 94.1, 141.8, 145.1, 94.1, 127.1, 113.6, 101.6, 134.7, 127.1, 88.0, 78.4, 318.3, 82.7, 97.5, 87.9, 184.2, 109.8, 95.2, 59.1, 118.9, 131.0, 134.7, 88.0, 67.4, 83.3, 118.9, 105.9, 85.4, 73.8, 139.0, 123.1, 56.0, 141.8, 154.1, 118.9, 114.5, 120.9, 97.5, 141.8, 75.0, 89.5, 198.4, 65.3, 107.9, 81.3, 76.9, 76.9, 140.4, 104.9, 81.3, 140.4, 79.9, 79.9, 268.3, 124.7, 148.4, 118.9, 177.0, 109.8, 127.1, 110.8, 91.7, 104.9, 272.3, 268.3, 163.5, 104.9, 123.1, 118.9, 148.4, 175.4, 96.4, 96.9, 99.7, 99.7, 311.9, 109.8, 88.0, 138.3, 47.9, 104.9, 99.7, 133.2, 115.4, 120.9, 148.4, 120.6, 144.5, 90.5, 148.4, 123.1, 268.3, 78.4, 107.9, 148.4, 89.2, 131.0, 88.0, 70.5, 108.7, 80.6, 65.1, 65.1, 118.9, 73.8, 54.6, 66.2, 272.3, 134.7, 46.8, 76.9, 81.3, 99.7, 166.3, 94.1, 114.5, 88.0, 118.9, 161.9, 73.8, 99.7, 103.9, 108.9, 107.9, 141.8, 160.6, 112.2, 169.1, 96.4, 81.3, 54.6, 107.9, 136.9, 65.1, 179.5, 66.2, 104.9, 177.0, 114.5, 76.9, 94.1, 127.1, 94.1, 103.9, 99.7, 88.0, 136.2, 94.1, 88.0, 97.5, 43.7, 117.1, 127.1, 272.3, 109.8, 67.0, 127.9, 118.9, 74.4, 143.1, 88.0, 128.7, 121.4, 98.6, 117.1, 109.8, 99.7, 160.6, 118.9, 163.5, 110.8, 88.0, 54.6, 127.0, 123.1, 73.8, 99.7, 94.1, 88.0, 118.9, 65.1, 141.8, 134.7, 76.9, 101.4, 99.7, 95.2, 73.8, 123.1, 99.7, 118.9, 127.1, 145.1, 118.9, 128.7, 92.9, 68.7, 99.7, 109.8, 43.7, 189.2, 32.4, 154.7, 114.5, 148.4, 101.8, 123.1, 118.9, 75.0, 160.6, 104.9, 81.3, 99.7, 104.9, 95.2, 99.7, 84.0, 177.0, 118.9, 94.1, 94.1, 101.8, 85.4, 142.5, 118.9, 95.2, 111.7, 59.6, 99.7, 99.7, 86.7, 93.0, 134.7, 145.1, 148.4, 88.0, 108.4, 73.8, 73.8, 106.4, 78.4, 72.6, 73.8, 38.2, 99.7, 50.4, 170.5, 123.1, 73.8, 110.8, 125.5, 75.0, 95.2, 118.9, 127.1, 70.5, 166.3, 139.2, 25.3, 81.4, 88.0, 116.4, 166.3, 149.7, 73.8, 277.6, 136.9, 129.5, 111.7, 178.7, 49.6, 82.7, 73.8, 92.9, 114.5, 84.0, 76.9, 79.9, 131.0, 148.4, 65.1, 134.7, 94.1, 94.1, 90.5, 111.7, 107.9, 191.6, 145.1, 138.6, 53.6, 93.1, 81.3, 128.7, 136.2, 160.6, 109.8, 148.4, 108.4, 67.1, 118.0, 109.8, 47.3, 62.9, 70.5, 99.7, 92.8, 99.7, 114.5, 89.2, 118.9, 148.4, 90.5, 118.9, 89.2, 73.8, 70.5, 93.5, 70.5, 99.7, 98.6, 54.6, 86.7, 118.9, 160.6, 59.1, 92.7, 63.2, 114.5, 65.1, 148.4, 109.5, 99.7, 105.9, 134.7, 189.2, 104.9, 82.7, 81.3, 76.9, 85.4, 73.8, 106.6, 95.2, 70.5, 105.9, 56.5, 94.1, 105.9, 75.0, 118.9, 138.3, 99.7, 95.2, 94.1, 123.1, 90.5, 88.0, 109.8, 85.4, 191.6, 101.8, 148.4, 171.8, 73.5, 88.0, 272.3, 102.9, 160.6, 123.1, 91.7, 85.4, 109.8, 114.5, 84.3, 114.5, 57.4, 104.9, 125.5, 108.9, 65.1, 109.8, 70.8, 145.1, 101.8, 84.0, 134.7, 97.5, 154.7, 200.5, 59.7, 91.7, 109.8, 114.5, 66.2, 92.9, 94.1, 118.9, 132.5, 127.1, 99.7, 40.4, 138.3, 102.9, 79.9, 111.7, 62.2, 70.5, 86.0, 99.7, 113.6, 100.8, 61.2, 113.6, 134.7, 104.9, 109.8, 276.8, 148.4, 148.4, 109.8, 81.3, 79.9, 109.8, 148.4, 65.1, 88.3, 91.7, 73.8, 70.5, 128.7, 94.1, 98.6, 133.2, 134.7, 91.7, 160.6, 99.7, 114.5, 97.5, 98.0, 104.9, 109.8, 133.2, 118.9, 73.8, 104.9, 62.0, 97.5, 145.8, 82.7, 148.4, 49.6, 73.8, 73.8, 127.1, 109.8, 61.6, 111.4, 138.3, 127.1, 75.4, 139.0, 118.9, 109.8, 66.2, 73.3, 131.0, 276.8, 86.9, 109.8, 118.9, 104.9, 136.9, 84.0, 196.1, 121.4, 96.4, 128.7, 148.4, 85.4, 88.0, 99.7, 148.4, 81.3, 145.8, 149.1, 97.5, 118.0, 99.7, 118.9, 79.9, 118.9, 160.6, 177.0, 73.8, 154.7, 101.8, 131.0, 114.5, 105.9, 81.3, 134.7, 97.5, 109.8, 171.8, 67.8, 73.8, 91.7, 67.0, 95.2, 98.6, 109.8, 81.3, 90.5, 109.8, 148.4, 84.5, 101.8, 104.9, 104.9, 99.7, 101.4, 149.1, 73.8, 160.6, 118.9, 119.4, 107.9, 154.9, 75.4, 118.5, 76.9, 62.2, 182.0, 267.9, 141.8, 186.9, 72.2, 49.6, 81.3, 118.9, 97.5, 111.7, 101.8, 127.1, 88.0, 84.0, 78.4, 46.4, 132.9, 61.6, 99.7, 66.2, 108.9, 99.7, 152.8, 76.9, 143.1, 125.2, 75.6, 109.8, 177.0, 59.1, 99.7, 95.2, 104.9, 49.6, 131.0, 43.7, 118.9, 109.8, 75.0, 91.7, 105.9, 73.8, 170.2, 138.3, 101.8, 88.0, 78.4, 123.1, 116.3, 90.5, 109.8, 104.9, 118.9, 94.1, 141.8, 128.7, 73.8, 139.4, 94.1, 73.8, 107.9, 64.5, 138.3, 89.2, 99.7, 109.8, 90.5, 89.5, 102.8, 118.9, 148.4, 114.5, 130.0, 110.8, 114.5, 148.4, 276.8, 24.0, 103.9, 118.9, 71.7, 276.8, 141.8, 99.7, 108.9, 79.9, 79.0, 82.7, 89.5, 131.0, 109.7, 117.1, 73.8, 81.3, 80.9, 107.9, 76.9, 88.0, 95.2, 84.0, 99.7, 101.4, 88.0, 88.0, 94.1, 128.2, 136.5, 107.9, 123.1, 91.7, 78.4, 154.7, 136.2, 81.3, 76.3, 109.8, 87.8, 127.1, 154.1, 109.8, 138.3, 164.6, 138.3, 45.0, 106.7, 114.5, 73.8, 75.4, 141.8, 109.8, 277.8, 79.9, 166.3, 75.4, 100.1, 102.9, 118.7, 117.1, 123.5, 148.4, 76.9, 109.8, 105.9, 160.6, 149.7, 99.7, 104.9, 61.2, 105.9, 107.9, 70.8, 160.6, 99.7, 111.7, 75.4, 94.1, 88.0, 123.1, 99.7, 76.9, 86.7, 177.0, 100.8, 114.5, 67.2, 79.9, 90.5, 58.0, 114.5, 99.7, 89.5, 151.8, 88.0, 88.0, 104.9, 65.1, 128.7, 154.7, 131.0, 120.6, 81.3, 110.2, 152.2, 70.5, 85.4, 101.8, 85.4, 101.8, 118.9, 73.8, 73.8, 138.6, 109.8, 151.6, 177.0, 103.9, 128.7, 108.9, 88.0, 95.2, 98.6, 141.8, 123.1, 94.7, 148.4, 104.9, 123.1, 94.6, 127.1, 29.4, 129.5, 109.8, 99.7, 90.5, 70.8, 95.2, 109.8, 182.0, 160.6, 70.5, 131.0, 105.9, 109.8, 97.5, 111.7, 172.2, 129.5, 127.1, 134.7, 94.1, 94.1, 96.9, 276.8, 32.4, 84.5, 65.1, 84.7, 167.7, 94.1, 134.7, 81.3, 134.7, 114.5, 131.0, 104.9, 152.2, 124.7, 148.4, 89.2, 82.7, 94.1, 153.5, 46.8, 129.5, 131.0, 94.1, 99.7, 128.7, 73.8, 110.8, 99.7, 91.7, 82.7, 118.9, 148.4, 95.2, 163.5, 279.5, 114.5, 102.9, 88.0, 88.0, 70.5, 101.8, 277.6, 88.0, 104.9, 127.1, 99.7, 171.8, 75.0, 72.2, 34.6, 94.1, 177.0, 140.4, 27.1, 127.1, 114.5, 127.1, 82.7, 101.8, 86.7, 63.2, 114.9, 81.3, 101.8, 101.8, 103.2, 113.6, 148.4, 148.4, 105.7, 128.7, 51.8, 81.3, 158.3, 54.1, 127.1, 71.7, 145.1, 94.1, 127.9, 102.9, 89.5, 104.9, 137.6, 177.0, 97.5, 100.8, 81.3, 56.9, 105.9, 138.3, 108.9, 76.9, 109.8, 94.1, 75.4, 74.6, 81.3, 95.2, 145.1, 140.4, 148.4, 99.7, 59.1, 118.9, 64.4, 133.2, 59.1, 104.9, 60.2, 30.9, 109.8, 65.1, 94.1, 65.1, 88.0, 177.0, 189.2, 79.9, 111.2, 118.9, 81.3, 186.9, 154.7, 124.7, 277.8, 99.6, 88.0, 114.5, 145.1, 138.3, 256.4, 113.6, 118.0, 104.9, 131.0, 123.1, 109.8, 109.8, 138.3, 107.4, 105.9, 121.4, 85.4, 91.7, 90.5, 104.9, 147.1, 81.3, 107.9, 118.9, 104.9, 127.1, 88.0, 111.7, 81.3, 123.1, 177.0, 82.7, 102.8, 120.6, 141.8, 106.9, 268.3, 109.8, 99.7, 200.5, 109.8, 125.5, 114.5, 160.6, 99.7, 160.6, 125.5, 133.2, 75.0, 109.8, 63.2, 95.2, 111.7, 78.4, 99.7, 82.7, 78.4, 81.3, 70.8, 148.4, 130.6, 200.5, 148.4, 88.0, 96.1, 104.9, 62.2, 137.6, 88.0, 155.9, 177.0, 123.1, 138.3, 63.2, 73.8, 182.0, 116.3, 94.1, 148.4, 20.1, 111.7, 148.4, 81.3, 70.5, 92.9, 88.0, 89.5, 102.9, 73.8, 66.2, 117.1, 101.8, 116.3, 126.3, 82.7, 112.6, 118.9, 88.0, 54.0, 117.1, 118.9, 127.9, 88.0, 109.8, 68.7, 95.2, 134.7, 81.3, 68.7, 134.7, 81.3, 150.7, 94.1, 75.4, 141.8, 175.9, 198.4, 94.1, 81.3, 81.3, 76.4, 94.1, 104.9, 110.8, 92.9, 99.7, 85.4, 75.4, 72.2, 31.4, 92.9, 103.9, 111.7, 180.8, 109.8, 36.7, 73.8, 98.6, 57.5, 118.9, 82.7, 81.3, 227.5, 91.7, 116.3, 141.8, 81.3, 91.1, 114.5, 160.6, 99.7, 92.9, 276.8, 82.7, 99.7, 124.7, 100.8, 169.8, 82.7, 136.9, 277.8, 118.9, 118.9, 114.5, 61.2, 118.9, 133.2, 82.7, 148.4, 148.4, 96.9, 154.7, 88.0, 102.9, 281.7, 106.9, 148.4, 111.7, 148.4, 108.9, 104.9, 86.2, 102.9, 76.3, 124.7, 67.0, 54.6, 166.3, 91.7, 78.3, 111.7, 151.6, 120.6, 117.1, 82.0, 137.6, 40.4, 154.7, 154.7, 143.3, 78.4, 85.4, 159.5, 66.2, 111.7, 90.7, 128.7, 148.4, 114.5, 88.0, 94.1, 88.0, 182.0, 88.0, 92.9, 72.2, 122.3, 72.2, 82.7, 177.0, 141.8, 95.2, 141.8, 101.8, 131.7, 66.3, 118.9, 163.5, 114.5, 123.1, 40.2, 70.5, 73.8, 100.9, 84.0, 85.4, 141.8, 91.1, 114.5, 267.9, 160.6, 94.1, 139.7, 125.1, 113.6, 182.0, 102.9, 76.9, 109.8, 142.5, 101.8, 118.9, 102.9, 128.7, 61.2, 81.3, 276.8, 268.3, 104.9, 144.5, 118.9, 94.1, 73.8, 196.1, 169.1, 69.6, 124.7, 115.5, 89.2, 276.8, 170.7, 99.7, 148.4, 114.5, 128.7, 99.7, 128.7, 140.4, 111.7, 125.5, 94.1, 118.9, 72.2, 104.9, 277.8, 73.8, 131.0, 78.2, 90.5, 117.1, 99.7, 166.3, 81.3, 84.0, 114.5, 73.8, 115.1, 53.0, 118.9, 79.9, 56.5, 90.5, 104.9, 88.0, 147.1, 109.8, 118.9, 141.8, 108.9, 104.9, 109.8, 27.1, 70.5, 166.9, 127.1, 117.1, 103.9, 34.6, 100.0, 64.9, 109.8, 127.1, 114.5, 117.1, 134.7, 65.1, 143.1, 76.9, 99.7, 94.1, 75.4, 127.1, 166.3, 133.2, 125.5, 89.5, 84.0, 169.1, 160.6, 144.2, 73.8, 70.5, 73.8, 94.1, 83.2, 134.7, 86.7, 70.5, 131.0, 136.3, 114.0, 106.1, 88.0, 116.3, 143.1, 54.6, 48.2, 123.1, 117.6, 272.3, 145.1, 118.9, 97.5, 148.4, 127.1, 268.3, 109.8, 51.9, 114.5, 134.7, 88.0, 95.2, 76.9, 116.3, 81.3, 131.6, 117.1, 68.7, 125.5, 101.8, 140.4, 107.9, 58.0, 99.7, 85.4, 131.7, 81.3, 86.7, 157.7, 65.1, 90.5, 46.8, 85.4, 139.7, 148.4, 81.3, 118.9, 71.2, 65.1, 65.1, 125.5, 123.1, 70.8, 112.6, 86.7, 82.7, 131.0, 117.1, 177.0, 118.9, 68.7, 267.9, 99.7, 92.7, 109.8, 88.0, 118.9, 75.0, 114.5, 276.8, 277.6, 80.6, 114.5, 166.3, 85.4, 43.7, 101.8, 88.0, 121.4, 109.8, 79.9, 127.1, 115.3, 98.6, 144.5, 136.2, 100.8, 76.9, 90.5, 86.7, 123.9, 65.1, 131.7, 67.0, 196.1, 166.3, 65.1, 120.6, 101.8, 148.4, 159.1, 109.8, 140.1, 132.4, 118.9, 97.5, 134.7, 72.2, 88.0, 49.6, 149.1, 122.3, 101.8, 99.7, 104.9, 81.3, 73.8, 82.7, 148.4, 118.9, 129.5, 134.7, 79.9, 68.1, 40.4, 131.7, 134.7, 114.5, 126.3, 116.7, 109.8, 81.2, 88.0, 127.1, 104.9, 107.9, 109.8, 117.1, 107.9, 72.2, 160.6, 148.4, 143.1, 97.5, 141.8, 148.4, 109.8, 59.1, 152.5, 81.3, 43.7, 96.4, 101.8, 131.0, 82.7, 131.0, 89.2, 85.1, 166.3, 100.8, 99.7, 123.1, 163.5, 85.4, 75.4, 65.1, 92.7, 137.6, 134.9, 72.5, 178.5, 98.6, 115.4, 73.8, 36.7, 123.1, 88.0, 73.9, 177.0, 118.9, 134.7, 90.5, 148.4, 81.3, 131.0, 177.0, 82.7, 131.7, 82.7, 41.4, 117.1, 73.8, 86.7, 99.7, 141.8, 70.8, 72.2, 54.6, 127.1, 73.8, 139.7, 160.6, 24.0, 115.4, 114.5, 127.1, 137.6, 177.0, 23.3, 90.5, 73.8, 82.7, 56.9, 128.7, 75.0, 73.8, 108.1, 123.1, 277.8, 73.8, 123.9, 88.0, 70.5, 277.6, 148.4, 114.5, 99.7, 268.3, 131.0, 109.8, 277.6, 73.8, 267.9, 119.7, 141.8, 128.3, 90.5, 76.9, 127.1, 118.9, 200.5, 88.0, 148.4, 268.3, 88.0, 99.7, 82.7, 131.0, 108.9, 54.6, 309.6, 82.7, 59.6, 166.3, 79.9, 118.9, 92.9, 160.6, 70.5, 120.6, 160.6, 171.8, 120.6, 134.7, 148.4, 129.5, 134.7, 56.9, 88.0, 68.1, 128.7, 134.7, 94.1, 88.0, 118.9, 68.7, 94.1, 118.9, 91.7, 134.7, 127.1, 100.8, 105.9, 88.0, 99.7, 112.6, 163.5, 82.7, 79.9, 49.6, 152.8, 148.4, 101.4, 95.7, 118.9, 76.9, 118.9, 138.3, 54.6, 65.1, 109.8, 73.8, 105.9, 116.3, 94.1, 118.9, 148.4, 104.9, 79.9, 108.9, 109.8, 127.1, 151.6, 105.9, 200.5, 59.1, 68.7, 177.0, 103.9, 82.7, 200.5, 101.8, 163.5, 104.9, 109.8, 104.9, 107.9, 182.0, 75.0, 61.2, 85.4, 123.8, 177.0, 118.9, 268.3, 89.5, 92.9, 127.1, 115.4, 131.0, 68.7, 182.0, 143.8, 134.7, 63.2, 75.4, 177.0, 104.9, 123.1, 111.7, 111.7, 88.0, 144.2, 117.1, 78.4, 99.7, 123.1, 127.1, 139.0, 127.1, 70.5, 109.8, 70.8, 70.5, 177.0, 113.6, 82.7, 148.4, 161.2, 127.1, 134.7, 160.6, 267.9, 104.9, 134.7, 123.1, 67.0, 91.7, 160.6, 136.9, 153.5, 61.2, 65.1, 114.5, 182.0, 114.5, 97.5, 136.9, 97.5, 81.3, 73.8, 118.9, 113.6, 90.5, 160.6, 179.5, 147.8, 88.0, 59.0, 107.3, 49.6, 144.5, 81.3, 81.6, 88.0, 131.0, 88.0, 81.3, 89.2, 114.1, 104.9, 112.6, 56.9, 88.0, 118.9, 127.1, 134.7, 107.9, 281.7, 48.2, 127.1, 50.4, 81.3, 75.0, 104.9, 79.9, 131.0, 171.8, 97.5, 98.6, 84.0, 299.3, 70.8, 82.7, 73.8, 77.5, 91.7, 141.8, 93.7, 143.1, 91.7, 131.0, 88.0, 76.5, 71.7, 88.0, 80.6, 163.5, 107.9, 133.2, 73.8, 88.0, 119.0, 102.1, 136.9, 118.9, 65.1, 94.1, 138.3, 118.9, 79.9, 63.2, 134.7, 296.0, 109.8, 104.9, 148.4, 99.7, 118.9, 95.7, 114.5, 104.9, 101.8, 146.5, 79.9, 145.1, 76.4, 84.0, 115.4, 105.9, 72.2, 79.9, 103.9, 89.0, 99.7, 112.6, 138.3, 68.7, 109.3, 148.4, 99.7, 118.0, 65.1, 94.1, 98.6, 88.0, 99.7, 108.9, 82.7, 89.5, 97.5, 56.9, 65.1, 89.5, 84.0, 94.1, 85.4, 78.4, 160.4, 132.9, 88.0, 158.2, 118.9, 101.4, 59.1, 85.4, 88.0, 160.6, 70.5, 47.7, 131.0, 85.4, 99.7, 93.9, 131.0, 168.0, 126.1, 148.4, 132.5, 118.9, 109.8, 102.9, 133.4, 154.7, 99.7, 66.2, 88.0, 90.5]};
+
+/* A single-layer neural network on the Wage data (ML L9): the model.
+   f(x) = b0 + sum_k beta_k g(w_k0 + w_k1 x), fitted by minibatch stochastic gradient descent.
+   Age and wage are standardised inside the fit; every number shown is back in dollars and years. */
+const NA=WAGE.age.length;
+const mu=a=>a.reduce((s,v)=>s+v,0)/a.length,sdv=a=>{const m=mu(a);return Math.sqrt(a.reduce((s,v)=>s+(v-m)**2,0)/a.length);};
+const AM=mu(WAGE.age),AS=sdv(WAGE.age),WM=mu(WAGE.wage),WS=sdv(WAGE.wage);
+const XS=WAGE.age.map(a=>(a-AM)/AS),YS=WAGE.wage.map(w=>(w-WM)/WS);
+const toX=age=>(age-AM)/AS;
+const ACT={
+  relu:{g:z=>z>0?z:0,d:z=>z>0?1:0},
+  sigmoid:{g:z=>1/(1+Math.exp(-z)),d:z=>{const s=1/(1+Math.exp(-z));return s*(1-s);}}
+};
+const S={K:6,act:'relu',lr:3,lam:0,n:3,seed:3,speed:1,batch:32,epoch:0,run:false,hover:-1,off:new Set(),x0:null};
+const LRS=[0.003,0.01,0.03,0.05,0.1,0.2,0.4];
+const LAMS=[0,0.0001,0.001,0.003,0.01,0.03,0.1];
+const NS=[30,60,150,400,1000];
+let D=null,N=null,H=null;
+function shuffleIdx(n,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=n-1;i>0;i--){const j=Math.floor(rng()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/* the split: 1000 validation and 1000 test workers fixed by the seed, the training set the first n of the rest */
+function split(){const rng=mulberry32(S.seed*104729+7);const p=shuffleIdx(NA,rng);
+  D={val:p.slice(0,1000),test:p.slice(1000,2000),train:p.slice(2000,2000+NS[S.n]),rng};}
+/* starting weights: each unit's kink (ReLU) or midpoint (sigmoid) at a random age inside the data, random slope and output weight */
+function init(){const rng=mulberry32(S.seed*7919+S.K*31+(S.act==='relu'?1:2));const K=S.K;
+  const xmin=toX(18),xmax=toX(80);
+  N={K,w0:new Float64Array(K),w1:new Float64Array(K),b:new Float64Array(K),b0:0,rng};
+  for(let k=0;k<K;k++){const c=xmin+rng()*(xmax-xmin),s=(rng()<.5?-1:1)*(S.act==='relu'?0.5+rng():1+2*rng());
+    N.w1[k]=s;N.w0[k]=-s*c;N.b[k]=(rng()-.5)*0.6;}
+  H={ep:[],tr:[],va:[],te:[],best:null};S.epoch=0;record();}
+function fwd(x,skip){let f=N.b0;const g=ACT[S.act].g;for(let k=0;k<N.K;k++){if(skip&&skip.has(k))continue;f+=N.b[k]*g(N.w0[k]+N.w1[k]*x);}return f;}
+/* mean squared error in dollars squared */
+function mseOn(idx,skip){let s=0;for(const i of idx){const e=fwd(XS[i],skip)-YS[i];s+=e*e;}return s/idx.length*WS*WS;}
+function penalty(){let s=0;for(let k=0;k<N.K;k++)s+=N.w1[k]**2+N.b[k]**2;return s;}
+/* one epoch: a pass through the training set in minibatches, one gradient step per minibatch */
+function epoch(){const K=N.K,{g,d}=ACT[S.act],lr=LRS[S.lr],lam=LAMS[S.lam],tr=D.train,B=Math.min(S.batch,tr.length);
+  const ord=shuffleIdx(tr.length,N.rng);const z=new Float64Array(K),a=new Float64Array(K);
+  const gw0=new Float64Array(K),gw1=new Float64Array(K),gb=new Float64Array(K);
+  for(let s0=0;s0<ord.length;s0+=B){const bt=ord.slice(s0,s0+B),m=bt.length;gw0.fill(0);gw1.fill(0);gb.fill(0);let gb0=0;
+    for(const t of bt){const i=tr[t],x=XS[i];let f=N.b0;for(let k=0;k<K;k++){z[k]=N.w0[k]+N.w1[k]*x;a[k]=g(z[k]);f+=N.b[k]*a[k];}
+      const e=f-YS[i];gb0+=e;for(let k=0;k<K;k++){gb[k]+=e*a[k];const q=e*N.b[k]*d(z[k]);gw0[k]+=q;gw1[k]+=q*x;}}
+    N.b0-=lr*gb0/m;
+    for(let k=0;k<K;k++){N.b[k]-=lr*(gb[k]/m+2*lam*N.b[k]);N.w0[k]-=lr*gw0[k]/m;N.w1[k]-=lr*(gw1[k]/m+2*lam*N.w1[k]);}}
+  S.epoch++;if(S.epoch<=200||S.epoch%Math.ceil(S.epoch/200)===0)record();}
+function snapshot(){return{w0:N.w0.slice(),w1:N.w1.slice(),b:N.b.slice(),b0:N.b0,epoch:S.epoch};}
+function record(){const tr=mseOn(D.train),va=mseOn(D.val),te=mseOn(D.test);
+  if(!isFinite(tr)||tr>1e7){H.blown=true;}
+  H.ep.push(S.epoch);H.tr.push(tr);H.va.push(va);H.te.push(te);
+  if(!H.best||va<H.best.va)H.best={va,te,tr,snap:snapshot()};}
+function restore(s){N.w0=s.w0.slice();N.w1=s.w1.slice();N.b=s.b.slice();N.b0=s.b0;}
+
+/* drawing */
+const nice=r=>{const p=10**Math.floor(Math.log10(r)),m=r/p;return(m<1.5?1:m<3.5?2:m<7.5?5:10)*p;};
+const UC=['--blue','--red','--green','--orange','--purple','--ctrl','--point','--treat','--navy','--grey'];
+const ucol=k=>css(UC[k%UC.length]);
+const AR=[17,81],WR=[0,330];
+const dollars=v=>v*WS;               /* a standardised wage difference, in thousands of dollars */
+const wageAt=age=>WM+WS*fwd(toX(age),S.off);
+const unitAt=(k,age)=>N.b[k]*ACT[S.act].g(N.w0[k]+N.w1[k]*toX(age))*WS;
+const kinkAge=k=>N.w1[k]===0?NaN:AM+AS*(-N.w0[k]/N.w1[k]);
+const x0=()=>S.x0==null?40:S.x0;
+const nf=v=>v.toLocaleString('en-US',{maximumFractionDigits:0});
+function curve(ctx,A,fn,col,wd,dash){const p=[];for(let a=AR[0];a<=AR[1];a+=0.25)p.push([A.px(a),A.py(fn(a))]);line(ctx,p,col,wd,dash);}
+
+function drawFit(){
+  const c=$('cFit'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const A=axes(ctx,w,h,{xlim:AR,ylim:WR,xt:[20,30,40,50,60,70,80],yt:[0,50,100,150,200,250,300],xl:'age',yl:'wage (thousands of dollars)',L:50,B:40});
+  A.clip();
+  const held=D.val.concat(D.test);ctx.globalAlpha=.22;
+  for(const i of held){const j=((i*37)%10-4.5)*0.06;ctx.fillStyle=css('--muted');ctx.fillRect(A.px(WAGE.age[i]+j)-1,A.py(WAGE.wage[i])-1,2,2);}
+  ctx.globalAlpha=1;
+  for(const i of D.train){const j=((i*37)%10-4.5)*0.06;dot(ctx,A.px(WAGE.age[i]+j),A.py(WAGE.wage[i]),D.train.length>200?1.8:2.8,css('--point'));}
+  if(S.off.size){ctx.globalAlpha=.45;curve(ctx,A,a=>WM+WS*fwd(toX(a)),css('--ink'),1.5,[5,4]);ctx.globalAlpha=1;}
+  if(S.hover>=0&&!S.off.has(S.hover)){const k=S.hover,base=wageAt(x0())-unitAt(k,x0());
+    curve(ctx,A,a=>wageAt(a)-unitAt(k,a),ucol(k),1.6,[4,3]);}
+  curve(ctx,A,wageAt,css('--navy'),3);
+  /* where each unit bends */
+  for(let k=0;k<N.K;k++){const a=kinkAge(k);if(!(a>=AR[0]&&a<=AR[1]))continue;const x=A.px(a),y=A.T+A.ph;
+    ctx.fillStyle=ucol(k);ctx.globalAlpha=S.off.has(k)?.25:(S.hover<0||S.hover===k?1:.35);ctx.beginPath();ctx.moveTo(x,y-1);ctx.lineTo(x-5,y-10);ctx.lineTo(x+5,y-10);ctx.closePath();ctx.fill();ctx.globalAlpha=1;}
+  /* the age being followed */
+  const a0=x0(),f0=wageAt(a0);line(ctx,[[A.px(a0),A.T],[A.px(a0),A.T+A.ph]],css('--orange'),1.2,[3,3]);
+  dot(ctx,A.px(a0),A.py(f0),5,css('--orange'),css('--panel'));
+  A.unclip();
+  label(ctx,'age '+Math.round(a0)+': f = '+fmt(f0,1),Math.min(A.px(a0)+8,A.L+A.pw-120),A.T+14,css('--orange'),'left');
+  if(H.blown)label(ctx,'the steps are too large and the loss has exploded: lower ρ and restart',A.L+A.pw/2,A.T+A.ph/2,css('--red'),'center');
+  if(S.off.size)label(ctx,'dashed: the fit with all units on',A.L+A.pw-4,A.T+A.ph-16,css('--muted'),'right');
+}
+
+function drawChips(){const box=$('chips');
+  if(box.childElementCount!==N.K){box.innerHTML='';for(let k=0;k<N.K;k++){const b=document.createElement('button');b.dataset.k=k;box.appendChild(b);
+    b.onmouseenter=()=>{S.hover=k;drawStatic();};b.onmouseleave=()=>{S.hover=-1;drawStatic();};b.onclick=()=>toggleUnit(k);}}
+  [...box.children].forEach((b,k)=>{b.textContent='unit '+(k+1);b.style.borderColor=ucol(k);b.style.color=S.off.has(k)?css('--muted'):ucol(k);
+    b.style.textDecoration=S.off.has(k)?'line-through':'none';b.classList.toggle('on',S.hover===k);});}
+function toggleUnit(k){if(S.off.has(k))S.off.delete(k);else S.off.add(k);drawStatic();}
+
+function drawUnits(){
+  const c=$('cUnits'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  let lo=0,hi=0;for(let k=0;k<N.K;k++)for(let a=AR[0];a<=AR[1];a+=1){const v=unitAt(k,a);if(v<lo)lo=v;if(v>hi)hi=v;}
+  const pad=(hi-lo)*.08||5,yl=[lo-pad,hi+pad],st=nice((yl[1]-yl[0])/5),yt=[];for(let v=Math.ceil(yl[0]/st)*st;v<=yl[1];v+=st)yt.push(+v.toFixed(6));
+  const A=axes(ctx,w,h,{xlim:AR,ylim:yl,xt:[20,30,40,50,60,70,80],yt,yf:v=>fmt(v,Math.abs(st)<1?1:0),xl:'age',yl:'contribution βₖ g(·), thousands of $',L:50,B:40});
+  A.clip();line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  for(let k=0;k<N.K;k++){const on=!S.off.has(k),hl=S.hover===k;ctx.globalAlpha=!on?.18:(S.hover<0||hl?1:.3);
+    curve(ctx,A,a=>unitAt(k,a),ucol(k),hl?3:1.8,on?null:[3,3]);ctx.globalAlpha=1;}
+  const a0=x0();line(ctx,[[A.px(a0),A.T],[A.px(a0),A.T+A.ph]],css('--orange'),1.2,[3,3]);
+  for(let k=0;k<N.K;k++)if(!S.off.has(k))dot(ctx,A.px(a0),A.py(unitAt(k,a0)),2.8,ucol(k));
+  A.unclip();
+  label(ctx,'β₀ = '+fmt(WM+WS*N.b0,1)+' (the constant the curves are added to)',A.L+6,A.T+12,css('--muted'),'left');
+}
+
+function drawNet(){
+  const c=$('cNet'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const K=N.K,g=ACT[S.act].g,xa=toX(x0()),xin=46,xh=w/2,xo=w-46,T=22,Bm=22,ys=k=>K===1?h/2:T+(h-T-Bm)*k/(K-1);
+  const r=Math.max(5,Math.min(12,(h-T-Bm)/K/2.4));
+  let mw=0,mb=0;for(let k=0;k<K;k++){mw=Math.max(mw,Math.abs(N.w1[k]));mb=Math.max(mb,Math.abs(N.b[k]));}
+  const blue=css('--blue'),red=css('--red');
+  const z=k=>N.w0[k]+N.w1[k]*xa,act=k=>g(z(k));
+  let amax=0;for(let k=0;k<K;k++)amax=Math.max(amax,act(k));
+  for(let k=0;k<K;k++){const off=S.off.has(k),hl=S.hover===k;ctx.globalAlpha=off?.12:(S.hover<0||hl?.9:.25);
+    line(ctx,[[xin,h/2],[xh,ys(k)]],N.w1[k]>=0?blue:red,0.6+5*Math.abs(N.w1[k])/(mw||1));
+    line(ctx,[[xh,ys(k)],[xo,h/2]],N.b[k]>=0?blue:red,0.6+5*Math.abs(N.b[k])/(mb||1));ctx.globalAlpha=1;}
+  NET_NODES=[];
+  for(let k=0;k<K;k++){const a=act(k),t=S.act==='relu'?(amax>0?a/amax:0):a,off=S.off.has(k);
+    ctx.beginPath();ctx.arc(xh,ys(k),r,0,6.2832);ctx.fillStyle=css('--panel');ctx.fill();
+    if(!off){ctx.globalAlpha=Math.min(1,t);ctx.fillStyle=ucol(k);ctx.fill();ctx.globalAlpha=1;}
+    ctx.strokeStyle=ucol(k);ctx.lineWidth=S.hover===k?3:1.6;ctx.stroke();
+    if(off){line(ctx,[[xh-r,ys(k)-r],[xh+r,ys(k)+r]],css('--muted'),1.5);}
+    NET_NODES.push({k,x:xh,y:ys(k),r});
+    if(K<=12){ctx.font='10px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=css('--muted');ctx.textAlign='left';
+      ctx.fillText('A'+(k+1)+' = '+fmt(a,2)+(a<=1e-9&&S.act==='relu'?' (silent)':''),xh+r+5,ys(k)+3);}}
+  dot(ctx,xin,h/2,13,css('--panel'),css('--ink'));dot(ctx,xo,h/2,13,css('--panel'),css('--ink'));
+  ctx.font=FONT;ctx.fillStyle=css('--ink');ctx.textAlign='center';
+  ctx.fillText('age',xin,h/2+4);ctx.fillText('f',xo,h/2+4);
+  ctx.fillStyle=css('--muted');ctx.fillText(String(Math.round(x0())),xin,h/2+30);ctx.fillText(fmt(wageAt(x0()),1),xo,h/2+30);
+  ctx.fillText('input',xin,14);ctx.fillText('hidden layer, K = '+K,xh,14);ctx.fillText('output',xo,14);
+}
+let NET_NODES=[];
+
+function drawErr(){
+  const c=$('cErr'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const E=Math.max(10,S.epoch),lx=e=>Math.log10(e+1);
+  const all=H.tr.concat(H.va,H.te).filter(v=>isFinite(v)&&v<1e7),base=WS*WS;
+  let lo=Math.min(...all,base),hi=Math.max(...all.slice(-200),base*1.15);hi=Math.min(hi,base*3.5);lo=Math.max(0,lo-(hi-lo)*.08);
+  const xt=[0,1,10,100,1000,10000,100000].filter(v=>v<=E*1.01),st=nice((hi-lo)/5),yt=[];for(let v=Math.ceil(lo/st)*st;v<=hi;v+=st)yt.push(v);
+  const A=axes(ctx,w,h,{xlim:[0,lx(E)],ylim:[lo,hi],xt:xt.map(lx),xf:v=>String(Math.round(10**v-1)),yt,yf:v=>nf(v),xl:'epochs (log scale)',yl:'MSE',L:56});
+  A.clip();
+  line(ctx,[[A.L,A.py(base)],[A.L+A.pw,A.py(base)]],css('--grey'),1.2,[6,4]);
+  const pts=arr=>H.ep.map((e,i)=>[A.px(lx(e)),A.py(Math.min(arr[i],hi*2))]);
+  line(ctx,pts(H.te),css('--green'),1.6);line(ctx,pts(H.va),css('--red'),2);line(ctx,pts(H.tr),css('--navy'),2);
+  if(H.best){dot(ctx,A.px(lx(H.best.snap.epoch)),A.py(H.best.va),5,css('--red'),css('--panel'));}
+  line(ctx,[[A.px(lx(S.epoch)),A.T],[A.px(lx(S.epoch)),A.T+A.ph]],css('--orange'),1.2,[3,3]);
+  A.unclip();
+  label(ctx,'predict the mean: '+nf(base),A.L+A.pw-4,A.py(base)-7,css('--grey'),'right');
+  const n=H.ep.length-1;if(n>=0){label(ctx,'training',A.L+A.pw-4,A.py(Math.min(H.tr[n],hi))+14,css('--navy'),'right');}
+  if(H.best)label(ctx,'best validation, epoch '+H.best.snap.epoch,A.px(lx(H.best.snap.epoch))+7,A.py(H.best.va)-9,css('--red'),'left');
+}
+
+/* the one-dimensional objective: a quartic with minima at -0.46 (local) and 1.02 (global), as in the slide figure */
+const Q={r:[-0.46,0.17,1.02],c:15.984,d:2.111};
+Q.s1=Q.r[0]+Q.r[1]+Q.r[2];Q.s2=Q.r[0]*Q.r[1]+Q.r[0]*Q.r[2]+Q.r[1]*Q.r[2];Q.s3=Q.r[0]*Q.r[1]*Q.r[2];
+const Rq=t=>Q.c*(t**4/4-Q.s1*t**3/3+Q.s2*t**2/2-Q.s3*t)+Q.d,dRq=t=>Q.c*(t-Q.r[0])*(t-Q.r[1])*(t-Q.r[2]);
+const GD={rho:0.03,path:[0.3],run:null};
+const sup=n=>String(n).split('').map(c=>'⁰¹²³⁴⁵⁶⁷⁸⁹'[+c]).join('');
+function gdStep(){const t=GD.path[GD.path.length-1];if(!isFinite(t)||Math.abs(t)>50)return false;GD.path.push(t-GD.rho*dRq(t));return true;}
+function drawGD(){
+  const c=$('cGD'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const A=axes(ctx,w,h,{xlim:[-1.05,1.45],ylim:[0,6.2],xt:[-1,-0.5,0,0.5,1],yt:[0,1,2,3,4,5,6],xl:'θ',yl:'R(θ)',L:40,B:40});
+  GD.A=A;A.clip();
+  const p=[];for(let t=-1.05;t<=1.45;t+=0.005)p.push([A.px(t),A.py(Rq(t))]);line(ctx,p,css('--orange'),2.4);
+  const P=GD.path,last=P.length-1;
+  for(let i=1;i<=last;i++){const a=P[i-1],b=P[i];if(!isFinite(b)||Math.abs(b)>5)break;
+    ctx.globalAlpha=.7;line(ctx,[[A.px(a),A.py(Rq(a))],[A.px(b),A.py(Rq(b))]],css('--navy'),1.2,[3,3]);ctx.globalAlpha=1;}
+  P.forEach((t,i)=>{if(!isFinite(t)||Math.abs(t)>5)return;dot(ctx,A.px(t),A.py(Rq(t)),i===last?5.5:3.5,i===last?css('--red'):css('--ink'));});
+  A.unclip();
+  const t=P[last];
+  if(isFinite(t)&&Math.abs(t)<=5){const s=dRq(t);label(ctx,`θ${sup(last)} = ${fmt(t,3)}, R = ${fmt(Rq(t),3)}, slope ${fmt(s,2)}, next step δ = ${fmt(-GD.rho*s,3)}`,A.L+6,A.T+12,css('--ink'),'left');}
+  else label(ctx,`θ has left the plot after ${last} steps: ρ is too large`,A.L+6,A.T+12,css('--red'),'left');
+  label(ctx,'local min −0.46',A.px(-0.46),A.py(Rq(-0.46))+16,css('--muted'),'center');label(ctx,'global min 1.02',A.px(1.02),A.py(Rq(1.02))+16,css('--muted'),'center');
+}
+function gdReset(t){if(GD.run){clearInterval(GD.run);GD.run=null;$('gRun').classList.remove('on');}GD.path=[t??GD.path[0]];drawGD();}
+$('gdBar').querySelectorAll('button[data-r]').forEach(b=>b.onclick=()=>{GD.rho=+b.dataset.r;$('gdBar').querySelectorAll('button[data-r]').forEach(x=>x.classList.toggle('on',x===b));gdReset();});
+$('gStep').onclick=()=>{gdStep();drawGD();};
+$('gRun').onclick=()=>{if(GD.run){gdReset(GD.path[0]);return;}gdReset();$('gRun').classList.add('on');
+  GD.run=setInterval(()=>{const ok=gdStep();const P=GD.path,n=P.length;drawGD();
+    if(!ok||n>60||(n>2&&Math.abs(P[n-1]-P[n-2])<1e-4)){clearInterval(GD.run);GD.run=null;$('gRun').classList.remove('on');}},350);};
+$('gReset').onclick=()=>gdReset();
+$('cGD').addEventListener('click',e=>{const A=GD.A;if(!A)return;const r=$('cGD').getBoundingClientRect(),x=e.clientX-r.left;
+  const t=-1.05+(x-A.L)/A.pw*2.5;if(t<-1.05||t>1.45)return;gdReset(Math.round(t*100)/100);});
+
+/* the box in words */
+function narrate(){const n=D.train.length,K=N.K,tr=H.tr.at(-1),va=H.va.at(-1),b=H.best;
+  if(H.blown)return'<b>The loss has exploded.</b> With this learning rate each step overshoots so far that the next slope is even larger, and the weights run off to infinity. Lower &rho; and press Restart.';
+  let t=S.epoch===0?`<b>Before training.</b> The ${K} units start with random weights: each kink sits at a random age, and the fit is a random sum of ${K} hinges${S.act==='sigmoid'?' (smooth steps)':''}. Press Train or One epoch.`
+    :`<b>Epoch ${nf(S.epoch)}.</b> ${nf(S.epoch*Math.ceil(n/32))} gradient steps so far on ${n} training workers. Training MSE ${nf(tr)}, validation MSE ${nf(va)}.`;
+  if(S.epoch>0&&b){const be=b.snap.epoch;
+    if(S.epoch-be>Math.max(50,be)&&va>b.va*1.04)t+=` The validation error was lowest at epoch ${nf(be)} (${nf(b.va)}) and has risen by ${fmt(100*(va/b.va-1),0)}% since, while the training error kept falling: the network is fitting the noise of its ${n} workers. Early stopping would keep the weights of epoch ${nf(be)}.`;
+    else if(S.epoch-be<=5)t+=' The validation error is still falling, so training is still helping.';
+    else t+=` The validation error has been flat since about epoch ${nf(be)}: more epochs no longer help, but they do not hurt yet either.`;}
+  if(S.off.size)t+=` Units switched off: ${[...S.off].map(k=>k+1).join(', ')}. Without them the training MSE is ${nf(mseOn(D.train,S.off))} instead of ${nf(mseOn(D.train))}.`;
+  return t;}
+
+function drawStatic(){
+  $('vK').textContent=S.K;$('vN').textContent=NS[S.n];$('vLR').textContent=LRS[S.lr];$('vLam').textContent=LAMS[S.lam];$('vSeed').textContent=S.seed;$('vSp').textContent=S.speed===5?'as fast as it goes':SPEEDS[S.speed]+' per frame';
+  $('rE').textContent=nf(S.epoch);$('rTr').textContent=nf(H.tr.at(-1));$('rVa').textContent=nf(H.va.at(-1));$('rTe').textContent=nf(H.te.at(-1));
+  $('narr').innerHTML=narrate();
+  const a0=x0(),xa=toX(a0),g=ACT[S.act].g,K=N.K;
+  $('fNet').textContent=`K = ${K}: ${3*K+1} parameters (w_k0, w_k1, β_k for each unit, plus β₀). At age ${Math.round(a0)}: f = ${fmt(WM+WS*N.b0,1)} + the ${K} contributions = ${fmt(wageAt(a0),1)} thousand dollars`;
+  let fire=0;for(let k=0;k<K;k++)if(!S.off.has(k)&&g(N.w0[k]+N.w1[k]*xa)>(S.act==='relu'?1e-9:0.5))fire++;
+  $('fAct').textContent=S.act==='relu'?`at age ${Math.round(a0)}, ${fire} of ${K} units fire (z > 0) and ${K-fire} are silent (z ≤ 0, so A = 0 and they add nothing)`
+    :`at age ${Math.round(a0)}, ${fire} of ${K} units are above one half (firing), the rest closer to 0 (silent)`;
+  let pen=0;for(let k=0;k<K;k++)pen+=(N.w1[k]**2+N.b[k]**2);
+  const half=H.tr.at(-1)/WS/WS/2;
+  $('fObj').textContent=`on standardised wages: ${fmt(half,4)} + ${LAMS[S.lam]} × ${fmt(pen,2)} = ${fmt(half+LAMS[S.lam]*pen,4)} (training MSE ${nf(H.tr.at(-1))} in dollars squared)`;
+  const n=D.train.length,spe=Math.ceil(n/32);
+  $('fGD').textContent=`ρ = ${LRS[S.lr]}: ${spe} step${spe>1?'s':''} per epoch on ${n} workers, ${nf(S.epoch*spe)} steps so far, each one moving ${3*K+1} parameters at once`;
+  drawChips();drawFit();drawUnits();drawNet();drawErr();
+}
+function drawAll(){drawStatic();drawGD();}
+
+/* training loop: as many epochs as fit in about 14 ms per frame */
+let loop=null;
+const SPEEDS=[1,2,5,20,100,Infinity];
+function frame(){const t0=performance.now(),lim=SPEEDS[S.speed];let k=0;do{epoch();k++;}while(k<lim&&performance.now()-t0<14&&!H.blown&&S.epoch<200000);
+  drawStatic();if(H.blown||S.epoch>=200000){stopTrain();return;}loop=requestAnimationFrame(frame);}
+function startTrain(){if(loop)return;$('bTrain').textContent='Pause';$('bTrain').classList.add('on');loop=requestAnimationFrame(frame);}
+function stopTrain(){if(loop){cancelAnimationFrame(loop);loop=null;}$('bTrain').textContent='Train';$('bTrain').classList.remove('on');}
+function rebuild(newSplit){stopTrain();if(newSplit)split();S.off=new Set();S.hover=-1;init();drawStatic();}
+$('bTrain').onclick=()=>{if(loop)stopTrain();else startTrain();};
+$('bStep').onclick=()=>{stopTrain();epoch();if(H.ep.at(-1)!==S.epoch)record();drawStatic();};
+$('bRestart').onclick=()=>{S.seed=S.seed%20+1;$('sSeed').value=S.seed;rebuild(true);};
+$('bBest').onclick=()=>{if(!H.best)return;stopTrain();restore(H.best.snap);S.epoch=H.best.snap.epoch;
+  const keep=H.ep.findIndex(e=>e>S.epoch);if(keep>0)['ep','tr','va','te'].forEach(k=>H[k]=H[k].slice(0,keep));drawStatic();};
+$('bOver').onclick=()=>{S.K=20;S.n=0;S.lr=4;S.lam=0;S.seed=7;S.act='relu';S.speed=4;syncInputs();rebuild(true);startTrain();};
+$('bDef').onclick=()=>{S.K=6;S.n=3;S.lr=3;S.lam=0;S.seed=3;S.act='relu';S.speed=1;syncInputs();rebuild(true);};
+function syncInputs(){$('sSp').value=S.speed;$('sK').value=S.K;$('sN').value=S.n;$('sLR').value=S.lr;$('sLam').value=S.lam;$('sSeed').value=S.seed;setActUI();}
+function setActUI(){$('aRelu').classList.toggle('on',S.act==='relu');$('aSig').classList.toggle('on',S.act==='sigmoid');
+  $('fActT').textContent=S.act==='relu'?'The activation (ReLU)':'The activation (sigmoid)';
+  $('fActK').dataset.tex=S.act==='relu'?'A_k = g(z) = (z)_+ = \\max(0, z)':'A_k = g(z) = \\frac{e^z}{1 + e^z} = \\frac{1}{1 + e^{-z}}';if(window.katex)renderTex();}
+$('aRelu').onclick=()=>{S.act='relu';setActUI();rebuild(false);};
+$('aSig').onclick=()=>{S.act='sigmoid';setActUI();rebuild(false);};
+$('sK').addEventListener('input',e=>{S.K=+e.target.value;rebuild(false);});
+$('sN').addEventListener('input',e=>{S.n=+e.target.value;rebuild(true);});
+$('sSeed').addEventListener('input',e=>{S.seed=+e.target.value;rebuild(true);});
+/* learning rate and penalty change the next steps, not the weights so far */
+$('sLR').addEventListener('input',e=>{S.lr=+e.target.value;H.blown=false;drawStatic();});
+$('sLam').addEventListener('input',e=>{S.lam=+e.target.value;drawStatic();});
+$('sSp').addEventListener('input',e=>{S.speed=+e.target.value;drawStatic();});
+/* following one age, and switching units off from the network */
+$('cFit').addEventListener('pointermove',e=>{const r=$('cFit').getBoundingClientRect(),L=50,R=12,pw=r.width-L-R;
+  const a=AR[0]+(e.clientX-r.left-L)/pw*(AR[1]-AR[0]);S.x0=Math.max(18,Math.min(80,a));if(!loop)drawStatic();});
+$('cFit').addEventListener('pointerleave',()=>{S.x0=null;if(!loop)drawStatic();});
+$('cNet').addEventListener('pointermove',e=>{const r=$('cNet').getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  const hit=NET_NODES.find(n=>Math.hypot(n.x-x,n.y-y)<=n.r+3);const k=hit?hit.k:-1;$('cNet').style.cursor=hit?'pointer':'default';if(k!==S.hover){S.hover=k;if(!loop)drawStatic();}});
+$('cNet').addEventListener('pointerleave',()=>{if(S.hover!==-1){S.hover=-1;if(!loop)drawStatic();}});
+$('cNet').addEventListener('click',e=>{if(S.hover>=0)toggleUnit(S.hover);});
+split();init();
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>
