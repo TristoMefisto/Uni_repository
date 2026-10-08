@@ -133,6 +133,74 @@ header p{max-width:none}
 #chips button{background:var(--panel);font-weight:500}
 #cGD{cursor:crosshair}
 .note b{color:var(--ink);font-weight:500}
+[hidden]{display:none!important}
+#pills{margin-top:16px}
+#pills button{font-weight:500;padding:8px 16px}
+.fbar{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px}
+.fbar .tabs{margin-top:0;align-items:center}
+.fbar .lab{font-size:.9rem;color:var(--muted);margin-right:4px}
+.fbar .controls{margin-top:12px}
+.fbar .buttons{margin-top:14px}
+.xin{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin-top:14px}
+.xin label{display:flex;align-items:center;gap:7px;font-size:1rem;color:var(--navy);font-weight:500}
+.xin button{font-size:.85rem;padding:4px 11px}
+.fx input[data-step],.fbar input[data-step]{width:5.6em;font:inherit;font-size:.95rem;font-variant-numeric:tabular-nums;text-align:right;padding:4px 6px;border:1px solid var(--rule);border-radius:5px;background:var(--bg);color:var(--ink)}
+.fbar input[data-step]{color:var(--navy);font-weight:500}
+.fx .narr{margin-top:14px}
+.fx .narr.walking{position:sticky;top:6px;z-index:3;box-shadow:0 3px 14px rgba(0,0,0,.14);border-color:var(--orange)}
+.narr .nb{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.narr .nb button{font-size:.82rem;padding:3px 11px;border-radius:14px}
+.narr .ln{color:var(--muted);font-size:.85rem;margin-right:6px}
+.fcols,.frow{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr)}
+.fcols{margin-top:18px;font-size:.76rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.fcols span{padding:0 16px}
+.frow{background:var(--panel);border:1px solid var(--rule);border-radius:8px;margin-top:8px;overflow:hidden}
+.fh{grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;margin:0;padding:9px 16px;font-size:1rem;font-weight:600;color:var(--ink);background:var(--fill);border-bottom:1px solid var(--rule)}
+.fh .sn{width:22px;height:22px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;display:inline-flex;align-items:center;justify-content:center}
+.fh .sub{font-weight:400;font-size:.88rem;color:var(--muted)}
+.fl{padding:10px 16px 16px;border-right:1px solid var(--rule);min-width:0;background:color-mix(in srgb,var(--fill) 35%,var(--panel))}
+.fr{padding:14px 16px 16px;min-width:0;overflow-x:auto}
+.fl .n{font-size:.86rem;color:var(--muted);margin:.4rem 0 0;line-height:1.45}
+.fl .k{overflow-x:auto;overflow-y:hidden;font-size:.98rem}
+.fl .k .katex-display{margin:.4em 0}
+.fl canvas,.fr canvas{display:block;width:100%;margin-top:10px;touch-action:none}
+#cxF{cursor:ew-resize;margin-top:0}
+#cxNet{cursor:default}
+.obs{font-size:.95rem;margin-bottom:10px}
+.hint{font-size:.84rem;color:var(--muted);margin-top:10px}
+table.eq{border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:.97rem}
+table.eq td,table.eq th{padding:7px 8px;white-space:nowrap;text-align:left;vertical-align:middle}
+table.eq th{font-size:.8rem;font-weight:500;color:var(--muted);text-align:right;line-height:1.25}
+table.eq th span{display:block;font-size:.74rem;font-weight:400}
+table.eq th.grp{text-align:center;border-bottom:1px solid var(--rule);font-size:.74rem;text-transform:uppercase;letter-spacing:.05em}
+table.eq tbody tr+tr td{border-top:1px solid color-mix(in srgb,var(--rule) 70%,transparent)}
+table.eq td.e{color:var(--muted);padding:7px 2px}
+table.eq td.lhs{font-weight:600;color:var(--uc,var(--ink));border-left:4px solid var(--uc,var(--rule));padding-left:11px}
+table.eq td.res{font-weight:600;color:var(--uc,var(--ink));text-align:right}
+table.eq td.run{color:var(--muted);text-align:right}
+table.eq th.r{text-align:right}
+table.eq .w{color:var(--uc,var(--ink))}
+table.eq .x,.obs .x{color:var(--navy);font-weight:500}
+table.eq .a{font-weight:500}
+table.eq .m{color:var(--muted)}
+table.eq tr.hl td{background:color-mix(in srgb,var(--uc) 10%,transparent)}
+table.eq tr.cur td{background:var(--hl)}
+table.eq tr.pend{opacity:.4}
+table.eq tr.sil td.res{color:var(--muted);font-weight:500}
+table.eq tr.tot td{border-top:2px solid var(--rule);font-size:1.02rem}
+table.eq tr.tot td.res{color:var(--orange);font-size:1.15rem}
+table.ed td{padding:5px 6px}
+table.ed td.lhs{font-weight:500}
+table.ed input{color:var(--uc,var(--ink))}
+.tg{display:inline-block;font-size:.76rem;padding:1px 8px;border-radius:10px;font-weight:500;white-space:nowrap}
+.tg.on{background:color-mix(in srgb,var(--uc) 16%,transparent);color:var(--uc)}
+.tg.off{background:var(--fill);color:var(--muted)}
+.fbig{margin-top:14px;display:inline-flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:9px 16px;border:2px solid var(--orange);border-radius:8px;font-size:1.05rem}
+.fbig b{font-size:1.65rem;font-variant-numeric:tabular-nums;color:var(--orange)}
+.fbig span{color:var(--muted);font-size:.9rem}
+.fbig.pend{opacity:.4}
+.fbig.cur{background:var(--hl)}
+@media (max-width:900px){.fcols{display:none}.frow{grid-template-columns:minmax(0,1fr)}.fl{border-right:none;border-bottom:1px solid var(--rule)}}
 
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
@@ -141,11 +209,13 @@ header p{max-width:none}
 <body>
 <div class="wrap">
 <header>
-  <h1>A single-layer neural network, trained live</h1>
-  <p>The Wage data of the R lab: the wage (in thousands of dollars) of 3,000 male workers against their age, the same data as the splines page. A neural network with one hidden layer of K units learns the curve in the browser by stochastic gradient descent. 1,000 workers are kept aside as a validation set (for early stopping) and 1,000 as a test set; the network is trained on n of the remaining ones. Every number on the page comes from the network as it is right now, so the page changes while it trains.</p>
+  <h1>A single-layer neural network<span id="h1s">, trained live</span></h1>
+  <p data-p="train">The Wage data of the R lab: the wage (in thousands of dollars) of 3,000 male workers against their age, the same data as the splines page. A neural network with one hidden layer of K units learns the curve in the browser by stochastic gradient descent. 1,000 workers are kept aside as a validation set (for early stopping) and 1,000 as a test set; the network is trained on n of the remaining ones. Every number on the page comes from the network as it is right now, so the page changes while it trains.</p>
+  <p data-p="fwd" hidden>One prediction of a single-layer network, computed by hand with a real activation (the ReLU or the sigmoid, not the z&sup2; of the slides' example). One observation with p predictors goes in. Each of the K hidden units takes its own linear combination of the predictors and passes it through g, and the output is a linear combination of the K activations. The left column has the formulas, the right one the same formulas with the numbers in. Set the size of the network and the observation at the top, type any weight in the table, or walk through the computation one line at a time.</p>
 </header>
-<ol class="steps"><li>Press Train. Watch the hidden units (top right) move their kinks and slopes, and the fit (top left), which is their weighted sum, bend into the shape of the data.</li><li>Press "Overfit": 30 workers and 20 units, trained for long. The training error keeps falling while the validation error turns up. Then try early stopping, or a ridge penalty.</li><li>Move the mouse over the fit to see which units fire at each age (the network, bottom left), and click a unit to switch it off.</li></ol>
-<div class="main"><div class="col">
+<div class="tabs" id="pills"><button id="pTrain" class="on">Trained live on the Wage data</button><button id="pFwd">One prediction by hand</button></div>
+<ol class="steps" data-p="train"><li>Press Train. Watch the hidden units (top right) move their kinks and slopes, and the fit (top left), which is their weighted sum, bend into the shape of the data.</li><li>Press "Overfit": 30 workers and 20 units, trained for long. The training error keeps falling while the validation error turns up. Then try early stopping, or a ridge penalty.</li><li>Move the mouse over the fit to see which units fire at each age (the network, bottom left), and click a unit to switch it off.</li></ol>
+<div class="main" data-p="train"><div class="col">
 <div class="tabs"><button id="aRelu" class="on">ReLU activation</button><button id="aSig">Sigmoid activation</button></div>
 <section class="controls" aria-label="Network">
   <div class="slider"><label for="sK">Hidden units K <b id="vK"></b></label><input id="sK" type="range" min="1" max="20" step="1" value="6"></div>
@@ -193,6 +263,59 @@ header p{max-width:none}
   <p><b>What the network is.</b> Each hidden unit takes a linear combination of the input, w<sub>k0</sub> + w<sub>k1</sub> age, and passes it through g. With ReLU this gives a hinge: flat at 0 on one side of the age &minus;w<sub>k0</sub>/w<sub>k1</sub>, a straight line on the other. The output layer is a linear regression on the K activations, so the fit is a sum of K hinges plus a constant, which is a piecewise-linear curve with (at most) K kinks. That is a linear spline, the same family as on the splines page, with one difference: there the knots were fixed before fitting, here they are parameters that gradient descent moves around. With the sigmoid each unit is a smooth step instead, and the fit is a sum of K smooth steps. Without a nonlinear g the units would add up to a straight line, whatever K is.</p>
   <p><b>How it is trained.</b> Age and wage are standardised inside the fit (every number shown is back in years and dollars), and the starting weights put each unit's kink at a random age inside the data. An epoch shuffles the training workers, cuts them into minibatches of 32 and takes one gradient step per minibatch, so with n = 1,000 an epoch is 32 steps and with n = 30 it is one step. This is the stochastic gradient descent of the slides: each step uses the slope on a minibatch, not on the whole training set, which is cheaper and noisier. The objective is not convex, so different seeds (different starting weights) end in different fits with similar errors.</p>
   <p><b>Overfitting, early stopping, ridge.</b> With 400 or 1,000 workers and a few units the network cannot overfit much: the three errors move together. With 30 workers and 20 units it has 61 parameters for 30 points, and the late epochs fit the noise of those 30 wages: the training error keeps falling while the validation error rises. Two fixes from the slides. Slow learning with early stopping keeps the weights of the epoch with the lowest validation error (the button jumps back to them), and the test error then says how well that choice does on workers used for nothing else. A ridge penalty shrinks the weights towards 0 and keeps the units from bending sharply around single points. The wage data are noisy (the MSE of the best fits stays around 1,600, a typical error of about 40 thousand dollars), so the validation and test errors also differ a little between seeds just because each set gets a different share of the very high earners.</p>
+</div>
+</div>
+<ol class="steps" data-p="fwd" hidden><li>Read down the right column: step 1 multiplies each predictor by its weight and adds up, step 2 passes each sum through g, step 3 adds up the activations times their &beta;. Hover a unit anywhere to follow it through every step.</li><li>Press "Walk through" and then Next (or the &rarr; key): the lines fill in one at a time, with what each one does in words.</li><li>Change p, K or the activation, type any weight or predictor, or drag the orange point in step 4 to move X<sub>1</sub>: every number follows.</li></ol>
+<section class="fbar" data-p="fwd" hidden aria-label="The network and the observation">
+  <div class="tabs"><span class="lab">Activation g</span><button id="xRelu" class="on">ReLU: g(z) = max(0, z)</button><button id="xSig">Sigmoid: g(z) = 1 / (1 + e<sup>&minus;z</sup>)</button></div>
+  <div class="controls">
+    <div class="slider"><label for="xP">Predictors p <b id="vxP"></b></label><input id="xP" type="range" min="1" max="4" step="1" value="2"></div>
+    <div class="slider"><label for="xK">Hidden units K <b id="vxK"></b></label><input id="xK" type="range" min="1" max="20" step="1" value="3"></div>
+    <div class="slider"><label for="xS">Random weights (seed) <b id="vxS"></b></label><input id="xS" type="range" min="1" max="30" step="1" value="13"></div>
+  </div>
+  <div class="xin" id="xIn"></div>
+  <div class="buttons">
+    <button class="primary" id="xWalk">Walk through it, one line at a time</button>
+    <button id="xSlides">The slides' weights, with a real g</button>
+    <button id="xWage">The network trained on Wage (first pill)</button>
+  </div>
+</section>
+<div id="fx" class="fx" data-p="fwd" hidden>
+<div class="stats">
+  <div class="stat"><span class="small">Parameters</span><span class="big" id="xrPar"></span></div>
+  <div class="stat"><span class="small" id="xrFireL">Units firing</span><span class="big" id="xrFire"></span></div>
+  <div class="stat"><span class="small">The prediction f(X)</span><span class="big" id="xrF"></span></div>
+  <div class="stat"><span class="small">Weights</span><span class="big long" id="xrW"></span></div>
+</div>
+<div class="narr" id="xNarr" aria-live="polite"></div>
+<div class="fcols"><span>The formulas</span><span>The same, with the numbers</span></div>
+<div class="frow"><h3 class="fh"><span class="sn">0</span>The observation and the weights<span class="sub">what goes in, and the parameters of the network</span></h3>
+  <div class="fl"><div class="n">The whole network in one formula: p predictors in, K hidden units, one output</div>
+    <div class="k" data-tex='f(X) = \beta_0 + \sum_{k=1}^{K} \beta_k \, g\Big(w_{k0} + \sum_{j=1}^{p} w_{kj} X_j\Big)'></div>
+    <div class="n" id="xL0"></div><canvas id="cxNet"></canvas></div>
+  <div class="fr"><div class="obs" id="xObs"></div><table class="eq ed" id="xTab"></table>
+    <div class="hint">Type any number in the table (the up and down arrow keys nudge it). Each row is one hidden unit: its intercept, one weight per predictor, and the weight &beta;<sub>k</sub> its activation gets in the output.</div></div></div>
+<div class="frow"><h3 class="fh"><span class="sn">1</span>What each unit receives<span class="sub">a linear combination of the predictors, one per unit</span></h3>
+  <div class="fl"><div class="k" data-tex='z_k = w_{k0} + \sum_{j=1}^{p} w_{kj} X_j \qquad k = 1, \dots, K'></div>
+    <div class="n" id="xL1n"></div><div class="k" id="xL1"></div>
+    <div class="n">All K at once, in matrix form: z = w<sub>0</sub> + W X, with W the K &times; p block of weights in the table above. Nothing nonlinear has happened yet: each z<sub>k</sub> is a linear regression of the predictors.</div></div>
+  <div class="fr" id="xR1"></div></div>
+<div class="frow"><h3 class="fh"><span class="sn">2</span>What each unit sends on<span class="sub">the activation, the only nonlinear step</span></h3>
+  <div class="fl"><div class="k" data-tex='A_k = h_k(X) = g(z_k)'></div><div class="k" id="xL2g"></div>
+    <div class="n" id="xL2n"></div><canvas id="cxG"></canvas></div>
+  <div class="fr" id="xR2"></div></div>
+<div class="frow"><h3 class="fh"><span class="sn">3</span>The output<span class="sub">a linear regression on the K activations</span></h3>
+  <div class="fl"><div class="k" data-tex='f(X) = \beta_0 + \sum_{k=1}^{K} \beta_k A_k'></div><div class="k" id="xL3"></div>
+    <div class="n">The bars add up the prediction: the intercept, then each unit's &beta;<sub>k</sub>A<sub>k</sub> (a silent unit adds nothing), ending at f.</div><canvas id="cxW"></canvas></div>
+  <div class="fr" id="xR3"></div></div>
+<div class="frow"><h3 class="fh"><span class="sn">4</span><span>The same network at every value of X<sub>1</sub></span><span class="sub">drag the orange point</span></h3>
+  <div class="fl"><div class="k" id="xL4"></div><div class="n" id="xL4n"></div></div>
+  <div class="fr"><canvas id="cxF"></canvas></div></div>
+<div class="note">
+  <p><b>What the three steps are.</b> A single-layer network predicts in two stages. The hidden layer builds K new features from the predictors: each unit takes its own linear combination z<sub>k</sub> of the p predictors (step 1) and passes it through the nonlinear activation g (step 2). The output layer is then an ordinary linear regression on these K activations (step 3). The weights w<sub>kj</sub> belong to the hidden layer, one row per unit, the &beta;<sub>k</sub> to the output layer. In training all of them are chosen together to minimise the squared error, by gradient descent (the first pill). Here they are given, and the page only does the forward pass, which is what a fitted network does for every new observation.</p>
+  <p><b>ReLU and sigmoid.</b> With the ReLU, a unit whose z<sub>k</sub> is negative is silent: A<sub>k</sub> = 0, and its &beta;<sub>k</sub> drops out of this prediction. Which units are silent changes from one observation to the next, so as a function of one predictor f is piecewise linear, with a kink wherever a unit switches on or off (step 4). The sigmoid never switches a unit fully off: every A<sub>k</sub> is strictly between 0 and 1, and f is smooth. Without a nonlinear g the three steps would collapse into a single linear regression of the predictors, whatever K is.</p>
+  <p><b>The slides' example.</b> The slides use g(z) = z&sup2; to show that two units can represent the interaction X<sub>1</sub>X<sub>2</sub>: with their weights, &frac14;(X<sub>1</sub> + X<sub>2</sub>)&sup2; &minus; &frac14;(X<sub>1</sub> &minus; X<sub>2</sub>)&sup2; = X<sub>1</sub>X<sub>2</sub>. Networks in practice use the ReLU or the sigmoid. The preset loads the slides' weights with a real g, and the box at the top says what the quadratic would have given: the same weights compute a different function once g changes.</p>
+  <p><b>Rounding and the trained network.</b> As on paper, every intermediate number is rounded to 3 decimals and the next line uses the rounded value (e<sup>&minus;z</sup> to 4 significant digits), so each line can be checked with a calculator. The trained-network preset takes the weights of the first pill. That network was fitted on standardised age and wage, so its weights are converted back to years and thousands of dollars first (w<sub>k1</sub> divided by the standard deviation of age, w<sub>k0</sub> shifted by the mean, the &beta; multiplied by the standard deviation of wage, &beta;<sub>0</sub> shifted by the mean wage) and rounded to a few decimals: the hand computation then matches the curve of the first pill up to that rounding.</p>
 </div>
 </div>
 
@@ -493,6 +616,306 @@ $('cNet').addEventListener('click',e=>{if(S.hover>=0)toggleUnit(S.hover);});
 split();init();
 hookTheme(drawAll);
 drawAll();
+
+/* ---------- The second pill: one prediction by hand ----------
+   The same kind of network written out number by number, for one observation with p predictors:
+   z_k = w_k0 + sum_j w_kj X_j,  A_k = g(z_k),  f(X) = beta_0 + sum_k beta_k A_k.
+   Every intermediate number is rounded to 3 decimals and the next line uses the rounded value, as on paper. */
+const FX={p:2,K:3,act:'relu',seed:13,x:[1.5,-0.5,2,0.5],W:[],B:[],names:null,mode:'random',edited:false,walk:-1,hk:-1,info:'',pill:'train'};
+const rd=(v,d)=>(Math.round(v*10**d)/10**d)||0;
+const mn=s=>String(s).replace(/-/g,'−');
+const pv=v=>mn(rd(v,5));                          /* a weight or a predictor, as typed */
+const pp=v=>v<0?'('+pv(v)+')':pv(v);              /* the same, in brackets when negative */
+const t3=v=>mn(fmt(v,3));
+const sgn=(v,first)=>first?t3(v):(v<0?' − '+t3(-v):' + '+t3(v));
+const ev=e=>e>=1e4?Math.round(e).toLocaleString('en-US'):mn(e);
+const ix=(k,j)=>k+1>=10?`${k+1},${j}`:`${k+1}${j}`;
+const isAge=j=>!!(FX.names&&FX.names[j]==='age');
+const xh=j=>isAge(j)?'age':`X<sub>${j+1}</sub>`;
+const xt=j=>isAge(j)?'\\text{age}':`X_{${j+1}}`;
+const num=s=>{const t=String(s).trim().replace(',','.').replace(/[−–]/g,'-');return t===''||t==='-'||t==='.'?NaN:+t;};
+const tc=(c,s)=>`\\textcolor{${c}}{${s}}`;
+
+function fxSeedWeights(){const rng=mulberry32(FX.seed*2654435+11);FX.B=[rd((rng()-.5)*2,1)];FX.W=[];
+  for(let k=0;k<20;k++){const row=[];for(let j=0;j<=4;j++)row.push(rd((rng()-.5)*(j?3:2),1));FX.W.push(row);FX.B.push(rd((rng()-.5)*4,1));}
+  FX.names=null;FX.mode='random';FX.edited=false;FX.info='';}
+
+function fxCalc(){const p=FX.p,K=FX.K,x=FX.x.slice(0,p),relu=FX.act==='relu',U=[];
+  for(let k=0;k<K;k++){const w=FX.W[k].slice(0,p+1),pr=x.map((xj,j)=>rd(w[j+1]*xj,3));
+    const z=rd(w[0]+pr.reduce((s,v)=>s+v,0),3);let e=null,A;
+    if(relu)A=z>0?z:0;else{e=+Math.exp(-z).toPrecision(4);A=rd(1/(1+e),3);}
+    U.push({k,w,pr,z,e,A,b:FX.B[k+1],c:rd(FX.B[k+1]*A,3)});}
+  let run=FX.B[0];for(const u of U){run=rd(run+u.c,3);u.run=run;}
+  /* what the slides' g(z) = z^2 would give with the same weights */
+  let quad=FX.B[0];for(let k=0;k<K;k++){let z=FX.W[k][0];for(let j=0;j<p;j++)z+=FX.W[k][j+1]*x[j];quad+=FX.B[k+1]*z*z;}
+  return{p,K,x,U,b0:FX.B[0],f:rd(run,3),relu,quad};}
+
+/* the walkthrough: one line at a time, step 1 for every unit, step 2 for every unit, then the output */
+function fxOrder(K){const o=[];for(let k=0;k<K;k++)o.push([1,k]);for(let k=0;k<K;k++)o.push([2,k]);o.push([3,-1]);for(let k=0;k<K;k++)o.push([3,k]);o.push([3,'f']);return o;}
+const fxCur=()=>FX.walk<0?null:fxOrder(FX.K)[FX.walk];
+function fxSt(s,k){if(FX.walk<0)return'done';const i=fxOrder(FX.K).findIndex(o=>o[0]===s&&o[1]===k);return i<FX.walk?'done':i===FX.walk?'cur':'pend';}
+function fxEmph(){const c=fxCur();if(c&&typeof c[1]==='number'&&c[1]>=0)return c[1];return FX.hk<FX.K?FX.hk:-1;}
+const fxFocus=()=>Math.max(0,fxEmph());
+const fxHide=(s,st)=>st==='pend'?'<span class="m">…</span>':s;
+const fxTr=(k,cls,inner)=>`<tr class="u ${cls}${fxEmph()===k?' hl':''}" data-k="${k}" style="--uc:${ucol(k)}">${inner}</tr>`;
+
+/* ----- the right column: the numbers ----- */
+function fxTable(){const p=FX.p,K=FX.K,wage=FX.mode==='wage';
+  let h=`<thead><tr><th></th><th colspan="${p+1}" class="grp">hidden layer: the weights into each unit</th><th class="grp">output layer</th></tr><tr><th></th><th>w<sub>k0</sub><span>intercept</span></th>`;
+  for(let j=0;j<p;j++)h+=`<th>w<sub>k${j+1}</sub><span>times ${xh(j)}</span></th>`;
+  h+=`<th>&beta;<sub>k</sub><span>times A<sub>k</sub></span></th></tr></thead><tbody>`;
+  h+=`<tr><td class="lhs">output intercept &beta;<sub>0</sub></td><td colspan="${p+1}"></td><td><input type="text" inputmode="decimal" data-step="${wage?1:0.1}" data-b="0" value="${FX.B[0]}" aria-label="beta 0"></td></tr>`;
+  for(let k=0;k<K;k++){h+=`<tr class="u" data-k="${k}" style="--uc:${ucol(k)}"><td class="lhs">unit ${k+1}</td>`;
+    for(let j=0;j<=p;j++)h+=`<td><input type="text" inputmode="decimal" data-step="${wage?(j?0.001:0.1):0.1}" data-w="${k},${j}" value="${FX.W[k][j]}" aria-label="w ${k+1} ${j}"></td>`;
+    h+=`<td><input type="text" inputmode="decimal" data-step="${wage?1:0.1}" data-b="${k+1}" value="${FX.B[k+1]}" aria-label="beta ${k+1}"></td></tr>`;}
+  $('xTab').innerHTML=h+'</tbody>';}
+
+function fxR1(C){let h='<table class="eq"><tbody>';
+  for(const u of C.U){const st=fxSt(1,u.k);
+    const sub=`<span class="w">${pv(u.w[0])}</span>`+C.x.map((xj,j)=>` + <span class="w">${pp(u.w[j+1])}</span><span class="m"> × </span><span class="x">${pp(xj)}</span>`).join('');
+    const prods=sgn(u.w[0],true)+u.pr.map(v=>sgn(v)).join('');
+    h+=fxTr(u.k,st,`<td class="lhs">z<sub>${u.k+1}</sub></td><td class="e">=</td><td>${fxHide(sub,st)}</td><td class="e">=</td><td>${fxHide(prods,st)}</td><td class="e">=</td><td class="res">${fxHide(t3(u.z),st)}</td>`);}
+  return h+'</tbody></table>';}
+
+function fxR2(C){let h='<table class="eq"><tbody>';
+  for(const u of C.U){const st=fxSt(2,u.k),zs=`<span class="a">${t3(u.z)}</span>`;let cells;
+    if(C.relu)cells=`<td>${fxHide(`max(0, ${zs})`,st)}</td><td class="e">=</td><td class="res">${fxHide(u.A>0?t3(u.A):'0',st)}</td><td>${st==='pend'?'':u.z>0?'<span class="tg on">fires: z &gt; 0</span>':'<span class="tg off">silent: z ≤ 0</span>'}</td>`;
+    else cells=`<td>${fxHide(`1 / (1 + e<sup>${mn(t3(-u.z))}</sup>)`,st)}</td><td class="e">=</td><td>${fxHide(`1 / (1 + ${ev(u.e)})`,st)}</td><td class="e">=</td><td class="res">${fxHide(t3(u.A),st)}</td><td>${st==='pend'?'':u.A>=.5?'<span class="tg on">above ½: z &gt; 0</span>':'<span class="tg off">below ½: z &lt; 0</span>'}</td>`;
+    h+=fxTr(u.k,st+(C.relu&&u.A===0?' sil':''),`<td class="lhs">A<sub>${u.k+1}</sub></td><td class="e">=</td>`+cells);}
+  return h+'</tbody></table>';}
+
+const fxUnitsTxt=()=>FX.mode==='wage'&&!FX.edited?` thousand dollars, for a worker aged ${pv(FX.x[0])}`:'';
+function fxR3(C){const s0=fxSt(3,-1),sf=fxSt(3,'f');
+  let h=`<table class="eq"><thead><tr><th></th><th></th><th></th><th></th><th class="r">adds</th><th class="r">running total</th></tr></thead><tbody>`;
+  h+=`<tr class="u ${s0}"><td class="lhs">&beta;<sub>0</sub></td><td class="e">=</td><td>${fxHide('<span class="m">the intercept, where the sum starts</span>',s0)}</td><td class="e"></td><td class="res">${fxHide(t3(C.b0),s0)}</td><td class="run">${fxHide(t3(C.b0),s0)}</td></tr>`;
+  for(const u of C.U){const st=fxSt(3,u.k);
+    h+=fxTr(u.k,st+(C.relu&&u.A===0?' sil':''),`<td class="lhs">&beta;<sub>${u.k+1}</sub>A<sub>${u.k+1}</sub></td><td class="e">=</td><td>${fxHide(`<span class="w">${pp(u.b)}</span><span class="m"> × </span><span class="a">${C.relu&&u.A===0?'0':t3(u.A)}</span>`,st)}</td><td class="e">=</td><td class="res">${fxHide(C.relu&&u.A===0?'0':t3(u.c),st)}</td><td class="run">${fxHide(t3(u.run),st)}</td>`);}
+  const sum=sgn(C.b0,true)+C.U.map(u=>C.relu&&u.A===0?' + 0':sgn(u.c)).join('');
+  h+=`<tr class="tot ${sf}"><td class="lhs">f(X)</td><td class="e">=</td><td>${fxHide(sum,sf)}</td><td class="e">=</td><td class="res">${fxHide(t3(C.f),sf)}</td><td></td></tr></tbody></table>`;
+  return h+`<div class="fbig ${sf==='done'?'':sf}">f(X) = <b>${sf==='pend'?'?':t3(C.f)}</b><span>${sf==='pend'?'':fxUnitsTxt()}</span></div>`;}
+
+/* ----- the left column: the formulas, written out for the current p and K ----- */
+function fxTex(id,s){const el=$(id);if(el.dataset.last===s)return;el.dataset.last=s;
+  if(window.katex){try{katex.render(s,el,{displayMode:true,throwOnError:false});return;}catch(e){}}el.textContent=s;}
+function fxLeft(C){const p=C.p,K=C.K,k=fxFocus(),c=ucol(k),nv=css('--navy');
+  $('xL0').innerHTML=`Here p = ${p} and K = ${K}: K(p + 1) = ${K*(p+1)} weights into the hidden layer and K + 1 = ${K+1} in the output layer, ${K*(p+2)+1} parameters in all. In the diagram, line widths are the sizes of the weights (blue positive, red negative), and each unit is filled by its activation.`;
+  $('xL1n').innerHTML=`Written out for unit ${k+1}${K>1?' (hover another unit to follow it)':''}:`;
+  let s=`${tc(c,`z_{${k+1}}`)} = ${tc(c,`w_{${ix(k,0)}}`)}`;for(let j=0;j<p;j++)s+=` + ${tc(c,`w_{${ix(k,j+1)}}`)}\\,${tc(nv,xt(j))}`;fxTex('xL1',s);
+  fxTex('xL2g',C.relu?`g(z) = (z)_+ = \\max(0, z) = \\begin{cases} z & \\text{if } z > 0 \\\\ 0 & \\text{if } z \\le 0 \\end{cases}`
+    :`g(z) = \\frac{e^{z}}{1 + e^{z}} = \\frac{1}{1 + e^{-z}}`);
+  $('xL2n').innerHTML=C.relu?'The ReLU keeps a positive z and replaces a negative one by 0. Each dot is one unit at this observation: its z on the horizontal axis, its activation A on the vertical one. The dots on the flat part are the silent units.'
+    :'The sigmoid squeezes any z into (0, 1): near 0 for a very negative z, one half at z = 0, near 1 for a very positive z. Each dot is one unit at this observation, its z across and its activation A up.';
+  let f='f(X) = \\beta_0';
+  if(K<=8)for(let i=0;i<K;i++)f+=` + ${tc(ucol(i),`\\beta_{${i+1}} A_{${i+1}}`)}`;
+  else f+=` + ${tc(ucol(0),'\\beta_1 A_1')} + ${tc(ucol(1),'\\beta_2 A_2')} + \\dots + ${tc(ucol(K-1),`\\beta_{${K}} A_{${K}}`)}`;
+  fxTex('xL3',f);
+  const inner=p===1?`w_{k0} + w_{k1} ${tc(nv,xt(0))}`:p===2?`\\underbrace{w_{k0} + w_{k2}\\, x_2}_{\\text{fixed}} + w_{k1} ${tc(nv,xt(0))}`:`\\underbrace{w_{k0} + \\textstyle\\sum_{j=2}^{${p}} w_{kj}\\, x_j}_{\\text{fixed}} + w_{k1} ${tc(nv,xt(0))}`;
+  fxTex('xL4',`f(${xt(0)}) = \\beta_0 + \\sum_{k=1}^{${K}} \\beta_k \\, g\\big(${inner}\\big)`);
+  const held=p>1?` The other predictors are held at their values (${C.x.slice(1).map((v,j)=>`${xh(j+1)} = ${pv(v)}`).join(', ')}).`:'';
+  $('xL4n').innerHTML=`The thick curve is the prediction as ${xh(0)} moves, the thin ones each unit's contribution &beta;<sub>k</sub>g(z<sub>k</sub>), in the unit's colour.${held} `+
+    (C.relu?`With the ReLU each contribution is a hinge, flat on one side of its kink (the triangles, where z<sub>k</sub> = 0), so f is piecewise linear with at most K kinks: a linear spline whose knots are parameters.`
+      :'With the sigmoid each contribution is a smooth step, so f is smooth.')+
+    (FX.mode==='wage'&&!FX.edited?' The grey dots are the 3,000 workers of the Wage data.':'');}
+
+/* ----- the box at the top: what is happening ----- */
+function fxSay(C,it){const [s,k]=it,u=typeof k==='number'&&k>=0?C.U[k]:null;
+  if(s===1){const terms=C.x.map((xj,j)=>`${xh(j)} times w<sub>${ix(k,j+1)}</sub>: ${pp(xj)} × ${pp(u.w[j+1])} = ${t3(u.pr[j])}`).join('; ');
+    return `<b>Step 1, unit ${k+1}.</b> The unit starts from its intercept w<sub>${ix(k,0)}</sub> = ${pv(u.w[0])} and adds each predictor times its own weight (${terms}). What it receives is the sum, z<sub>${k+1}</sub> = ${t3(u.z)}.`+(k===0?' Nothing nonlinear yet: z is a linear combination of the predictors, like a fitted value of a linear regression.':'');}
+  if(s===2){if(C.relu)return u.z>0?`<b>Step 2, unit ${k+1}.</b> z<sub>${k+1}</sub> = ${t3(u.z)} is positive, so the ReLU lets it through unchanged: A<sub>${k+1}</sub> = ${t3(u.A)}. The unit fires.`
+      :`<b>Step 2, unit ${k+1}.</b> z<sub>${k+1}</sub> = ${t3(u.z)} is ${u.z===0?'zero':'negative'}, so the ReLU sets it to 0: A<sub>${k+1}</sub> = 0. The unit is silent for this observation, and in step 3 it adds nothing, whatever its &beta;.`;
+    return `<b>Step 2, unit ${k+1}.</b> The sigmoid squeezes z<sub>${k+1}</sub> = ${t3(u.z)} into (0, 1). First e<sup>${mn(t3(-u.z))}</sup> = ${ev(u.e)}, then A<sub>${k+1}</sub> = 1 / (1 + ${ev(u.e)}) = ${t3(u.A)}, ${u.A>=.5?'above':'below'} one half because z is ${u.z>=0?'positive':'negative'}. A sigmoid unit is never exactly silent.`;}
+  if(k===-1)return `<b>Step 3, the output.</b> The output layer is a linear regression on the ${C.K} activations. It starts from its intercept &beta;<sub>0</sub> = ${pv(C.b0)}, the prediction if every unit sent 0.`;
+  if(k==='f')return `<b>The prediction.</b> f(X) = ${t3(C.f)}${fxUnitsTxt()}. The predictors went through ${C.K} linear combinations (step 1), the activation (step 2) and one more linear combination (step 3).`+fxCompare(C);
+  return C.relu&&u.A===0?`<b>Step 3, unit ${k+1}.</b> &beta;<sub>${k+1}</sub>A<sub>${k+1}</sub> = ${pp(u.b)} × 0 = 0: the unit is silent, so its weight &beta;<sub>${k+1}</sub> = ${pv(u.b)} plays no part in this prediction. The running total stays at ${t3(u.run)}.`
+    :`<b>Step 3, unit ${k+1}.</b> The unit adds &beta;<sub>${k+1}</sub>A<sub>${k+1}</sub> = ${pp(u.b)} × ${t3(u.A)} = ${t3(u.c)}, ${u.c>=0?'pushing the prediction up':'pulling it down'}. Running total: ${t3(u.run)}.`;}
+/* the trained network as it was when loaded, on the original standardised scale */
+function fxRefF(age){const R=FX.ref,g=ACT[R.act].g,x=toX(age);let f=R.b0;for(let k=0;k<R.w0.length;k++)f+=R.b[k]*g(R.w0[k]+R.w1[k]*x);return WM+WS*f;}
+function fxCompare(C){
+  if(FX.mode==='slides'&&!FX.edited)return ` With the slides' g(z) = z² the same weights would give ${mn(rd(C.quad,3))}, which is X<sub>1</sub>X<sub>2</sub> = ${pv(C.x[0])} × ${pp(C.x[1])}: with a real g they compute a different function.`;
+  if(FX.mode==='wage'&&!FX.edited&&FX.ref){const t=fxRefF(C.x[0]);return ` The curve of the first pill gives ${fmt(t,3)} at age ${pv(C.x[0])}; ${Math.abs(t-C.f)<0.0005?'the same number':`the gap of ${fmt(Math.abs(t-C.f),3)} is the rounding of the weights`}.`;}
+  return '';}
+function fxNarr(C){const el=$('xNarr');
+  if(FX.walk>=0){const n=fxOrder(C.K).length;el.classList.add('walking');
+    el.innerHTML=`<span class="ln">Line ${FX.walk+1} of ${n}</span>`+fxSay(C,fxCur())+
+      `<div class="nb"><button data-go="-1"${FX.walk===0?' disabled':''}>&larr; Back</button><button data-go="1"${FX.walk===n-1?' disabled':''}>Next &rarr;</button><button data-go="0">Show every line</button></div>`;return;}
+  el.classList.remove('walking');
+  let t;if(C.relu){const sil=C.U.filter(u=>u.A===0).map(u=>u.k+1),n=C.K-sil.length;
+    t=sil.length===0?`At this observation ${C.K===1?'the unit fires':C.K===2?'both units fire':`all ${C.K} units fire`} (z &gt; 0).`
+      :n===0?`At this observation every unit is silent (z ≤ 0), so f(X) is just &beta;<sub>0</sub>.`
+      :`At this observation ${n} of ${C.K} units fire. Unit${sil.length>1?'s':''} ${sil.join(', ')} ${sil.length>1?'are':'is'} silent: z ≤ 0, so A = 0 and ${sil.length>1?'their':'its'} &beta; plays no part in this prediction.`;}
+  else{const n=C.U.filter(u=>u.A>=.5).length;t=`With the sigmoid no unit is ever exactly silent: every A<sub>k</sub> is strictly between 0 and 1, and ${n} of ${C.K} ${n===1?'is':'are'} above one half.`;}
+  el.innerHTML=(FX.info?FX.info+' ':'')+`<b>f(X) = ${t3(C.f)}${fxUnitsTxt()}.</b> ${t}`+fxCompare(C)+' Press "Walk through" to fill the lines in one at a time.';}
+
+/* ----- the drawings ----- */
+let FXN=[];
+function fxDrawNet(C){const c=$('cxNet'),p=C.p,K=C.K,n=Math.max(p,K);c.style.height=Math.round(Math.max(220,Math.min(640,64+n*40)))+'px';
+  const {ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const T=34,Bm=28,xi=64,xm=w*0.5,xo=w-60,ys=(i,m)=>m===1?(T+h-Bm)/2:T+(h-T-Bm)*i/(m-1),yo=(T+h-Bm)/2;
+  const r=Math.max(9,Math.min(16,(h-T-Bm)/n/2.6)),em=fxEmph(),blue=css('--blue'),red=css('--red');
+  let mw=1e-9,mb=1e-9;C.U.forEach(u=>{for(let j=1;j<=p;j++)mw=Math.max(mw,Math.abs(u.w[j]));mb=Math.max(mb,Math.abs(u.b));});
+  const shown=k=>fxSt(2,k)!=='pend',fin=fxSt(3,'f')!=='pend';
+  C.U.forEach(u=>{const a=em<0||em===u.k?.85:.12;ctx.globalAlpha=a;
+    for(let j=0;j<p;j++)line(ctx,[[xi,ys(j,p)],[xm,ys(u.k,K)]],u.w[j+1]>=0?blue:red,.6+4.5*Math.abs(u.w[j+1])/mw);
+    const quiet=C.relu&&u.A===0&&shown(u.k);ctx.globalAlpha=quiet?a*.4:a;
+    line(ctx,[[xm,ys(u.k,K)],[xo,yo]],u.b>=0?blue:red,.6+4.5*Math.abs(u.b)/mb,quiet?[4,4]:null);ctx.globalAlpha=1;});
+  ctx.font=FONT;ctx.textAlign='center';ctx.fillStyle=css('--muted');
+  ctx.fillText('input',xi,14);ctx.fillText('hidden layer, K = '+K,xm,14);ctx.fillText('output',xo,14);
+  for(let j=0;j<p;j++){const y=ys(j,p);dot(ctx,xi,y,r,css('--panel'),css('--navy'));
+    ctx.font='600 11px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=css('--navy');ctx.textAlign='center';ctx.fillText(isAge(j)?'age':'X'+(j+1),xi,y+4);
+    ctx.font=FONT;ctx.textAlign='right';ctx.fillText(pv(C.x[j]),xi-r-6,y+4);}
+  let amax=1e-9;C.U.forEach(u=>amax=Math.max(amax,u.A));
+  FXN=[];
+  C.U.forEach(u=>{const y=ys(u.k,K),col=ucol(u.k),dim=em>=0&&em!==u.k;ctx.globalAlpha=dim?.35:1;
+    ctx.beginPath();ctx.arc(xm,y,r,0,6.2832);ctx.fillStyle=css('--panel');ctx.fill();
+    if(shown(u.k)){ctx.globalAlpha=(dim?.35:1)*Math.min(1,C.relu?u.A/amax:u.A);ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=dim?.35:1;}
+    ctx.strokeStyle=col;ctx.lineWidth=em===u.k?3:1.6;ctx.stroke();
+    ctx.font='600 10px "Fira Sans", system-ui, sans-serif';ctx.textAlign='center';ctx.fillStyle=css('--ink');ctx.fillText(String(u.k+1),xm,y+3.5);
+    ctx.globalAlpha=1;FXN.push({k:u.k,x:xm,y,r});
+    if(K<=14&&!dim)label(ctx,shown(u.k)?(C.relu&&u.A===0?`A${u.k+1} = 0 (silent)`:`A${u.k+1} = ${t3(u.A)}`):`A${u.k+1} = ?`,xm+r+6,y+1,col,'left');});
+  dot(ctx,xo,yo,r+3,css('--panel'),css('--orange'));
+  ctx.font='600 12px "Fira Sans", system-ui, sans-serif';ctx.fillStyle=css('--orange');ctx.textAlign='center';ctx.fillText('f',xo,yo+4);
+  label(ctx,fin?'f = '+t3(C.f):'f = ?',xo,yo+r+20,css('--orange'),'center');}
+
+function fxDrawG(C){const c=$('cxG');c.style.height='250px';const {ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const zs=C.U.map(u=>u.z),lo=Math.min(-3,...zs)-.4,hi=Math.max(3,...zs)+.4,g=C.relu?(z=>z>0?z:0):(z=>1/(1+Math.exp(-z)));
+  const yl=C.relu?[-.08*hi,hi*1.04]:[-.08,1.1];
+  const xs=nice((hi-lo)/6),xtk=[];for(let v=Math.ceil(lo/xs)*xs;v<=hi;v+=xs)xtk.push(+v.toFixed(6));
+  const ys=C.relu?nice(yl[1]/4):0.5,ytk=[];for(let v=0;v<=yl[1];v+=ys)ytk.push(+v.toFixed(6));
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:yl,xt:xtk,yt:ytk,xf:v=>mn(v),xl:'z, what the unit receives',yl:'A = g(z)',L:44,B:36});
+  A.clip();line(ctx,[[A.px(0),A.T],[A.px(0),A.T+A.ph]],css('--rule'),1);line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  if(!C.relu)line(ctx,[[A.L,A.py(.5)],[A.L+A.pw,A.py(.5)]],css('--rule'),1,[3,3]);
+  const pts=[];for(let i=0;i<=240;i++){const z=lo+(hi-lo)*i/240;pts.push([A.px(z),A.py(g(z))]);}line(ctx,pts,css('--ink'),2.2);
+  const em=fxEmph();
+  C.U.forEach(u=>{if(fxSt(2,u.k)==='pend')return;const x=A.px(u.z),y=A.py(u.A),col=ucol(u.k);ctx.globalAlpha=em<0||em===u.k?1:.22;
+    line(ctx,[[x,A.py(0)],[x,y]],col,1.3,[3,3]);line(ctx,[[A.L,y],[x,y]],col,1,[2,3]);dot(ctx,x,y,em===u.k?6.5:4.8,col,css('--panel'));ctx.globalAlpha=1;});
+  A.unclip();
+  C.U.forEach(u=>{if(fxSt(2,u.k)==='pend'||(em>=0&&em!==u.k))return;label(ctx,String(u.k+1),A.px(u.z),A.py(u.A)-12,ucol(u.k),'center');});}
+
+function fxDrawW(C){const c=$('cxW');c.style.height='250px';const {ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const K=C.K,n=K+2;let lo=Math.min(0,C.b0,C.f),hi=Math.max(0,C.b0,C.f);C.U.forEach(u=>{lo=Math.min(lo,u.run);hi=Math.max(hi,u.run);});
+  const pad=(hi-lo)*.14||1,yl=[lo<0?lo-pad:0,hi>0?hi+pad:pad*.5];
+  const st=nice((yl[1]-yl[0])/5),ytk=[];for(let v=Math.ceil(yl[0]/st)*st;v<=yl[1]+1e-9;v+=st)ytk.push(+v.toFixed(6));
+  const A=axes(ctx,w,h,{xlim:[0,n],ylim:yl,xt:[],yt:ytk,yf:v=>mn(fmt(v,st<1?1:0)),L:46,B:28});
+  line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--muted'),1);
+  const bw=Math.min(40,A.pw/n*.62),em=fxEmph(),showV=n<=14;
+  const bar=(i,y0,y1,col,lab,val,st,dim)=>{const x=A.px(i+.5);ctx.font=FONT;ctx.textAlign='center';ctx.fillStyle=css('--muted');ctx.fillText(lab,x,A.T+A.ph+16);
+    if(st==='pend')return;ctx.globalAlpha=dim?.25:1;
+    const top=A.py(Math.max(y0,y1)),bot=A.py(Math.min(y0,y1));
+    if(Math.abs(bot-top)<1.5){line(ctx,[[x-bw/2,top],[x+bw/2,top]],col,2,[3,2]);}else{ctx.fillStyle=col;ctx.fillRect(x-bw/2,top,bw,bot-top);}
+    if(st==='cur'){ctx.strokeStyle=css('--ink');ctx.lineWidth=2;ctx.strokeRect(x-bw/2-2,top-2,bw+4,Math.max(4,bot-top+4));}
+    ctx.globalAlpha=1;if(showV&&!dim)label(ctx,val,x,y1>=y0?top-9:bot+11,col,'center');};
+  bar(0,0,C.b0,css('--grey'),'β₀',t3(C.b0),fxSt(3,-1),em>=0);
+  let prev=C.b0;
+  C.U.forEach((u,i)=>{const st=fxSt(3,u.k);if(st!=='pend'){ctx.globalAlpha=.6;line(ctx,[[A.px(i+.5)+bw/2,A.py(prev)],[A.px(i+1.5)-bw/2,A.py(prev)]],css('--muted'),1,[2,2]);ctx.globalAlpha=1;}
+    bar(i+1,prev,u.run,ucol(u.k),String(u.k+1),u.c===0?'0':(u.c>0?'+':'')+t3(u.c),st,em>=0&&em!==u.k);prev=u.run;});
+  const sf=fxSt(3,'f');if(sf!=='pend'){ctx.globalAlpha=.6;line(ctx,[[A.px(K+.5)+bw/2,A.py(C.f)],[A.px(K+1.5)-bw/2,A.py(C.f)]],css('--muted'),1,[2,2]);ctx.globalAlpha=1;}
+  bar(K+1,0,C.f,css('--orange'),'f',t3(C.f),sf,em>=0);}
+
+function fxEval(x1){const p=FX.p,K=FX.K,relu=FX.act==='relu',parts=[];let f=FX.B[0];
+  for(let k=0;k<K;k++){const w=FX.W[k];let z=w[0]+w[1]*x1;for(let j=1;j<p;j++)z+=w[j+1]*FX.x[j];
+    const a=relu?(z>0?z:0):1/(1+Math.exp(-z));parts.push(FX.B[k+1]*a);f+=FX.B[k+1]*a;}return{f,parts};}
+let FXF=null;
+function fxRange(){return isAge(0)?[17,81]:[Math.min(-4,FX.x[0]-.5),Math.max(4,FX.x[0]+.5)];}
+function fxDrawF(C){const c=$('cxF');c.style.height='360px';const {ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const xl=FXF&&FXF.drag?FXF.xl:fxRange(),age=isAge(0),wage=FX.mode==='wage'&&!FX.edited,K=C.K,ns=300;
+  const X=[],F=[],P=Array.from({length:K},()=>[]);
+  for(let i=0;i<=ns;i++){const x=xl[0]+(xl[1]-xl[0])*i/ns,e=fxEval(x);X.push(x);F.push(e.f);e.parts.forEach((v,k)=>P[k].push(v));}
+  let lo=Math.min(0,FX.B[0],...F),hi=Math.max(0,FX.B[0],...F);P.forEach(a=>a.forEach(v=>{lo=Math.min(lo,v);hi=Math.max(hi,v);}));
+  if(wage){lo=Math.min(lo,0);hi=Math.max(hi,330);}
+  const pad=(hi-lo)*.06||1,yl=[lo-pad,hi+pad],st=nice((yl[1]-yl[0])/6),ytk=[];for(let v=Math.ceil(yl[0]/st)*st;v<=yl[1];v+=st)ytk.push(+v.toFixed(6));
+  const xs=age?10:nice((xl[1]-xl[0])/8),xtk=[];for(let v=Math.ceil(xl[0]/xs)*xs;v<=xl[1];v+=xs)xtk.push(+v.toFixed(6));
+  const A=axes(ctx,w,h,{xlim:xl,ylim:yl,xt:xtk,yt:ytk,xf:v=>mn(v),yf:v=>mn(fmt(v,st<1?1:0)),xl:age?'age':'X₁',yl:wage?'f, thousands of dollars':'f(X₁) and each unit’s contribution',L:54,B:40});
+  A.clip();
+  if(wage){ctx.globalAlpha=.16;ctx.fillStyle=css('--muted');for(let i=0;i<NA;i++){const j=((i*37)%10-4.5)*0.06;ctx.fillRect(A.px(WAGE.age[i]+j)-1,A.py(WAGE.wage[i])-1,2,2);}ctx.globalAlpha=1;}
+  line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  line(ctx,[[A.L,A.py(FX.B[0])],[A.L+A.pw,A.py(FX.B[0])]],css('--grey'),1,[6,4]);
+  const em=fxEmph();
+  P.forEach((a,k)=>{ctx.globalAlpha=em<0?.7:em===k?1:.15;line(ctx,a.map((v,i)=>[A.px(X[i]),A.py(v)]),ucol(k),em===k?2.6:1.5);ctx.globalAlpha=1;});
+  line(ctx,F.map((v,i)=>[A.px(X[i]),A.py(v)]),css('--navy'),3);
+  if(C.relu)for(let k=0;k<K;k++){const wk=FX.W[k];if(!wk[1])continue;let s=wk[0];for(let j=1;j<FX.p;j++)s+=wk[j+1]*FX.x[j];const kx=-s/wk[1];
+    if(kx<xl[0]||kx>xl[1])continue;const x=A.px(kx),y=A.T+A.ph;ctx.globalAlpha=em<0||em===k?1:.3;ctx.fillStyle=ucol(k);
+    ctx.beginPath();ctx.moveTo(x,y-1);ctx.lineTo(x-5,y-10);ctx.lineTo(x+5,y-10);ctx.closePath();ctx.fill();ctx.globalAlpha=1;}
+  const x0=FX.x[0],f0=C.f;  /* the hand computation, so the label matches step 3 */line(ctx,[[A.px(x0),A.T],[A.px(x0),A.T+A.ph]],css('--orange'),1.2,[3,3]);
+  dot(ctx,A.px(x0),A.py(f0),7,css('--orange'),css('--panel'));
+  A.unclip();
+  label(ctx,'β₀ = '+pv(FX.B[0]),A.L+A.pw-4,A.py(FX.B[0])-8,css('--grey'),'right');
+  label(ctx,`${age?'age':'X₁'} = ${pv(x0)}: f = ${t3(f0)}`,Math.min(A.px(x0)+10,A.L+A.pw-150),A.T+14,css('--orange'),'left');
+  FXF={A,xl,drag:FXF&&FXF.drag};}
+
+/* ----- putting it together ----- */
+function fxDraw(C){fxDrawNet(C);fxDrawG(C);fxDrawW(C);fxDrawF(C);}
+function fxRender(){if(FX.pill!=='fwd')return;const C=fxCalc();
+  $('vxP').textContent=FX.p;$('vxK').textContent=FX.K;$('vxS').textContent=FX.seed;
+  $('xRelu').classList.toggle('on',FX.act==='relu');$('xSig').classList.toggle('on',FX.act!=='relu');
+  $('xrPar').textContent=`${FX.K}(${FX.p} + 2) + 1 = ${FX.K*(FX.p+2)+1}`;
+  if(C.relu){$('xrFireL').textContent='Units firing at this observation';$('xrFire').textContent=`${C.U.filter(u=>u.A>0).length} of ${C.K}`;}
+  else{$('xrFireL').textContent='Units above one half';$('xrFire').textContent=`${C.U.filter(u=>u.A>=.5).length} of ${C.K}`;}
+  $('xrF').textContent=t3(C.f);
+  $('xWalk').textContent=FX.walk<0?'Walk through it, one line at a time':'Stop the walkthrough: show every line';
+  $('xrW').textContent=({random:`random, seed ${FX.seed}`,slides:"the slides' example",wage:'trained on Wage',custom:'a preset, then changed'})[FX.mode]+(FX.edited?', edited by hand':'');
+  $('xObs').innerHTML='The observation: '+C.x.map((v,j)=>`<span class="x">${xh(j)} = ${pv(v)}</span>`).join(', ');
+  $('xR1').innerHTML=fxR1(C);$('xR2').innerHTML=fxR2(C);$('xR3').innerHTML=fxR3(C);
+  fxNarr(C);fxLeft(C);fxDraw(C);}
+function fxRenderX(){let h='<span class="lab">The observation</span>';
+  for(let j=0;j<FX.p;j++)h+=`<label>${xh(j)}<input type="text" inputmode="decimal" data-step="${isAge(j)?1:0.1}" data-x="${j}" value="${FX.x[j]}"></label>`;
+  $('xIn').innerHTML=h+'<button id="xNewX">A new observation</button>';}
+function fxStruct(){FX.walk=Math.min(FX.walk,fxOrder(FX.K).length-1);$('xP').value=FX.p;$('xK').value=FX.K;$('xS').value=FX.seed;fxRenderX();fxTable();fxRender();}
+function fxHover(k){if(k===FX.hk)return;FX.hk=k;const em=fxEmph();
+  document.querySelectorAll('#fx tr[data-k]').forEach(t=>t.classList.toggle('hl',+t.dataset.k===em));
+  const C=fxCalc();fxLeft(C);fxDraw(C);}
+function fxGo(d){const n=fxOrder(FX.K).length;FX.walk=d===0?-1:FX.walk<0?(d>0?0:n-1):Math.max(0,Math.min(n-1,FX.walk+d));FX.hk=-1;fxRender();
+  const cur=document.querySelector('#fx tr.cur, #fx .fbig.cur');if(cur)cur.scrollIntoView({block:'center',behavior:'smooth'});}
+function fxPreset(){if(FX.mode==='slides'||FX.mode==='wage')FX.mode='custom';FX.info='';}
+
+$('xRelu').onclick=()=>{if(FX.act==='relu')return;FX.act='relu';fxPreset();fxRender();};
+$('xSig').onclick=()=>{if(FX.act==='sigmoid')return;FX.act='sigmoid';fxPreset();fxRender();};
+$('xP').addEventListener('input',e=>{FX.p=+e.target.value;fxPreset();if(FX.p>1&&FX.names)FX.names=null;fxStruct();});
+$('xK').addEventListener('input',e=>{FX.K=+e.target.value;fxPreset();fxStruct();});
+$('xS').addEventListener('input',e=>{FX.seed=+e.target.value;fxSeedWeights();fxStruct();});
+$('xIn').addEventListener('input',e=>{const j=e.target.dataset.x;if(j==null)return;const v=num(e.target.value);if(!isFinite(v))return;FX.x[+j]=v;fxRender();});
+$('xIn').addEventListener('click',e=>{if(e.target.id!=='xNewX')return;
+  for(let j=0;j<FX.p;j++)FX.x[j]=isAge(j)?18+Math.floor(Math.random()*63):rd((Math.random()-.5)*5,1);fxRenderX();fxRender();});
+$('xTab').addEventListener('input',e=>{const t=e.target;const v=num(t.value);if(!isFinite(v))return;
+  if(t.dataset.w){const [k,j]=t.dataset.w.split(',').map(Number);FX.W[k][j]=v;}else if(t.dataset.b!=null)FX.B[+t.dataset.b]=v;else return;
+  FX.edited=true;fxRender();});
+$('xWalk').onclick=()=>fxGo(FX.walk<0?1:0);
+$('xNarr').addEventListener('click',e=>{const b=e.target.closest('button[data-go]');if(b)fxGo(+b.dataset.go);});
+$('xSlides').onclick=()=>{FX.p=2;FX.K=2;FX.W[0]=[0,1,1,0,0];FX.W[1]=[0,1,-1,0,0];FX.B[0]=0;FX.B[1]=0.25;FX.B[2]=-0.25;FX.x[0]=2;FX.x[1]=1;
+  FX.names=null;FX.mode='slides';FX.edited=false;FX.walk=-1;
+  FX.info="The slides' weights: w<sub>1</sub> = (0, 1, 1), w<sub>2</sub> = (0, 1, &minus;1), &beta; = (0, &frac14;, &minus;&frac14;).";fxStruct();};
+$('xWage').onclick=()=>{stopTrain();let extra='';
+  if(S.epoch===0){for(let i=0;i<500&&!H.blown;i++)epoch();if(H.ep.at(-1)!==S.epoch)record();extra=' It had not been trained yet, so it was first trained for 500 epochs.';}
+  const K=N.K;FX.p=1;FX.K=K;FX.act=S.act;
+  for(let k=0;k<K;k++){FX.W[k][0]=rd(N.w0[k]-N.w1[k]*AM/AS,3);FX.W[k][1]=rd(N.w1[k]/AS,5);FX.B[k+1]=rd(WS*N.b[k],2);}
+  FX.B[0]=rd(WM+WS*N.b0,2);FX.x[0]=40;FX.ref={w0:N.w0.slice(),w1:N.w1.slice(),b:N.b.slice(),b0:N.b0,act:S.act};FX.names=['age'];FX.mode='wage';FX.edited=false;FX.walk=-1;
+  FX.info=`The network of the first pill: ${K} units, ${S.act==='relu'?'ReLU':'sigmoid'}, ${nf(S.epoch)} epochs on ${D.train.length} workers, with its weights converted to years and thousands of dollars.`+extra;fxStruct();};
+const fxRows=$('fx');
+fxRows.addEventListener('mouseover',e=>{const t=e.target.closest('tr[data-k]');if(t)fxHover(+t.dataset.k);});
+fxRows.addEventListener('mouseleave',()=>fxHover(-1));
+$('cxNet').addEventListener('pointermove',e=>{const r=$('cxNet').getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  const hit=FXN.find(n=>Math.hypot(n.x-x,n.y-y)<=n.r+4);fxHover(hit?hit.k:-1);});
+function fxDragTo(e){if(!FXF)return;const r=$('cxF').getBoundingClientRect(),A=FXF.A;let x=FXF.xl[0]+(e.clientX-r.left-A.L)/A.pw*(FXF.xl[1]-FXF.xl[0]);
+  x=Math.max(FXF.xl[0],Math.min(FXF.xl[1],x));x=isAge(0)?Math.round(x):rd(x,1);if(x===FX.x[0])return;FX.x[0]=x;
+  const inp=$('xIn').querySelector('input[data-x="0"]');if(inp)inp.value=x;fxRender();}
+$('cxF').addEventListener('pointerdown',e=>{if(!FXF)return;FXF.drag=true;$('cxF').setPointerCapture(e.pointerId);fxDragTo(e);});
+$('cxF').addEventListener('pointermove',e=>{if(FXF&&FXF.drag)fxDragTo(e);});
+$('cxF').addEventListener('pointerup',()=>{if(FXF){FXF.drag=false;fxRender();}});
+document.addEventListener('keydown',e=>{const t=e.target;
+  if(t.matches&&t.matches('input[data-step]')&&(e.key==='ArrowUp'||e.key==='ArrowDown')){const st=+t.dataset.step,v=num(t.value);if(!isFinite(v))return;
+    const d=String(st).split('.')[1]?.length||0;t.value=rd(v+(e.key==='ArrowUp'?st:-st),Math.max(d,(String(v).split('.')[1]||'').length));t.dispatchEvent(new Event('input',{bubbles:true}));e.preventDefault();return;}
+  if(FX.pill!=='fwd'||t.matches('input'))return;
+  if(e.key==='ArrowRight'){fxGo(1);e.preventDefault();}else if(e.key==='ArrowLeft'&&FX.walk>=0){fxGo(-1);e.preventDefault();}else if(e.key==='Escape'&&FX.walk>=0)fxGo(0);});
+
+/* the two pills */
+function setPill(p){FX.pill=p;document.querySelectorAll('[data-p]').forEach(e=>{e.hidden=e.dataset.p!==p;});
+  $('pTrain').classList.toggle('on',p==='train');$('pFwd').classList.toggle('on',p==='fwd');
+  $('h1s').textContent=p==='fwd'?', one prediction by hand':', trained live';
+  if(p==='fwd'){stopTrain();fxStruct();}else drawAll();}
+$('pTrain').onclick=()=>setPill('train');$('pFwd').onclick=()=>setPill('fwd');
+let fxW=0;new ResizeObserver(()=>{const w=$('fx').clientWidth;if(w&&w!==fxW&&FX.pill==='fwd'){fxW=w;fxDraw(fxCalc());}}).observe($('fx'));
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{if(FX.pill==='fwd'){fxTable();fxRender();}});
+fxSeedWeights();
+if(location.hash==='#forward')setPill('fwd');
 
 
 function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
