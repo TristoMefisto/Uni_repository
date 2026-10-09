@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tobacco excise CBA calculator</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <style>
 :root{
   color-scheme:light;
@@ -72,7 +74,14 @@ button{font:inherit;color:inherit}
 .step{display:grid;grid-template-columns:40px minmax(0,1fr) 250px;gap:16px;align-items:start}
 .step>*{min-width:0}
 .step .num{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700}
-.fx{display:block;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13.5px;background:var(--page);border:1px solid var(--grid);border-radius:8px;padding:8px 10px;margin:8px 0 12px;overflow-x:auto;white-space:pre}
+.fx{display:block;font-size:14px;background:var(--page);border:1px solid var(--grid);border-radius:8px;padding:8px 12px;margin:8px 0 10px;overflow-x:auto}
+.fx .tx{padding:2px 0;white-space:normal}
+.fx .katex-display{margin:2px 0}
+.fx .katex{font-size:1.08em}
+.where{list-style:none;margin:-4px 0 14px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(270px,100%),1fr));gap:3px 18px;font-size:13.5px;color:var(--ink2)}
+.where li{line-height:1.4;display:grid;grid-template-columns:minmax(2.6em,max-content) minmax(0,1fr);gap:8px;align-items:baseline}
+.where .sym{color:var(--ink)}
+.fx .katex-display.fleqn>.katex{padding-left:0}
 .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(200px,100%),1fr));gap:10px 14px}
 .field{display:flex;flex-direction:column;gap:3px;font-size:13.5px;min-width:0}
 .field>span:first-child{font-weight:600}
@@ -235,8 +244,8 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <div>
         <h3>From the excise to the pack price</h3>
         <p class="small">The retail price is the specific excise S, the ad valorem excise aP, VAT vP, the retailer's margin rP and the manufacturer's share F. If manufacturers keep their share, one euro of specific excise adds about €4.4 at the till, because the ad valorem part, VAT and the retailer's margin all grow with the price. Current law (L. 199/2025) already sets S at €32.00, €35.50 and €38.50 per 1,000 for 2026, 2027 and 2028, and a at 49.23%, 48.5% and 48%; after 2028 nothing is indexed.</p>
-        <code class="fx">P = (S + F) / (1 − a − v − r)
-policy price = current-law price + θ × ΔS / (1 − a − v − r)</code>
+        <div class="fx"><div class="tx" data-tex="P_t=\dfrac{S_t+F_t}{1-a_t-v-r}">P = (S + F) / (1 − a − v − r)</div><div class="tx" data-tex="P^{pol}_t=P^{law}_t+\theta\,\dfrac{S^{pol}_t-S^{law}_t}{1-a_t-v-r}">policy price = current-law price + θ ΔS / (1 − a − v − r)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="P_t">P_t</span><span>retail price of a pack in year <i>t</i></span></li><li><span class="sym" data-tex="S_t">S_t</span><span>specific excise per pack (€0.64 in 2026)</span></li><li><span class="sym" data-tex="F_t">F_t</span><span>manufacturer's share per pack (about €0.61 in 2026, grows with inflation)</span></li><li><span class="sym" data-tex="a_t">a_t</span><span>ad valorem excise rate (49.23% in 2026)</span></li><li><span class="sym" data-tex="v">v</span><span>VAT as a share of the retail price (22/122 = 18.0%)</span></li><li><span class="sym" data-tex="r">r</span><span>retailer's margin as a share of the price (10%)</span></li><li><span class="sym" data-tex="\theta">\theta</span><span>pass-through: share of the full price effect that reaches the till</span></li><li><span class="sym" data-tex="law,\ pol">law,\ pol</span><span>current law (L. 199/2025) and the policy</span></li></ul>
         <div class="fields">
           <label class="field"><span>Extra specific excise from 2027</span><span class="inwrap"><input type="number" data-k="dS" step="0.01" min="0" max="3"><em>€ a pack</em></span><small>Same as the slider. €0.23 a pack is €11.50 per 1,000 cigarettes.</small></label>
           <label class="field"><span>Reference pack price, 2026</span><span class="inwrap"><input type="number" data-k="P0" step="0.05" min="3" max="12"><em>€</em></span><small>€5.50, ADM price table, 1 January 2026 (excise €3.35, total tax 78.9%).</small></label>
@@ -251,8 +260,8 @@ policy price = current-law price + θ × ΔS / (1 − a − v − r)</code>
       <div>
         <h3>Indexation keeps the real price from falling</h3>
         <p class="small">From 2028 the specific excise grows each year by k × inflation, on top of the steps already in current law. If k = 100% and manufacturers' share grows with inflation, the whole price grows with inflation and its real value stays constant. With k = 0 the real price falls by roughly half the inflation rate each year.</p>
-        <code class="fx">S(t) = S(t−1) × (1 + k × π) + current-law step(t)
-real price(t) = P(t) / (1 + π)^(t − 2026)</code>
+        <div class="fx"><div class="tx" data-tex="S^{pol}_{2027}=S^{law}_{2027}+\Delta S">S(2027) = law + ΔS</div><div class="tx" data-tex="S^{pol}_t=S^{pol}_{t-1}\,(1+k\pi)+\left(S^{law}_t-S^{law}_{t-1}\right)\quad t\ge 2028">S(t) = S(t−1)(1 + kπ) + law step</div><div class="tx" data-tex="\tilde P_t=\dfrac{P_t}{(1+\pi)^{\,t-2026}}">real price = P / (1 + π)^(t − 2026)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="\Delta S">\Delta S</span><span>extra specific excise per pack from 2027</span></li><li><span class="sym" data-tex="k">k</span><span>indexation rate (1 = the excise grows with inflation)</span></li><li><span class="sym" data-tex="\pi">\pi</span><span>inflation rate</span></li><li><span class="sym" data-tex="\tilde P_t">\tilde P_t</span><span>real pack price in year <i>t</i>, in 2026 euros</span></li><li><span class="sym" data-tex="S^{law}_t-S^{law}_{t-1}">S^{law}_t-S^{law}_{t-1}</span><span>step already set by current law (only in 2027 and 2028)</span></li></ul>
         <div class="fields">
           <label class="field"><span>Indexation rate k</span><span class="inwrap"><input type="number" data-k="k" step="0.1" min="0" max="2"><em>× inflation</em></span><small>Same as the chips above. 1 = full indexation.</small></label>
           <label class="field"><span>Inflation π</span><span class="inwrap"><input type="number" data-k="pi" step="0.1" min="0" max="10"><em>% a year</em></span><small>2.0%: Banca d'Italia, June 2026 projections (2.0% in 2027, 1.9% in 2028) and the ECB target.</small></label>
@@ -266,8 +275,8 @@ real price(t) = P(t) / (1 + π)^(t − 2026)</code>
       <div>
         <h3>From the price to the number of smokers</h3>
         <p class="small">The participation elasticity is the % change in the number of smokers for a 1% rise in the real price. Only quitting enters the health steps: cutting down barely lowers CVD risk.</p>
-        <code class="fx">smokers(t) = N₀ × (real price(t) / P₀)^εp
-fewer smokers(t) = smokers under current law − smokers under the policy</code>
+        <div class="fx"><div class="tx" data-tex="N_t=N_0\left(\dfrac{\tilde P_t}{P_0}\right)^{\varepsilon_p}">N = N₀ (real price / P₀)^εp</div><div class="tx" data-tex="f_t=1-\left(\dfrac{\tilde P^{pol}_t}{\tilde P^{law}_t}\right)^{\varepsilon_p}">f = 1 − (policy price / law price)^εp</div><div class="tx" data-tex="\text{fewer smokers}_t=N^{law}_t-N^{pol}_t=f_t\,N^{law}_t">fewer smokers = f × smokers under current law</div></div>
+        <ul class="where"><li><span class="sym" data-tex="N_t">N_t</span><span>number of smokers in year <i>t</i></span></li><li><span class="sym" data-tex="N_0">N_0</span><span>smokers today, 2026</span></li><li><span class="sym" data-tex="P_0">P_0</span><span>pack price in 2026</span></li><li><span class="sym" data-tex="\varepsilon_p">\varepsilon_p</span><span>participation elasticity: % change in smokers for a 1% rise in the real price</span></li><li><span class="sym" data-tex="f_t">f_t</span><span>share of smokers who quit because of the policy</span></li></ul>
         <div class="fields">
           <label class="field"><span>Smokers today</span><span class="inwrap"><input type="number" data-k="N0" step="0.1" min="1" max="20"><em>million</em></span><small>ISTAT 2025: 18.6% of people aged 11+, about 10.0 million.</small></label>
           <label class="field"><span>Participation elasticity εp</span><span class="inwrap"><input type="number" data-k="eps_p" step="0.01" min="-1" max="0"><em></em></span><small>−0.2: half of the total elasticity of −0.4 (IARC 2011). Italy 1970–2001: −0.30 (Gallus et al. 2003).</small></label>
@@ -281,12 +290,11 @@ fewer smokers(t) = smokers under current law − smokers under the policy</code>
       <div>
         <h3>From fewer smokers to fewer CVD deaths and admissions</h3>
         <p class="small">Smoking causes a known number of CVD deaths and hospital admissions each year. The share of smokers who quit (step 3) removes the same share of the part caused by current smokers, but not at once: a quitter's extra risk fades over the years, so only a share g(t) of the gain has arrived by year t.</p>
-        <code class="fx">deaths avoided(t)     = A × s × f(t) × g(t)
-admissions avoided(t) = H × s × f(t) × g(t)
-f(t) = share of smokers who quit (step 3),  g(t) = 1 − e^(−λ × (t − 2026))</code>
+        <div class="fx"><div class="tx" data-tex="D_t=\bar D\,s\,f_t\,g_t">deaths avoided = D̄ s f g</div><div class="tx" data-tex="H_t=\bar H\,s\,f_t\,g_t">admissions avoided = H̄ s f g</div><div class="tx" data-tex="g_t=1-e^{-\lambda\,(t-2026)}">g = 1 − e^(−λ (t − 2026))</div></div>
+        <ul class="where"><li><span class="sym" data-tex="D_t,\ H_t">D_t,\ H_t</span><span>CVD deaths and hospital admissions avoided in year <i>t</i></span></li><li><span class="sym" data-tex="\bar D">\bar D</span><span>CVD deaths caused by smoking each year (11,840)</span></li><li><span class="sym" data-tex="\bar H">\bar H</span><span>CVD hospital admissions caused by smoking each year (177,409)</span></li><li><span class="sym" data-tex="s">s</span><span>share of those caused by current, not former, smokers</span></li><li><span class="sym" data-tex="f_t">f_t</span><span>share of smokers who quit (step 3)</span></li><li><span class="sym" data-tex="g_t">g_t</span><span>share of the quitters' risk reduction already arrived</span></li><li><span class="sym" data-tex="\lambda">\lambda</span><span>speed at which a quitter's extra risk fades</span></li></ul>
         <div class="fields">
-          <label class="field"><span>CVD deaths caused by smoking A</span><span class="inwrap"><input type="number" data-k="A" step="100" min="0"><em>a year</em></span><small>11,840 in Italy in 2023 (GBD 2023, via Our World in Data).</small></label>
-          <label class="field"><span>CVD admissions caused by smoking H</span><span class="inwrap"><input type="number" data-k="H" step="1000" min="0"><em>a year</em></span><small>177,409 in 2018: heart disease, stroke and arteries (Possenti et al. 2024).</small></label>
+          <label class="field"><span>CVD deaths caused by smoking <span data-tex="\bar D">D̄</span></span><span class="inwrap"><input type="number" data-k="A" step="100" min="0"><em>a year</em></span><small>11,840 in Italy in 2023 (GBD 2023, via Our World in Data).</small></label>
+          <label class="field"><span>CVD admissions caused by smoking <span data-tex="\bar H">H̄</span></span><span class="inwrap"><input type="number" data-k="H" step="1000" min="0"><em>a year</em></span><small>177,409 in 2018: heart disease, stroke and arteries (Possenti et al. 2024).</small></label>
           <label class="field"><span>Share due to current smokers s</span><span class="inwrap"><input type="number" data-k="s" step="0.01" min="0" max="1"><em></em></span><small>0.44: the rest is caused by former smokers, whom the tax does not change (AVQ 2024 × Mons et al. 2015).</small></label>
           <label class="field"><span>Speed the extra risk fades λ</span><span class="inwrap"><input type="number" data-k="lam" step="0.01" min="0.01" max="1"><em>a year</em></span><small>0.25: about 70% of the gain after 5 years (Duncan et al. 2019). 0.10 is a slow case.</small></label>
         </div>
@@ -299,11 +307,11 @@ f(t) = share of smokers who quit (step 3),  g(t) = 1 − e^(−λ × (t − 2026
       <div>
         <h3>What the health gains are worth</h3>
         <p class="small">Each death avoided is worth the life-years it adds (about 10) times the value of a life-year; each admission avoided saves the SSN its average cost.</p>
-        <code class="fx">value of health(t) = deaths avoided(t) × value per death avoided
-SSN savings(t)     = admissions avoided(t) × cost per admission</code>
+        <div class="fx"><div class="tx" data-tex="V_t=\omega\,D_t">value of health = ω D</div><div class="tx" data-tex="C_t=c\,H_t">SSN savings = c H</div><div class="tx" data-tex="\omega=LY\times VOLY">ω = LY × VOLY</div></div>
+        <ul class="where"><li><span class="sym" data-tex="V_t">V_t</span><span>value of the health gain in year <i>t</i></span></li><li><span class="sym" data-tex="C_t">C_t</span><span>SSN hospital savings in year <i>t</i></span></li><li><span class="sym" data-tex="\omega">\omega</span><span>value of one death avoided (€898,000)</span></li><li><span class="sym" data-tex="LY">LY</span><span>life-years gained per death avoided (10)</span></li><li><span class="sym" data-tex="VOLY">VOLY</span><span>value of a life-year (€89,800)</span></li><li><span class="sym" data-tex="c">c</span><span>average SSN cost of one CVD admission (€7,490)</span></li></ul>
         <div class="fields">
-          <label class="field"><span>Value per death avoided</span><span class="inwrap"><input type="number" data-k="vpd" step="10000" min="0"><em>€</em></span><small>€898,000 = 10 life-years × €89,800. Life expectancy at 75 is 13.4 years (Eurostat 2024); a life-year is worth €70,000 at 2016 prices in the EU handbook on external costs (2019), uprated. With the AIES threshold of €40,000 per year: €400,000.</small></label>
-          <label class="field"><span>Cost per CVD admission</span><span class="inwrap"><input type="number" data-k="cpa" step="100" min="0"><em>€</em></span><small>€7,490 = €1,063m ÷ 177,409 admissions in 2018 (Possenti et al. 2024), at 2026 prices.</small></label>
+          <label class="field"><span>Value per death avoided <span data-tex="\omega">ω</span></span><span class="inwrap"><input type="number" data-k="vpd" step="10000" min="0"><em>€</em></span><small>€898,000 = 10 life-years × €89,800. Life expectancy at 75 is 13.4 years (Eurostat 2024); a life-year is worth €70,000 at 2016 prices in the EU handbook on external costs (2019), uprated. With the AIES threshold of €40,000 per year: €400,000.</small></label>
+          <label class="field"><span>Cost per CVD admission <span data-tex="c">c</span></span><span class="inwrap"><input type="number" data-k="cpa" step="100" min="0"><em>€</em></span><small>€7,490 = €1,063m ÷ 177,409 admissions in 2018 (Possenti et al. 2024), at 2026 prices.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">Value of health gains</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n">SSN savings in the same years</div></div>
@@ -314,9 +322,8 @@ SSN savings(t)     = admissions avoided(t) × cost per admission</code>
       <div>
         <h3>Tax revenue and smokers' lost surplus</h3>
         <p class="small">Revenue is packs sold times tax per pack. Demand is inelastic, so revenue rises. Smokers who buy less lose the surplus on the packs they give up: a small triangle under the demand curve.</p>
-        <code class="fx">packs(t)        = Q₀ × (real price(t) / P₀)^εQ
-revenue(t)      = packs(t) × tax per pack(t),  tax per pack = S + (a + v) × P
-lost surplus(t) = ½ × price rise(t) × packs given up(t)</code>
+        <div class="fx"><div class="tx" data-tex="Q_t=Q_0\left(\dfrac{\tilde P_t}{P_0}\right)^{\varepsilon_Q}">Q = Q₀ (real price / P₀)^εQ</div><div class="tx" data-tex="R_t=Q_t\left[S_t+(a_t+v)\,P_t\right]">R = Q [S + (a + v) P]</div><div class="tx" data-tex="L_t=\tfrac12\left(\tilde P^{pol}_t-\tilde P^{law}_t\right)\left(Q^{law}_t-Q^{pol}_t\right)">L = ½ × price rise × packs given up</div></div>
+        <ul class="where"><li><span class="sym" data-tex="Q_t">Q_t</span><span>legal packs sold in year <i>t</i></span></li><li><span class="sym" data-tex="Q_0">Q_0</span><span>packs sold today (2.917 billion)</span></li><li><span class="sym" data-tex="\varepsilon_Q">\varepsilon_Q</span><span>elasticity of legal sales to the price</span></li><li><span class="sym" data-tex="R_t">R_t</span><span>tax revenue, excise + VAT (extra revenue = R<sup>pol</sup> − R<sup>law</sup>)</span></li><li><span class="sym" data-tex="S_t+(a_t+v)P_t">S_t+(a_t+v)P_t</span><span>tax per pack</span></li><li><span class="sym" data-tex="L_t">L_t</span><span>smokers' lost surplus on the packs given up</span></li></ul>
         <div class="fields">
           <label class="field"><span>Packs sold today Q₀</span><span class="inwrap"><input type="number" data-k="Q0" step="0.01" min="0"><em>billion</em></span><small>2.917 billion: 58.34 billion cigarettes in 2023 (ADM Libro Blu 2023).</small></label>
           <label class="field"><span>Elasticity of legal sales εQ</span><span class="inwrap"><input type="number" data-k="eps_Q" step="0.01" min="-1.5" max="0"><em></em></span><small>−0.45 (Kohler et al. 2023). The range down to −0.30 covers the leakage to illicit and cross-border buying.</small></label>
@@ -330,9 +337,8 @@ lost surplus(t) = ½ × price rise(t) × packs given up(t)</code>
       <div>
         <h3>Adding up</h3>
         <p class="small">Revenue is a transfer from smokers to the state, so it is shown but not added. The rest depends on how smokers are seen. If smoking is partly a mistake, quitters' health gains are a benefit to society. If smokers are fully rational, they already weighed their own health, and only the SSN savings count against their lost surplus. Future years are discounted.</p>
-        <code class="fx">not fully rational:  net benefit(t) = value of health(t) + SSN savings(t)
-fully rational:      net benefit(t) = SSN savings(t) − lost surplus(t)
-present value        = Σ net benefit(t) / (1 + d)^(t − 2027)</code>
+        <div class="fx"><div class="tx" data-tex="NB_t=V_t+C_t\qquad\text{(not fully rational)}">net benefit = V + C (not fully rational)</div><div class="tx" data-tex="NB_t=C_t-L_t\qquad\text{(fully rational)}">net benefit = C − L (fully rational)</div><div class="tx" data-tex="PV=\sum_{t=2027}^{T}\dfrac{NB_t}{(1+d)^{\,t-2027}}">PV = Σ NB / (1 + d)^(t − 2027)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="NB_t">NB_t</span><span>net social benefit in year <i>t</i></span></li><li><span class="sym" data-tex="PV">PV</span><span>present value over the horizon</span></li><li><span class="sym" data-tex="T">T</span><span>last year of the horizon (2029, 2035 or 2046)</span></li><li><span class="sym" data-tex="d">d</span><span>social discount rate</span></li></ul>
         <div class="fields">
           <label class="field"><span>Social discount rate d</span><span class="inwrap"><input type="number" data-k="d" step="0.5" min="0" max="10"><em>%</em></span><small>3%: EU Guide to Cost-Benefit Analysis (2014), for member states outside the Cohesion Fund.</small></label>
         </div>
@@ -352,34 +358,19 @@ present value        = Σ net benefit(t) / (1 + d)^(t − 2027)</code>
   <div class="eqs">
     <div class="card eq">
       <h3>Prices and taxes</h3>
-      <code class="fx">P = (S + F) / (1 − a − v − r)
-F(2026) = P₀ (1 − a − v − r) − S(2026),  F(t) = F(2026) (1 + π)^(t−2026)
-ΔP = θ ΔS / (1 − a − v − r) ≈ 4.4 θ ΔS
-tax per pack T = S + (a + v) P
-minimum tax raised in step: ΔM = (1 − r) ΔP</code>
+      <div class="fx"><div class="tx" data-tex="P_t=\dfrac{S_t+F_t}{1-a_t-v-r},\qquad F_t=F_{2026}\,(1+\pi)^{t-2026}"></div><div class="tx" data-tex="\Delta P=\theta\,\dfrac{\Delta S}{1-a-v-r}\approx 4.4\,\theta\,\Delta S"></div><div class="tx" data-tex="T=S+(a+v)\,P,\qquad \Delta M=(1-r)\,\Delta P\ \ \text{(minimum tax raised in step)}"></div></div>
     </div>
     <div class="card eq">
       <h3>Smokers and sales</h3>
-      <code class="fx">N(t) = N₀ (P̃(t)/P₀)^εp,   P̃ = real price
-f(t) = 1 − (P̃_policy(t) / P̃_law(t))^εp
-Q(t) = Q₀ (P̃(t)/P₀)^εQ,   packs per smoker q̄ = Q₀/N₀
-revenue R = Q × T = N × q̄ × T</code>
+      <div class="fx"><div class="tx" data-tex="N_t=N_0\left(\tilde P_t/P_0\right)^{\varepsilon_p},\qquad f_t=1-\left(\tilde P^{pol}_t/\tilde P^{law}_t\right)^{\varepsilon_p}"></div><div class="tx" data-tex="Q_t=Q_0\left(\tilde P_t/P_0\right)^{\varepsilon_Q},\qquad \bar q=Q_0/N_0"></div><div class="tx" data-tex="R=Q\,T=N\,\bar q\,T"></div></div>
     </div>
     <div class="card eq">
       <h3>Health</h3>
-      <code class="fx">g(t) = 1 − e^(−λ (t − 2026))
-deaths avoided D(t) = A × s × f(t) × g(t)
-admissions avoided H(t) = H × s × f(t) × g(t)
-value of health V(t) = D(t) × value per death (≈ 10 × €89,800)
-SSN savings C(t) = H(t) × cost per admission</code>
+      <div class="fx"><div class="tx" data-tex="g_t=1-e^{-\lambda(t-2026)}"></div><div class="tx" data-tex="D_t=\bar D\,s\,f_t\,g_t,\qquad H_t=\bar H\,s\,f_t\,g_t"></div><div class="tx" data-tex="V_t=\omega\,D_t,\qquad C_t=c\,H_t,\qquad \omega\approx 10\times 89{,}800"></div></div>
     </div>
     <div class="card eq">
       <h3>Welfare</h3>
-      <code class="fx">lost surplus L(t) = ½ (P̃_policy − P̃_law)(Q_law − Q_policy)
-net benefit = V + C        (not fully rational)
-net benefit = C − L        (fully rational)
-revenue = transfer, shown apart
-PV = Σ net benefit(t) / (1 + d)^(t−2027)</code>
+      <div class="fx"><div class="tx" data-tex="L_t=\tfrac12\left(\tilde P^{pol}_t-\tilde P^{law}_t\right)\left(Q^{law}_t-Q^{pol}_t\right)"></div><div class="tx" data-tex="NB_t=V_t+C_t\ \text{(not fully rational)},\qquad NB_t=C_t-L_t\ \text{(fully rational)}"></div><div class="tx" data-tex="PV=\sum_{t=2027}^{T}NB_t/(1+d)^{t-2027}\qquad\text{(revenue: a transfer, shown apart)}"></div></div>
     </div>
   </div>
 </section>
@@ -399,10 +390,10 @@ PV = Σ net benefit(t) / (1 + d)^(t−2027)</code>
       <tr><td>Participation elasticity εp</td><td>−0.2 (−0.1 to −0.3)</td><td>Bocconi CERGAS report (2025), p. 21 (total −0.4, IARC 2011); <a href="https://doi.org/10.1097/00008469-200308000-00015">Gallus et al. (2003)</a>, Italy −0.30; Ahmad and Franz (2008), Table 1</td><td><span class="tag y">folder</span></td></tr>
       <tr><td>Elasticity of legal sales εQ</td><td>−0.45 (−0.30 to −0.45)</td><td>Kohler, Vinci, Mattli (2023), Table 4: −0.45 without and −0.30 with illicit trade, so the range covers leakage</td><td><span class="tag y">folder</span></td></tr>
       <tr><td>Legal packs sold Q₀</td><td>2.917 billion</td><td><a href="https://www.adm.gov.it/portale/documents/20182/228258926/Libro+blu+2023+-+Relazione+%281%29.pdf">ADM, Libro Blu 2023</a></td><td><span class="tag n">online</span></td></tr>
-      <tr><td>CVD deaths caused by smoking A</td><td>11,840 (2023)</td><td>GBD 2023, IHME, via the <a href="https://api.ourworldindata.org/v1/indicators/1172075.data.json">Our World in Data API</a></td><td><span class="tag n">online</span></td></tr>
+      <tr><td>CVD deaths caused by smoking D̄</td><td>11,840 (2023)</td><td>GBD 2023, IHME, via the <a href="https://api.ourworldindata.org/v1/indicators/1172075.data.json">Our World in Data API</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Share due to current smokers s</td><td>0.44 (0.40–0.50)</td><td>AVQ 2024 microdata × <a href="https://doi.org/10.1136/bmj.h1551">Mons et al. (2015)</a> relative risks</td><td><span class="tag p">computed</span></td></tr>
       <tr><td>Speed the risk fades λ</td><td>0.25 (0.10–0.25)</td><td><a href="https://doi.org/10.1001/jama.2019.10298">Duncan et al. (2019)</a>, JAMA</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>CVD admissions caused by smoking H, cost per admission</td><td>177,409; €7,490 (€1,063m in 2018, uprated)</td><td><a href="https://doi.org/10.18332/tid/188111">Possenti et al. (2024)</a>, Tobacco Induced Diseases, Table 1</td><td><span class="tag n">online</span></td></tr>
+      <tr><td>CVD admissions caused by smoking H̄, cost per admission c</td><td>177,409; €7,490 (€1,063m in 2018, uprated)</td><td><a href="https://doi.org/10.18332/tid/188111">Possenti et al. (2024)</a>, Tobacco Induced Diseases, Table 1</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Life-years per death avoided</td><td>10 (7–13)</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/demo_mlexpec/default/table">Eurostat demo_mlexpec</a>: life expectancy at 75 = 13.4 years (Italy, 2024)</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Value of a life-year (so €898,000 per death avoided)</td><td>€89,800 (2026 prices)</td><td><a href="https://cedelft.eu/publications/handbook-on-the-external-costs-of-transport-version-2019/">Handbook on the external costs of transport (2019)</a>, €70,000 at 2016 prices; AIES €25–40k per QALY in the Bocconi report, p. 46</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Price uprating</td><td>HICP 2016 = 99.9, 2018 = 102.5, 2025 = 124.3; 2026 +3.1%</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_aind/default/table">Eurostat prc_hicp_aind</a>; Banca d'Italia 2026 projection</td><td><span class="tag n">online</span></td></tr>
@@ -641,6 +632,8 @@ document.querySelectorAll("[data-k]").forEach(function(el){
 });
 var rz;window.addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(render,120);});
 render();
+function renderTex(){if(!window.katex)return;document.querySelectorAll("[data-tex]").forEach(function(el){try{katex.render(el.getAttribute("data-tex"),el,{displayMode:el.classList.contains("tx"),fleqn:true,throwOnError:false});}catch(e){}});}
+if(document.readyState==="complete")renderTex();else window.addEventListener("load",renderTex);
 window.__cba={run:run,pv:pv,S:S};
 })();
 </script>
