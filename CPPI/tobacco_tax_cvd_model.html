@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tobacco excise CBA calculator</title>
+<title>Tobacco excise health benefits</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <style>
@@ -67,7 +67,6 @@ button{font:inherit;color:inherit}
 .tile .n{font-size:12.5px;color:var(--ink2)}
 .tile.big{grid-column:1/-1;background:var(--accent-soft);border-color:transparent}
 .tile.big .v{font-size:34px}
-.viewsw{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px;font-size:13.5px;color:var(--ink2)}
 
 /* steps */
 .steps{display:grid;gap:14px}
@@ -121,9 +120,8 @@ th{font-weight:600;color:var(--ink2)}
 .tscroll{overflow-x:auto}
 table.src td,table.src th{text-align:left}
 
-/* formulas, limitations */
-.eqs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.eqs>*,.lims>*{min-width:0}
+/* limitations */
+.lims>*{min-width:0}
 .lims{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .lims ul{margin:6px 0 0;padding-left:18px;font-size:14.5px}
 .lims li{margin-bottom:6px}
@@ -138,7 +136,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
   .hero{grid-template-columns:minmax(0,1fr)}
   .step{grid-template-columns:36px minmax(0,1fr)}
   .step .out{grid-column:2}
-  .eqs,.lims{grid-template-columns:minmax(0,1fr)}
+  .lims{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:480px){
   .tiles{grid-template-columns:1fr}
@@ -155,9 +153,9 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 
 <header class="top">
   <div class="wrap">
-    <div class="eyebrow">Cost-benefit calculator · Italy · Current Public Policy Issues</div>
+    <div class="eyebrow">Health-benefit calculator · Italy · Current Public Policy Issues</div>
     <h1>Raise the cigarette excise on 1 January 2027, then index it to inflation</h1>
-    <p class="lede">A higher specific excise raises the pack price, some smokers quit, and over the following years fewer people die of or are admitted to hospital for cardiovascular disease (CVD). Indexing the excise stops the real price from falling again. Every number below comes from the inputs on this page, and every input has a source.</p>
+    <p class="lede">A higher specific excise raises the pack price, some smokers quit, and over the following years fewer people die of or are admitted to hospital for cardiovascular disease (CVD). Indexing the excise stops the real price from falling again. The page stops at what the deaths and admissions avoided are worth; tax revenue is left out for now. Every number comes from the inputs below, and every input has a source.</p>
   </div>
 </header>
 
@@ -185,22 +183,16 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
         <div class="tile"><div class="l">Pack price</div><div class="v" id="y_price">–</div><div class="n" id="y_priceN">–</div></div>
         <div class="tile"><div class="l">Fewer smokers</div><div class="v" id="y_smk">–</div><div class="n" id="y_smkN">–</div></div>
         <div class="tile"><div class="l">CVD deaths avoided</div><div class="v" id="y_d">–</div><div class="n">the gain builds up in later years</div></div>
-        <div class="tile"><div class="l">CVD hospital admissions avoided</div><div class="v" id="y_h">–</div><div class="n" id="y_hN">–</div></div>
-        <div class="tile"><div class="l">Extra tax revenue (excise + VAT)</div><div class="v" id="y_r">–</div><div class="n">a transfer from smokers to the state</div></div>
-        <div class="tile"><div class="l">Value of health gains + SSN savings</div><div class="v" id="y_b">–</div><div class="n" id="y_bN">–</div></div>
+        <div class="tile"><div class="l">CVD hospital admissions avoided</div><div class="v" id="y_h">–</div><div class="n">the same build-up as deaths</div></div>
+        <div class="tile big"><div class="l">Value of the deaths and admissions avoided</div><div class="v" id="y_b">–</div><div class="n" id="y_bN">–</div></div>
       </div>
     </div>
     <div class="card">
       <h3 id="pvTitle">2027–2035, present value at 3%</h3>
-      <div class="viewsw">Count smokers as
-        <span class="chips" id="viewChips"><button class="chip" data-view="b">not fully rational (internality)</button><button class="chip" data-view="r">fully rational</button></span>
-      </div>
       <div class="tiles">
-        <div class="tile big"><div class="l">Net social benefit</div><div class="v" id="pv_nsb">–</div><div class="n" id="pv_nsbN">–</div></div>
-        <div class="tile"><div class="l">Value of life-years gained</div><div class="v" id="pv_v">–</div><div class="n" id="pv_vN">–</div></div>
+        <div class="tile big"><div class="l">Value of the health gains</div><div class="v" id="pv_b">–</div><div class="n">value of deaths avoided + SSN hospital savings</div></div>
+        <div class="tile"><div class="l">Value of deaths avoided</div><div class="v" id="pv_v">–</div><div class="n" id="pv_vN">–</div></div>
         <div class="tile"><div class="l">SSN hospital savings</div><div class="v" id="pv_c">–</div><div class="n" id="pv_cN">–</div></div>
-        <div class="tile"><div class="l">Extra tax revenue</div><div class="v" id="pv_r">–</div><div class="n">a transfer, shown but not added to the net benefit</div></div>
-        <div class="tile"><div class="l">Smokers' lost surplus</div><div class="v" id="pv_l">–</div><div class="n" id="pv_lN">–</div></div>
       </div>
     </div>
   </div>
@@ -210,11 +202,10 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
   <h2>Year by year</h2>
   <p class="sub">Benefits arrive slowly: smoking falls in the first year, but a quitter's extra CVD risk fades over 5 to 15 years. With indexation the gap between the policy price and the current-law price also widens, because under current law the excise is frozen from 2028 and the real price drifts down.</p>
   <div class="seg" role="group" aria-label="Measure shown" id="metricSeg">
-    <button data-m="nsb" aria-pressed="true">Net benefit</button>
+    <button data-m="val" aria-pressed="true">Value of health gains</button>
     <button data-m="smk" aria-pressed="false">Fewer smokers</button>
     <button data-m="d" aria-pressed="false">Deaths avoided</button>
     <button data-m="h" aria-pressed="false">Admissions avoided</button>
-    <button data-m="rev" aria-pressed="false">Tax revenue</button>
     <button data-m="price" aria-pressed="false">Real pack price</button>
   </div>
   <div class="legend" id="legend"></div>
@@ -230,7 +221,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 
 <section>
   <h2>How the numbers are built</h2>
-  <p class="sub">Seven steps, each with its formula, its inputs and its result. Defaults are the central case; load another set or type your own values.</p>
+  <p class="sub">Five steps, each with its formula, its inputs and its result. Defaults are the central case; load another set or type your own values.</p>
   <div class="presets">
     <span class="small"><b>Load a set of inputs:</b></span>
     <button class="chip" data-preset="cautious">Cautious</button>
@@ -252,7 +243,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
           <label class="field"><span>Pass-through θ</span><span class="inwrap"><input type="number" data-k="theta" step="0.05" min="0.1" max="1.2"><em>× full</em></span><small>1 = manufacturers keep their share (price rises 4.4 × ΔS); 0.28 = only VAT is added. Kohler et al. 2023 find taxes almost fully passed on.</small></label>
         </div>
       </div>
-      <div class="out"><div class="l">Pack price in 2027</div><div class="v" id="o1">–</div><div class="n" id="o1n">–</div><div class="v2" id="o1b">–</div><div class="n">implied minimum tax burden, raised in step</div></div>
+      <div class="out"><div class="l">Pack price in 2027</div><div class="v" id="o1">–</div><div class="n" id="o1n">–</div></div>
     </div>
 
     <div class="card step">
@@ -305,45 +296,17 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
     <div class="card step">
       <div class="num">5</div>
       <div>
-        <h3>What the health gains are worth</h3>
-        <p class="small">Each death avoided is worth the life-years it adds (about 10) times the value of a life-year; each admission avoided saves the SSN its average cost.</p>
-        <div class="fx"><div class="tx" data-tex="V_t=\omega\,D_t">value of health = ω D</div><div class="tx" data-tex="C_t=c\,H_t">SSN savings = c H</div><div class="tx" data-tex="\omega=LY\times VOLY">ω = LY × VOLY</div></div>
-        <ul class="where"><li><span class="sym" data-tex="V_t">V_t</span><span>value of the health gain in year <i>t</i></span></li><li><span class="sym" data-tex="C_t">C_t</span><span>SSN hospital savings in year <i>t</i></span></li><li><span class="sym" data-tex="\omega">\omega</span><span>value of one death avoided (€898,000)</span></li><li><span class="sym" data-tex="LY">LY</span><span>life-years gained per death avoided (10)</span></li><li><span class="sym" data-tex="VOLY">VOLY</span><span>value of a life-year (€89,800)</span></li><li><span class="sym" data-tex="c">c</span><span>average SSN cost of one CVD admission (€7,490)</span></li></ul>
+        <h3>What the deaths and admissions avoided are worth</h3>
+        <p class="small">Each death avoided is worth the life-years it adds (about 10) times the value of a life-year; each admission avoided saves the SSN its average cost. The two are added year by year and discounted back to 2027. Counting the quitters' own health gain treats smoking as partly a mistake: if smokers were fully rational, only the SSN savings would count.</p>
+        <div class="fx"><div class="tx" data-tex="V_t=\omega\,D_t,\qquad \omega=LY\times VOLY">value of deaths avoided = ω D</div><div class="tx" data-tex="C_t=c\,H_t">SSN savings = c H</div><div class="tx" data-tex="B_t=V_t+C_t,\qquad PV=\sum_{t=2027}^{T}\dfrac{B_t}{(1+d)^{\,t-2027}}">PV = Σ (V + C) / (1 + d)^(t − 2027)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="V_t">V_t</span><span>value of the deaths avoided in year <i>t</i></span></li><li><span class="sym" data-tex="\omega">\omega</span><span>value of one death avoided (€898,000)</span></li><li><span class="sym" data-tex="LY">LY</span><span>life-years gained per death avoided (10)</span></li><li><span class="sym" data-tex="VOLY">VOLY</span><span>value of a life-year (€89,800)</span></li><li><span class="sym" data-tex="C_t">C_t</span><span>SSN hospital savings in year <i>t</i></span></li><li><span class="sym" data-tex="c">c</span><span>average SSN cost of one CVD admission (€7,490)</span></li><li><span class="sym" data-tex="B_t">B_t</span><span>value of the health gains in year <i>t</i></span></li><li><span class="sym" data-tex="PV">PV</span><span>present value over the horizon</span></li><li><span class="sym" data-tex="T">T</span><span>last year of the horizon (2029, 2035 or 2046)</span></li><li><span class="sym" data-tex="d">d</span><span>social discount rate</span></li></ul>
         <div class="fields">
           <label class="field"><span>Value per death avoided <span data-tex="\omega">ω</span></span><span class="inwrap"><input type="number" data-k="vpd" step="10000" min="0"><em>€</em></span><small>€898,000 = 10 life-years × €89,800. Life expectancy at 75 is 13.4 years (Eurostat 2024); a life-year is worth €70,000 at 2016 prices in the EU handbook on external costs (2019), uprated. With the AIES threshold of €40,000 per year: €400,000.</small></label>
           <label class="field"><span>Cost per CVD admission <span data-tex="c">c</span></span><span class="inwrap"><input type="number" data-k="cpa" step="100" min="0"><em>€</em></span><small>€7,490 = €1,063m ÷ 177,409 admissions in 2018 (Possenti et al. 2024), at 2026 prices.</small></label>
-        </div>
-      </div>
-      <div class="out"><div class="l">Value of health gains</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n">SSN savings in the same years</div></div>
-    </div>
-
-    <div class="card step">
-      <div class="num">6</div>
-      <div>
-        <h3>Tax revenue and smokers' lost surplus</h3>
-        <p class="small">Revenue is packs sold times tax per pack. Demand is inelastic, so revenue rises. Smokers who buy less lose the surplus on the packs they give up: a small triangle under the demand curve.</p>
-        <div class="fx"><div class="tx" data-tex="Q_t=Q_0\left(\dfrac{\tilde P_t}{P_0}\right)^{\varepsilon_Q}">Q = Q₀ (real price / P₀)^εQ</div><div class="tx" data-tex="R_t=Q_t\left[S_t+(a_t+v)\,P_t\right]">R = Q [S + (a + v) P]</div><div class="tx" data-tex="L_t=\tfrac12\left(\tilde P^{pol}_t-\tilde P^{law}_t\right)\left(Q^{law}_t-Q^{pol}_t\right)">L = ½ × price rise × packs given up</div></div>
-        <ul class="where"><li><span class="sym" data-tex="Q_t">Q_t</span><span>legal packs sold in year <i>t</i></span></li><li><span class="sym" data-tex="Q_0">Q_0</span><span>packs sold today (2.917 billion)</span></li><li><span class="sym" data-tex="\varepsilon_Q">\varepsilon_Q</span><span>elasticity of legal sales to the price</span></li><li><span class="sym" data-tex="R_t">R_t</span><span>tax revenue, excise + VAT (extra revenue = R<sup>pol</sup> − R<sup>law</sup>)</span></li><li><span class="sym" data-tex="S_t+(a_t+v)P_t">S_t+(a_t+v)P_t</span><span>tax per pack</span></li><li><span class="sym" data-tex="L_t">L_t</span><span>smokers' lost surplus on the packs given up</span></li></ul>
-        <div class="fields">
-          <label class="field"><span>Packs sold today Q₀</span><span class="inwrap"><input type="number" data-k="Q0" step="0.01" min="0"><em>billion</em></span><small>2.917 billion: 58.34 billion cigarettes in 2023 (ADM Libro Blu 2023).</small></label>
-          <label class="field"><span>Elasticity of legal sales εQ</span><span class="inwrap"><input type="number" data-k="eps_Q" step="0.01" min="-1.5" max="0"><em></em></span><small>−0.45 (Kohler et al. 2023). The range down to −0.30 covers the leakage to illicit and cross-border buying.</small></label>
-        </div>
-      </div>
-      <div class="out"><div class="l">Extra revenue in 2027</div><div class="v" id="o6">–</div><div class="n" id="o6n">–</div><div class="v2" id="o6b">–</div><div class="n">smokers' lost surplus in 2027</div></div>
-    </div>
-
-    <div class="card step">
-      <div class="num">7</div>
-      <div>
-        <h3>Adding up</h3>
-        <p class="small">Revenue is a transfer from smokers to the state, so it is shown but not added. The rest depends on how smokers are seen. If smoking is partly a mistake, quitters' health gains are a benefit to society. If smokers are fully rational, they already weighed their own health, and only the SSN savings count against their lost surplus. Future years are discounted.</p>
-        <div class="fx"><div class="tx" data-tex="NB_t=V_t+C_t\qquad\text{(not fully rational)}">net benefit = V + C (not fully rational)</div><div class="tx" data-tex="NB_t=C_t-L_t\qquad\text{(fully rational)}">net benefit = C − L (fully rational)</div><div class="tx" data-tex="PV=\sum_{t=2027}^{T}\dfrac{NB_t}{(1+d)^{\,t-2027}}">PV = Σ NB / (1 + d)^(t − 2027)</div></div>
-        <ul class="where"><li><span class="sym" data-tex="NB_t">NB_t</span><span>net social benefit in year <i>t</i></span></li><li><span class="sym" data-tex="PV">PV</span><span>present value over the horizon</span></li><li><span class="sym" data-tex="T">T</span><span>last year of the horizon (2029, 2035 or 2046)</span></li><li><span class="sym" data-tex="d">d</span><span>social discount rate</span></li></ul>
-        <div class="fields">
           <label class="field"><span>Social discount rate d</span><span class="inwrap"><input type="number" data-k="d" step="0.5" min="0" max="10"><em>%</em></span><small>3%: EU Guide to Cost-Benefit Analysis (2014), for member states outside the Cohesion Fund.</small></label>
         </div>
       </div>
-      <div class="out"><div class="l">Net social benefit, present value</div><div class="v" id="o7">–</div><div class="n" id="o7n">–</div></div>
+      <div class="out"><div class="l">Value of the health gains, present value</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n" id="o5bn">–</div></div>
     </div>
   </div>
 </section>
@@ -351,28 +314,6 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 <section>
   <h2>Why 2027–2035</h2>
   <p class="sub">The default horizon is nine years. It covers the 2027 budget and the following ones of the next legislature, and ends with the EU Safe Hearts Plan target year (premature CVD mortality −25% by 2035 against 2022). By then about 90% of the health gain of the 2027 quitters has arrived. The 2027–29 option matches the three-year budget plan a finance minister signs; 2027–46 shows the long run.</p>
-</section>
-
-<section>
-  <h2>All formulas in one place</h2>
-  <div class="eqs">
-    <div class="card eq">
-      <h3>Prices and taxes</h3>
-      <div class="fx"><div class="tx" data-tex="P_t=\dfrac{S_t+F_t}{1-a_t-v-r},\qquad F_t=F_{2026}\,(1+\pi)^{t-2026}"></div><div class="tx" data-tex="\Delta P=\theta\,\dfrac{\Delta S}{1-a-v-r}\approx 4.4\,\theta\,\Delta S"></div><div class="tx" data-tex="T=S+(a+v)\,P,\qquad \Delta M=(1-r)\,\Delta P\ \ \text{(minimum tax raised in step)}"></div></div>
-    </div>
-    <div class="card eq">
-      <h3>Smokers and sales</h3>
-      <div class="fx"><div class="tx" data-tex="N_t=N_0\left(\tilde P_t/P_0\right)^{\varepsilon_p},\qquad f_t=1-\left(\tilde P^{pol}_t/\tilde P^{law}_t\right)^{\varepsilon_p}"></div><div class="tx" data-tex="Q_t=Q_0\left(\tilde P_t/P_0\right)^{\varepsilon_Q},\qquad \bar q=Q_0/N_0"></div><div class="tx" data-tex="R=Q\,T=N\,\bar q\,T"></div></div>
-    </div>
-    <div class="card eq">
-      <h3>Health</h3>
-      <div class="fx"><div class="tx" data-tex="g_t=1-e^{-\lambda(t-2026)}"></div><div class="tx" data-tex="D_t=\bar D\,s\,f_t\,g_t,\qquad H_t=\bar H\,s\,f_t\,g_t"></div><div class="tx" data-tex="V_t=\omega\,D_t,\qquad C_t=c\,H_t,\qquad \omega\approx 10\times 89{,}800"></div></div>
-    </div>
-    <div class="card eq">
-      <h3>Welfare</h3>
-      <div class="fx"><div class="tx" data-tex="L_t=\tfrac12\left(\tilde P^{pol}_t-\tilde P^{law}_t\right)\left(Q^{law}_t-Q^{pol}_t\right)"></div><div class="tx" data-tex="NB_t=V_t+C_t\ \text{(not fully rational)},\qquad NB_t=C_t-L_t\ \text{(fully rational)}"></div><div class="tx" data-tex="PV=\sum_{t=2027}^{T}NB_t/(1+d)^{t-2027}\qquad\text{(revenue: a transfer, shown apart)}"></div></div>
-    </div>
-  </div>
 </section>
 
 <section>
@@ -388,8 +329,6 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <tr><td>Inflation π</td><td>2.0%</td><td><a href="https://www.bancaditalia.it/pubblicazioni/proiezioni-macroeconomiche/2026/Proiezioni-macroeconomiche-Italia-giugno-2026.pdf">Banca d'Italia, macroeconomic projections, June 2026</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Smokers today N₀</td><td>10.0 million</td><td>ISTAT (2026), Fattori di rischio per la salute, anno 2025, p. 7</td><td><span class="tag y">folder</span></td></tr>
       <tr><td>Participation elasticity εp</td><td>−0.2 (−0.1 to −0.3)</td><td>Bocconi CERGAS report (2025), p. 21 (total −0.4, IARC 2011); <a href="https://doi.org/10.1097/00008469-200308000-00015">Gallus et al. (2003)</a>, Italy −0.30; Ahmad and Franz (2008), Table 1</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>Elasticity of legal sales εQ</td><td>−0.45 (−0.30 to −0.45)</td><td>Kohler, Vinci, Mattli (2023), Table 4: −0.45 without and −0.30 with illicit trade, so the range covers leakage</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>Legal packs sold Q₀</td><td>2.917 billion</td><td><a href="https://www.adm.gov.it/portale/documents/20182/228258926/Libro+blu+2023+-+Relazione+%281%29.pdf">ADM, Libro Blu 2023</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>CVD deaths caused by smoking D̄</td><td>11,840 (2023)</td><td>GBD 2023, IHME, via the <a href="https://api.ourworldindata.org/v1/indicators/1172075.data.json">Our World in Data API</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Share due to current smokers s</td><td>0.44 (0.40–0.50)</td><td>AVQ 2024 microdata × <a href="https://doi.org/10.1136/bmj.h1551">Mons et al. (2015)</a> relative risks</td><td><span class="tag p">computed</span></td></tr>
       <tr><td>Speed the risk fades λ</td><td>0.25 (0.10–0.25)</td><td><a href="https://doi.org/10.1001/jama.2019.10298">Duncan et al. (2019)</a>, JAMA</td><td><span class="tag n">online</span></td></tr>
@@ -425,19 +364,18 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       </ul>
     </div>
     <div class="card">
-      <h3>Taxes and prices</h3>
+      <h3>Left out for now</h3>
       <ul>
-        <li>Every pack is treated like the €5.50 reference pack. The minimum tax must rise with the excise, or cheap brands (much of the market sits near it) do not move.</li>
-        <li>Heated tobacco is left at current law; raising it in step avoids substitution.</li>
-        <li>Revenue counts excise and VAT on cigarettes only; VAT on the spending that shifts to other goods is ignored.</li>
-        <li>Smokers' lost surplus uses legal sales, so packs that move to illicit buying count as given up (this overstates the cost in the fully rational view).</li>
+        <li>Tax revenue: the higher price paid on packs still smoked moves money from smokers to the state, a transfer rather than a gain for society.</li>
+        <li>Smokers' lost surplus on the packs they give up, which would count against the benefit if smokers were fully rational.</li>
       </ul>
     </div>
     <div class="card">
-      <h3>Baseline</h3>
+      <h3>Prices and baseline</h3>
       <ul>
+        <li>Every pack is treated like the €5.50 reference pack. The minimum tax must rise with the excise, or cheap brands (much of the market sits near it) do not move.</li>
+        <li>Heated tobacco is left at current law; raising it in step avoids substitution.</li>
         <li>Prevalence is flat apart from the price effect (it has been at about 20% for ten years); smoking-attributable CVD deaths are held at their 2023 level (they fell 2.2% a year in 2015–2023).</li>
-        <li>Producers' and retailers' margins on packs no longer sold are not counted (much of the industry is foreign-owned).</li>
       </ul>
     </div>
   </div>
@@ -445,26 +383,26 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 
 </main>
 <footer>
-  <div class="wrap">CPPI project, Bologna. First version of this page by Alessandro (3 October 2026); rebuilt as a cost-benefit calculator with indexation on 9 October 2026. All amounts in 2026 euros.</div>
+  <div class="wrap">CPPI project, Bologna. First version of this page by Alessandro (3 October 2026); rebuilt with indexation and the value of the health gains on 9 October 2026. All amounts in 2026 euros.</div>
 </footer>
 
 <script>
 (function(){
 "use strict";
 var HICP26=124.3*1.031;
-var LAW_S={2026:0.64,2027:0.71,2028:0.77}, LAW_A={2026:0.4923,2027:0.485,2028:0.48}, LAW_M={2026:216,2027:221,2028:227};
+var LAW_S={2026:0.64,2027:0.71,2028:0.77}, LAW_A={2026:0.4923,2027:0.485,2028:0.48};
 var V=22/122, R=0.10;
 // value per death avoided = 10 life-years x VOLY (EUR 70,000 at 2016 prices, uprated); cost per admission = EUR 1,063.1m / 177,409 (2018), uprated
-var CENTRAL={dS:0.23,k:1,pi:2.0,theta:1,P0:5.50,N0:10.0,eps_p:-0.20,eps_Q:-0.45,Q0:2.917,
+var CENTRAL={dS:0.23,k:1,pi:2.0,theta:1,P0:5.50,N0:10.0,eps_p:-0.20,
   A:11840,H:177409,s:0.44,lam:0.25,vpd:Math.round(10*70000*HICP26/99.9/1000)*1000,
   cpa:Math.round(1063.1e6*HICP26/102.5/177409/10)*10,d:3};
 var PRESETS={
-  cautious:{eps_p:-0.10,theta:0.8,lam:0.10,vpd:280000,s:0.40,eps_Q:-0.30},
+  cautious:{eps_p:-0.10,theta:0.8,lam:0.10,vpd:280000,s:0.40},
   central:{},
-  optimistic:{eps_p:-0.30,theta:1,lam:0.25,vpd:1167000,s:0.50,eps_Q:-0.45}
+  optimistic:{eps_p:-0.30,theta:1,lam:0.25,vpd:1167000,s:0.50}
 };
 var S={}; Object.keys(CENTRAL).forEach(function(k){S[k]=CENTRAL[k];});
-var H_END=2035, VIEW="b", METRIC="nsb", PRESET="central";
+var H_END=2035, METRIC="val", PRESET="central";
 var $=function(id){return document.getElementById(id);};
 
 function law(tab,t){var y=2026;Object.keys(tab).forEach(function(k){k=+k;if(k<=t&&k>y)y=k;});return tab[y];}
@@ -472,7 +410,7 @@ function law(tab,t){var y=2026;Object.keys(tab).forEach(function(k){k=+k;if(k<=t
 // ---- model ----
 function run(s,last){
   var pi=s.pi/100, a0=law(LAW_A,2026), F0=s.P0*(1-a0-V-R)-law(LAW_S,2026);
-  var rows=[], SPp=0, SBp=0, N0=s.N0*1e6, Q0=s.Q0*1e9;
+  var rows=[], SPp=0, SBp=0, N0=s.N0*1e6;
   for(var t=2026;t<=last;t++){
     var cpi=Math.pow(1+pi,t-2026), a=law(LAW_A,t), SB=law(LAW_S,t), den=1-a-V-R;
     var PB=(SB+F0*cpi)/den;
@@ -481,13 +419,8 @@ function run(s,last){
     var rB=PB/cpi, rP=PP/cpi;
     var NB=N0*Math.pow(rB/s.P0,s.eps_p), NP=N0*Math.pow(rP/s.P0,s.eps_p);
     var f=1-Math.pow(rP/rB,s.eps_p), g=1-Math.exp(-s.lam*(t-2026));
-    var D=s.A*s.s*f*g, Hh=s.H*s.s*f*g, C=Hh*s.cpa, Vv=D*s.vpd;
-    var QB=Q0*Math.pow(rB/s.P0,s.eps_Q), QP=Q0*Math.pow(rP/s.P0,s.eps_Q);
-    var RB=QB*(SB+(a+V)*PB)/cpi, RP=QP*(SP+(a+V)*PP)/cpi, dR=RP-RB;
-    var L=0.5*(rP-rB)*(QB-QP);
-    var Mlaw=law(LAW_M,t), Mpol=Mlaw+(1-R)*(PP-PB)*50;
-    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,C:C,V:Vv,
-      QB:QB,QP:QP,RB:RB,RP:RP,dR:dR,L:L,Mlaw:Mlaw,Mpol:Mpol,nsbB:Vv+C,nsbR:C-L});
+    var D=s.A*s.s*f*g, Hh=s.H*s.s*f*g, Vv=D*s.vpd, C=Hh*s.cpa;
+    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,V:Vv,C:C,B:Vv+C});
     SPp=SP; SBp=SB;
   }
   return rows;
@@ -508,35 +441,27 @@ function setT(id,t){var e=$(id);if(e)e.textContent=t;}
 // ---- render ----
 function render(){
   var rows=run(S,2046), y27=rows[1], yT=rows[H_END-2026], s=S;
-  var key=VIEW==="b"?"nsbB":"nsbR";
   setT("dsVal","+€"+fix(s.dS,2));
   $("dsRange").value=Math.min(s.dS,0.6);
   // year 1
   setT("y_price",money(y27.PP)); setT("y_priceN",pct(y27.rP/y27.rB-1)+" on the current-law price ("+money(y27.PB)+")");
   setT("y_smk",ppl(y27.dN)); setT("y_smkN",fix(y27.dN/y27.NB*100,1)+"% of smokers");
-  setT("y_d",ppl(y27.D)); setT("y_h",ppl(y27.H)); setT("y_hN","SSN hospital savings "+eur(y27.C));
-  setT("y_r",eur(y27.dR)); setT("y_b",eur(y27.V+y27.C)); setT("y_bN","health "+eur(y27.V)+", SSN "+eur(y27.C));
+  setT("y_d",ppl(y27.D)); setT("y_h",ppl(y27.H));
+  setT("y_b",eur(y27.B)); setT("y_bN","deaths avoided "+eur(y27.V)+", SSN hospital savings "+eur(y27.C));
   // horizon
   setT("pvTitle","2027–"+H_END+", present value at "+String(+s.d.toFixed(2))+"%");
-  var nsb=pv(rows,key,s,H_END);
-  setT("pv_nsb",eur(nsb));
-  setT("pv_nsbN",VIEW==="b"?"health gains + SSN savings; "+ppl(sum(rows,"D",H_END))+" CVD deaths avoided in total":"SSN savings − smokers' lost surplus");
-  setT("pv_v",eur(pv(rows,"V",s,H_END))); setT("pv_vN",ppl(sum(rows,"D",H_END))+" deaths avoided"+(VIEW==="r"?" (not counted in this view)":""));
-  setT("pv_c",eur(pv(rows,"C",s,H_END))); setT("pv_cN",ppl(sum(rows,"H",H_END))+" admissions avoided");
-  setT("pv_r",eur(pv(rows,"dR",s,H_END)));
-  setT("pv_l",eur(pv(rows,"L",s,H_END))); setT("pv_lN",VIEW==="r"?"subtracted in this view":"not counted in this view (internality)");
+  var tot=pv(rows,"B",s,H_END);
+  setT("pv_b",eur(tot));
+  setT("pv_v",eur(pv(rows,"V",s,H_END))); setT("pv_vN",ppl(sum(rows,"D",H_END))+" deaths avoided in total");
+  setT("pv_c",eur(pv(rows,"C",s,H_END))); setT("pv_cN",ppl(sum(rows,"H",H_END))+" admissions avoided in total");
   // steps
   setT("o1",money(y27.PP)); setT("o1n","current law: "+money(y27.PB)+" ("+pct(y27.rP/y27.rB-1)+")");
-  setT("o1b","€"+nf0.format(y27.Mpol)+" per 1,000 (law: €"+nf0.format(y27.Mlaw)+")");
   setT("o2",money(yT.rP)); setT("o2n",H_END+", in 2026 euros; current law "+money(yT.rB)+", today "+money(s.P0));
   setT("o3",ppl(y27.dN)+" → "+ppl(yT.dN)); setT("o3n","2027 → "+H_END);
   setT("o4",ppl(y27.D)+" → "+ppl(yT.D)); setT("o4n","a year, 2027 → "+H_END+"; "+ppl(sum(rows,"D",H_END))+" in total");
   setT("o4b",ppl(sum(rows,"H",H_END)));
-  setT("o5",eur(y27.V)+" → "+eur(yT.V)); setT("o5n","a year, 2027 → "+H_END);
-  setT("o5b",eur(y27.C)+" → "+eur(yT.C));
-  setT("o6",eur(y27.dR)); setT("o6n","legal packs "+fix(y27.QP/1e9,3)+" bn (current law "+fix(y27.QB/1e9,3)+" bn)");
-  setT("o6b",eur(y27.L));
-  setT("o7",eur(nsb)); setT("o7n","2027–"+H_END+", "+(VIEW==="b"?"not fully rational view":"fully rational view")+"; the other view: "+eur(pv(rows,VIEW==="b"?"nsbR":"nsbB",s,H_END)));
+  setT("o5",eur(tot)); setT("o5n","2027–"+H_END+": deaths avoided "+eur(pv(rows,"V",s,H_END))+", SSN savings "+eur(pv(rows,"C",s,H_END)));
+  setT("o5b",eur(y27.B)+" → "+eur(yT.B)); setT("o5bn","a year, 2027 → "+H_END+", undiscounted");
   // inputs
   document.querySelectorAll("[data-k]").forEach(function(el){
     var k=el.getAttribute("data-k"); if(document.activeElement===el)return;
@@ -544,27 +469,22 @@ function render(){
   });
   pressed("#kChips .chip","data-kk",String(S.k));
   pressed("#hChips .chip","data-h",String(H_END));
-  pressed("#viewChips .chip","data-view",VIEW);
   pressed(".presets .chip","data-preset",PRESET);
   chart(rows); table(rows);
 }
 function pressed(sel,attr,val){document.querySelectorAll(sel).forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute(attr)===val));});}
 
 // ---- chart ----
-var CH={nsb:{title:"€ million a year, 2026 prices"},smk:{title:"fewer smokers"},d:{title:"CVD deaths avoided a year"},h:{title:"CVD hospital admissions avoided a year"},rev:{title:"€ million a year, 2026 prices"},price:{title:"€ per pack, 2026 prices"}};
+var CH={val:{title:"€ million a year, 2026 prices"},smk:{title:"fewer smokers"},d:{title:"CVD deaths avoided a year"},h:{title:"CVD hospital admissions avoided a year"},price:{title:"€ per pack, 2026 prices"}};
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 function chart(rows){
   var svg=$("chart"), W=svg.clientWidth||900, Hh=svg.clientHeight||340, m={l:62,r:14,t:20,b:30};
   var yrs=rows.filter(function(r){return r.t>=2027&&r.t<=H_END;});
   var series=[], line=null, line2=null, leg="";
-  if(METRIC==="nsb"){
-    series=[{k:"V",c:css("--accent"),n:"value of health gains",on:VIEW==="b"},{k:"C",c:css("--c2"),n:"SSN hospital savings",on:true},{k:"L",c:css("--neg"),n:"smokers' lost surplus (−)",on:VIEW==="r",neg:true}];
-    series=series.filter(function(x){return x.on;});
-    line={f:function(r){return r[VIEW==="b"?"nsbB":"nsbR"]/1e6;},n:"net social benefit"};
-  }else if(METRIC==="smk"){series=[{k:"dN",c:css("--accent"),n:"fewer smokers than under current law",div:1}];}
+  if(METRIC==="val"){series=[{k:"V",c:css("--accent"),n:"value of deaths avoided"},{k:"C",c:css("--c2"),n:"SSN hospital savings"}];}
+  else if(METRIC==="smk"){series=[{k:"dN",c:css("--accent"),n:"fewer smokers than under current law",div:1}];}
   else if(METRIC==="d"){series=[{k:"D",c:css("--accent"),n:"CVD deaths avoided",div:1}];}
   else if(METRIC==="h"){series=[{k:"H",c:css("--c2"),n:"CVD hospital admissions avoided",div:1}];}
-  else if(METRIC==="rev"){series=[{k:"dR",c:css("--c3"),n:"extra excise + VAT revenue (a transfer)"}];}
   else if(METRIC==="price"){line={f:function(r){return r.rP;},n:"policy"};line2={f:function(r){return r.rB;},n:"current law"};}
   function val(sr,r){var v=r[sr.k]*(sr.scale||1)/(sr.div||1e6);return sr.neg?-v:v;}
   var lo=0,hi=0;
@@ -601,7 +521,7 @@ function chart(rows){
   $("hit").onmousemove=function(e){var bx=svg.getBoundingClientRect(),x=(e.clientX-bx.left)*W/bx.width;var i=Math.max(0,Math.min(yrs.length-1,Math.floor((x-m.l)/((W-m.l-m.r)/yrs.length))));var r=yrs[i];
     var h='<div class="t">'+r.t+'</div>';
     if(METRIC==="price"){h+=row("policy",money(r.rP))+row("current law",money(r.rB))+row("gap",pct(r.rP/r.rB-1));}
-    else{series.forEach(function(sr){var v=r[sr.k]*(sr.scale||1);h+=row(sr.n,sr.div===1?ppl(v):eur(v));});if(line)h+=row(line.n,eur(line.f(r)*1e6));}
+    else{series.forEach(function(sr){var v=r[sr.k]*(sr.scale||1);h+=row(sr.n,sr.div===1?ppl(v):eur(v));});if(METRIC==="val")h+=row("total",eur(r.B));}
     tip.innerHTML=h;tip.style.display="block";var tx=(X(i)*bx.width/W)+12;if(tx>bx.width-220)tx-=240;tip.style.left=tx+"px";tip.style.top="20px";};
   $("hit").onmouseleave=function(){tip.style.display="none";};
 }
@@ -612,9 +532,9 @@ function fmtTick(v){var a=Math.abs(v);if(a>=1e6)return fix(v/1e6,1)+"m";if(a>=10
 
 // ---- table ----
 function table(rows){
-  var h='<thead><tr><th>Year</th><th>Price, law</th><th>Price, policy</th><th>Real gap</th><th>Fewer smokers</th><th>Deaths avoided</th><th>Admissions avoided</th><th>Health value</th><th>SSN savings</th><th>Lost surplus</th><th>Δ revenue</th><th>NSB, not fully rational</th><th>NSB, fully rational</th></tr></thead><tbody>';
+  var h='<thead><tr><th>Year</th><th>Price, law</th><th>Price, policy</th><th>Real gap</th><th>Fewer smokers</th><th>Deaths avoided</th><th>Admissions avoided</th><th>Value of deaths avoided</th><th>SSN savings</th><th>Total value</th></tr></thead><tbody>';
   rows.forEach(function(r){if(r.t<2027||r.t>H_END)return;
-    h+='<tr><td>'+r.t+'</td><td>'+money(r.PB)+'</td><td>'+money(r.PP)+'</td><td>'+pct(r.rP/r.rB-1)+'</td><td>'+ppl(r.dN)+'</td><td>'+ppl(r.D)+'</td><td>'+ppl(r.H)+'</td><td>'+eur(r.V)+'</td><td>'+eur(r.C)+'</td><td>'+eur(r.L)+'</td><td>'+eur(r.dR)+'</td><td>'+eur(r.nsbB)+'</td><td>'+eur(r.nsbR)+'</td></tr>';});
+    h+='<tr><td>'+r.t+'</td><td>'+money(r.PB)+'</td><td>'+money(r.PP)+'</td><td>'+pct(r.rP/r.rB-1)+'</td><td>'+ppl(r.dN)+'</td><td>'+ppl(r.D)+'</td><td>'+ppl(r.H)+'</td><td>'+eur(r.V)+'</td><td>'+eur(r.C)+'</td><td>'+eur(r.B)+'</td></tr>';});
   $("tbl").innerHTML=h+'</tbody>';
 }
 
@@ -622,7 +542,6 @@ function table(rows){
 $("dsRange").addEventListener("input",function(){S.dS=+this.value;PRESET="";render();});
 document.querySelectorAll("#kChips .chip").forEach(function(b){b.onclick=function(){S.k=+b.getAttribute("data-kk");render();};});
 document.querySelectorAll("#hChips .chip").forEach(function(b){b.onclick=function(){H_END=+b.getAttribute("data-h");render();};});
-document.querySelectorAll("#viewChips .chip").forEach(function(b){b.onclick=function(){VIEW=b.getAttribute("data-view");render();};});
 document.querySelectorAll("#metricSeg button").forEach(function(b){b.onclick=function(){METRIC=b.getAttribute("data-m");document.querySelectorAll("#metricSeg button").forEach(function(x){x.setAttribute("aria-pressed",String(x===b));});render();};});
 document.querySelectorAll(".presets .chip").forEach(function(b){b.onclick=function(){var p=b.getAttribute("data-preset");var keep={dS:S.dS,k:S.k};Object.keys(CENTRAL).forEach(function(k){S[k]=CENTRAL[k];});Object.keys(PRESETS[p]).forEach(function(k){S[k]=PRESETS[p][k];});S.dS=keep.dS;S.k=keep.k;PRESET=p;render();};});
 document.querySelectorAll("[data-k]").forEach(function(el){
