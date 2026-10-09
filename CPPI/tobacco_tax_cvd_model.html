@@ -180,7 +180,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
     <div class="card">
       <h3>The first year, 2027</h3>
       <div class="tiles">
-        <div class="tile"><div class="l">Pack price</div><div class="v" id="y_price">–</div><div class="n" id="y_priceN">–</div></div>
+        <div class="tile"><div class="l">Pack price (2026 euros)</div><div class="v" id="y_price">–</div><div class="n" id="y_priceN">–</div></div>
         <div class="tile"><div class="l">Fewer smokers</div><div class="v" id="y_smk">–</div><div class="n" id="y_smkN">–</div></div>
         <div class="tile"><div class="l">CVD deaths avoided</div><div class="v" id="y_d">–</div><div class="n">the gain builds up in later years</div></div>
         <div class="tile"><div class="l">CVD hospital admissions avoided</div><div class="v" id="y_h">–</div><div class="n">the same build-up as deaths</div></div>
@@ -236,13 +236,13 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <div class="num">1</div>
       <div>
         <h3>From the excise to the pack price</h3>
-        <p class="small">The retail price is the specific excise S, the ad valorem excise aP, VAT vP, the retailer's margin rP and the manufacturer's share F. If manufacturers keep their share, one euro of specific excise adds about €4.4 at the till, because the ad valorem part, VAT and the retailer's margin all grow with the price. Current law (L. 199/2025) already sets S at €32.00, €35.50 and €38.50 per 1,000 for 2026, 2027 and 2028, and a at 49.23%, 48.5% and 48%; after 2028 nothing is indexed.</p>
-        <div class="fx"><div class="tx" data-tex="P_t=\dfrac{S_t+F_t}{1-a_t-v-r}">P = (S + F) / (1 − a − v − r)</div><div class="tx" data-tex="P^{pol}_t=P^{law}_t+\theta\,\dfrac{S^{pol}_t-S^{law}_t}{1-a_t-v-r}">policy price = current-law price + θ ΔS / (1 − a − v − r)</div></div>
-        <ul class="where"><li><span class="sym" data-tex="P_t">P_t</span><span>retail price of a pack in year <i>t</i></span></li><li><span class="sym" data-tex="S_t">S_t</span><span>specific excise per pack (€0.64 in 2026)</span></li><li><span class="sym" data-tex="F_t">F_t</span><span>manufacturer's share per pack (about €0.61 in 2026, grows with inflation)</span></li><li><span class="sym" data-tex="a_t">a_t</span><span>ad valorem excise rate (49.23% in 2026)</span></li><li><span class="sym" data-tex="v">v</span><span>VAT as a share of the retail price (22/122 = 18.0%)</span></li><li><span class="sym" data-tex="r">r</span><span>retailer's margin as a share of the price (10%)</span></li><li><span class="sym" data-tex="\theta">\theta</span><span>pass-through: share of the full price effect that reaches the till</span></li><li><span class="sym" data-tex="law,\ pol">law,\ pol</span><span>current law (L. 199/2025) and the policy</span></li></ul>
+        <p class="small">A pack's price is the specific excise S, plus three parts that are shares of the price (the ad valorem excise, VAT and the retailer's margin), plus the manufacturer's share. We assume both margins stay constant: the retailer keeps the 10% set by law, and the manufacturer's share per pack stays the same in real terms. Then only the excise moves the price, and each euro of specific excise adds about €4.4 at the till, because the ad valorem excise, VAT and the retailer's 10% all grow with the price.</p>
+        <div class="fx"><div class="tx" data-tex="\Delta P=\theta\,m\,\Delta S">ΔP = θ m ΔS</div><div class="tx" data-tex="m=\dfrac{1}{1-a-v-r}=\dfrac{1}{1-0.4923-0.180-0.10}\approx 4.4">m = 1 / (1 − a − v − r) ≈ 4.4</div></div>
+        <ul class="where"><li><span class="sym" data-tex="\Delta P">\Delta P</span><span>rise in the pack price</span></li><li><span class="sym" data-tex="\Delta S">\Delta S</span><span>rise in the specific excise per pack</span></li><li><span class="sym" data-tex="\theta">\theta</span><span>pass-through: share of the full price effect that reaches the till</span></li><li><span class="sym" data-tex="m">m</span><span>price multiplier: euros at the till per euro of specific excise</span></li><li><span class="sym" data-tex="a">a</span><span>ad valorem excise rate (49.23% in 2026)</span></li><li><span class="sym" data-tex="v">v</span><span>VAT as a share of the retail price (22/122 = 18.0%)</span></li><li><span class="sym" data-tex="r">r</span><span>retailer's margin, set by law (10% of the price)</span></li></ul>
         <div class="fields">
           <label class="field"><span>Extra specific excise from 2027</span><span class="inwrap"><input type="number" data-k="dS" step="0.01" min="0" max="3"><em>€ a pack</em></span><small>Same as the slider. €0.23 a pack is €11.50 per 1,000 cigarettes.</small></label>
           <label class="field"><span>Reference pack price, 2026</span><span class="inwrap"><input type="number" data-k="P0" step="0.05" min="3" max="12"><em>€</em></span><small>€5.50, ADM price table, 1 January 2026 (excise €3.35, total tax 78.9%).</small></label>
-          <label class="field"><span>Pass-through θ</span><span class="inwrap"><input type="number" data-k="theta" step="0.05" min="0.1" max="1.2"><em>× full</em></span><small>1 = manufacturers keep their share (price rises 4.4 × ΔS); 0.28 = only VAT is added. Kohler et al. 2023 find taxes almost fully passed on.</small></label>
+          <label class="field"><span>Pass-through θ</span><span class="inwrap"><input type="number" data-k="theta" step="0.05" min="0.1" max="1.2"><em>× full</em></span><small>1 = margins unchanged, so the price rises 4.4 × ΔS; below 1 if manufacturers absorb part of the tax. Kohler et al. 2023 find taxes almost fully passed on.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">Pack price in 2027</div><div class="v" id="o1">–</div><div class="n" id="o1n">–</div></div>
@@ -252,9 +252,9 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <div class="num">2</div>
       <div>
         <h3>Indexation keeps the real price from falling</h3>
-        <p class="small">From 2028 the specific excise grows each year by k × inflation, on top of the steps already in current law. If k = 100% and manufacturers' share grows with inflation, the whole price grows with inflation and its real value stays constant. With k = 0 the real price falls by roughly half the inflation rate each year.</p>
-        <div class="fx"><div class="tx" data-tex="S^{pol}_{2027}=S^{law}_{2027}+\Delta S">S(2027) = law + ΔS</div><div class="tx" data-tex="S^{pol}_t=S^{pol}_{t-1}\,(1+k\pi)+\left(S^{law}_t-S^{law}_{t-1}\right)\quad t\ge 2028">S(t) = S(t−1)(1 + kπ) + law step</div><div class="tx" data-tex="\tilde P_t=\dfrac{P_t}{(1+\pi)^{\,t-2026}}">real price = P / (1 + π)^(t − 2026)</div></div>
-        <ul class="where"><li><span class="sym" data-tex="\Delta S">\Delta S</span><span>extra specific excise per pack from 2027</span></li><li><span class="sym" data-tex="k">k</span><span>indexation rate (1 = the excise grows with inflation)</span></li><li><span class="sym" data-tex="\pi">\pi</span><span>inflation rate</span></li><li><span class="sym" data-tex="\tilde P_t">\tilde P_t</span><span>real pack price in year <i>t</i>, in 2026 euros</span></li><li><span class="sym" data-tex="S^{law}_t-S^{law}_{t-1}">S^{law}_t-S^{law}_{t-1}</span><span>step already set by current law (only in 2027 and 2028)</span></li></ul>
+        <p class="small">Current law (L. 199/2025) raises the specific excise to €0.71 a pack in 2027 and €0.77 in 2028, then freezes it, so inflation erodes it. The policy adds ΔS in 2027 and from 2028 grows the excise by k × inflation. Prices are in 2026 euros: the real price is today's price plus m times the change in the real specific excise. With k = 100% the real policy price stays constant; with k = 0 it falls by roughly half the inflation rate each year.</p>
+        <div class="fx"><div class="tx" data-tex="S^{pol}_{2027}=S^{law}_{2027}+\Delta S,\qquad S^{pol}_t=S^{pol}_{t-1}\,(1+k\pi)+\left(S^{law}_t-S^{law}_{t-1}\right)">S(2027) = law + ΔS; S(t) = S(t−1)(1 + kπ) + law step</div><div class="tx" data-tex="\tilde S_t=\dfrac{S_t}{(1+\pi)^{\,t-2026}}">real excise = S / (1 + π)^(t − 2026)</div><div class="tx" data-tex="\tilde P^{law}_t=P_0+m\left(\tilde S^{law}_t-S_0\right),\qquad \tilde P^{pol}_t=\tilde P^{law}_t+\theta\,m\left(\tilde S^{pol}_t-\tilde S^{law}_t\right)">real price = P₀ + m (real excise − S₀)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="S^{law}_t,\ S^{pol}_t">S^{law}_t,\ S^{pol}_t</span><span>specific excise per pack under current law and under the policy</span></li><li><span class="sym" data-tex="S_0">S_0</span><span>specific excise per pack in 2026 (€0.64)</span></li><li><span class="sym" data-tex="k">k</span><span>indexation rate (1 = the excise grows with inflation)</span></li><li><span class="sym" data-tex="\pi">\pi</span><span>inflation rate</span></li><li><span class="sym" data-tex="\tilde S_t">\tilde S_t</span><span>real specific excise, in 2026 euros</span></li><li><span class="sym" data-tex="\tilde P_t">\tilde P_t</span><span>real pack price in year <i>t</i>, in 2026 euros</span></li><li><span class="sym" data-tex="P_0">P_0</span><span>pack price in 2026</span></li></ul>
         <div class="fields">
           <label class="field"><span>Indexation rate k</span><span class="inwrap"><input type="number" data-k="k" step="0.1" min="0" max="2"><em>× inflation</em></span><small>Same as the chips above. 1 = full indexation.</small></label>
           <label class="field"><span>Inflation π</span><span class="inwrap"><input type="number" data-k="pi" step="0.1" min="0" max="10"><em>% a year</em></span><small>2.0%: Banca d'Italia, June 2026 projections (2.0% in 2027, 1.9% in 2028) and the ECB target.</small></label>
@@ -326,7 +326,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
     <thead><tr><th>Input</th><th>Default</th><th>Source</th><th></th></tr></thead>
     <tbody>
       <tr><td>Reference pack price, tax split</td><td>€5.50; S €0.64, a 49.23%, VAT 22/122, retailer 10%</td><td><a href="https://www.adm.gov.it/portale/documents/20182/1106865/TAB+A+SIGARETTE_01-01-2026.pdf/ef857cb5-6bd6-feae-39fb-8399e1991a31?t=1768549888045">ADM, Tabella A sigarette, 1 January 2026</a>; price structure also in the Bocconi CERGAS report (2025), p. 9</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>Current-law excise path</td><td>€32.00 / 35.50 / 38.50 per 1,000; a 49.23 / 48.5 / 48%; minimum €216 / 221 / 227</td><td><a href="https://temi.camera.it/leg19/temi/19_tl18_accise.html">L. 199/2025, Camera dei deputati dossier on excise duties</a></td><td><span class="tag n">online</span></td></tr>
+      <tr><td>Current-law excise path</td><td>€32.00 / 35.50 / 38.50 per 1,000 (2026–2028), then frozen; the cut in a to 48% is ignored</td><td><a href="https://temi.camera.it/leg19/temi/19_tl18_accise.html">L. 199/2025, Camera dei deputati dossier on excise duties</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Minimum tax burden = excise + VAT</td><td>packs below about €5.47 pay it</td><td><a href="https://www.adm.gov.it/portale/monopoli/tabacchi/prezzi/composizione_prezzo">ADM, composizione del prezzo</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Pass-through θ</td><td>1 (cautious 0.8)</td><td>Kohler, Vinci, Mattli (2023), BMJ Open: tax-to-price coefficient 0.80; Marzioni et al. (2020): pass-through weaker on cheap brands</td><td><span class="tag y">folder</span></td></tr>
       <tr><td>Inflation π</td><td>2.0%</td><td><a href="https://www.bancaditalia.it/pubblicazioni/proiezioni-macroeconomiche/2026/Proiezioni-macroeconomiche-Italia-giugno-2026.pdf">Banca d'Italia, macroeconomic projections, June 2026</a></td><td><span class="tag n">online</span></td></tr>
@@ -377,6 +377,8 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
     <div class="card">
       <h3>Prices and baseline</h3>
       <ul>
+        <li>Margins are held constant: the retailer's 10% (set by law) and the manufacturer's share in real terms. If manufacturers absorb part of the tax, set θ below 1.</li>
+        <li>L. 199/2025 also trims the ad valorem rate (49.23% to 48% by 2028). Ignoring it puts the current-law price about 3–5% too high, but changes the deaths avoided by less than 1%.</li>
         <li>Every pack is treated like the €5.50 reference pack. The minimum tax must rise with the excise, or cheap brands (much of the market sits near it) do not move.</li>
         <li>Heated tobacco is left at current law; raising it in step avoids substitution.</li>
         <li>Prevalence is flat apart from the price effect (it has been at about 20% for ten years); smoking-attributable CVD deaths are held at their 2023 level (they fell 2.2% a year in 2015–2023).</li>
@@ -394,8 +396,9 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 (function(){
 "use strict";
 var HICP26=124.3*1.031;
-var LAW_S={2026:0.64,2027:0.71,2028:0.77}, LAW_A={2026:0.4923,2027:0.485,2028:0.48};
-var V=22/122, R=0.10;
+var LAW_S={2026:0.64,2027:0.71,2028:0.77}, S0=0.64;
+// price multiplier: euros at the till per euro of specific excise, margins held constant
+var M=1/(1-0.4923-22/122-0.10);
 // value of a life-year = EUR 70,000 at 2016 prices, uprated (optional euro figure); cost per admission = EUR 1,063.1m / 177,409 (2018), uprated
 var CENTRAL={dS:0.23,k:1,pi:2.0,theta:1,P0:5.50,N0:10.0,eps_p:-0.20,
   A:11840,H:177409,s:0.44,lam:0.25,ly:10,voly:Math.round(70000*HICP26/99.9/100)*100,
@@ -413,18 +416,15 @@ function law(tab,t){var y=2026;Object.keys(tab).forEach(function(k){k=+k;if(k<=t
 
 // ---- model ----
 function run(s,last){
-  var pi=s.pi/100, a0=law(LAW_A,2026), F0=s.P0*(1-a0-V-R)-law(LAW_S,2026);
-  var rows=[], SPp=0, SBp=0, N0=s.N0*1e6;
+  var pi=s.pi/100, rows=[], SPp=0, SBp=0, N0=s.N0*1e6;
   for(var t=2026;t<=last;t++){
-    var cpi=Math.pow(1+pi,t-2026), a=law(LAW_A,t), SB=law(LAW_S,t), den=1-a-V-R;
-    var PB=(SB+F0*cpi)/den;
+    var cpi=Math.pow(1+pi,t-2026), SB=law(LAW_S,t);
     var SP=(t===2026)?SB:(t===2027?SB+s.dS:SPp*(1+s.k*pi)+(SB-SBp));
-    var PP=PB+s.theta*(SP-SB)/den;
-    var rB=PB/cpi, rP=PP/cpi;
+    var rB=s.P0+M*(SB/cpi-S0), rP=rB+s.theta*M*(SP-SB)/cpi;
     var NB=N0*Math.pow(rB/s.P0,s.eps_p), NP=N0*Math.pow(rP/s.P0,s.eps_p);
     var f=1-Math.pow(rP/rB,s.eps_p), g=1-Math.exp(-s.lam*(t-2026));
     var D=s.A*s.s*f*g, Hh=s.H*s.s*f*g, LY=s.ly*D, C=Hh*s.cpa;
-    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,LY:LY,C:C,V:LY*s.voly});
+    rows.push({t:t,SB:SB,SP:SP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,LY:LY,C:C,V:LY*s.voly});
     SPp=SP; SBp=SB;
   }
   return rows;
@@ -448,7 +448,7 @@ function render(){
   setT("dsVal","+€"+fix(s.dS,2));
   $("dsRange").value=Math.min(s.dS,0.6);
   // year 1
-  setT("y_price",money(y27.PP)); setT("y_priceN",pct(y27.rP/y27.rB-1)+" on the current-law price ("+money(y27.PB)+")");
+  setT("y_price",money(y27.rP)); setT("y_priceN",pct(y27.rP/y27.rB-1)+" on the current-law price ("+money(y27.rB)+")");
   setT("y_smk",ppl(y27.dN)); setT("y_smkN",fix(y27.dN/y27.NB*100,1)+"% of smokers");
   setT("y_d",ppl(y27.D)); setT("y_h",ppl(y27.H)); setT("y_ly",ppl(y27.LY)); setT("y_c",eur(y27.C));
   // horizon
@@ -460,7 +460,7 @@ function render(){
   var valTxt="With a euro value of €"+nf0.format(s.voly)+" per life-year, the life-years are worth "+eur(pV)+" ("+eur(pV+pC)+" with the SSN savings), present value at "+String(+s.d.toFixed(2))+"%.";
   setT("pv_val",valTxt);
   // steps
-  setT("o1",money(y27.PP)); setT("o1n","current law: "+money(y27.PB)+" ("+pct(y27.rP/y27.rB-1)+")");
+  setT("o1",money(y27.rP)); setT("o1n","2026 euros; current law "+money(y27.rB)+" ("+pct(y27.rP/y27.rB-1)+")");
   setT("o2",money(yT.rP)); setT("o2n",H_END+", in 2026 euros; current law "+money(yT.rB)+", today "+money(s.P0));
   setT("o3",ppl(y27.dN)+" → "+ppl(yT.dN)); setT("o3n","2027 → "+H_END);
   setT("o4",ppl(y27.D)+" → "+ppl(yT.D)); setT("o4n","a year, 2027 → "+H_END+"; "+ppl(nD)+" in total");
@@ -538,9 +538,9 @@ function fmtTick(v){var a=Math.abs(v);if(a>=1e6)return fix(v/1e6,1)+"m";if(a>=10
 
 // ---- table ----
 function table(rows){
-  var h='<thead><tr><th>Year</th><th>Price, law</th><th>Price, policy</th><th>Real gap</th><th>Fewer smokers</th><th>Deaths avoided</th><th>Admissions avoided</th><th>Life-years gained</th><th>SSN savings</th></tr></thead><tbody>';
+  var h='<thead><tr><th>Year</th><th>Real price, law</th><th>Real price, policy</th><th>Gap</th><th>Fewer smokers</th><th>Deaths avoided</th><th>Admissions avoided</th><th>Life-years gained</th><th>SSN savings</th></tr></thead><tbody>';
   rows.forEach(function(r){if(r.t<2027||r.t>H_END)return;
-    h+='<tr><td>'+r.t+'</td><td>'+money(r.PB)+'</td><td>'+money(r.PP)+'</td><td>'+pct(r.rP/r.rB-1)+'</td><td>'+ppl(r.dN)+'</td><td>'+ppl(r.D)+'</td><td>'+ppl(r.H)+'</td><td>'+ppl(r.LY)+'</td><td>'+eur(r.C)+'</td></tr>';});
+    h+='<tr><td>'+r.t+'</td><td>'+money(r.rB)+'</td><td>'+money(r.rP)+'</td><td>'+pct(r.rP/r.rB-1)+'</td><td>'+ppl(r.dN)+'</td><td>'+ppl(r.D)+'</td><td>'+ppl(r.H)+'</td><td>'+ppl(r.LY)+'</td><td>'+eur(r.C)+'</td></tr>';});
   $("tbl").innerHTML=h+'</tbody>';
 }
 
