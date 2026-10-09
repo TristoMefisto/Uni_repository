@@ -155,7 +155,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
   <div class="wrap">
     <div class="eyebrow">Health-benefit calculator · Italy · Current Public Policy Issues</div>
     <h1>Raise the cigarette excise on 1 January 2027, then index it to inflation</h1>
-    <p class="lede">A higher specific excise raises the pack price, some smokers quit, and over the following years fewer people die of or are admitted to hospital for cardiovascular disease (CVD). Indexing the excise stops the real price from falling again. The page stops at what the deaths and admissions avoided are worth; tax revenue is left out for now. Every number comes from the inputs below, and every input has a source.</p>
+    <p class="lede">A higher specific excise raises the pack price, some smokers quit, and over the following years fewer people die of or are admitted to hospital for cardiovascular disease (CVD). Indexing the excise stops the real price from falling again. The gains are counted as deaths, hospital admissions and life-years, plus the hospital money the SSN saves; tax revenue is left out for now. Every number comes from the inputs below, and every input has a source.</p>
   </div>
 </header>
 
@@ -184,16 +184,18 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
         <div class="tile"><div class="l">Fewer smokers</div><div class="v" id="y_smk">–</div><div class="n" id="y_smkN">–</div></div>
         <div class="tile"><div class="l">CVD deaths avoided</div><div class="v" id="y_d">–</div><div class="n">the gain builds up in later years</div></div>
         <div class="tile"><div class="l">CVD hospital admissions avoided</div><div class="v" id="y_h">–</div><div class="n">the same build-up as deaths</div></div>
-        <div class="tile big"><div class="l">Value of the deaths and admissions avoided</div><div class="v" id="y_b">–</div><div class="n" id="y_bN">–</div></div>
+        <div class="tile"><div class="l">Life-years gained</div><div class="v" id="y_ly">–</div><div class="n">about 10 per death avoided</div></div>
+        <div class="tile"><div class="l">SSN hospital savings</div><div class="v" id="y_c">–</div><div class="n">admissions avoided × average cost</div></div>
       </div>
     </div>
     <div class="card">
-      <h3 id="pvTitle">2027–2035, present value at 3%</h3>
+      <h3 id="pvTitle">2027–2035 in total</h3>
       <div class="tiles">
-        <div class="tile big"><div class="l">Value of the health gains</div><div class="v" id="pv_b">–</div><div class="n">value of deaths avoided + SSN hospital savings</div></div>
-        <div class="tile"><div class="l">Value of deaths avoided</div><div class="v" id="pv_v">–</div><div class="n" id="pv_vN">–</div></div>
+        <div class="tile big"><div class="l">CVD deaths avoided</div><div class="v" id="pv_d">–</div><div class="n" id="pv_dN">–</div></div>
+        <div class="tile"><div class="l">Life-years gained</div><div class="v" id="pv_ly">–</div><div class="n">by the deaths avoided</div></div>
         <div class="tile"><div class="l">SSN hospital savings</div><div class="v" id="pv_c">–</div><div class="n" id="pv_cN">–</div></div>
       </div>
+      <p class="small" id="pv_val" style="margin:12px 0 0">–</p>
     </div>
   </div>
 </section>
@@ -202,10 +204,10 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
   <h2>Year by year</h2>
   <p class="sub">Benefits arrive slowly: smoking falls in the first year, but a quitter's extra CVD risk fades over 5 to 15 years. With indexation the gap between the policy price and the current-law price also widens, because under current law the excise is frozen from 2028 and the real price drifts down.</p>
   <div class="seg" role="group" aria-label="Measure shown" id="metricSeg">
-    <button data-m="val" aria-pressed="true">Value of health gains</button>
-    <button data-m="smk" aria-pressed="false">Fewer smokers</button>
-    <button data-m="d" aria-pressed="false">Deaths avoided</button>
+    <button data-m="d" aria-pressed="true">Deaths avoided</button>
     <button data-m="h" aria-pressed="false">Admissions avoided</button>
+    <button data-m="c" aria-pressed="false">SSN savings</button>
+    <button data-m="smk" aria-pressed="false">Fewer smokers</button>
     <button data-m="price" aria-pressed="false">Real pack price</button>
   </div>
   <div class="legend" id="legend"></div>
@@ -296,17 +298,18 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
     <div class="card step">
       <div class="num">5</div>
       <div>
-        <h3>What the deaths and admissions avoided are worth</h3>
-        <p class="small">Each death avoided is worth the life-years it adds (about 10) times the value of a life-year; each admission avoided saves the SSN its average cost. The two are added year by year and discounted back to 2027. Counting the quitters' own health gain treats smoking as partly a mistake: if smokers were fully rational, only the SSN savings would count.</p>
-        <div class="fx"><div class="tx" data-tex="V_t=\omega\,D_t,\qquad \omega=LY\times VOLY">value of deaths avoided = ω D</div><div class="tx" data-tex="C_t=c\,H_t">SSN savings = c H</div><div class="tx" data-tex="B_t=V_t+C_t,\qquad PV=\sum_{t=2027}^{T}\dfrac{B_t}{(1+d)^{\,t-2027}}">PV = Σ (V + C) / (1 + d)^(t − 2027)</div></div>
-        <ul class="where"><li><span class="sym" data-tex="V_t">V_t</span><span>value of the deaths avoided in year <i>t</i></span></li><li><span class="sym" data-tex="\omega">\omega</span><span>value of one death avoided (€898,000)</span></li><li><span class="sym" data-tex="LY">LY</span><span>life-years gained per death avoided (10)</span></li><li><span class="sym" data-tex="VOLY">VOLY</span><span>value of a life-year (€89,800)</span></li><li><span class="sym" data-tex="C_t">C_t</span><span>SSN hospital savings in year <i>t</i></span></li><li><span class="sym" data-tex="c">c</span><span>average SSN cost of one CVD admission (€7,490)</span></li><li><span class="sym" data-tex="B_t">B_t</span><span>value of the health gains in year <i>t</i></span></li><li><span class="sym" data-tex="PV">PV</span><span>present value over the horizon</span></li><li><span class="sym" data-tex="T">T</span><span>last year of the horizon (2029, 2035 or 2046)</span></li><li><span class="sym" data-tex="d">d</span><span>social discount rate</span></li></ul>
+        <h3>Life-years gained and SSN savings</h3>
+        <p class="small">Each CVD death avoided adds about 10 years of life (life expectancy at 75, where most CVD deaths happen, is 13.4 years). Each admission avoided saves the SSN its average cost. Only the savings are in euros, discounted back to 2027. A euro value for the life-years is shown apart, because it rests on one contested number: the value of a life-year.</p>
+        <div class="fx"><div class="tx" data-tex="LY_t=\ell\,D_t">life-years gained = ℓ D</div><div class="tx" data-tex="C_t=c\,H_t">SSN savings = c H</div><div class="tx" data-tex="PV_C=\sum_{t=2027}^{T}\dfrac{C_t}{(1+d)^{\,t-2027}}">PV = Σ C / (1 + d)^(t − 2027)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="LY_t">LY_t</span><span>life-years gained by the deaths avoided in year <i>t</i></span></li><li><span class="sym" data-tex="\ell">\ell</span><span>life-years gained per death avoided (10)</span></li><li><span class="sym" data-tex="D_t,\ H_t">D_t,\ H_t</span><span>CVD deaths and admissions avoided (step 4)</span></li><li><span class="sym" data-tex="C_t">C_t</span><span>SSN hospital savings in year <i>t</i></span></li><li><span class="sym" data-tex="c">c</span><span>average SSN cost of one CVD admission (€7,490)</span></li><li><span class="sym" data-tex="PV_C">PV_C</span><span>present value of the savings over the horizon</span></li><li><span class="sym" data-tex="T">T</span><span>last year of the horizon (2029, 2035 or 2046)</span></li><li><span class="sym" data-tex="d">d</span><span>social discount rate</span></li></ul>
         <div class="fields">
-          <label class="field"><span>Value per death avoided <span data-tex="\omega">ω</span></span><span class="inwrap"><input type="number" data-k="vpd" step="10000" min="0"><em>€</em></span><small>€898,000 = 10 life-years × €89,800. Life expectancy at 75 is 13.4 years (Eurostat 2024); a life-year is worth €70,000 at 2016 prices in the EU handbook on external costs (2019), uprated. With the AIES threshold of €40,000 per year: €400,000.</small></label>
+          <label class="field"><span>Life-years per death avoided <span data-tex="\ell">ℓ</span></span><span class="inwrap"><input type="number" data-k="ly" step="1" min="0" max="30"><em>years</em></span><small>10 (range 7–13). Life expectancy at 75 is 13.4 years (Eurostat 2024); CVD deaths are mostly at 75+.</small></label>
           <label class="field"><span>Cost per CVD admission <span data-tex="c">c</span></span><span class="inwrap"><input type="number" data-k="cpa" step="100" min="0"><em>€</em></span><small>€7,490 = €1,063m ÷ 177,409 admissions in 2018 (Possenti et al. 2024), at 2026 prices.</small></label>
           <label class="field"><span>Social discount rate d</span><span class="inwrap"><input type="number" data-k="d" step="0.5" min="0" max="10"><em>%</em></span><small>3%: EU Guide to Cost-Benefit Analysis (2014), for member states outside the Cohesion Fund.</small></label>
+          <label class="field"><span>Optional: value of a life-year</span><span class="inwrap"><input type="number" data-k="voly" step="1000" min="0"><em>€</em></span><small>Only for the euro figure shown apart. €89,800: €70,000 at 2016 prices in the EU handbook on external costs (2019), uprated. The AIES threshold is €40,000.</small></label>
         </div>
       </div>
-      <div class="out"><div class="l">Value of the health gains, present value</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n" id="o5bn">–</div></div>
+      <div class="out"><div class="l">Life-years gained</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n" id="o5bn">–</div><div class="n" id="o5c" style="margin-top:8px">–</div></div>
     </div>
   </div>
 </section>
@@ -334,7 +337,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <tr><td>Speed the risk fades λ</td><td>0.25 (0.10–0.25)</td><td><a href="https://doi.org/10.1001/jama.2019.10298">Duncan et al. (2019)</a>, JAMA</td><td><span class="tag n">online</span></td></tr>
       <tr><td>CVD admissions caused by smoking H̄, cost per admission c</td><td>177,409; €7,490 (€1,063m in 2018, uprated)</td><td><a href="https://doi.org/10.18332/tid/188111">Possenti et al. (2024)</a>, Tobacco Induced Diseases, Table 1</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Life-years per death avoided</td><td>10 (7–13)</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/demo_mlexpec/default/table">Eurostat demo_mlexpec</a>: life expectancy at 75 = 13.4 years (Italy, 2024)</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>Value of a life-year (so €898,000 per death avoided)</td><td>€89,800 (2026 prices)</td><td><a href="https://cedelft.eu/publications/handbook-on-the-external-costs-of-transport-version-2019/">Handbook on the external costs of transport (2019)</a>, €70,000 at 2016 prices; AIES €25–40k per QALY in the Bocconi report, p. 46</td><td><span class="tag n">online</span></td></tr>
+      <tr><td>Value of a life-year (optional euro figure only)</td><td>€89,800 (2026 prices)</td><td><a href="https://cedelft.eu/publications/handbook-on-the-external-costs-of-transport-version-2019/">Handbook on the external costs of transport (2019)</a>, €70,000 at 2016 prices; AIES €25–40k per QALY in the Bocconi report, p. 46</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Price uprating</td><td>HICP 2016 = 99.9, 2018 = 102.5, 2025 = 124.3; 2026 +3.1%</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_aind/default/table">Eurostat prc_hicp_aind</a>; Banca d'Italia 2026 projection</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Social discount rate d</td><td>3%</td><td><a href="https://ec.europa.eu/regional_policy/sources/studies/cba_guide.pdf">European Commission, Guide to Cost-Benefit Analysis of Investment Projects (2014)</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Safe Hearts target</td><td>premature CVD mortality −25% by 2035</td><td>European Commission (2025), COM(2025) 1024</td><td><span class="tag y">folder</span></td></tr>
@@ -368,6 +371,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <ul>
         <li>Tax revenue: the higher price paid on packs still smoked moves money from smokers to the state, a transfer rather than a gain for society.</li>
         <li>Smokers' lost surplus on the packs they give up, which would count against the benefit if smokers were fully rational.</li>
+        <li>A euro value for the lives saved, shown only apart: it moves by a factor of two with the value of a life-year (€40,000 to €89,800).</li>
       </ul>
     </div>
     <div class="card">
@@ -392,17 +396,17 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 var HICP26=124.3*1.031;
 var LAW_S={2026:0.64,2027:0.71,2028:0.77}, LAW_A={2026:0.4923,2027:0.485,2028:0.48};
 var V=22/122, R=0.10;
-// value per death avoided = 10 life-years x VOLY (EUR 70,000 at 2016 prices, uprated); cost per admission = EUR 1,063.1m / 177,409 (2018), uprated
+// value of a life-year = EUR 70,000 at 2016 prices, uprated (optional euro figure); cost per admission = EUR 1,063.1m / 177,409 (2018), uprated
 var CENTRAL={dS:0.23,k:1,pi:2.0,theta:1,P0:5.50,N0:10.0,eps_p:-0.20,
-  A:11840,H:177409,s:0.44,lam:0.25,vpd:Math.round(10*70000*HICP26/99.9/1000)*1000,
+  A:11840,H:177409,s:0.44,lam:0.25,ly:10,voly:Math.round(70000*HICP26/99.9/100)*100,
   cpa:Math.round(1063.1e6*HICP26/102.5/177409/10)*10,d:3};
 var PRESETS={
-  cautious:{eps_p:-0.10,theta:0.8,lam:0.10,vpd:280000,s:0.40},
+  cautious:{eps_p:-0.10,theta:0.8,lam:0.10,ly:7,voly:40000,s:0.40},
   central:{},
-  optimistic:{eps_p:-0.30,theta:1,lam:0.25,vpd:1167000,s:0.50}
+  optimistic:{eps_p:-0.30,theta:1,lam:0.25,ly:13,s:0.50}
 };
 var S={}; Object.keys(CENTRAL).forEach(function(k){S[k]=CENTRAL[k];});
-var H_END=2035, METRIC="val", PRESET="central";
+var H_END=2035, METRIC="d", PRESET="central";
 var $=function(id){return document.getElementById(id);};
 
 function law(tab,t){var y=2026;Object.keys(tab).forEach(function(k){k=+k;if(k<=t&&k>y)y=k;});return tab[y];}
@@ -419,8 +423,8 @@ function run(s,last){
     var rB=PB/cpi, rP=PP/cpi;
     var NB=N0*Math.pow(rB/s.P0,s.eps_p), NP=N0*Math.pow(rP/s.P0,s.eps_p);
     var f=1-Math.pow(rP/rB,s.eps_p), g=1-Math.exp(-s.lam*(t-2026));
-    var D=s.A*s.s*f*g, Hh=s.H*s.s*f*g, Vv=D*s.vpd, C=Hh*s.cpa;
-    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,V:Vv,C:C,B:Vv+C});
+    var D=s.A*s.s*f*g, Hh=s.H*s.s*f*g, LY=s.ly*D, C=Hh*s.cpa;
+    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,LY:LY,C:C,V:LY*s.voly});
     SPp=SP; SBp=SB;
   }
   return rows;
@@ -446,22 +450,24 @@ function render(){
   // year 1
   setT("y_price",money(y27.PP)); setT("y_priceN",pct(y27.rP/y27.rB-1)+" on the current-law price ("+money(y27.PB)+")");
   setT("y_smk",ppl(y27.dN)); setT("y_smkN",fix(y27.dN/y27.NB*100,1)+"% of smokers");
-  setT("y_d",ppl(y27.D)); setT("y_h",ppl(y27.H));
-  setT("y_b",eur(y27.B)); setT("y_bN","deaths avoided "+eur(y27.V)+", SSN hospital savings "+eur(y27.C));
+  setT("y_d",ppl(y27.D)); setT("y_h",ppl(y27.H)); setT("y_ly",ppl(y27.LY)); setT("y_c",eur(y27.C));
   // horizon
-  setT("pvTitle","2027–"+H_END+", present value at "+String(+s.d.toFixed(2))+"%");
-  var tot=pv(rows,"B",s,H_END);
-  setT("pv_b",eur(tot));
-  setT("pv_v",eur(pv(rows,"V",s,H_END))); setT("pv_vN",ppl(sum(rows,"D",H_END))+" deaths avoided in total");
-  setT("pv_c",eur(pv(rows,"C",s,H_END))); setT("pv_cN",ppl(sum(rows,"H",H_END))+" admissions avoided in total");
+  var nD=sum(rows,"D",H_END), nH=sum(rows,"H",H_END), nLY=sum(rows,"LY",H_END), pC=pv(rows,"C",s,H_END), pV=pv(rows,"V",s,H_END);
+  setT("pvTitle","2027–"+H_END+" in total");
+  setT("pv_d",ppl(nD)); setT("pv_dN","and "+ppl(nH)+" CVD hospital admissions");
+  setT("pv_ly",ppl(nLY));
+  setT("pv_c",eur(pC)); setT("pv_cN","present value at "+String(+s.d.toFixed(2))+"%");
+  var valTxt="With a euro value of €"+nf0.format(s.voly)+" per life-year, the life-years are worth "+eur(pV)+" ("+eur(pV+pC)+" with the SSN savings), present value at "+String(+s.d.toFixed(2))+"%.";
+  setT("pv_val",valTxt);
   // steps
   setT("o1",money(y27.PP)); setT("o1n","current law: "+money(y27.PB)+" ("+pct(y27.rP/y27.rB-1)+")");
   setT("o2",money(yT.rP)); setT("o2n",H_END+", in 2026 euros; current law "+money(yT.rB)+", today "+money(s.P0));
   setT("o3",ppl(y27.dN)+" → "+ppl(yT.dN)); setT("o3n","2027 → "+H_END);
-  setT("o4",ppl(y27.D)+" → "+ppl(yT.D)); setT("o4n","a year, 2027 → "+H_END+"; "+ppl(sum(rows,"D",H_END))+" in total");
-  setT("o4b",ppl(sum(rows,"H",H_END)));
-  setT("o5",eur(tot)); setT("o5n","2027–"+H_END+": deaths avoided "+eur(pv(rows,"V",s,H_END))+", SSN savings "+eur(pv(rows,"C",s,H_END)));
-  setT("o5b",eur(y27.B)+" → "+eur(yT.B)); setT("o5bn","a year, 2027 → "+H_END+", undiscounted");
+  setT("o4",ppl(y27.D)+" → "+ppl(yT.D)); setT("o4n","a year, 2027 → "+H_END+"; "+ppl(nD)+" in total");
+  setT("o4b",ppl(nH));
+  setT("o5",ppl(nLY)); setT("o5n","2027–"+H_END+", by "+ppl(nD)+" deaths avoided");
+  setT("o5b",eur(pC)); setT("o5bn","SSN savings, present value at "+String(+s.d.toFixed(2))+"%");
+  setT("o5c",valTxt);
   // inputs
   document.querySelectorAll("[data-k]").forEach(function(el){
     var k=el.getAttribute("data-k"); if(document.activeElement===el)return;
@@ -475,13 +481,13 @@ function render(){
 function pressed(sel,attr,val){document.querySelectorAll(sel).forEach(function(b){b.setAttribute("aria-pressed",String(b.getAttribute(attr)===val));});}
 
 // ---- chart ----
-var CH={val:{title:"€ million a year, 2026 prices"},smk:{title:"fewer smokers"},d:{title:"CVD deaths avoided a year"},h:{title:"CVD hospital admissions avoided a year"},price:{title:"€ per pack, 2026 prices"}};
+var CH={c:{title:"€ million a year, 2026 prices"},smk:{title:"fewer smokers"},d:{title:"CVD deaths avoided a year"},h:{title:"CVD hospital admissions avoided a year"},price:{title:"€ per pack, 2026 prices"}};
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 function chart(rows){
   var svg=$("chart"), W=svg.clientWidth||900, Hh=svg.clientHeight||340, m={l:62,r:14,t:20,b:30};
   var yrs=rows.filter(function(r){return r.t>=2027&&r.t<=H_END;});
   var series=[], line=null, line2=null, leg="";
-  if(METRIC==="val"){series=[{k:"V",c:css("--accent"),n:"value of deaths avoided"},{k:"C",c:css("--c2"),n:"SSN hospital savings"}];}
+  if(METRIC==="c"){series=[{k:"C",c:css("--c2"),n:"SSN hospital savings"}];}
   else if(METRIC==="smk"){series=[{k:"dN",c:css("--accent"),n:"fewer smokers than under current law",div:1}];}
   else if(METRIC==="d"){series=[{k:"D",c:css("--accent"),n:"CVD deaths avoided",div:1}];}
   else if(METRIC==="h"){series=[{k:"H",c:css("--c2"),n:"CVD hospital admissions avoided",div:1}];}
@@ -521,7 +527,7 @@ function chart(rows){
   $("hit").onmousemove=function(e){var bx=svg.getBoundingClientRect(),x=(e.clientX-bx.left)*W/bx.width;var i=Math.max(0,Math.min(yrs.length-1,Math.floor((x-m.l)/((W-m.l-m.r)/yrs.length))));var r=yrs[i];
     var h='<div class="t">'+r.t+'</div>';
     if(METRIC==="price"){h+=row("policy",money(r.rP))+row("current law",money(r.rB))+row("gap",pct(r.rP/r.rB-1));}
-    else{series.forEach(function(sr){var v=r[sr.k]*(sr.scale||1);h+=row(sr.n,sr.div===1?ppl(v):eur(v));});if(METRIC==="val")h+=row("total",eur(r.B));}
+    else{series.forEach(function(sr){var v=r[sr.k]*(sr.scale||1);h+=row(sr.n,sr.div===1?ppl(v):eur(v));});}
     tip.innerHTML=h;tip.style.display="block";var tx=(X(i)*bx.width/W)+12;if(tx>bx.width-220)tx-=240;tip.style.left=tx+"px";tip.style.top="20px";};
   $("hit").onmouseleave=function(){tip.style.display="none";};
 }
@@ -532,9 +538,9 @@ function fmtTick(v){var a=Math.abs(v);if(a>=1e6)return fix(v/1e6,1)+"m";if(a>=10
 
 // ---- table ----
 function table(rows){
-  var h='<thead><tr><th>Year</th><th>Price, law</th><th>Price, policy</th><th>Real gap</th><th>Fewer smokers</th><th>Deaths avoided</th><th>Admissions avoided</th><th>Value of deaths avoided</th><th>SSN savings</th><th>Total value</th></tr></thead><tbody>';
+  var h='<thead><tr><th>Year</th><th>Price, law</th><th>Price, policy</th><th>Real gap</th><th>Fewer smokers</th><th>Deaths avoided</th><th>Admissions avoided</th><th>Life-years gained</th><th>SSN savings</th></tr></thead><tbody>';
   rows.forEach(function(r){if(r.t<2027||r.t>H_END)return;
-    h+='<tr><td>'+r.t+'</td><td>'+money(r.PB)+'</td><td>'+money(r.PP)+'</td><td>'+pct(r.rP/r.rB-1)+'</td><td>'+ppl(r.dN)+'</td><td>'+ppl(r.D)+'</td><td>'+ppl(r.H)+'</td><td>'+eur(r.V)+'</td><td>'+eur(r.C)+'</td><td>'+eur(r.B)+'</td></tr>';});
+    h+='<tr><td>'+r.t+'</td><td>'+money(r.PB)+'</td><td>'+money(r.PP)+'</td><td>'+pct(r.rP/r.rB-1)+'</td><td>'+ppl(r.dN)+'</td><td>'+ppl(r.D)+'</td><td>'+ppl(r.H)+'</td><td>'+ppl(r.LY)+'</td><td>'+eur(r.C)+'</td></tr>';});
   $("tbl").innerHTML=h+'</tbody>';
 }
 
