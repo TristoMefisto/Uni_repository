@@ -190,7 +190,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
         <div class="tile big"><div class="l">Net social benefit</div><div class="v" id="pv_nsb">–</div><div class="n" id="pv_nsbN">–</div></div>
         <div class="tile"><div class="l">Value of life-years gained</div><div class="v" id="pv_v">–</div><div class="n" id="pv_vN">–</div></div>
         <div class="tile"><div class="l">SSN hospital savings</div><div class="v" id="pv_c">–</div><div class="n" id="pv_cN">–</div></div>
-        <div class="tile"><div class="l">Extra tax revenue</div><div class="v" id="pv_r">–</div><div class="n">not in the net benefit unless the excess burden is set (step 6)</div></div>
+        <div class="tile"><div class="l">Extra tax revenue</div><div class="v" id="pv_r">–</div><div class="n">a transfer, shown but not added to the net benefit</div></div>
         <div class="tile"><div class="l">Smokers' lost surplus</div><div class="v" id="pv_l">–</div><div class="n" id="pv_lN">–</div></div>
       </div>
     </div>
@@ -280,16 +280,15 @@ fewer smokers(t) = smokers under current law − smokers under the policy</code>
       <div class="num">4</div>
       <div>
         <h3>From fewer smokers to fewer CVD deaths and admissions</h3>
-        <p class="small">Each year's new quitters lower the CVD deaths and admissions caused by current smoking by the same proportion, but only gradually: after k years a share 1 − e<sup>−λk</sup> of their extra risk is gone. Deaths already caused by former smokers are not affected.</p>
-        <code class="fx">deaths avoided(t) = A × s_c × Σ_s Δf(s) × (1 − e^(−λ(t − s + 1)))
-admissions avoided(t) = H × s_h × Σ_s Δf(s) × (1 − e^(−λ(t − s + 1)))
-f(s) = share of smokers who quit by year s</code>
+        <p class="small">Smoking causes a known number of CVD deaths and hospital admissions each year. The share of smokers who quit (step 3) removes the same share of the part caused by current smokers, but not at once: a quitter's extra risk fades over the years, so only a share g(t) of the gain has arrived by year t.</p>
+        <code class="fx">deaths avoided(t)     = A × s × f(t) × g(t)
+admissions avoided(t) = H × s × f(t) × g(t)
+f(t) = share of smokers who quit (step 3),  g(t) = 1 − e^(−λ × (t − 2026))</code>
         <div class="fields">
-          <label class="field"><span>CVD deaths caused by smoking</span><span class="inwrap"><input type="number" data-k="A" step="100" min="0"><em>a year</em></span><small>GBD 2023: 11,840 in Italy (2023), via Our World in Data.</small></label>
-          <label class="field"><span>Share due to current smokers, deaths</span><span class="inwrap"><input type="number" data-k="s_c" step="0.01" min="0" max="1"><em></em></span><small>0.44: AVQ 2024 smoker shares × Mons et al. 2015 relative risks (own computation). The rest is former smokers.</small></label>
-          <label class="field"><span>CVD admissions caused by smoking</span><span class="inwrap"><input type="number" data-k="H" step="1000" min="0"><em>a year</em></span><small>177,409 in 2018: heart disease 92,900, stroke 51,986, arteries 32,523 (Possenti et al. 2024).</small></label>
-          <label class="field"><span>Share due to current smokers, admissions</span><span class="inwrap"><input type="number" data-k="s_h" step="0.01" min="0" max="1"><em></em></span><small>0.55: rough; admissions happen younger than deaths, where current smokers weigh more.</small></label>
-          <label class="field"><span>Speed the extra risk fades λ</span><span class="inwrap"><input type="number" data-k="lam" step="0.01" min="0.01" max="1"><em>a year</em></span><small>0.25: about 70% gone after 5 years (Duncan et al. 2019). 0.10 is a slow case.</small></label>
+          <label class="field"><span>CVD deaths caused by smoking A</span><span class="inwrap"><input type="number" data-k="A" step="100" min="0"><em>a year</em></span><small>11,840 in Italy in 2023 (GBD 2023, via Our World in Data).</small></label>
+          <label class="field"><span>CVD admissions caused by smoking H</span><span class="inwrap"><input type="number" data-k="H" step="1000" min="0"><em>a year</em></span><small>177,409 in 2018: heart disease, stroke and arteries (Possenti et al. 2024).</small></label>
+          <label class="field"><span>Share due to current smokers s</span><span class="inwrap"><input type="number" data-k="s" step="0.01" min="0" max="1"><em></em></span><small>0.44: the rest is caused by former smokers, whom the tax does not change (AVQ 2024 × Mons et al. 2015).</small></label>
+          <label class="field"><span>Speed the extra risk fades λ</span><span class="inwrap"><input type="number" data-k="lam" step="0.01" min="0.01" max="1"><em>a year</em></span><small>0.25: about 70% of the gain after 5 years (Duncan et al. 2019). 0.10 is a slow case.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">CVD deaths avoided</div><div class="v" id="o4">–</div><div class="n" id="o4n">–</div><div class="v2" id="o4b">–</div><div class="n">hospital admissions avoided over the horizon</div></div>
@@ -299,14 +298,12 @@ f(s) = share of smokers who quit by year s</code>
       <div class="num">5</div>
       <div>
         <h3>What the health gains are worth</h3>
-        <p class="small">A death avoided is valued by the life-years it adds times the value of a life-year (the right metric for deaths that are delayed rather than prevented outright). Hospital savings are the smoking-attributable CVD hospital costs, cut in the same proportion as admissions.</p>
-        <code class="fx">value of health(t) = deaths avoided(t) × LY × VOLY
-SSN savings(t) = C_h × s_h × Σ_s Δf(s) × (1 − e^(−λ(t − s + 1)))</code>
+        <p class="small">Each death avoided is worth the life-years it adds (about 10) times the value of a life-year; each admission avoided saves the SSN its average cost.</p>
+        <code class="fx">value of health(t) = deaths avoided(t) × value per death avoided
+SSN savings(t)     = admissions avoided(t) × cost per admission</code>
         <div class="fields">
-          <label class="field"><span>Life-years gained per death avoided LY</span><span class="inwrap"><input type="number" data-k="LY" step="0.5" min="0" max="30"><em>years</em></span><small>10: life expectancy at 75 is 13.4 years (Eurostat 2024); quitters keep some extra risk.</small></label>
-          <label class="field"><span>Value of a life-year VOLY</span><span class="inwrap"><input type="number" data-k="VOLY" step="1000" min="0"><em>€</em></span><small>€89,800: EU handbook on external costs (2019), €70,000 at 2016 prices, uprated with Italian HICP. AIES threshold: €25,000–40,000 per QALY.</small></label>
-          <label class="field"><span>Smoking-attributable CVD hospital costs</span><span class="inwrap"><input type="number" data-k="Ch" step="10" min="0"><em>€ m a year</em></span><small>€1,329m at 2026 prices: €1,063m in 2018 (Possenti et al. 2024) × HICP.</small></label>
-          <label class="field"><span>Also count outpatient care and drugs</span><span class="inwrap"><select data-k="opd"><option value="0">No, hospital only</option><option value="1">Yes, × 1.71</option></select></span><small>Italy's CVD health care is 1.71 × its hospital care (Luengo-Fernandez et al. 2023).</small></label>
+          <label class="field"><span>Value per death avoided</span><span class="inwrap"><input type="number" data-k="vpd" step="10000" min="0"><em>€</em></span><small>€898,000 = 10 life-years × €89,800. Life expectancy at 75 is 13.4 years (Eurostat 2024); a life-year is worth €70,000 at 2016 prices in the EU handbook on external costs (2019), uprated. With the AIES threshold of €40,000 per year: €400,000.</small></label>
+          <label class="field"><span>Cost per CVD admission</span><span class="inwrap"><input type="number" data-k="cpa" step="100" min="0"><em>€</em></span><small>€7,490 = €1,063m ÷ 177,409 admissions in 2018 (Possenti et al. 2024), at 2026 prices.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">Value of health gains</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n">SSN savings in the same years</div></div>
@@ -316,15 +313,13 @@ SSN savings(t) = C_h × s_h × Σ_s Δf(s) × (1 − e^(−λ(t − s + 1)))</co
       <div class="num">6</div>
       <div>
         <h3>Tax revenue and smokers' lost surplus</h3>
-        <p class="small">Revenue is legal packs sold times tax per pack. Demand is inelastic, so revenue rises. Part of the fall in legal sales is a shift to illicit or cross-border cigarettes: that part lowers revenue but is not consumption given up. The lost surplus of smokers is the deadweight triangle on consumption given up.</p>
-        <code class="fx">revenue(t) = Q(t) × [S(t) + (a + v) × P(t)]   (Q = smokers × packs per smoker)
-Q(t) = Q₀ × (real price(t) / P₀)^εQ
-lost surplus(t) = ½ × Δreal price × Δconsumption,  consumption elasticity = εQ × (1 − leakage)</code>
+        <p class="small">Revenue is packs sold times tax per pack. Demand is inelastic, so revenue rises. Smokers who buy less lose the surplus on the packs they give up: a small triangle under the demand curve.</p>
+        <code class="fx">packs(t)        = Q₀ × (real price(t) / P₀)^εQ
+revenue(t)      = packs(t) × tax per pack(t),  tax per pack = S + (a + v) × P
+lost surplus(t) = ½ × price rise(t) × packs given up(t)</code>
         <div class="fields">
-          <label class="field"><span>Legal packs sold today Q₀</span><span class="inwrap"><input type="number" data-k="Q0" step="0.01" min="0"><em>billion</em></span><small>2.917 billion: 58.34 billion cigarettes in 2023 (ADM Libro Blu 2023).</small></label>
-          <label class="field"><span>Elasticity of legal sales εQ</span><span class="inwrap"><input type="number" data-k="eps_Q" step="0.01" min="-1.5" max="0"><em></em></span><small>−0.45: Kohler et al. 2023, EU panel (−0.30 when illicit trade is included).</small></label>
-          <label class="field"><span>Leakage to illicit and cross-border</span><span class="inwrap"><input type="number" data-k="leak" step="0.05" min="0" max="1"><em>share</em></span><small>0.33 = 1 − 0.30/0.45, the gap between Kohler's two estimates.</small></label>
-          <label class="field"><span>Marginal excess burden of taxation</span><span class="inwrap"><input type="number" data-k="metb" step="0.05" min="0" max="1"><em>€ per €</em></span><small>0 = revenue is a pure transfer. A positive value credits each extra euro of revenue with the distortion it saves elsewhere (cost of public funds = 1 + METB).</small></label>
+          <label class="field"><span>Packs sold today Q₀</span><span class="inwrap"><input type="number" data-k="Q0" step="0.01" min="0"><em>billion</em></span><small>2.917 billion: 58.34 billion cigarettes in 2023 (ADM Libro Blu 2023).</small></label>
+          <label class="field"><span>Elasticity of legal sales εQ</span><span class="inwrap"><input type="number" data-k="eps_Q" step="0.01" min="-1.5" max="0"><em></em></span><small>−0.45 (Kohler et al. 2023). The range down to −0.30 covers the leakage to illicit and cross-border buying.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">Extra revenue in 2027</div><div class="v" id="o6">–</div><div class="n" id="o6n">–</div><div class="v2" id="o6b">–</div><div class="n">smokers' lost surplus in 2027</div></div>
@@ -333,13 +328,13 @@ lost surplus(t) = ½ × Δreal price × Δconsumption,  consumption elasticity =
     <div class="card step">
       <div class="num">7</div>
       <div>
-        <h3>Adding up and discounting</h3>
-        <p class="small">Two views of smokers. If smoking is partly a mistake (irrational addiction), quitters' health gains are a benefit and the surplus measured on the demand curve overstates their loss: the net benefit is health value plus SSN savings. If smokers are fully rational, they already weighed their own health: only the SSN savings (borne by taxpayers) count, minus their lost surplus. Revenue is a transfer in both, except for the excess-burden credit.</p>
-        <code class="fx">not fully rational:  NSB(t) = value of health(t) + SSN savings(t) + METB × Δrevenue(t)
-fully rational:      NSB(t) = SSN savings(t) − lost surplus(t) + METB × Δrevenue(t)
-PV = Σ_{t=2027}^{T} NSB(t) / (1 + d)^(t − 2027)</code>
+        <h3>Adding up</h3>
+        <p class="small">Revenue is a transfer from smokers to the state, so it is shown but not added. The rest depends on how smokers are seen. If smoking is partly a mistake, quitters' health gains are a benefit to society. If smokers are fully rational, they already weighed their own health, and only the SSN savings count against their lost surplus. Future years are discounted.</p>
+        <code class="fx">not fully rational:  net benefit(t) = value of health(t) + SSN savings(t)
+fully rational:      net benefit(t) = SSN savings(t) − lost surplus(t)
+present value        = Σ net benefit(t) / (1 + d)^(t − 2027)</code>
         <div class="fields">
-          <label class="field"><span>Social discount rate d</span><span class="inwrap"><input type="number" data-k="d" step="0.5" min="0" max="10"><em>%</em></span><small>3%: EU Guide to Cost-Benefit Analysis (2014) for member states outside the Cohesion Fund.</small></label>
+          <label class="field"><span>Social discount rate d</span><span class="inwrap"><input type="number" data-k="d" step="0.5" min="0" max="10"><em>%</em></span><small>3%: EU Guide to Cost-Benefit Analysis (2014), for member states outside the Cohesion Fund.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">Net social benefit, present value</div><div class="v" id="o7">–</div><div class="n" id="o7n">–</div></div>
@@ -349,7 +344,7 @@ PV = Σ_{t=2027}^{T} NSB(t) / (1 + d)^(t − 2027)</code>
 
 <section>
   <h2>Why 2027–2035</h2>
-  <p class="sub">The default horizon is nine years. It covers the 2027 budget and the following ones of the next legislature, and ends with the EU Safe Hearts Plan target year (premature CVD mortality −25% by 2035 against 2022). By then about 85% of the health gain of the 2027 quitters has arrived. The 2027–29 option matches the three-year budget plan a finance minister signs; 2027–46 shows the long run.</p>
+  <p class="sub">The default horizon is nine years. It covers the 2027 budget and the following ones of the next legislature, and ends with the EU Safe Hearts Plan target year (premature CVD mortality −25% by 2035 against 2022). By then about 90% of the health gain of the 2027 quitters has arrived. The 2027–29 option matches the three-year budget plan a finance minister signs; 2027–46 shows the long run.</p>
 </section>
 
 <section>
@@ -372,19 +367,19 @@ revenue R = Q × T = N × q̄ × T</code>
     </div>
     <div class="card eq">
       <h3>Health</h3>
-      <code class="fx">K(t) = Σ_{s=2027}^{t} [f(s) − f(s−1)] (1 − e^(−λ(t−s+1)))
-deaths avoided D(t) = A s_c K(t)
-admissions avoided H(t) = H s_h K(t)
-SSN savings C(t) = C_h s_h K(t)
-value of health V(t) = D(t) × LY × VOLY</code>
+      <code class="fx">g(t) = 1 − e^(−λ (t − 2026))
+deaths avoided D(t) = A × s × f(t) × g(t)
+admissions avoided H(t) = H × s × f(t) × g(t)
+value of health V(t) = D(t) × value per death (≈ 10 × €89,800)
+SSN savings C(t) = H(t) × cost per admission</code>
     </div>
     <div class="card eq">
       <h3>Welfare</h3>
-      <code class="fx">lost surplus L(t) = ½ (P̃_policy − P̃_law)(Qc_law − Qc_policy)
-Qc uses εQ (1 − leakage)
-NSB(t) = V + C + METB ΔR   (not fully rational)
-NSB(t) = C − L + METB ΔR   (fully rational)
-PV = Σ NSB(t) / (1 + d)^(t−2027)</code>
+      <code class="fx">lost surplus L(t) = ½ (P̃_policy − P̃_law)(Q_law − Q_policy)
+net benefit = V + C        (not fully rational)
+net benefit = C − L        (fully rational)
+revenue = transfer, shown apart
+PV = Σ net benefit(t) / (1 + d)^(t−2027)</code>
     </div>
   </div>
 </section>
@@ -402,15 +397,14 @@ PV = Σ NSB(t) / (1 + d)^(t−2027)</code>
       <tr><td>Inflation π</td><td>2.0%</td><td><a href="https://www.bancaditalia.it/pubblicazioni/proiezioni-macroeconomiche/2026/Proiezioni-macroeconomiche-Italia-giugno-2026.pdf">Banca d'Italia, macroeconomic projections, June 2026</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Smokers today N₀</td><td>10.0 million</td><td>ISTAT (2026), Fattori di rischio per la salute, anno 2025, p. 7</td><td><span class="tag y">folder</span></td></tr>
       <tr><td>Participation elasticity εp</td><td>−0.2 (−0.1 to −0.3)</td><td>Bocconi CERGAS report (2025), p. 21 (total −0.4, IARC 2011); <a href="https://doi.org/10.1097/00008469-200308000-00015">Gallus et al. (2003)</a>, Italy −0.30; Ahmad and Franz (2008), Table 1</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>Elasticity of legal sales εQ, leakage</td><td>−0.45; leakage 0.33</td><td>Kohler, Vinci, Mattli (2023), Table 4: −0.45 without and −0.30 with illicit trade</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>Elasticity of legal sales εQ</td><td>−0.45 (−0.30 to −0.45)</td><td>Kohler, Vinci, Mattli (2023), Table 4: −0.45 without and −0.30 with illicit trade, so the range covers leakage</td><td><span class="tag y">folder</span></td></tr>
       <tr><td>Legal packs sold Q₀</td><td>2.917 billion</td><td><a href="https://www.adm.gov.it/portale/documents/20182/228258926/Libro+blu+2023+-+Relazione+%281%29.pdf">ADM, Libro Blu 2023</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>CVD deaths caused by smoking A</td><td>11,840 (2023)</td><td>GBD 2023, IHME, via the <a href="https://api.ourworldindata.org/v1/indicators/1172075.data.json">Our World in Data API</a></td><td><span class="tag n">online</span></td></tr>
-      <tr><td>Share due to current smokers s_c</td><td>0.44 (0.40–0.50)</td><td>AVQ 2024 microdata × <a href="https://doi.org/10.1136/bmj.h1551">Mons et al. (2015)</a> relative risks</td><td><span class="tag p">computed</span></td></tr>
+      <tr><td>Share due to current smokers s</td><td>0.44 (0.40–0.50)</td><td>AVQ 2024 microdata × <a href="https://doi.org/10.1136/bmj.h1551">Mons et al. (2015)</a> relative risks</td><td><span class="tag p">computed</span></td></tr>
       <tr><td>Speed the risk fades λ</td><td>0.25 (0.10–0.25)</td><td><a href="https://doi.org/10.1001/jama.2019.10298">Duncan et al. (2019)</a>, JAMA</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>CVD admissions and hospital costs caused by smoking</td><td>177,409; €1,063m (2018)</td><td><a href="https://doi.org/10.18332/tid/188111">Possenti et al. (2024)</a>, Tobacco Induced Diseases, Table 1</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>Outpatient and drug multiplier</td><td>1.71</td><td>Luengo-Fernandez et al. (2023), Table 3, Italy: CVD health care €21,334m, hospital care €12,480m</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>Life-years per death avoided LY</td><td>10 (7–13)</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/demo_mlexpec/default/table">Eurostat demo_mlexpec</a>: life expectancy at 75 = 13.4 years (Italy, 2024)</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>Value of a life-year VOLY</td><td>€89,800 (2026 prices)</td><td><a href="https://cedelft.eu/publications/handbook-on-the-external-costs-of-transport-version-2019/">Handbook on the external costs of transport (2019)</a>, €70,000 at 2016 prices; AIES €25–40k per QALY in the Bocconi report, p. 46</td><td><span class="tag n">online</span></td></tr>
+      <tr><td>CVD admissions caused by smoking H, cost per admission</td><td>177,409; €7,490 (€1,063m in 2018, uprated)</td><td><a href="https://doi.org/10.18332/tid/188111">Possenti et al. (2024)</a>, Tobacco Induced Diseases, Table 1</td><td><span class="tag n">online</span></td></tr>
+      <tr><td>Life-years per death avoided</td><td>10 (7–13)</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/demo_mlexpec/default/table">Eurostat demo_mlexpec</a>: life expectancy at 75 = 13.4 years (Italy, 2024)</td><td><span class="tag n">online</span></td></tr>
+      <tr><td>Value of a life-year (so €898,000 per death avoided)</td><td>€89,800 (2026 prices)</td><td><a href="https://cedelft.eu/publications/handbook-on-the-external-costs-of-transport-version-2019/">Handbook on the external costs of transport (2019)</a>, €70,000 at 2016 prices; AIES €25–40k per QALY in the Bocconi report, p. 46</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Price uprating</td><td>HICP 2016 = 99.9, 2018 = 102.5, 2025 = 124.3; 2026 +3.1%</td><td><a href="https://ec.europa.eu/eurostat/databrowser/view/prc_hicp_aind/default/table">Eurostat prc_hicp_aind</a>; Banca d'Italia 2026 projection</td><td><span class="tag n">online</span></td></tr>
       <tr><td>Social discount rate d</td><td>3%</td><td><a href="https://ec.europa.eu/regional_policy/sources/studies/cba_guide.pdf">European Commission, Guide to Cost-Benefit Analysis of Investment Projects (2014)</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>Safe Hearts target</td><td>premature CVD mortality −25% by 2035</td><td>European Commission (2025), COM(2025) 1024</td><td><span class="tag y">folder</span></td></tr>
@@ -436,6 +430,7 @@ PV = Σ NSB(t) / (1 + d)^(t−2027)</code>
         <li>One elasticity for every age, while most CVD deaths are at 75+, where evidence on how smokers respond is mixed.</li>
         <li>Smokers who move to heated tobacco or e-cigarettes count as quitters; their CVD risk is lower than a smoker's, not zero.</li>
         <li>Deaths are delayed, not prevented for ever: health costs in the added years are not subtracted.</li>
+        <li>The phase-in treats every quitter as if they quit in 2027, which slightly flatters the later quitters that indexation adds.</li>
       </ul>
     </div>
     <div class="card">
@@ -444,6 +439,7 @@ PV = Σ NSB(t) / (1 + d)^(t−2027)</code>
         <li>Every pack is treated like the €5.50 reference pack. The minimum tax must rise with the excise, or cheap brands (much of the market sits near it) do not move.</li>
         <li>Heated tobacco is left at current law; raising it in step avoids substitution.</li>
         <li>Revenue counts excise and VAT on cigarettes only; VAT on the spending that shifts to other goods is ignored.</li>
+        <li>Smokers' lost surplus uses legal sales, so packs that move to illicit buying count as given up (this overstates the cost in the fully rational view).</li>
       </ul>
     </div>
     <div class="card">
@@ -466,14 +462,15 @@ PV = Σ NSB(t) / (1 + d)^(t−2027)</code>
 "use strict";
 var HICP26=124.3*1.031;
 var LAW_S={2026:0.64,2027:0.71,2028:0.77}, LAW_A={2026:0.4923,2027:0.485,2028:0.48}, LAW_M={2026:216,2027:221,2028:227};
-var V=22/122, R=0.10, OPD=21334/12480;
-var CENTRAL={dS:0.23,k:1,pi:2.0,theta:1,P0:5.50,N0:10.0,eps_p:-0.20,eps_Q:-0.45,leak:0.33,Q0:2.917,
-  A:11840,s_c:0.44,lam:0.25,LY:10,VOLY:Math.round(70000*HICP26/99.9/100)*100,H:177409,
-  Ch:Math.round(1063.1*HICP26/102.5),s_h:0.55,opd:"0",metb:0,d:3};
+var V=22/122, R=0.10;
+// value per death avoided = 10 life-years x VOLY (EUR 70,000 at 2016 prices, uprated); cost per admission = EUR 1,063.1m / 177,409 (2018), uprated
+var CENTRAL={dS:0.23,k:1,pi:2.0,theta:1,P0:5.50,N0:10.0,eps_p:-0.20,eps_Q:-0.45,Q0:2.917,
+  A:11840,H:177409,s:0.44,lam:0.25,vpd:Math.round(10*70000*HICP26/99.9/1000)*1000,
+  cpa:Math.round(1063.1e6*HICP26/102.5/177409/10)*10,d:3};
 var PRESETS={
-  cautious:{eps_p:-0.10,theta:0.8,lam:0.10,LY:7,VOLY:40000,s_c:0.40,s_h:0.45,eps_Q:-0.30},
+  cautious:{eps_p:-0.10,theta:0.8,lam:0.10,vpd:280000,s:0.40,eps_Q:-0.30},
   central:{},
-  optimistic:{eps_p:-0.30,theta:1,lam:0.25,LY:13,s_c:0.50,s_h:0.65,eps_Q:-0.45}
+  optimistic:{eps_p:-0.30,theta:1,lam:0.25,vpd:1167000,s:0.50,eps_Q:-0.45}
 };
 var S={}; Object.keys(CENTRAL).forEach(function(k){S[k]=CENTRAL[k];});
 var H_END=2035, VIEW="b", METRIC="nsb", PRESET="central";
@@ -484,8 +481,7 @@ function law(tab,t){var y=2026;Object.keys(tab).forEach(function(k){k=+k;if(k<=t
 // ---- model ----
 function run(s,last){
   var pi=s.pi/100, a0=law(LAW_A,2026), F0=s.P0*(1-a0-V-R)-law(LAW_S,2026);
-  var rows=[], SPp=0, SBp=0, fp=0, incs=[], N0=s.N0*1e6, Q0=s.Q0*1e9, ec=s.eps_Q*(1-s.leak);
-  var mult=s.opd==="1"?OPD:1;
+  var rows=[], SPp=0, SBp=0, N0=s.N0*1e6, Q0=s.Q0*1e9;
   for(var t=2026;t<=last;t++){
     var cpi=Math.pow(1+pi,t-2026), a=law(LAW_A,t), SB=law(LAW_S,t), den=1-a-V-R;
     var PB=(SB+F0*cpi)/den;
@@ -493,19 +489,15 @@ function run(s,last){
     var PP=PB+s.theta*(SP-SB)/den;
     var rB=PB/cpi, rP=PP/cpi;
     var NB=N0*Math.pow(rB/s.P0,s.eps_p), NP=N0*Math.pow(rP/s.P0,s.eps_p);
-    var f=1-Math.pow(rP/rB,s.eps_p);
-    if(t>=2027)incs.push([t,f-fp]);
-    var K=0; if(t>=2027)incs.forEach(function(x){K+=x[1]*(1-Math.exp(-s.lam*(t-x[0]+1)));});
-    var D=s.A*s.s_c*K, Hh=s.H*s.s_h*K, C=s.Ch*1e6*s.s_h*K*mult, Vv=D*s.LY*s.VOLY;
+    var f=1-Math.pow(rP/rB,s.eps_p), g=1-Math.exp(-s.lam*(t-2026));
+    var D=s.A*s.s*f*g, Hh=s.H*s.s*f*g, C=Hh*s.cpa, Vv=D*s.vpd;
     var QB=Q0*Math.pow(rB/s.P0,s.eps_Q), QP=Q0*Math.pow(rP/s.P0,s.eps_Q);
-    var QcB=Q0*Math.pow(rB/s.P0,ec), QcP=Q0*Math.pow(rP/s.P0,ec);
     var RB=QB*(SB+(a+V)*PB)/cpi, RP=QP*(SP+(a+V)*PP)/cpi, dR=RP-RB;
-    var L=0.5*(rP-rB)*(QcB-QcP);
+    var L=0.5*(rP-rB)*(QB-QP);
     var Mlaw=law(LAW_M,t), Mpol=Mlaw+(1-R)*(PP-PB)*50;
-    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,K:K,D:D,H:Hh,C:C,V:Vv,
-      QB:QB,QP:QP,RB:RB,RP:RP,dR:dR,L:L,Mlaw:Mlaw,Mpol:Mpol,
-      nsbB:Vv+C+s.metb*dR, nsbR:C-L+s.metb*dR});
-    SPp=SP; SBp=SB; fp=f;
+    rows.push({t:t,SB:SB,SP:SP,PB:PB,PP:PP,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,D:D,H:Hh,C:C,V:Vv,
+      QB:QB,QP:QP,RB:RB,RP:RP,dR:dR,L:L,Mlaw:Mlaw,Mpol:Mpol,nsbB:Vv+C,nsbR:C-L});
+    SPp=SP; SBp=SB;
   }
   return rows;
 }
@@ -537,8 +529,8 @@ function render(){
   setT("pvTitle","2027–"+H_END+", present value at "+String(+s.d.toFixed(2))+"%");
   var nsb=pv(rows,key,s,H_END);
   setT("pv_nsb",eur(nsb));
-  setT("pv_nsbN",VIEW==="b"?"health gains + SSN savings"+(s.metb>0?" + excess-burden credit":"")+"; "+ppl(sum(rows,"D",H_END))+" CVD deaths avoided in total":"SSN savings − smokers' lost surplus"+(s.metb>0?" + excess-burden credit":""));
-  setT("pv_v",eur(pv(rows,"V",s,H_END))); setT("pv_vN",ppl(sum(rows,"D",H_END)*s.LY)+" life-years"+(VIEW==="r"?" (not counted in this view)":""));
+  setT("pv_nsbN",VIEW==="b"?"health gains + SSN savings; "+ppl(sum(rows,"D",H_END))+" CVD deaths avoided in total":"SSN savings − smokers' lost surplus");
+  setT("pv_v",eur(pv(rows,"V",s,H_END))); setT("pv_vN",ppl(sum(rows,"D",H_END))+" deaths avoided"+(VIEW==="r"?" (not counted in this view)":""));
   setT("pv_c",eur(pv(rows,"C",s,H_END))); setT("pv_cN",ppl(sum(rows,"H",H_END))+" admissions avoided");
   setT("pv_r",eur(pv(rows,"dR",s,H_END)));
   setT("pv_l",eur(pv(rows,"L",s,H_END))); setT("pv_lN",VIEW==="r"?"subtracted in this view":"not counted in this view (internality)");
@@ -576,7 +568,6 @@ function chart(rows){
   var series=[], line=null, line2=null, leg="";
   if(METRIC==="nsb"){
     series=[{k:"V",c:css("--accent"),n:"value of health gains",on:VIEW==="b"},{k:"C",c:css("--c2"),n:"SSN hospital savings",on:true},{k:"L",c:css("--neg"),n:"smokers' lost surplus (−)",on:VIEW==="r",neg:true}];
-    if(S.metb>0)series.push({k:"dR",c:css("--c3"),n:"excess-burden credit",on:true,scale:S.metb});
     series=series.filter(function(x){return x.on;});
     line={f:function(r){return r[VIEW==="b"?"nsbB":"nsbR"]/1e6;},n:"net social benefit"};
   }else if(METRIC==="smk"){series=[{k:"dN",c:css("--accent"),n:"fewer smokers than under current law",div:1}];}
