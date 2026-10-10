@@ -303,12 +303,12 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <div class="num">5</div>
       <div>
         <h3>Tax revenue</h3>
-        <p class="small">Revenue is packs sold times tax per pack (specific excise, ad valorem excise and VAT), under the policy minus under current law. Sales fall less than the tax rises, so revenue goes up. It is a transfer from smokers to the state, not a gain for society, so it is kept apart from the health gains; it is the number the MEF looks at.</p>
-        <div class="fx"><div class="tx" data-tex="T_t=S_t+(a+v)\,P_t">tax per pack = S + (a + v) P</div><div class="tx" data-tex="Q_t=Q_0\left(\dfrac{\tilde P_t}{P_0}\right)^{\varepsilon_Q}">Q = Q₀ (real price / P₀)^εQ</div><div class="tx" data-tex="\Delta R_t=Q^{pol}_t\,T^{pol}_t-Q^{law}_t\,T^{law}_t,\qquad PV_R=\sum_{t=2027}^{T}\dfrac{\Delta R_t}{(1+d)^{\,t-2027}}">ΔR = Q(pol) T(pol) − Q(law) T(law)</div></div>
-        <ul class="where"><li><span class="sym" data-tex="T_t">T_t</span><span>tax per pack, real (€4.34 on a €5.50 pack in 2026)</span></li><li><span class="sym" data-tex="Q_t,\ Q_0">Q_t,\ Q_0</span><span>legal packs sold in year <i>t</i> and in 2026 (2.917 billion)</span></li><li><span class="sym" data-tex="\varepsilon_Q">\varepsilon_Q</span><span>elasticity of legal sales to the price</span></li><li><span class="sym" data-tex="\Delta R_t">\Delta R_t</span><span>extra tax revenue in year <i>t</i>, 2026 euros</span></li><li><span class="sym" data-tex="PV_R">PV_R</span><span>present value of the extra revenue over the horizon</span></li></ul>
+        <p class="small">Revenue is packs sold times tax per pack (specific excise, ad valorem excise and VAT), under the policy minus under current law. Packs sold fall for two reasons: fewer smokers (εp, step 2) and fewer packs per remaining smoker (εq). They still fall less than the tax rises, so revenue goes up. It is a transfer from smokers to the state, not a gain for society, so it is kept apart from the health gains; it is the number the MEF looks at.</p>
+        <div class="fx"><div class="tx" data-tex="T_t=S_t+(a+v)\,P_t">tax per pack = S + (a + v) P</div><div class="tx" data-tex="Q_t=Q_0\left(\dfrac{\tilde P_t}{P_0}\right)^{\varepsilon_p+\varepsilon_q}">Q = Q₀ (real price / P₀)^(εp + εq)</div><div class="tx" data-tex="\Delta R_t=Q^{pol}_t\,T^{pol}_t-Q^{law}_t\,T^{law}_t,\qquad PV_R=\sum_{t=2027}^{T}\dfrac{\Delta R_t}{(1+d)^{\,t-2027}}">ΔR = Q(pol) T(pol) − Q(law) T(law)</div></div>
+        <ul class="where"><li><span class="sym" data-tex="T_t">T_t</span><span>tax per pack, real (€4.34 on a €5.50 pack in 2026)</span></li><li><span class="sym" data-tex="Q_t,\ Q_0">Q_t,\ Q_0</span><span>legal packs sold in year <i>t</i> and in 2026 (2.917 billion)</span></li><li><span class="sym" data-tex="\varepsilon_p+\varepsilon_q">\varepsilon_p+\varepsilon_q</span><span>elasticity of packs sold: fewer smokers (step 2) plus fewer packs per smoker</span></li><li><span class="sym" data-tex="\Delta R_t">\Delta R_t</span><span>extra tax revenue in year <i>t</i>, 2026 euros</span></li><li><span class="sym" data-tex="PV_R">PV_R</span><span>present value of the extra revenue over the horizon</span></li></ul>
         <div class="fields">
           <label class="field"><span>Packs sold today Q₀</span><span class="inwrap"><input type="number" data-k="Q0" step="0.01" min="0"><em>billion</em></span><small>2.917 billion: 58.34 billion cigarettes in 2023 (ADM Libro Blu 2023).</small></label>
-          <label class="field"><span>Elasticity of legal sales εQ</span><span class="inwrap"><input type="number" data-k="eps_Q" step="0.01" min="-1.5" max="0"><em></em></span><small>−0.45 (Kohler et al. 2023). −0.30 when illicit and cross-border buying is counted, so the range covers leakage.</small></label>
+          <label class="field"><span>Elasticity of packs per smoker εq</span><span class="inwrap"><input type="number" data-k="eps_Q" step="0.01" min="-1.5" max="0"><em></em></span><small>−0.45: legal packs per smoker (Kohler et al. 2023, Table 4, panel IV). −0.30 when illicit and cross-border buying is counted, so the range covers leakage.</small></label>
         </div>
       </div>
       <div class="out"><div class="l">Extra revenue in 2027</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n" id="o5bn">–</div></div>
@@ -342,7 +342,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <tr><td>4</td><td>Social discount rate d</td><td>3%</td><td><a href="https://ec.europa.eu/regional_policy/sources/studies/cba_guide.pdf">EU Guide to Cost-Benefit Analysis (2014)</a></td><td><span class="tag n">online</span></td></tr>
       <tr><td>4</td><td>Value of a life-year (optional)</td><td>€89,800</td><td><a href="https://cedelft.eu/publications/handbook-on-the-external-costs-of-transport-version-2019/">Handbook on the external costs of transport (2019)</a>, €70,000 at 2016 prices, uprated</td><td><span class="tag n">online</span></td></tr>
       <tr><td>5</td><td>Legal packs sold Q₀</td><td>2.917 billion</td><td><a href="https://www.adm.gov.it/portale/documents/20182/228258926/Libro+blu+2023+-+Relazione+%281%29.pdf">ADM, Libro Blu 2023</a></td><td><span class="tag n">online</span></td></tr>
-      <tr><td>5</td><td>Elasticity of legal sales εQ</td><td>−0.45 (−0.30 to −0.45)</td><td>Kohler, Vinci, Mattli (2023), Table 4</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>5</td><td>Elasticity of packs per smoker εq</td><td>−0.45 (−0.30 to −0.45)</td><td>Kohler, Vinci, Mattli (2023), Table 4 (panel IV, packs per smoker)</td><td><span class="tag y">folder</span></td></tr>
     </tbody>
   </table></div>
   <p class="small" style="margin-top:10px">Method for steps 3–4: the potential impact fraction (<a href="https://doi.org/10.1136/jech.2009.090274">Barendregt and Veerman 2010</a>) with the risk-fading curve of Hoogenveen et al. (2008, eq. 2).</p>
@@ -433,7 +433,7 @@ function run(s,last){
     var g=1-Math.exp(-s.lam*(t-2026)), rho=s.s*f*g;
     var D=rho*s.A, Hh=rho*s.H, LY=rho*s.ly*s.A, C=rho*s.Cbar*1e6;
     // step 5: revenue
-    var QB=Q0*Math.pow(rB/s.P0,s.eps_Q), QP=Q0*Math.pow(rP/s.P0,s.eps_Q);
+    var eQ=s.eps_p+s.eps_Q, QB=Q0*Math.pow(rB/s.P0,eQ), QP=Q0*Math.pow(rP/s.P0,eQ);
     var TB=sB+AV*rB, TP=sP+AV*rP;
     rows.push({t:t,rB:rB,rP:rP,NB:NB,NP:NP,dN:NB-NP,f:f,g:g,rho:rho,D:D,H:Hh,LY:LY,C:C,V:LY*s.voly,QB:QB,QP:QP,TB:TB,TP:TP,dR:QP*TP-QB*TB});
   }
