@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Partialling out (FWL)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+[hidden]{display:none!important}
+.grouplab{margin:20px 0 -6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--rule);padding:5px 11px;font-size:.88rem}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--navy);color:var(--panel);box-shadow:none}
+.optrow{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:.92rem;color:var(--muted)}
+.optrow .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.narr{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--navy);border-radius:6px;padding:9px 14px;font-size:.93rem;color:var(--ink)}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:6px}
+.key i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.f .v b{font-weight:500;color:var(--ink)}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Partialling out (Frisch-Waugh-Lovell)</h1>
+  <p>The slides' <code>ATTEND</code> example (680 students): the final exam score regressed on lectures missed gives −.121, but once prior GPA is added the coefficient on <code>missed</code> becomes +.017. The Frisch-Waugh-Lovell theorem says why: the multiple regression coefficient is the simple regression of y on the part of x<sub>1</sub> that x<sub>2</sub> cannot explain. This page removes that part step by step, on the real data.</p>
+</header>
+<ol class="steps">
+  <li>Start at λ = 0: the first panel is the simple regression of final on missed, slope −.121. The colours are prior GPA: good students (orange) miss few lectures and score high.</li>
+  <li>Press Animate. Each student slides sideways as the part of missed predicted by prior GPA is removed. At λ = 1 the slope is +.017, the multiple regression coefficient.</li>
+  <li>The third panel nets prior GPA out of the score as well (the added-variable plot): same slope, and the residuals are the multiple regression's residuals.</li>
+</ol>
+<div class="main"><div class="col">
+<div class="tabs" id="tabs">
+  <button data-k="1" class="on">Coefficient on missed (net out priGPA)</button>
+  <button data-k="2">Coefficient on priGPA (net out missed)</button>
+</div>
+<section class="controls">
+  <div class="slider"><label for="sL">Share of x₂'s prediction removed from x₁, λ <b id="vL"></b></label><input id="sL" type="range" min="0" max="1" step="0.01" value="0"></div>
+</section>
+<div class="stats">
+  <div class="stat"><span class="small">Simple regression slope</span><span class="big" id="rS"></span></div>
+  <div class="stat"><span class="small">Slope at the current λ</span><span class="big" id="rL"></span></div>
+  <div class="stat"><span class="small">Multiple regression coefficient</span><span class="big" id="rM"></span></div>
+  <div class="stat"><span class="small">Corr(missed, priGPA)</span><span class="big" id="rC"></span></div>
+</div>
+<div class="buttons">
+  <button class="primary" id="bAnim">Animate the partialling out</button>
+  <button id="b0">λ = 0 (simple regression)</button>
+  <button id="b1">λ = 1 (residual r̂₁)</button>
+  <button id="bStop">Stop</button>
+</div>
+<div class="panels">
+  <figure><canvas id="cA"></canvas>
+    <figcaption id="capA"><strong>Final score against missed, as missed is purged of prior GPA.</strong> The horizontal position is x₁ − λ(x̂₁ − x̄₁), where x̂₁ is the prediction of x₁ from x₂. The red line is the simple OLS line through the points as they are now. Its slope travels from the simple coefficient (λ = 0) to the multiple regression coefficient (λ = 1).</figcaption></figure>
+  <figure><canvas id="cB"></canvas>
+    <figcaption id="capB"><strong>Step 1: regress x₁ on x₂.</strong> The line is x̂₁ = α̂₀ + α̂₁x₂. The vertical distances to it are the residuals r̂₁: the part of missed lectures that prior GPA does not predict. Only that part is used to estimate β̂₁.</figcaption></figure>
+  <figure><canvas id="cC"></canvas>
+    <figcaption id="capC"><strong>The added-variable plot.</strong> Both the score and missed with prior GPA netted out (residuals from regressing each on priGPA). The slope is again β̂₁, and the vertical distances to the line are exactly the residuals of the multiple regression. The colour pattern is gone: within a given prior GPA, missing lectures says almost nothing about the score.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>Step 1</b>: regress x₁ on the other regressor</div><div class="k" data-tex='x_1=\alpha_0+\alpha_1 x_2+r_1'></div><span class="v" id="f1"></span></div>
+<div class="f"><div class="n"><b>Step 2</b>: the FWL theorem</div><div class="k" data-tex='\hat\beta_1=\frac{\sum_{i=1}^n \hat r_{i1}\,y_i}{\sum_{i=1}^n \hat r_{i1}^2}'></div><span class="v" id="f2"></span></div>
+<div class="f"><div class="n"><b>The multiple regression</b> (slide 171)</div><div class="k" data-tex='\widehat{final}=\hat\beta_0+\hat\beta_1\,missed+\hat\beta_2\,priGPA'></div><span class="v" id="f3"></span></div>
+<div class="f"><div class="n"><b>What is left of x₁</b> (it feeds the variance)</div><div class="k" data-tex='\textstyle\sum_{i=1}^n \hat r_{i1}^2=SST_1\,(1-R_1^2)'></div><span class="v" id="f4"></span></div>
+</aside>
+<div class="note">
+  <p>The simple regression attributes to missed lectures what belongs to prior GPA: students with a high prior GPA miss fewer lectures (Corr = −.427) and would score higher anyway, so missing looks costly. Holding prior GPA fixed, which is what the multiple regression does, the effect is about zero (and not significant: t = 0.50). FWL makes "holding fixed" literal: the coefficient comes only from the variation in missed that is left once prior GPA has been used to predict it.</p>
+  <p>The same residual explains the variance formula of lecture 03: Var(β̂ⱼ) = σ²/(SSTⱼ(1 − Rⱼ²)) has Σr̂²<sub>ij</sub> in the denominator. The more x₂ predicts x₁ (a high R₁²), the less variation is left in r̂₁ and the less precise β̂₁ is. The intermediate values of λ are only a way to watch the slide: no regression produces them, and the slope reaches β̂₁ only at λ = 1.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+/* econlib: distributions, OLS, binary MLE and drawing helpers shared by the Econometrics graphs */
+
+/* ---------- special functions ---------- */
+function lgam(x){const g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(x<0.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*x)))-lgam(1-x);
+  x-=1;let a=c[0];const t=x+g+0.5;for(let i=1;i<9;i++)a+=c[i]/(x+i);return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);}
+function betacf(a,b,x){const MAXIT=300,EPS=3e-14,FPMIN=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;
+  for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+/* regularized incomplete beta I_x(a,b) */
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+/* regularized incomplete gamma: gser for the series side, gcf for the continued fraction (upper tail) */
+function gser(a,x){let ap=a,s=1/a,d=s;for(let n=0;n<500;n++){ap+=1;d*=x/ap;s+=d;if(Math.abs(d)<Math.abs(s)*1e-16)break;}return s*Math.exp(-x+a*Math.log(x)-lgam(a));}
+function gcf(a,x){let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-16)break;}return Math.exp(-x+a*Math.log(x)-lgam(a))*h;}
+function gammp(a,x){if(x<=0)return 0;return x<a+1?gser(a,x):1-gcf(a,x);}
+function gammq(a,x){if(x<=0)return 1;return x<a+1?1-gser(a,x):gcf(a,x);}
+
+/* ---------- distributions ---------- */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function Phi(x){const t=Math.abs(x)/Math.SQRT2;const p=0.5*ibetaErfc(t);return x>=0?1-p:p;}
+function ibetaErfc(z){/* erfc(z) = Q(1/2, z^2) */return z<0?2-ibetaErfc(-z):gammq(0.5,z*z);}
+function zq(p){const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],
+  b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],
+  c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],
+  d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];const pl=0.02425;let q,r,x;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));x=(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));x=-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else{q=p-0.5;r=q*q;x=(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  const e=Phi(x)-p,u=e*Math.sqrt(2*Math.PI)*Math.exp(x*x/2);return x-u/(1+x*u/2);}
+function tpdf(t,v){return Math.exp(lgam((v+1)/2)-lgam(v/2)-0.5*Math.log(v*Math.PI)-(v+1)/2*Math.log(1+t*t/v));}
+function tcdf(t,v){const x=v/(v+t*t),p=0.5*ibeta(x,v/2,0.5);return t>=0?1-p:p;}
+function tq(p,v){if(v>1e6)return zq(p);let lo=-1e3,hi=1e3,x=zq(p);for(let i=0;i<60;i++){const f=tcdf(x,v)-p;if(Math.abs(f)<1e-13)break;const d=tpdf(x,v);let nx=x-f/d;if(f>0)hi=Math.min(hi,x);else lo=Math.max(lo,x);if(!(nx>lo&&nx<hi))nx=(lo+hi)/2;x=nx;}return x;}
+function fpdf(x,a,b){if(x<=0)return 0;return Math.exp(0.5*(a*Math.log(a)+b*Math.log(b))+(a/2-1)*Math.log(x)-(a+b)/2*Math.log(b+a*x)-(lgam(a/2)+lgam(b/2)-lgam((a+b)/2)));}
+function fcdf(x,a,b){if(x<=0)return 0;return ibeta(a*x/(a*x+b),a/2,b/2);}
+function fq(p,a,b){let lo=0,hi=1;while(fcdf(hi,a,b)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(fcdf(m,a,b)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+function chi2pdf(x,k){if(x<=0)return 0;return Math.exp((k/2-1)*Math.log(x)-x/2-k/2*Math.log(2)-lgam(k/2));}
+function chi2cdf(x,k){return gammp(k/2,x/2);}
+function chi2sf(x,k){return gammq(k/2,x/2);}
+function chi2q(p,k){let lo=0,hi=1;while(chi2cdf(hi,k)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(chi2cdf(m,k)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+const lgt=z=>1/(1+Math.exp(-z));
+const lpdf=z=>{const e=Math.exp(-Math.abs(z));return e/((1+e)*(1+e));};
+
+/* ---------- matrices ---------- */
+function inv(A){const n=A.length,M=A.map((r,i)=>{const o=new Float64Array(2*n);for(let j=0;j<n;j++)o[j]=r[j];o[n+i]=1;return o;});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];const d=M[c][c];if(Math.abs(d)<1e-300)return null;
+    for(let k=0;k<2*n;k++)M[c][k]/=d;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c];if(f)for(let k=0;k<2*n;k++)M[r][k]-=f*M[c][k];}}
+  return M.map(r=>Array.from(r.slice(n)));}
+function xtx(X,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p));for(const [i,r] of X.entries()){const wi=w?w[i]:1;for(let j=0;j<p;j++){const rj=r[j]*wi;if(!rj)continue;for(let k=j;k<p;k++)A[j][k]+=rj*r[k];}}
+  for(let j=0;j<p;j++)for(let k=0;k<j;k++)A[j][k]=A[k][j];return A.map(r=>Array.from(r));}
+const mv=(M,v)=>M.map(r=>r.reduce((s,x,j)=>s+x*v[j],0));
+
+/* ---------- OLS ----------
+   X rows (include the column of ones yourself), y. opts.cluster: array of cluster ids.
+   Returns b, se (usual), seR (HC1, Stata robust), seC (Stata cluster), resid, fit, SSR, SST, SSE, R2, R2a */
+function ols(X,y,opts){opts=opts||{};const n=X.length,k=X[0].length,A=xtx(X),Ai=inv(A);if(!Ai)return null;
+  const Xy=new Float64Array(k);for(let i=0;i<n;i++)for(let j=0;j<k;j++)Xy[j]+=X[i][j]*y[i];const b=mv(Ai,Xy);
+  const fit=X.map(r=>r.reduce((s,x,j)=>s+x*b[j],0)),resid=y.map((v,i)=>v-fit[i]);
+  const SSR=resid.reduce((s,u)=>s+u*u,0),ym=mean(y),SST=y.reduce((s,v)=>s+(v-ym)**2,0),df=n-k,s2=SSR/df;
+  const se=Ai.map((r,j)=>Math.sqrt(s2*r[j]));
+  const out={b,se,resid,fit,SSR,SST,SSE:SST-SSR,R2:1-SSR/SST,R2a:1-(SSR/df)/(SST/(n-1)),n,k,df,s2,Ai};
+  if(opts.robust){const M=Array.from({length:k},()=>new Float64Array(k));for(let i=0;i<n;i++){const u2=resid[i]*resid[i],r=X[i];for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=u2*r[j]*r[l];}
+    const V=sandwich(Ai,M);out.Vr=V.map(r=>r.map(v=>v*n/df));out.seR=out.Vr.map((r,j)=>Math.sqrt(r[j]));}
+  if(opts.cluster){const g=new Map();for(let i=0;i<n;i++){const id=opts.cluster[i];if(!g.has(id))g.set(id,new Float64Array(k));const s=g.get(id);for(let j=0;j<k;j++)s[j]+=X[i][j]*resid[i];}
+    const M=Array.from({length:k},()=>new Float64Array(k));for(const s of g.values())for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=s[j]*s[l];
+    const G=g.size,c=opts.cadj!==undefined?opts.cadj:(G/(G-1))*((n-1)/(n-k));const V=sandwich(Ai,M);out.Vc=V.map(r=>r.map(v=>v*c));out.seC=out.Vc.map((r,j)=>Math.sqrt(Math.max(r[j],0)));out.G=G;}
+  return out;}
+function sandwich(Ai,M){const k=Ai.length,T=Ai.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*M[j][l],0)));return T.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*Ai[j][l],0)));}
+/* simple regression in closed form */
+function slr(x,y){const n=x.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=x[i];my+=y[i];}mx/=n;my/=n;let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;}
+  const b1=sxy/sxx,b0=my-b1*mx;let ssr=0;for(let i=0;i<n;i++){const u=y[i]-b0-b1*x[i];ssr+=u*u;}const s2=ssr/(n-2);return{b0,b1,se1:Math.sqrt(s2/sxx),sxx,ssr,s2,mx,my};}
+
+/* ---------- binary response by Newton-Raphson ---------- */
+function binfit(X,y,link,b0){const n=X.length,k=X[0].length;let b=b0?b0.slice():new Array(k).fill(0);const G=link==='logit'?lgt:Phi,g=link==='logit'?lpdf:npdf;const log=[];
+  const ll=bb=>{let s=0;for(let i=0;i<n;i++){const z=X[i].reduce((a,x,j)=>a+x*bb[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;};
+  let L=ll(b);log.push(L);let H=null;
+  for(let it=0;it<60;it++){const gr=new Float64Array(k),Hm=Array.from({length:k},()=>new Float64Array(k));
+    for(let i=0;i<n;i++){const r=X[i],z=r.reduce((a,x,j)=>a+x*b[j],0);let s,w;
+      if(link==='logit'){const p=lgt(z);s=y[i]-p;w=p*(1-p);}
+      else{const P=Math.min(Math.max(Phi(z),1e-15),1-1e-15),f=npdf(z);s=y[i]?f/P:-f/(1-P);w=y[i]?s*(s+z):s*(s+z);}
+      for(let j=0;j<k;j++){gr[j]+=s*r[j];for(let l=0;l<k;l++)Hm[j][l]+=w*r[j]*r[l];}}
+    H=Hm.map(r=>Array.from(r));const Hi=inv(H);if(!Hi)break;const step=mv(Hi,Array.from(gr));let t=1,nb,nL;
+    for(let h=0;h<30;h++){nb=b.map((v,j)=>v+t*step[j]);nL=ll(nb);if(nL>=L-1e-12)break;t/=2;}
+    b=nb;const done=Math.abs(nL-L)<1e-11;L=nL;log.push(L);if(done&&it>1)break;}
+  const Hi=inv(H);const se=Hi?Hi.map((r,j)=>Math.sqrt(r[j])):null;return{b,se,logL:L,log,V:Hi};}
+function binLL(X,y,b,link){const G=link==='logit'?lgt:Phi;let s=0;for(let i=0;i<X.length;i++){const z=X[i].reduce((a,x,j)=>a+x*b[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;}
+
+/* ---------- small helpers ---------- */
+function hist(v,lo,hi,nb){const c=new Array(nb).fill(0),w=(hi-lo)/nb;for(const x of v){const i=Math.floor((x-lo)/w);if(i>=0&&i<nb)c[i]++;}return{c,w,lo,hi,nb};}
+function drawHist(ctx,A,H,color,alpha,total){const s=total||H.c.reduce((a,b)=>a+b,0)||1;ctx.save();ctx.globalAlpha=alpha??0.55;ctx.fillStyle=color;
+  H.c.forEach((c,i)=>{if(!c)return;const x0=A.px(H.lo+i*H.w),x1=A.px(H.lo+(i+1)*H.w),y=A.py(c/(s*H.w));ctx.fillRect(x0+0.5,y,Math.max(x1-x0-1,1),A.py(0)-y);});ctx.restore();}
+function curve(ctx,A,f,lo,hi,color,w,dash,n){const p=[];n=n||200;for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n,y=f(x);if(isFinite(y))p.push([A.px(x),A.py(y)]);}line(ctx,p,color,w,dash);}
+function fillUnder(ctx,A,f,lo,hi,color,alpha){if(hi<=lo)return;ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(A.px(lo),A.py(0));for(let i=0;i<=120;i++){const x=lo+(hi-lo)*i/120;ctx.lineTo(A.px(x),A.py(f(x)));}ctx.lineTo(A.px(hi),A.py(0));ctx.closePath();ctx.fill();ctx.restore();}
+function niceTicks(lo,hi,n){const span=hi-lo,raw=span/(n||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,st=(f<1.5?1:f<3?2:f<7?5:10)*mag;const t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9*st;v+=st)t.push(Math.abs(v)<st*1e-9?0:v);return t;}
+function tickFmt(st){const d=Math.max(0,-Math.floor(Math.log10(st)+1e-9));return v=>fmt(v,Math.min(d,6));}
+function quantile(a,p){const s=a.slice().sort((x,y)=>x-y),i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+const sd=a=>Math.sqrt(svar(a));
+const fmtp=p=>p<0.0001?'< 0.0001':fmt(p,4);
+const sgn=(v,d)=>(v<0?'−':'')+fmt(Math.abs(v),d);
+function bindSlider(id,key,S,f,after){const el=$(id);el.addEventListener('input',()=>{S[key]=+el.value;if(after)after();});return el;}
+/* colour mixing for value-coded points (tokens are hex) */
+function hexRGB(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
+
+const ATTEND={final:[28,26,30,27,34,25,10,34,26,26,27,22,27,33,29,23,22,21,25,22,24,27,19,33,33,31,32,22,30,27,30,26,25,28,27,23,32,32,26,19,31,31,19,24,26,34,19,24,29,29,23,20,27,25,22,30,21,35,24,23,23,28,31,21,35,18,21,35,25,22,21,29,20,29,25,20,24,35,19,25,28,22,28,25,20,26,25,28,23,27,26,25,25,27,21,28,26,34,21,22,34,27,30,23,27,22,30,35,21,20,22,33,30,20,20,30,23,25,27,19,30,19,31,28,21,25,30,32,20,23,24,29,19,29,26,19,20,27,30,26,23,25,20,26,31,22,32,16,24,22,31,25,27,26,24,28,37,21,31,32,29,29,27,23,30,29,23,32,28,30,22,37,17,31,24,26,23,28,27,30,24,30,28,30,25,22,22,21,26,22,32,26,34,26,26,30,24,34,30,26,19,34,22,22,36,27,24,26,22,31,20,30,22,22,26,29,22,31,27,23,26,22,24,32,26,31,25,27,17,29,26,26,24,25,24,28,21,32,28,22,24,33,28,25,27,27,26,22,21,27,30,26,21,23,37,24,27,19,25,21,30,38,19,25,35,32,29,30,22,29,21,20,29,26,21,30,19,24,24,16,25,33,31,27,14,31,14,24,23,25,29,19,23,25,27,24,25,25,15,25,24,29,24,29,22,31,18,25,22,32,27,30,27,22,22,26,39,30,24,18,35,26,28,30,29,25,24,24,25,30,17,25,25,26,29,23,19,22,32,28,24,31,31,28,31,29,18,31,28,25,26,22,22,24,33,36,21,23,34,29,27,27,22,35,34,23,19,35,29,24,26,30,26,22,24,13,28,30,22,19,19,28,36,25,17,28,35,33,19,21,32,25,37,22,31,17,28,27,22,17,23,27,23,35,23,25,24,25,23,30,32,21,34,38,17,31,26,31,27,35,32,26,24,19,28,26,24,28,32,27,21,18,19,23,32,24,31,29,21,23,29,26,26,29,24,30,20,19,35,20,35,24,28,23,32,20,29,22,26,20,27,20,19,19,29,22,22,22,21,30,24,20,24,23,17,28,29,25,26,19,33,30,27,28,17,21,16,24,30,28,24,21,32,17,29,31,30,20,30,28,27,11,30,23,30,29,29,26,24,25,30,16,25,30,29,24,28,25,27,31,31,36,28,17,28,30,32,22,24,24,35,24,34,23,31,21,21,26,29,21,22,19,24,23,29,27,23,24,25,25,27,25,27,26,22,29,33,23,28,22,34,22,29,28,21,23,24,27,29,18,25,34,28,25,32,31,21,29,24,23,16,27,23,23,25,26,32,36,28,26,25,29,21,19,27,26,22,29,25,22,25,26,28,32,21,24,25,23,26,26,20,25,23,22,28,24,29,17,24,35,22,24,31,27,18,24,22,28,29,28,31,30,26,28,24,36,24,22,29,23,25,28,27,34,28,21,20,23,34,26,22,25,31,21,22,26,26,26,22,27,32,27,27,16,34,26,25,30,28,26,26,22,26,23,26,22,19,30,27,29],missed:[5,10,2,1,0,3,2,6,8,3,2,13,13,3,3,2,12,0,1,3,5,7,1,10,5,3,0,7,2,7,5,5,9,0,1,7,14,0,1,8,1,1,0,7,1,0,2,2,2,22,13,2,15,5,5,5,4,2,2,2,1,6,7,8,13,10,4,0,3,13,12,3,6,6,9,5,1,1,3,1,8,7,2,0,2,9,8,0,12,6,5,8,2,1,9,7,3,4,12,1,1,9,7,4,3,15,4,0,12,30,11,4,6,8,1,3,11,8,12,2,1,0,9,2,4,7,4,8,6,7,5,9,3,10,4,7,7,5,9,0,5,1,7,6,3,4,2,3,3,4,0,7,4,4,8,3,2,3,4,7,2,0,3,4,8,6,29,17,1,7,5,5,5,3,0,9,0,4,1,7,2,8,10,1,16,4,1,11,23,8,1,4,6,1,12,9,3,0,0,3,4,1,4,1,2,5,7,5,7,0,22,7,1,3,5,2,0,1,0,3,8,11,11,0,4,0,4,4,2,2,4,3,15,0,6,1,2,6,3,4,7,0,1,8,5,9,3,6,10,3,3,5,14,5,3,9,7,4,2,8,2,0,4,3,7,1,1,2,9,1,0,0,2,4,6,8,4,17,4,3,5,4,1,3,2,8,1,4,11,6,0,0,11,23,6,8,6,1,5,4,0,7,6,5,0,11,0,7,4,8,9,1,0,3,3,1,3,8,15,3,1,5,12,1,5,15,15,3,5,1,20,5,7,5,6,5,9,7,5,4,0,4,6,9,0,4,2,5,7,0,7,5,4,0,2,14,17,11,8,0,14,8,7,2,0,0,3,22,5,13,15,3,6,16,14,15,26,5,8,6,17,4,2,3,2,4,4,0,9,20,6,27,2,7,5,4,18,4,4,9,4,5,0,3,7,3,10,1,3,6,22,5,9,0,4,8,8,2,1,2,0,0,1,4,1,5,9,7,4,4,9,18,5,3,7,7,5,2,4,6,26,5,6,4,15,8,6,2,7,3,3,11,3,13,3,4,0,6,3,4,0,1,5,5,8,6,1,12,4,9,1,20,3,20,5,1,3,6,3,2,10,3,2,17,3,7,3,7,11,1,6,3,1,22,3,9,6,5,5,11,14,5,5,4,5,16,9,10,6,13,23,2,28,0,1,4,4,7,7,0,13,0,7,4,8,0,1,5,2,5,3,6,0,11,4,6,7,6,2,5,16,5,19,27,0,21,0,7,3,19,5,2,4,23,11,2,13,15,2,1,1,3,14,2,8,18,2,1,4,2,5,13,3,1,4,3,5,3,20,4,1,2,7,6,2,0,2,6,2,0,3,4,1,17,2,7,17,4,0,4,1,17,5,2,1,16,2,2,2,4,2,7,2,16,5,8,16,22,4,2,21,5,5,12,14,22,5,1,0,2,1,0,4,3,15,6,14,4,0,1,14,8,2,1,0,6,11,7,9,3,16,1,8,14,15,3,4,9,13,1,14,5,6,1,1,0,3,2,9,6,1,8,13,1,3,7,0,0,4,18],priGPA:[2.64,3.52,2.46,2.61,3.32,2.93,1.94,2.12,2.06,2.73,2.29,2.29,2.64,3.39,2.76,2.33,1.98,2.29,3.02,2.33,2.54,2.39,2.43,3.88,2.58,3.36,3.02,2.12,2.37,2.93,2.02,2.78,2.85,2.28,3.46,2.63,2.19,3.57,1.98,3.05,3.45,2.63,2.62,2.13,2.42,3.43,2.35,3.61,2.86,2.05,2.95,2.41,2.32,2.3,1.79,2.3,2.48,2.87,2.02,2.66,2.81,2.34,2.53,2.09,2.67,1.9,2.8,3.93,2.55,2.17,1.58,2.12,2.2,2.02,3.45,1.96,2.78,3.59,2,3.59,2.04,2.12,3.35,2.41,2.56,2.36,2.59,3.17,2.61,2.95,2.2,2.52,2.55,2.9,2.53,2.27,2.71,2,2.29,1.96,2.46,2.18,3.05,2.47,2.76,1.75,2.74,3.07,1.91,2.25,2.03,3.06,2.26,3.19,2.57,2.74,2.17,3.3,2.53,2.07,3.25,2.82,2.45,3.02,2.84,3.39,.857,2.31,2.96,2.38,2.15,1.9,1.8,1.74,2.22,2.49,2.92,1.98,1.83,3.28,1.98,3.02,2.87,2.75,3.45,3.21,2.43,2.56,3.42,2.43,3.49,2.34,2.48,3.21,2.1,2.82,3.22,2.1,1.67,3.64,2.45,2.53,2.39,2.63,2.54,3.54,1.85,2.44,3.31,2.35,2.22,3.2,2.58,3.61,2.46,3.34,3.13,2.79,2.36,3.29,2.37,3.57,2.07,3.2,1.98,2.8,2.98,2.85,1.95,1.89,3.29,2.76,1.78,2.89,1.95,2.48,2.3,1.86,2.7,2.28,2.69,2.47,2.67,2.4,3.45,2.35,2.92,2.73,2.68,3.52,1.41,2.94,3.32,2.91,2.13,3.11,2.94,3.53,2.83,2.66,2.12,2.2,2.25,3.22,2.95,2.66,2.41,2.59,2.55,3.48,2.91,2.28,2.49,2.94,3.11,2.69,3.36,2.12,2.41,2.3,2.07,3.18,2.62,1.74,3.15,2.31,2.84,2.07,2.13,2.55,2.79,2.39,2.19,2.14,3.84,3.21,2.68,2.46,2.34,2.62,2.61,3.81,2.42,2.45,2.93,3.48,2.96,2.36,2.89,3.02,2.59,2.57,2.53,3.66,2.1,1.81,2.39,2.03,2.59,1.92,1.85,3.54,2.57,3.27,2.44,2.37,2.63,2.68,2.5,2.95,3.16,3.13,1.98,2.03,1.93,1.88,2.86,2.3,2.19,2.54,2.94,2.93,2.6,3.26,3.29,2.19,3.02,2.09,2.11,2.83,2.35,2.38,3.14,2.48,2.52,2.76,3.7,2.08,2.39,2.46,3.7,1.99,2.58,2.67,1.91,1.96,2.15,2.94,2.11,3.5,1.84,3.1,2.8,1.76,2.97,2.37,1.68,2.27,3.1,2.38,2.84,3.69,3.37,2.17,3.6,3.28,3.49,2.84,2.92,2.75,3.17,2.44,2.35,2.19,3.28,2.25,1.59,1.65,2.62,3.29,1.43,3.39,2.39,2.24,3.87,2.9,2.64,2.25,2.18,2.46,2.67,3.25,2.43,2.23,2.63,1.98,1.8,2.81,2.27,2.77,2.08,2.5,3.81,2.57,1.93,2.51,2,2.59,2.61,2.51,2.15,1.91,3.92,2.84,3.31,2.04,1.84,2.97,2.36,2.15,2,1.74,2.7,3.59,2.75,2.74,2.48,2.48,2.44,2.86,2.02,1.97,2.82,3.9,2.42,2.5,2.13,3.8,3.02,3.5,3.32,2.84,2.74,2.03,3.23,2.19,2.24,2.15,2.32,2.94,2.7,1.2,1.74,2.8,2.46,2.2,2.6,2.21,2.17,2.6,2.94,2.71,1.8,2.59,2.64,2.1,2.49,2.43,2.9,2.91,2.98,2.39,3.04,1.74,3.5,2.54,2.45,2.98,1.96,2.02,1.91,2.3,2.56,2.21,2.12,3.09,1.5,1.98,2.82,3.12,2.68,2.58,2.26,2.47,2.26,3.21,2.66,3,3.25,2.83,2.84,1.95,3.53,1.75,2.27,2.04,1.32,2.71,1.88,2.67,2.92,1.34,2.68,2.29,2.39,3.6,2.56,2.61,2.75,2.38,2.75,3.13,2.63,2.62,2.29,2.89,1.25,2.51,2.46,1.82,1.52,3,2.14,3.23,2.38,1.88,2.77,2.61,2.01,2.89,2.16,3.81,2,1.89,2.12,2.88,3.05,2.23,2.11,2.61,2.98,2.73,3.93,1.99,2.76,1.83,2.58,2.12,2.68,2.02,2.06,2.27,3.04,1.6,2.71,1.74,1.66,2.22,3.05,2.06,2.9,2.63,2.28,1.79,2.8,2.91,1.6,1.35,3.18,2.92,3.05,3.09,2.6,2.43,2.67,1.63,2.65,3.25,3.65,2.05,2.16,1.55,2.75,2.66,2.8,3.08,2.14,3.49,1.43,2.43,2.3,2.78,2.36,2.86,2.8,2.42,3.88,3.28,1.98,2.96,2.86,2.16,2.3,1.48,2.98,3.48,1.67,3.91,3.25,2.25,2.66,2.48,3.07,2.5,2.67,2.95,2.57,2.5,2.54,2.17,2.66,2.2,3.36,2.24,2.03,3.1,2,1.8,2.52,2.97,2.27,3.13,2.16,2.06,2.11,2.01,3.24,3.53,2.41,2.62,3.13,2.95,2.95,3.66,2.05,3.08,2.28,2.39,2.56,2.21,2.86,2.95,3,3.41,3,1.38,2.27,2.42,2.62,3.01,1.95,2.83,3.05,2.51,1.48,1.94,2.46,3.5,2.18,2.48,3.33,2.83,2.65,2.5,3.78,3.54,3.07,3.72,2.48,3.1,3.5,1.96,1.84,2.73,3.48,2.31,2.38,3.61,3.02,1.19]};
+
+/* FWL on ATTEND: final on missed and priGPA */
+const Y=ATTEND.final,MI=ATTEND.missed,PG=ATTEND.priGPA,N=Y.length;
+const S={k:1,lam:0};
+const NAMES={1:{x1:'missed',x2:'priGPA',x1l:'lectures missed',x2l:'prior GPA'},2:{x1:'priGPA',x2:'missed',x1l:'prior GPA',x2l:'lectures missed'}};
+const mlr=ols(Y.map((_,i)=>[1,MI[i],PG[i]]),Y);
+let M;  /* everything for the current tab */
+function prep(){
+  const x1=S.k===1?MI:PG,x2=S.k===1?PG:MI;
+  const st1=slr(x2,x1);                              /* x1 on x2 */
+  const x1hat=x2.map(v=>st1.b0+st1.b1*v),r=x1.map((v,i)=>v-x1hat[i]);
+  const sy=slr(x2,Y),yt=Y.map((v,i)=>v-sy.b0-sy.b1*x2[i]);
+  const simple=slr(x1,Y),m1=mean(x1);
+  const sst1=x1.reduce((s,v)=>s+(v-m1)**2,0),sr2=r.reduce((s,v)=>s+v*v,0);
+  const ry=r.reduce((s,v,i)=>s+v*Y[i],0);
+  const x2lo=Math.min(...x2),x2hi=Math.max(...x2);
+  M={x1,x2,st1,x1hat,r,yt,simple,m1,sst1,sr2,ry,x2lo,x2hi,beta:mlr.b[S.k],bOther:mlr.b[3-S.k]};
+}
+const xl=i=>M.x1[i]-S.lam*(M.x1hat[i]-M.m1);
+const col=i=>mixHex(css('--blue'),css('--orange'),(M.x2[i]-M.x2lo)/(M.x2hi-M.x2lo));
+function slopeAt(){const x=M.x1.map((_,i)=>xl(i));return slr(x,Y);}
+function drawA(){
+  const c=$('cA'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const all=M.x1.concat(M.r.map(v=>v+M.m1)),lo=Math.min(...all),hi=Math.max(...all),pad=(hi-lo)*0.04;
+  const xt=niceTicks(lo-pad,hi+pad,6),yt=[10,15,20,25,30,35,40];
+  const A=axes(ctx,w,h,{xlim:[lo-pad,hi+pad],ylim:[8,41],xt,yt,xf:tickFmt(xt[1]-xt[0]),xl:NAMES[S.k].x1l+(S.lam>0?' purged of '+NAMES[S.k].x2l+' (λ = '+fmt(S.lam,2)+')':''),yl:'final exam score'});
+  A.clip();ctx.globalAlpha=0.75;
+  for(let i=0;i<N;i++)dot(ctx,A.px(xl(i)+(((i*37)%17)/17-0.5)*(S.k===1?0.35:0.01)),A.py(Y[i]+(((i*53)%13)/13-0.5)*0.5),2.4,col(i));
+  ctx.globalAlpha=1;const f=slopeAt();
+  line(ctx,[[A.px(lo-pad),A.py(f.b0+f.b1*(lo-pad))],[A.px(hi+pad),A.py(f.b0+f.b1*(hi+pad))]],css('--red'),2.6);
+  if(S.lam>0)line(ctx,[[A.px(lo-pad),A.py(M.simple.b0+M.simple.b1*(lo-pad))],[A.px(hi+pad),A.py(M.simple.b0+M.simple.b1*(hi+pad))]],css('--grey'),1.4,[5,4]);
+  A.unclip();
+  label(ctx,'slope '+sgn(f.b1,4),A.L+A.pw-6,A.T+13,css('--red'),'right');
+  /* colour key */
+  const kx=A.L+8,ky=A.T+8;for(let j=0;j<40;j++){ctx.fillStyle=mixHex(css('--blue'),css('--orange'),j/39);ctx.fillRect(kx+j*2,ky,2,7);}
+  label(ctx,NAMES[S.k].x2l+': low → high',kx,ky+19,css('--muted'));
+}
+function drawB(){
+  const c=$('cB'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const x2=M.x2,x1=M.x1,lo=M.x2lo,hi=M.x2hi,pad=(hi-lo)*0.04,ylo=Math.min(...x1),yhi=Math.max(...x1),yp=(yhi-ylo)*0.06;
+  const xt=niceTicks(lo-pad,hi+pad,6),yt=niceTicks(ylo-yp,yhi+yp,5);
+  const A=axes(ctx,w,h,{xlim:[lo-pad,hi+pad],ylim:[ylo-yp,yhi+yp],xt,yt,xf:tickFmt(xt[1]-xt[0]),yf:tickFmt(yt[1]-yt[0]),xl:NAMES[S.k].x2l+' (x₂)',yl:NAMES[S.k].x1l+' (x₁)'});
+  A.clip();
+  ctx.globalAlpha=0.35;for(let i=0;i<N;i+=2)line(ctx,[[A.px(x2[i]),A.py(x1[i])],[A.px(x2[i]),A.py(M.x1hat[i])]],css('--resid'),1);ctx.globalAlpha=0.8;
+  for(let i=0;i<N;i++)dot(ctx,A.px(x2[i]),A.py(x1[i]),2.2,col(i));ctx.globalAlpha=1;
+  line(ctx,[[A.px(lo-pad),A.py(M.st1.b0+M.st1.b1*(lo-pad))],[A.px(hi+pad),A.py(M.st1.b0+M.st1.b1*(hi+pad))]],css('--navy'),2.4);
+  A.unclip();
+  label(ctx,'x̂₁ = '+fmt(M.st1.b0,3)+' '+(M.st1.b1<0?'− ':'+ ')+fmt(Math.abs(M.st1.b1),4)+' x₂',A.L+A.pw-6,A.T+13,css('--navy'),'right');
+}
+function drawC(){
+  const c=$('cC'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const r=M.r,yt=M.yt,lo=Math.min(...r),hi=Math.max(...r),pad=(hi-lo)*0.04,ylo=Math.min(...yt),yhi=Math.max(...yt);
+  const xt=niceTicks(lo-pad,hi+pad,6),ytk=niceTicks(ylo-1,yhi+1,5);
+  const A=axes(ctx,w,h,{xlim:[lo-pad,hi+pad],ylim:[ylo-1,yhi+1],xt,yt:ytk,xf:tickFmt(xt[1]-xt[0]),yf:tickFmt(ytk[1]-ytk[0]),xl:'r̂₁: '+NAMES[S.k].x1+' net of '+NAMES[S.k].x2,yl:'final net of '+NAMES[S.k].x2});
+  A.clip();ctx.globalAlpha=0.75;for(let i=0;i<N;i++)dot(ctx,A.px(r[i]),A.py(yt[i]),2.2,col(i));ctx.globalAlpha=1;
+  line(ctx,[[A.px(lo-pad),A.py(M.beta*(lo-pad))],[A.px(hi+pad),A.py(M.beta*(hi+pad))]],css('--red'),2.6);
+  A.unclip();
+  label(ctx,'slope '+sgn(M.beta,4)+' = β̂'+(S.k===1?'₁':'₂'),A.L+A.pw-6,A.T+13,css('--red'),'right');
+}
+function fill(){
+  $('vL').textContent=fmt(S.lam,2);const f=slopeAt();
+  $('rS').textContent=sgn(M.simple.b1,4);$('rL').textContent=sgn(f.b1,4);$('rM').textContent=sgn(M.beta,4);$('rC').textContent=sgn(-0.427188,3);
+  $('f1').innerHTML=NAMES[S.k].x1+' = '+fmt(M.st1.b0,3)+' '+(M.st1.b1<0?'−':'+')+' '+fmt(Math.abs(M.st1.b1),4)+'·'+NAMES[S.k].x2+' + r̂₁, R₁² = '+fmt(1-M.sr2/M.sst1,4)+'.';
+  $('f2').innerHTML='Σr̂ᵢ₁yᵢ / Σr̂ᵢ₁² = '+fmt(M.ry,2)+' / '+fmt(M.sr2,2)+' = <b>'+sgn(M.ry/M.sr2,4)+'</b>.';
+  $('f3').innerHTML='final = '+fmt(mlr.b[0],2)+' + '+fmt(mlr.b[1],4)+'·missed + '+fmt(mlr.b[2],4)+'·priGPA (se '+fmt(mlr.se[1],4)+', '+fmt(mlr.se[2],4)+').';
+  $('f4').innerHTML=fmt(M.sst1,1)+' × (1 − '+fmt(1-M.sr2/M.sst1,4)+') = <b>'+fmt(M.sr2,1)+'</b>: only '+fmt(100*M.sr2/M.sst1,1)+'% of the variation in '+NAMES[S.k].x1+' is used.';
+}
+const CAPA={1:'<strong>Final score against missed, as missed is purged of prior GPA.</strong> ',2:'<strong>Final score against prior GPA, as prior GPA is purged of missed lectures.</strong> '};
+function caps(){$('capA').innerHTML=CAPA[S.k]+'The horizontal position is x₁ − λ(x̂₁ − x̄₁), where x̂₁ is the prediction of x₁ from x₂. The red line is the simple OLS line through the points as they are now (dashed grey: λ = 0). Its slope travels from the simple coefficient (λ = 0) to the multiple regression coefficient (λ = 1). Colour: '+NAMES[S.k].x2l+'.';}
+function drawAll(){fill();drawA();drawB();drawC();}
+$('sL').addEventListener('input',e=>{stopAnim();S.lam=+e.target.value;drawAll();});
+$('bAnim').onclick=()=>{animate(t=>{S.lam=t<0.12?0:t>0.9?1:(t-0.12)/0.78;$('sL').value=S.lam;drawAll();},4200);};
+$('b0').onclick=()=>{stopAnim();S.lam=0;$('sL').value=0;drawAll();};
+$('b1').onclick=()=>{stopAnim();S.lam=1;$('sL').value=1;drawAll();};
+$('bStop').onclick=()=>stopAnim();
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{stopAnim();S.k=+b.dataset.k;S.lam=0;$('sL').value=0;document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));prep();caps();drawAll();});
+prep();caps();
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

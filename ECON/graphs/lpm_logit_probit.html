@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LPM, logit and probit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+[hidden]{display:none!important}
+.grouplab{margin:20px 0 -6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--rule);padding:5px 11px;font-size:.88rem}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--navy);color:var(--panel);box-shadow:none}
+.optrow{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:.92rem;color:var(--muted)}
+.optrow .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.narr{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--navy);border-radius:6px;padding:9px 14px;font-size:.93rem;color:var(--ink)}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:6px}
+.key i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.f .v b{font-weight:500;color:var(--ink)}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>LPM, logit and probit</h1>
+  <p>The slides' running example (slides 458-503): whether a married woman was in the labour force in 1975 (<code>MROZ</code>, 753 women), on non-wife income, education, experience and its square, age, and the numbers of young and older children. The three models are estimated live in the page (OLS for the LPM, maximum likelihood for logit and probit) and reproduce the slides' table. Pick a regressor to vary; the others are held at their sample means unless you change the number of young children.</p>
+</header>
+<ol class="steps">
+  <li>Pick a regressor. The first panel shows the predicted probability from each model. The LPM is a straight line and leaves [0, 1]; logit and probit bend to stay inside.</li>
+  <li>The second panel is the partial effect: constant in the LPM, largest in the middle for logit and probit, where g(xβ) peaks. The dots are the PEA, the dashed lines the APE.</li>
+  <li>Move x₀ and look at the third panel: probit as a latent variable. P(y = 1) is the area of the error distribution above −xβ.</li>
+</ol>
+<div class="main"><div class="col">
+<div class="optrow"><span class="lab">Vary</span><span class="seg" id="segX"><button data-x="educ">educ</button><button data-x="exper">exper</button><button data-x="age">age</button><button data-x="kidslt6" class="on">kidslt6</button><button data-x="nwifeinc">nwifeinc</button></span>
+<span class="lab">Young children (when not varied)</span><span class="seg" id="segK"><button data-k="mean" class="on">mean (.24)</button><button data-k="0">0</button><button data-k="1">1</button><button data-k="2">2</button></span></div>
+<section class="controls">
+  <div class="slider"><label for="sX0">x₀ for the latent-variable panel <b id="vX0"></b></label><input id="sX0" type="range" min="0" max="1000" value="500"></div>
+</section>
+<div class="optrow"><span class="lab">Latent error</span><span class="seg" id="segL"><button data-l="probit" class="on">normal (probit)</button><button data-l="logit">logistic (logit)</button></span></div>
+<div class="stats">
+  <div class="stat"><span class="small">LPM coefficient</span><span class="big" id="rL"></span></div>
+  <div class="stat"><span class="small">Probit PEA (at the means)</span><span class="big" id="rPEA"></span></div>
+  <div class="stat"><span class="small">Probit APE (average over women)</span><span class="big" id="rAPE"></span></div>
+  <div class="stat"><span class="small">LPM fitted values outside [0, 1]</span><span class="big" id="rOut"></span></div>
+</div>
+<div class="panels">
+  <figure><canvas id="cP"></canvas>
+    <figcaption><strong>Predicted probability of being in the labour force.</strong> Grey: LPM. Green: logit. Navy: probit. The dots at 0 and 1 are the women (jittered), at their actual value of the regressor. The red bands are the impossible region the LPM can reach.</figcaption></figure>
+  <figure><canvas id="cE"></canvas>
+    <figcaption><strong>Partial effect of the regressor</strong> along its range, others fixed: ∂P/∂x = g(xβ̂)·β̂ for logit and probit, β̂ for the LPM (for exper the derivative also moves exper²). Dots: the partial effect at the average (PEA). Dashed: the average partial effect over the 753 women (APE).</figcaption></figure>
+  <figure><canvas id="cZ"></canvas>
+    <figcaption><strong>The latent variable.</strong> y* = xβ + e and we see y = 1 when y* &gt; 0, that is when e &gt; −xβ. The curve is the density of e, the shaded area beyond −xβ̂ (at x₀, others as set) is the predicted probability. Changing x moves the threshold; the effect on the probability is the density at the threshold times β.</figcaption></figure>
+  <figure><div style="padding:6px 4px 0"><table class="data" id="tC"></table></div>
+    <figcaption style="margin-top:10px"><strong>The three sets of estimates</strong> (slide 496), with the slides' rule of thumb: logit coefficients divided by 4 and probit ones by 2.5 are roughly comparable with the LPM. The last rows are the fit measures. The highlighted row is the regressor being varied.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>Response probability</b></div><div class="k" data-tex='P(y=1\,|\,x)=G(\beta_0+x\beta),\quad G=\Phi\ \text{(probit)},\ \ \Lambda(z)=\frac{e^z}{1+e^z}\ \text{(logit)}'></div><span class="v" id="fG"></span></div>
+<div class="f"><div class="n"><b>Partial effect</b></div><div class="k" data-tex='\frac{\partial P(y=1|x)}{\partial x_j}=g(x\hat\beta)\,\hat\beta_j'></div><span class="v" id="fPE"></span></div>
+<div class="f"><div class="n"><b>PEA and APE</b> (slides 487-489)</div><div class="k" data-tex='PEA_j=g(\bar x\hat\beta)\hat\beta_j,\qquad APE_j=\frac1N\sum_{i=1}^N g(x_i\hat\beta)\hat\beta_j'></div><span class="v" id="fA"></span></div>
+<div class="f"><div class="n"><b>Scale factors</b> (slide 493)</div><div class="k" data-tex='\max g:\ \phi(0)\approx0.4,\quad \Lambda(0)[1-\Lambda(0)]=0.25'></div><span class="v" id="fS"></span></div>
+</aside>
+<div class="note">
+  <p>The three models tell the same story with different scales. A young child lowers the probability of working by .262 in the LPM at any point; in probit the effect at the average woman is −.339 (PEA) and the average over all women −.261 (APE), very close to the LPM, which is the usual finding (slide 495). The LPM's problem shows at the edges: a 30-year-old with 17 years of education and lots of experience gets a "probability" above 1, and a woman with three young children one below 0.</p>
+  <p>The APE is the more useful number to report, because it averages effects over real women instead of evaluating them at an average woman who may not exist (with .24 young children). For a discrete regressor like kidslt6 the slides' margins output uses the derivative, as here; the discrete change from 0 to 1 child is a slightly different number. For exper the page's derivative also moves exper², which Stata's margins does not do when expersq is a separate variable (it reports .037 for the probit APE).</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+/* econlib: distributions, OLS, binary MLE and drawing helpers shared by the Econometrics graphs */
+
+/* ---------- special functions ---------- */
+function lgam(x){const g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(x<0.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*x)))-lgam(1-x);
+  x-=1;let a=c[0];const t=x+g+0.5;for(let i=1;i<9;i++)a+=c[i]/(x+i);return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);}
+function betacf(a,b,x){const MAXIT=300,EPS=3e-14,FPMIN=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;
+  for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+/* regularized incomplete beta I_x(a,b) */
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+/* regularized incomplete gamma: gser for the series side, gcf for the continued fraction (upper tail) */
+function gser(a,x){let ap=a,s=1/a,d=s;for(let n=0;n<500;n++){ap+=1;d*=x/ap;s+=d;if(Math.abs(d)<Math.abs(s)*1e-16)break;}return s*Math.exp(-x+a*Math.log(x)-lgam(a));}
+function gcf(a,x){let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-16)break;}return Math.exp(-x+a*Math.log(x)-lgam(a))*h;}
+function gammp(a,x){if(x<=0)return 0;return x<a+1?gser(a,x):1-gcf(a,x);}
+function gammq(a,x){if(x<=0)return 1;return x<a+1?1-gser(a,x):gcf(a,x);}
+
+/* ---------- distributions ---------- */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function Phi(x){const t=Math.abs(x)/Math.SQRT2;const p=0.5*ibetaErfc(t);return x>=0?1-p:p;}
+function ibetaErfc(z){/* erfc(z) = Q(1/2, z^2) */return z<0?2-ibetaErfc(-z):gammq(0.5,z*z);}
+function zq(p){const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],
+  b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],
+  c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],
+  d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];const pl=0.02425;let q,r,x;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));x=(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));x=-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else{q=p-0.5;r=q*q;x=(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  const e=Phi(x)-p,u=e*Math.sqrt(2*Math.PI)*Math.exp(x*x/2);return x-u/(1+x*u/2);}
+function tpdf(t,v){return Math.exp(lgam((v+1)/2)-lgam(v/2)-0.5*Math.log(v*Math.PI)-(v+1)/2*Math.log(1+t*t/v));}
+function tcdf(t,v){const x=v/(v+t*t),p=0.5*ibeta(x,v/2,0.5);return t>=0?1-p:p;}
+function tq(p,v){if(v>1e6)return zq(p);let lo=-1e3,hi=1e3,x=zq(p);for(let i=0;i<60;i++){const f=tcdf(x,v)-p;if(Math.abs(f)<1e-13)break;const d=tpdf(x,v);let nx=x-f/d;if(f>0)hi=Math.min(hi,x);else lo=Math.max(lo,x);if(!(nx>lo&&nx<hi))nx=(lo+hi)/2;x=nx;}return x;}
+function fpdf(x,a,b){if(x<=0)return 0;return Math.exp(0.5*(a*Math.log(a)+b*Math.log(b))+(a/2-1)*Math.log(x)-(a+b)/2*Math.log(b+a*x)-(lgam(a/2)+lgam(b/2)-lgam((a+b)/2)));}
+function fcdf(x,a,b){if(x<=0)return 0;return ibeta(a*x/(a*x+b),a/2,b/2);}
+function fq(p,a,b){let lo=0,hi=1;while(fcdf(hi,a,b)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(fcdf(m,a,b)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+function chi2pdf(x,k){if(x<=0)return 0;return Math.exp((k/2-1)*Math.log(x)-x/2-k/2*Math.log(2)-lgam(k/2));}
+function chi2cdf(x,k){return gammp(k/2,x/2);}
+function chi2sf(x,k){return gammq(k/2,x/2);}
+function chi2q(p,k){let lo=0,hi=1;while(chi2cdf(hi,k)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(chi2cdf(m,k)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+const lgt=z=>1/(1+Math.exp(-z));
+const lpdf=z=>{const e=Math.exp(-Math.abs(z));return e/((1+e)*(1+e));};
+
+/* ---------- matrices ---------- */
+function inv(A){const n=A.length,M=A.map((r,i)=>{const o=new Float64Array(2*n);for(let j=0;j<n;j++)o[j]=r[j];o[n+i]=1;return o;});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];const d=M[c][c];if(Math.abs(d)<1e-300)return null;
+    for(let k=0;k<2*n;k++)M[c][k]/=d;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c];if(f)for(let k=0;k<2*n;k++)M[r][k]-=f*M[c][k];}}
+  return M.map(r=>Array.from(r.slice(n)));}
+function xtx(X,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p));for(const [i,r] of X.entries()){const wi=w?w[i]:1;for(let j=0;j<p;j++){const rj=r[j]*wi;if(!rj)continue;for(let k=j;k<p;k++)A[j][k]+=rj*r[k];}}
+  for(let j=0;j<p;j++)for(let k=0;k<j;k++)A[j][k]=A[k][j];return A.map(r=>Array.from(r));}
+const mv=(M,v)=>M.map(r=>r.reduce((s,x,j)=>s+x*v[j],0));
+
+/* ---------- OLS ----------
+   X rows (include the column of ones yourself), y. opts.cluster: array of cluster ids.
+   Returns b, se (usual), seR (HC1, Stata robust), seC (Stata cluster), resid, fit, SSR, SST, SSE, R2, R2a */
+function ols(X,y,opts){opts=opts||{};const n=X.length,k=X[0].length,A=xtx(X),Ai=inv(A);if(!Ai)return null;
+  const Xy=new Float64Array(k);for(let i=0;i<n;i++)for(let j=0;j<k;j++)Xy[j]+=X[i][j]*y[i];const b=mv(Ai,Xy);
+  const fit=X.map(r=>r.reduce((s,x,j)=>s+x*b[j],0)),resid=y.map((v,i)=>v-fit[i]);
+  const SSR=resid.reduce((s,u)=>s+u*u,0),ym=mean(y),SST=y.reduce((s,v)=>s+(v-ym)**2,0),df=n-k,s2=SSR/df;
+  const se=Ai.map((r,j)=>Math.sqrt(s2*r[j]));
+  const out={b,se,resid,fit,SSR,SST,SSE:SST-SSR,R2:1-SSR/SST,R2a:1-(SSR/df)/(SST/(n-1)),n,k,df,s2,Ai};
+  if(opts.robust){const M=Array.from({length:k},()=>new Float64Array(k));for(let i=0;i<n;i++){const u2=resid[i]*resid[i],r=X[i];for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=u2*r[j]*r[l];}
+    const V=sandwich(Ai,M);out.Vr=V.map(r=>r.map(v=>v*n/df));out.seR=out.Vr.map((r,j)=>Math.sqrt(r[j]));}
+  if(opts.cluster){const g=new Map();for(let i=0;i<n;i++){const id=opts.cluster[i];if(!g.has(id))g.set(id,new Float64Array(k));const s=g.get(id);for(let j=0;j<k;j++)s[j]+=X[i][j]*resid[i];}
+    const M=Array.from({length:k},()=>new Float64Array(k));for(const s of g.values())for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=s[j]*s[l];
+    const G=g.size,c=opts.cadj!==undefined?opts.cadj:(G/(G-1))*((n-1)/(n-k));const V=sandwich(Ai,M);out.Vc=V.map(r=>r.map(v=>v*c));out.seC=out.Vc.map((r,j)=>Math.sqrt(Math.max(r[j],0)));out.G=G;}
+  return out;}
+function sandwich(Ai,M){const k=Ai.length,T=Ai.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*M[j][l],0)));return T.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*Ai[j][l],0)));}
+/* simple regression in closed form */
+function slr(x,y){const n=x.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=x[i];my+=y[i];}mx/=n;my/=n;let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;}
+  const b1=sxy/sxx,b0=my-b1*mx;let ssr=0;for(let i=0;i<n;i++){const u=y[i]-b0-b1*x[i];ssr+=u*u;}const s2=ssr/(n-2);return{b0,b1,se1:Math.sqrt(s2/sxx),sxx,ssr,s2,mx,my};}
+
+/* ---------- binary response by Newton-Raphson ---------- */
+function binfit(X,y,link,b0){const n=X.length,k=X[0].length;let b=b0?b0.slice():new Array(k).fill(0);const G=link==='logit'?lgt:Phi,g=link==='logit'?lpdf:npdf;const log=[];
+  const ll=bb=>{let s=0;for(let i=0;i<n;i++){const z=X[i].reduce((a,x,j)=>a+x*bb[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;};
+  let L=ll(b);log.push(L);let H=null;
+  for(let it=0;it<60;it++){const gr=new Float64Array(k),Hm=Array.from({length:k},()=>new Float64Array(k));
+    for(let i=0;i<n;i++){const r=X[i],z=r.reduce((a,x,j)=>a+x*b[j],0);let s,w;
+      if(link==='logit'){const p=lgt(z);s=y[i]-p;w=p*(1-p);}
+      else{const P=Math.min(Math.max(Phi(z),1e-15),1-1e-15),f=npdf(z);s=y[i]?f/P:-f/(1-P);w=y[i]?s*(s+z):s*(s+z);}
+      for(let j=0;j<k;j++){gr[j]+=s*r[j];for(let l=0;l<k;l++)Hm[j][l]+=w*r[j]*r[l];}}
+    H=Hm.map(r=>Array.from(r));const Hi=inv(H);if(!Hi)break;const step=mv(Hi,Array.from(gr));let t=1,nb,nL;
+    for(let h=0;h<30;h++){nb=b.map((v,j)=>v+t*step[j]);nL=ll(nb);if(nL>=L-1e-12)break;t/=2;}
+    b=nb;const done=Math.abs(nL-L)<1e-11;L=nL;log.push(L);if(done&&it>1)break;}
+  const Hi=inv(H);const se=Hi?Hi.map((r,j)=>Math.sqrt(r[j])):null;return{b,se,logL:L,log,V:Hi};}
+function binLL(X,y,b,link){const G=link==='logit'?lgt:Phi;let s=0;for(let i=0;i<X.length;i++){const z=X[i].reduce((a,x,j)=>a+x*b[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;}
+
+/* ---------- small helpers ---------- */
+function hist(v,lo,hi,nb){const c=new Array(nb).fill(0),w=(hi-lo)/nb;for(const x of v){const i=Math.floor((x-lo)/w);if(i>=0&&i<nb)c[i]++;}return{c,w,lo,hi,nb};}
+function drawHist(ctx,A,H,color,alpha,total){const s=total||H.c.reduce((a,b)=>a+b,0)||1;ctx.save();ctx.globalAlpha=alpha??0.55;ctx.fillStyle=color;
+  H.c.forEach((c,i)=>{if(!c)return;const x0=A.px(H.lo+i*H.w),x1=A.px(H.lo+(i+1)*H.w),y=A.py(c/(s*H.w));ctx.fillRect(x0+0.5,y,Math.max(x1-x0-1,1),A.py(0)-y);});ctx.restore();}
+function curve(ctx,A,f,lo,hi,color,w,dash,n){const p=[];n=n||200;for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n,y=f(x);if(isFinite(y))p.push([A.px(x),A.py(y)]);}line(ctx,p,color,w,dash);}
+function fillUnder(ctx,A,f,lo,hi,color,alpha){if(hi<=lo)return;ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(A.px(lo),A.py(0));for(let i=0;i<=120;i++){const x=lo+(hi-lo)*i/120;ctx.lineTo(A.px(x),A.py(f(x)));}ctx.lineTo(A.px(hi),A.py(0));ctx.closePath();ctx.fill();ctx.restore();}
+function niceTicks(lo,hi,n){const span=hi-lo,raw=span/(n||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,st=(f<1.5?1:f<3?2:f<7?5:10)*mag;const t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9*st;v+=st)t.push(Math.abs(v)<st*1e-9?0:v);return t;}
+function tickFmt(st){const d=Math.max(0,-Math.floor(Math.log10(st)+1e-9));return v=>fmt(v,Math.min(d,6));}
+function quantile(a,p){const s=a.slice().sort((x,y)=>x-y),i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+const sd=a=>Math.sqrt(svar(a));
+const fmtp=p=>p<0.0001?'< 0.0001':fmt(p,4);
+const sgn=(v,d)=>(v<0?'−':'')+fmt(Math.abs(v),d);
+function bindSlider(id,key,S,f,after){const el=$(id);el.addEventListener('input',()=>{S[key]=+el.value;if(after)after();});return el;}
+/* colour mixing for value-coded points (tokens are hex) */
+function hexRGB(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
+/* pills: elements carry data-p="a b"; tabs are buttons with data-p inside #tabs */
+function showPill(p){document.querySelectorAll('[data-p]').forEach(e=>{if(e.closest('#tabs'))return;e.hidden=!e.dataset.p.split(' ').includes(p);});
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));}
+function hookTabs(fn){document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{stopAnim();fn(b.dataset.p);}));const h=location.hash.slice(1);const t=[...document.querySelectorAll('#tabs button')].find(b=>b.dataset.p===h);return t?h:null;}
+
+const MROZ={inlf:[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],nwifeinc:[10.9100599,19.4999809,12.0399103,6.7999959,20.1000576,9.8590536,9.1520481,10.9000378,17.3050003,12.9250002,24.2999535,19.7000713,15.0000076,14.6000004,24.6309147,17.5310268,14.0999804,15.8389997,14.1000004,10.2999611,22.6549816,8.0900478,17.4790001,9.5600004,8.2749529,27.3499851,16,16.9999828,15.1000557,15.6999836,5.1189599,16.7500114,13.5999317,17.1000481,16.7340488,14.1969776,10.3199873,11.3841047,14.5940781,17.5004387,15.5099964,21.9999752,22.5,19.9939995,14.1300001,5.0000129,21.1548977,7.1419458,16.6500721,6.3519998,27.3139477,14.5000038,16.2579899,9.5,7.9999561,12.5000286,14.0000324,20.8000736,19.3851128,12.3869915,28.5,15.0499086,10.4999838,11.8100004,6.9500732,12.4199715,17.4000034,15.4999962,21.2170429,18,11.8999186,26.751955,12.1499615,10.1999903,8.1200151,10.6599646,18.1000099,8.5999861,13.665,32.3499603,12.0850058,12.1499996,17.6950207,24.7000008,2.133992,20.9500484,10.5000801,10.5500002,45.75,13.63204,18.2389393,17.0899963,30.2348995,28.7000008,19.6299953,12.8249426,23.7999992,26.3000259,20.6999073,26.0000038,10.8770208,25.6120625,20.9889946,70.7499313,17.0499992,20.9999962,8.1199999,20.8859901,17.6689186,25.2000294,14.2450056,14.3000002,23.7000103,45.9999962,42.9999046,14.7489996,16.1500549,17.7740002,91,22.2999344,34.6000137,9.6200018,10.8999462,14.4999437,22.0000153,17.9000797,23.6750622,11.7999601,16.1419544,18.399971,15.4999475,17.3239994,19.2050037,21.3000622,23.5599957,20.8500004,26.1499996,17,20.7200031,17.0000896,15.9999981,19.5000496,12.0000038,13.7319117,27.1999912,5.3150001,16,27.8719826,40.0000114,15.900034,27.4999695,17.02005,22.3949394,11.1000004,32.7000122,27.7999611,2.1999941,19.7209511,9.9999876,13.1999683,12.7089748,27.3000469,21.2000008,14.4000044,20.5759602,12.4999905,17.5002155,44.0000381,13.1189547,14.0000563,9.6450863,17.3970451,7.7998886,13.1339769,25.6000004,13.9000254,19.2979431,9.200016,37.9999886,44,21.3720245,23.6680202,9,25.1999512,21.2199993,33.9699135,17.0699997,6.0160236,17.1000099,8.2370005,13.3000822,16.000021,12.5399904,18.0000381,31.2000008,20.7499104,11.0999203,20.6800003,18.0000095,32.4300652,32.900032,24.1000061,17.8003922,20.5000172,10.499898,10.4370346,18.1949902,12.8450766,13.8000002,22.199995,6.6999412,6.2500157,15.600008,3.30001,3.6709776,7.7899971,18.2719898,10.9539795,13.4999924,11.2000122,20.9999084,25.6999989,8.9329939,19.159977,26.5899868,22.4000053,20.6329994,28.2000065,28.7999992,8.9999971,11.3999424,10.4000139,19.0800552,9.4660397,6.5000601,29.1170139,19.1030197,16.3499718,32.0250168,16.7000618,4.8110375,24.626009,17.400013,13.0250397,19.0069828,14.0299997,14.8999062,25.0000553,10.7000675,24.2500038,39.1399651,7.1999731,31.8109989,10.0000477,20.6599998,13.4999762,25.3799953,18.2749767,39.2130013,10.4999361,34.8569984,28.5019989,12.9999599,41.39991,14.7799997,15.0499983,29.6999779,16.16502,25.2051582,14.1999989,18.158968,28.9810638,13.3920031,9.1750202,27.0398483,13.1499519,16.4000702,21.2999916,17.2010155,8.5600262,6.49084,12.4999676,27.0000248,53.5000496,52.4999466,38.3999786,13.8919449,3.8999929,34.1999969,19.700079,18.4999523,10.9999762,43.3000107,18.7600079,4.800096,21.5000019,28.039938,26.0000038,27,17.7996883,17.4019451,19.3099918,9.99998,11.1799803,18.8569565,12.3000202,13.6771183,9.5599966,24.4999847,23.1499996,15.5908833,14.4209242,17.4549084,9.8000193,17.5744648,16.5550003,13.2949743,11.8440027,46.6450615,14.6999893,26.0900803,9.8999996,9.0480261,30.7500648,8.4999399,22.2499924,42.9099998,33.2999992,13.8199034,23.600008,13.0000677,20.7499409,6.3000002,7.7889247,10.4700403,12,16.9799156,17.8999996,15.539937,9.8839855,28.5999508,17.6600113,25.999918,13.6020098,15.8000002,41.0999947,10.7750416,9.0000467,24.3989944,37.3000908,27.9999485,13.7000027,17.2099438,14.0000143,35.7550201,23.4999962,31.9999332,17.1499958,20.2500248,5.4859848,25.0750408,18.2199516,25.9999962,34.5000725,12.3999996,10.78685,16.3230076,30.5,51.2996254,33.0499725,34.7500114,16.4000397,19.7000732,6.6000028,9.0200081,10.4000082,14.5199881,17.1999969,43,13.8719597,-.0290575,16.7699432,7.7999997,14.5000639,7.9000001,79.8000107,7.1759701,17.5069828,20.6000004,18.5599155,9.3000002,5.1200075,14.5000381,19.7999992,18.2999496,33.9999352,11.6279364,11.800046,39.0999756,18.4300709,21,59,25.2999992,23.248991,24.9280872,14.7819881,18.9000282,21,10.0000095,29.3099747,13.1400318,25.0899944,14.5999317,1.2000012,32.0000038,16.1199703,26.5000229,12.7500553,12.8999996,10.699975,14.4340315,23.7089996,15.1000042,18.199976,22.6410561,21.6400795,23.9999847,16.0000153,21.0249996,23.6000004,22.7999992,35.9099998,21.7000008,21.823,31,15.3000002,12.9250002,15.8299999,30.2000008,16.6000004,11,15,20.5279999,13.1260004,15.5500002,18.0100002,18.8740005,24.7999992,17.5,16.1499996,15.1890001,6,37.25,27.7600002,9.0900002,14.5,19.7000008,16.7880001,18.5200005,20.9500008,7.5739999,10.0270004,5,7.04,40.7999992,16.0499992,33.0999985,33.855999,20.5,28.6000004,18.75,20.2999992,13.4200001,18.3999996,16.6819992,32.6850014,7.0500002,10.8669996,18.2199993,26.6130009,25,15.6999998,40.25,73.5999985,10.592,8,13.3999996,23.7000008,18.8999996,48.2999992,24.4699993,28.6299992,25.3199997,13.5299997,14.8000002,17.3999996,15.9799995,16.5760002,21.8500004,14.6000004,21.6000004,24,20.8829994,19.5,42.7999992,41.5,18.9650002,16.1000004,14.6999998,18.7999992,14.75,21,35.4000015,10.6999998,24.5,17.0450001,18.7999992,14,18.2140007,20.177,8.3000002,14.1999998,21.7679996,29.5529995,4.3499999,24,18.2999992,17.2000008,16.4759998,13.3999996,44.987999,18.2000008,28,11.5500002,28.4500008,15.0959997,8.0089998,10.04,16.7000008,8.3999996,13,17.9699993,18.4500008,31,24.1350002,31.7000008,10.1899996,21.5739994,26.6800003,17.7000008,29.3999996,22.1590004,35,8.6300001,17.0799999,32.5,16,18.8500004,17.5,19.3920002,14.4499998,21.7999992,7.6999998,31.7999992,17.2579994,13.3990002,16.073,23.2600002,37.2999992,11,13.0749998,13.6999998,25.1000004,18.6000004,29,19.2369995,19.8549995,9.4499998,30,15,24.7010002,15.8999996,16.2399998,21.1000004,23,6.3400002,42.25,14.6940002,21.4169998,20.2000008,12.0900002,24.7600002,23,19.3649998,5.5500002,68.0350037,29.2999992,18.5,22.5820007,21.5,28.0699997,50.2999992,23.5,15.5,13.4399996,8.1000004,9.8000002,20.2999992,15,56.0999985,22.8460007,22.2250004,17.6350002,18.5,13.3900003,15.1499996,16.2000008,33.9199982,14,16.7360001,30.6499996,12.3999996,19.0219994,11.2030001,19.8759995,57,18.2900009,20.2199993,22.1499996,30.6229992,9.3800001,22,23.6749992,33.6710014,12.3669996,21.9500008,32,22.6100006,12.092,3.777,36,26.8999996,32.2420006,35.0200005,37.5999985,1.5,96,18.1499996,15.5,14,14.7559996,22,24.4659996,24.3999996,24,15.5,30.7999992,10.6599998,13.3500004,10.0900002,55.5999985,25.7000008,29,7.2859998,37.7519989,13.0719995,7.0440001,18.2000008,27,30.2999992,12,31.5,27.0919991,20.9680004,27,11.2250004,37.7000008,28.2000008,34,63.2000008,7.5,17.4099998,51,12.9160004,21.8999996,17.6399994,20,15,14.0600004,15.8249998,16.5100002,13,10,22,29.7999992,15,22.2999992,14.5500002,19.7299995,35,21.0139999,10.8760004,27.8500004,9.5600004,30.2999992,7.7199998,10.5500002,24.1060009,22.9950008,6,24.3500004,7.6079998,28.2000008,16.1499996,51.2000008,12.6459999,19,19,14.3999996,7.2319999,21.9430008,47.5,28.8999996,12.3999996,6.5310001,22.4220009,22.2000008,77,88,26.0400009,63.5,12.1000004,17.5049992,18,28.0690002,14,8.1169996,11.8950005,45.25,31.1060009,4,40.5,21.6200008,23.4260006,26,7.8400002,6.8000002,5.3299999,28.2000008,10,9.9519997,24.9839993,28.3630009],educ:[12,12,12,12,14,12,16,12,12,12,12,11,12,12,10,11,12,12,12,12,16,12,13,12,12,17,12,12,17,12,11,16,13,12,16,11,12,10,14,17,12,12,16,12,12,12,16,12,12,12,12,12,12,8,10,16,14,17,14,12,14,12,8,12,12,8,17,12,12,12,12,12,9,10,12,12,12,17,15,12,6,14,12,14,9,17,13,9,15,12,12,12,12,12,12,12,12,13,12,13,12,12,12,16,12,13,11,12,12,12,17,14,16,17,12,11,12,12,17,10,13,11,12,16,17,12,16,12,16,8,12,12,12,13,11,12,12,14,12,12,12,17,14,12,9,12,12,12,14,16,17,15,12,16,17,17,12,16,13,12,11,16,14,16,12,9,17,14,12,12,11,12,12,10,12,5,17,11,12,12,14,11,12,14,12,10,16,13,12,12,12,11,12,9,13,12,12,12,13,16,12,16,17,12,12,9,12,12,13,12,12,12,12,10,12,16,12,11,12,10,12,12,12,12,16,17,12,17,12,12,12,8,12,13,12,12,8,12,17,17,12,13,12,12,12,12,9,10,12,16,13,8,16,13,12,11,13,12,12,10,12,17,15,16,10,11,12,12,14,16,14,8,7,12,12,14,12,12,12,14,16,12,12,12,13,13,10,12,12,12,12,14,17,10,9,12,12,16,12,17,12,17,11,16,11,13,11,8,11,12,10,17,12,12,17,14,12,12,12,12,12,12,9,10,12,12,12,12,12,17,12,17,12,10,12,12,12,12,12,12,16,13,13,12,16,17,12,14,12,17,12,14,12,12,17,16,16,12,9,12,12,16,14,12,12,11,12,16,17,17,14,12,14,12,10,12,13,16,12,7,16,14,12,10,12,16,10,12,14,12,6,15,12,17,14,13,6,16,14,15,14,8,14,12,12,12,12,12,12,8,12,17,12,12,14,13,17,8,12,11,12,12,17,10,12,13,12,12,12,16,12,12,12,12,13,12,12,10,12,12,7,12,9,12,10,14,14,12,12,17,8,12,17,12,12,12,9,11,12,12,9,11,12,9,12,17,12,14,12,12,10,12,12,10,12,13,12,8,12,13,12,12,13,13,8,12,8,14,9,16,12,16,12,12,12,12,11,12,13,12,12,16,16,12,12,14,14,12,13,12,11,12,15,7,12,12,12,12,13,12,10,12,14,12,10,11,12,12,12,8,7,16,14,12,16,12,10,7,12,10,8,11,15,12,12,13,9,12,12,12,12,6,12,12,12,12,12,12,8,12,12,7,15,12,6,12,12,12,12,12,12,12,12,17,16,12,11,12,10,10,12,14,10,12,16,5,12,12,12,13,8,12,8,8,12,8,12,11,13,8,12,15,12,10,13,12,11,12,11,13,12,11,12,12,12,10,7,12,12,12,12,11,12,10,11,16,10,14,11,12,5,10,16,12,11,12,12,12,12,6,14,12,12,16,12,12,17,12,12,9,12,12,12,12,12,12,14,10,12,9,14,16,11,12,12,12,12,12,11,12,12,17,10,11,14,12,8,13,12,16,8,9,16,12,12,12,15,12,9,9,12,16,9,15,12,12,15,12,17,12,12,10,13,12,11,8,12,16,12,12,12,10,12,12,15,10,14,12,8,8,12,12,16,12,5,8,13,12,12,14,12,12,12,12,14,12,12,9,14,11,12,12,11,12,10,12,10,12,13,12,12,12,9],exper:[14,5,15,6,7,33,11,35,24,21,15,14,0,14,6,9,20,6,23,9,5,11,18,15,4,21,31,9,7,7,32,11,16,14,27,0,17,28,24,11,1,14,6,10,6,4,10,22,16,6,12,32,15,17,34,9,37,10,35,6,19,10,11,15,12,12,14,11,9,24,12,13,29,11,13,19,2,24,9,6,22,30,10,6,29,29,36,19,8,13,16,11,15,6,13,22,24,2,6,2,2,14,9,11,9,6,19,26,19,3,7,28,13,9,15,20,29,9,1,8,19,23,3,13,8,17,4,15,11,7,0,0,10,8,2,4,6,18,3,22,33,28,23,27,11,6,11,14,17,17,14,11,7,8,6,8,4,25,24,11,19,9,19,14,22,6,23,15,6,11,2,22,10,14,12,9,13,18,8,11,9,9,14,9,2,12,15,11,7,9,19,11,8,13,4,7,19,14,14,3,9,7,7,14,29,19,14,16,10,12,24,6,9,14,26,7,4,15,23,1,29,9,6,11,17,6,7,2,24,4,11,25,11,2,19,7,2,20,10,19,17,12,11,6,10,4,2,13,21,9,4,2,19,4,9,14,6,24,1,13,3,10,16,9,19,4,10,5,7,3,38,16,13,1,7,15,10,2,19,25,25,7,15,11,25,19,4,14,19,18,14,11,4,29,21,24,19,31,28,15,27,13,4,10,8,4,18,3,11,8,10,33,19,35,21,7,18,4,12,16,14,3,1,27,12,6,9,2,6,9,16,22,26,11,11,15,13,6,20,17,8,13,15,14,14,6,24,10,2,9,23,12,8,16,10,7,19,2,9,14,9,16,7,6,22,9,9,14,17,12,13,8,10,16,1,6,4,8,4,15,7,14,16,15,23,19,4,12,12,25,14,14,11,7,18,4,37,13,14,17,5,2,0,3,21,20,19,4,19,11,14,8,13,24,1,1,3,4,21,10,13,9,14,2,21,22,14,7,2,5,12,1,12,4,9,9,6,5,5,8,2,6,0,3,7,3,10,3,2,12,15,5,4,10,1,8,20,4,7,10,3,5,10,0,3,10,2,10,4,0,10,5,0,0,19,2,12,5,5,5,10,0,4,3,2,1,0,1,1,6,12,6,9,14,13,8,0,1,3,13,3,8,8,18,2,3,5,2,10,30,1,5,8,0,4,2,30,25,3,20,20,0,15,10,4,3,10,9,7,12,0,16,4,7,7,14,2,20,5,10,20,10,8,11,3,6,4,4,9,10,3,2,2,0,8,6,15,15,9,8,18,3,10,6,20,8,3,4,13,4,17,4,0,15,11,23,1,5,1,5,3,3,19,20,5,0,3,3,7,7,1,13,0,0,12,0,5,45,10,2,3,1,5,10,4,7,9,5,4,11,9,4,2,23,3,15,8,3,25,2,0,19,3,7,1,9,3,8,0,5,20,3,12,5,1,0,7,13,3,0,2,0,2,1,10,10,1,3,32,0,7,5,2,5,3,25,0,3,10,10,7,5,15,1,5,9,18,1,0,6,1,2,15,25,1,0,0,0,8,22,5,10,1,1,6,4,6,0,1,3,15,33,2,1,10,0,14,15,15,10,6,18,15,30,15,10,0,0,4,0,3,20,3,1,5,7,6,2,0,10,6,4,8,18,7,15,7,8,8,3,10,9,24,12,2,6,18,17,7,6,10,5,7,11,14,5,2,4,5,14,4,15,12],age:[32,30,35,34,31,54,37,54,48,39,33,42,30,43,43,35,43,39,45,35,42,30,48,45,31,43,59,32,31,42,50,59,36,51,45,42,46,46,51,30,30,57,31,48,30,34,48,45,51,30,46,58,37,52,52,31,55,34,55,39,40,43,48,47,41,36,46,34,41,51,33,52,58,34,31,48,32,49,32,58,50,60,50,56,51,54,59,46,46,39,44,33,33,48,31,45,45,32,47,34,37,36,47,48,42,33,46,47,44,36,31,55,45,47,46,49,49,45,38,47,54,41,43,31,47,35,45,33,54,35,31,55,34,38,45,47,39,36,33,50,58,49,41,51,53,36,46,36,53,40,42,33,43,31,47,54,33,43,46,35,37,37,34,43,46,35,46,46,43,30,41,54,31,44,32,47,46,37,51,49,36,39,48,38,40,39,37,49,33,30,54,39,43,31,33,40,36,51,44,42,40,34,30,54,51,44,43,34,45,39,50,52,41,59,52,46,41,33,45,36,48,47,45,37,46,43,42,34,52,37,37,52,30,31,38,43,49,55,38,52,48,32,32,38,46,40,31,43,51,30,52,30,51,31,34,49,35,53,32,38,54,47,45,47,59,32,45,40,47,36,56,41,48,36,41,41,36,37,38,43,54,38,30,49,45,51,34,34,41,49,32,32,32,47,39,49,37,59,50,32,46,43,37,32,39,34,39,45,50,40,30,57,39,53,48,46,47,43,47,47,47,46,34,48,30,51,52,37,32,36,35,45,56,40,45,32,45,40,38,49,47,52,34,44,36,50,45,44,57,35,46,30,42,34,45,35,40,32,54,38,43,54,39,37,46,56,41,45,44,50,37,44,32,34,32,37,44,34,33,43,35,43,34,36,41,41,35,32,30,43,54,35,50,34,52,35,55,35,49,38,42,48,51,43,43,38,44,36,38,47,34,40,31,46,36,39,36,37,39,36,49,45,32,36,40,43,33,30,49,30,30,41,45,43,42,60,57,38,56,32,49,55,36,44,44,35,44,45,34,30,39,36,38,53,36,32,51,38,33,54,38,30,34,34,50,30,38,54,30,55,51,44,53,42,38,38,41,35,33,48,47,34,33,31,58,49,55,44,44,36,38,37,47,47,32,43,42,56,38,52,50,33,44,41,45,53,53,42,32,56,37,40,54,53,48,36,57,51,33,52,56,36,36,46,31,52,46,35,59,36,51,31,31,32,35,40,33,54,36,50,54,48,41,50,46,42,31,53,51,47,50,37,30,49,52,47,49,44,53,30,54,47,56,49,48,49,56,46,45,32,43,34,30,38,33,52,43,33,45,36,34,37,46,47,31,57,30,30,44,53,51,39,52,46,47,52,45,60,41,39,49,32,33,36,37,30,44,48,40,47,36,40,46,52,44,45,30,40,43,49,46,52,31,42,33,57,49,45,56,41,56,48,52,51,35,45,54,54,31,53,35,36,59,54,37,44,34,49,49,60,51,30,47,36,35,58,41,51,47,45,60,30,55,32,36,55,47,47,37,50,30,48,43,48,41,50,58,38,37,50,42,37,41,31,51,36,54,49,48,42,41,55,42,32,43,33,48,43,47,54,51,51,43,53,34,31,56,42,32,35,30,51,47,54,31,47,47,40,48,34,38,32,48,41,49,59,58,41,45,30,41,30,53,31,43,31,51,43,31,48,31,44,48,53,42,39,32,36,40,31,43,60,39],kidslt6:[1,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,1,0,2,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,2,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,2,0,0,0,0,0,0,2,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,1,2,0,1,2,0,0,0,0,0,1,0,0,2,0,0,2,2,0,0,2,0,0,1,0,0,0,0,0,0,1,1,0,1,0,0,0,2,3,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,2,0,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,0,2,0,0,1,1,0,1,1,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,2,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,1,1,1,2,1,0,0,1,0,2,1,0,0,0,2,0,1,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,1,0,3,1,1,0,0,0,0,0,0,0,0,0,2,1,0,0,1,0,1,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,2,1,0,0,1,0,1,0,0,0,0,1,0,0,1,0,1,0,0,1,0,1,0,1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,0,0,1,0,0,1,0,0,0,1,0,1,1,0,0,0,1,1,0,0,0,3,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,2,0,0,0,1,0,0,1,0,1,0,0,0,0,2,1,0,0,2,0,0,0],kidsge6:[0,2,3,3,2,0,2,0,2,2,1,1,2,2,1,3,2,5,0,4,2,0,0,0,1,2,0,3,0,0,0,0,2,1,3,1,0,1,0,0,2,0,2,2,3,2,2,0,0,2,1,0,8,0,0,0,0,0,0,2,3,4,0,0,4,0,2,0,3,1,0,0,0,4,1,1,2,0,2,0,0,0,1,0,0,1,0,2,1,3,2,0,2,2,4,1,1,2,0,2,1,1,2,1,2,3,0,3,1,4,0,0,1,0,3,0,0,2,3,0,3,0,2,1,0,2,3,0,1,4,2,0,2,1,1,1,2,0,2,0,0,0,2,1,0,2,2,2,1,3,2,1,3,0,0,0,3,0,1,3,3,2,3,0,0,3,0,0,2,0,2,1,1,0,1,0,1,0,2,1,4,1,2,2,2,5,0,1,3,0,0,4,3,3,3,3,1,0,1,3,1,1,0,0,0,2,1,1,0,0,0,0,2,0,0,0,5,2,0,2,1,1,0,2,4,3,2,2,0,3,1,0,0,1,1,3,1,0,2,0,0,2,1,2,3,3,4,1,0,0,0,5,0,2,4,0,3,0,3,3,0,1,1,1,0,1,1,4,2,2,0,1,3,2,0,0,3,3,0,2,0,1,0,0,1,0,0,2,1,1,0,0,2,0,1,0,3,0,0,1,0,2,3,2,1,2,1,3,0,1,1,0,1,0,1,1,0,1,0,1,0,0,4,0,1,1,5,2,2,2,2,0,0,2,2,2,0,2,1,4,1,0,1,2,3,0,0,2,2,0,0,1,3,1,2,2,0,1,0,3,3,0,3,1,2,0,3,1,1,1,5,1,2,1,2,3,1,2,3,3,2,1,0,3,2,0,3,3,0,0,0,2,0,1,0,3,0,0,1,2,2,1,0,2,1,1,1,3,0,0,2,2,1,0,3,2,2,4,4,3,2,1,0,5,1,2,1,1,1,0,0,4,1,5,1,0,0,2,0,3,1,0,1,3,1,2,3,1,0,0,1,2,2,0,2,1,3,0,0,0,3,2,3,1,2,0,2,0,2,0,1,1,0,2,2,3,4,3,2,0,0,5,1,1,0,0,1,0,0,3,3,3,0,3,1,2,4,0,5,2,0,0,2,1,1,0,0,1,0,0,3,2,3,0,1,2,0,0,4,0,0,2,0,1,3,0,2,0,0,1,3,0,2,1,2,3,2,0,1,1,0,1,4,4,2,1,2,0,1,1,1,1,2,0,2,2,0,4,0,0,2,1,0,1,0,1,1,0,2,2,1,1,1,0,1,0,3,1,0,1,1,2,1,0,1,0,1,0,3,0,0,3,0,4,5,2,2,0,2,3,1,1,3,4,3,2,1,1,4,0,2,2,1,0,1,1,1,3,1,2,4,0,1,1,3,0,0,1,0,3,0,1,2,0,3,0,0,2,0,3,2,3,0,0,1,0,2,0,0,0,0,1,2,4,3,0,3,1,0,2,0,1,0,2,2,0,0,1,1,2,3,1,2,0,2,0,0,5,1,0,4,3,2,2,0,2,0,0,1,2,2,0,0,1,2,3,1,2,3,0,1,1,1,0,1,1,0,1,2,3,1,0,3,1,0,0,3,3,0,7,3,3,1,2,2,0,0,3,2,1,1,0,1,0,2,1,0,0,2,0,1,1,1,1,3,6,2,2,2,3,0,0,3]};
+
+/* LPM, logit and probit on MROZ */
+const M=MROZ,N=M.inlf.length;const NM=['nwifeinc','educ','exper','expersq','age','kidslt6','kidsge6'];
+const row=i=>[1,M.nwifeinc[i],M.educ[i],M.exper[i],M.exper[i]**2,M.age[i],M.kidslt6[i],M.kidsge6[i]];
+const X=M.inlf.map((_,i)=>row(i)),Y=M.inlf;
+const LPM=ols(X,Y),LG=binfit(X,Y,'logit'),PB=binfit(X,Y,'probit');const L0=binLL(X,Y,[zq(mean(Y)),0,0,0,0,0,0,0],'probit');
+const MEANS=[1,...NM.map((_,j)=>mean(X.map(r=>r[j+1])))];
+const RANGE={educ:[5,17],exper:[0,45],age:[30,60],kidslt6:[0,3],nwifeinc:[0,96]};
+const S={x:'kidslt6',k:'mean',x0:1,lat:'probit'};
+const idx=v=>({nwifeinc:1,educ:2,exper:3,age:5,kidslt6:6,kidsge6:7})[v];
+function base(xv){const r=MEANS.slice();if(S.x!=='kidslt6'&&S.k!=='mean')r[6]=+S.k;const j=idx(S.x);r[j]=xv;if(S.x==='exper')r[4]=xv*xv;else r[4]=MEANS[4];return r;}
+const lin=(r,b)=>r.reduce((s,v,j)=>s+v*b[j],0);
+const P={lpm:r=>lin(r,LPM.b),logit:r=>lgt(lin(r,LG.b)),probit:r=>Phi(lin(r,PB.b))};
+function dbeta(b,xv){const j=idx(S.x);return S.x==='exper'?b[3]+2*b[4]*xv:b[j];}
+const PE={lpm:xv=>dbeta(LPM.b,xv),logit:xv=>{const r=base(xv);return lpdf(lin(r,LG.b))*dbeta(LG.b,xv);},probit:xv=>{const r=base(xv);return npdf(lin(r,PB.b))*dbeta(PB.b,xv);}};
+function APE(mod){const b=mod==='logit'?LG.b:PB.b,g=mod==='logit'?lpdf:npdf,j=idx(S.x);let s=0;for(let i=0;i<N;i++){const z=lin(X[i],b),d=S.x==='exper'?b[3]+2*b[4]*X[i][3]:b[j];s+=g(z)*d;}return s/N;}
+function PEA(mod){const b=mod==='logit'?LG.b:PB.b,g=mod==='logit'?lpdf:npdf,z=lin(MEANS,b),j=idx(S.x);return g(z)*(S.x==='exper'?b[3]+2*b[4]*MEANS[3]:b[j]);}
+const COL={lpm:'--grey',logit:'--green',probit:'--navy'};
+function drawP(){
+  const c=$('cP'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const [lo,hi]=RANGE[S.x];let mn=0,mx=1;for(let i=0;i<=60;i++){const v=P.lpm(base(lo+(hi-lo)*i/60));mn=Math.min(mn,v);mx=Math.max(mx,v);}
+  const yl=Math.min(-0.08,mn-0.05),yh=Math.max(1.08,mx+0.05);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[yl,yh],xt:niceTicks(lo,hi,6),yt:[0,0.25,0.5,0.75,1],yf:v=>fmt(v,2),xl:S.x,yl:'P(inlf = 1)'});
+  A.clip();ctx.fillStyle=css('--red');ctx.globalAlpha=0.08;ctx.fillRect(A.L,A.T,A.pw,A.py(1)-A.T);ctx.fillRect(A.L,A.py(0),A.pw,A.T+A.ph-A.py(0));ctx.globalAlpha=1;
+  ctx.globalAlpha=0.35;const j=idx(S.x);for(let i=0;i<N;i++){const xv=X[i][j]+(S.x==='kidslt6'?(((i*7919)%101)/101-0.5)*0.25:0);dot(ctx,A.px(xv),A.py(Y[i]+(((i*104729)%97)/97-0.5)*0.07),1.8,css('--point'));}ctx.globalAlpha=1;
+  ['lpm','logit','probit'].forEach(m=>curve(ctx,A,x=>P[m](base(x)),lo,hi,css(COL[m]),m==='lpm'?2:2.6,m==='lpm'?[6,4]:null));
+  dot(ctx,A.px(S.x0),A.py(P.probit(base(S.x0))),5,css('--orange'),css('--panel'));A.unclip();
+  label(ctx,'LPM',A.L+6,A.T+13,css('--grey'));label(ctx,'logit',A.L+40,A.T+13,css('--green'));label(ctx,'probit',A.L+76,A.T+13,css('--navy'));
+}
+function drawE(){
+  const c=$('cE'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const [lo,hi]=RANGE[S.x];const vals=[];['lpm','logit','probit'].forEach(m=>{for(let i=0;i<=60;i++)vals.push(PE[m](lo+(hi-lo)*i/60));});
+  const yl=Math.min(0,...vals),yh=Math.max(0,...vals),pad=(yh-yl)*0.12||0.01;const yt=niceTicks(yl-pad,yh+pad,5);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[yl-pad,yh+pad],xt:niceTicks(lo,hi,6),yt,yf:tickFmt(yt[1]-yt[0]),xl:S.x,yl:'∂P/∂'+S.x,L:56});
+  A.clip();line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  ['lpm','logit','probit'].forEach(m=>curve(ctx,A,PE[m],lo,hi,css(COL[m]),m==='lpm'?2:2.6,m==='lpm'?[6,4]:null));
+  ['logit','probit'].forEach(m=>{const a=APE(m);line(ctx,[[A.L,A.py(a)],[A.L+A.pw,A.py(a)]],css(COL[m]),1.2,[3,4]);dot(ctx,A.px(MEANS[idx(S.x)]),A.py(PEA(m)),5,css(COL[m]),css('--panel'));});A.unclip();
+}
+function drawZ(){
+  const c=$('cZ'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const b=S.lat==='logit'?LG.b:PB.b,z=lin(base(S.x0),b),f=S.lat==='logit'?lpdf:npdf,G=S.lat==='logit'?lgt:Phi;
+  const lim=S.lat==='logit'?7:4;const A=axes(ctx,w,h,{xlim:[-lim,lim],ylim:[0,f(0)*1.15],xt:niceTicks(-lim,lim,8),yt:[],xl:'latent error e'});
+  A.clip();fillUnder(ctx,A,f,-z,lim,css('--navy'),0.25);curve(ctx,A,f,-lim,lim,css('--ink'),2,null,300);line(ctx,[[A.px(-z),A.py(0)],[A.px(-z),A.T]],css('--orange'),2.2);A.unclip();
+  label(ctx,'−xβ̂ = '+sgn(-z,3),A.px(-z)+(z>0?-6:6),A.T+13,css('--orange'),z>0?'right':'left');
+  label(ctx,'P(y = 1) = '+fmt(G(z),3),A.L+A.pw-6,A.T+30,css('--navy'),'right');
+  label(ctx,'density at the threshold g = '+fmt(f(z),3),A.L+A.pw-6,A.T+46,css('--muted'),'right');
+}
+function pcp(prob){let ok=0;for(let i=0;i<N;i++)ok+=((prob(X[i])>=0.5?1:0)===Y[i])?1:0;return 100*ok/N;}
+function table(){const j=idx(S.x);const rows=NM.map((nm,k)=>'<tr'+(k+1===j||(S.x==='exper'&&nm==='expersq')?' class="t"':'')+'><td>'+nm+'</td><td>'+sgn(LPM.b[k+1],k===3?5:4)+'</td><td>'+sgn(LG.b[k+1],k===3?4:3)+'</td><td>'+sgn(PB.b[k+1],k===3?4:3)+'</td><td>'+sgn(LG.b[k+1]/4,k===3?5:4)+'</td><td>'+sgn(PB.b[k+1]/2.5,k===3?5:4)+'</td></tr>').join('');
+  $('tC').innerHTML='<tr><th>inlf</th><th>LPM</th><th>logit</th><th>probit</th><th>logit/4</th><th>probit/2.5</th></tr>'+rows+
+  '<tr><td>% correct</td><td>'+fmt(pcp(r=>lin(r,LPM.b)),1)+'</td><td>'+fmt(pcp(r=>lgt(lin(r,LG.b))),1)+'</td><td>'+fmt(pcp(r=>Phi(lin(r,PB.b))),1)+'</td><td></td><td></td></tr>'+
+  '<tr><td>log L</td><td></td><td>'+sgn(LG.logL,2)+'</td><td>'+sgn(PB.logL,2)+'</td><td></td><td></td></tr>'+
+  '<tr><td>(pseudo) R²</td><td>'+fmt(LPM.R2,3)+'</td><td>'+fmt(1-LG.logL/L0,3)+'</td><td>'+fmt(1-PB.logL/L0,3)+'</td><td></td><td></td></tr>';}
+function fill(){
+  const [lo,hi]=RANGE[S.x];$('vX0').textContent=fmt(S.x0,S.x==='nwifeinc'?1:0);const j=idx(S.x);
+  $('rL').textContent=sgn(S.x==='exper'?LPM.b[3]+2*LPM.b[4]*MEANS[3]:LPM.b[j],4);$('rPEA').textContent=sgn(PEA('probit'),4);$('rAPE').textContent=sgn(APE('probit'),4);
+  const fv=X.map(r=>lin(r,LPM.b));$('rOut').textContent=fv.filter(v=>v<0).length+' below, '+fv.filter(v=>v>1).length+' above';
+  const r=base(S.x0);$('fG').innerHTML='At '+S.x+' = '+fmt(S.x0,1)+': LPM '+fmt(P.lpm(r),3)+', logit '+fmt(P.logit(r),3)+', probit <b>'+fmt(P.probit(r),3)+'</b> (xβ̂ = '+sgn(lin(r,PB.b),3)+').';
+  $('fPE').innerHTML='Probit at x₀: '+fmt(npdf(lin(r,PB.b)),4)+' × '+sgn(dbeta(PB.b,S.x0),4)+' = <b>'+sgn(PE.probit(S.x0),4)+'</b>; logit '+sgn(PE.logit(S.x0),4)+'.';
+  $('fA').innerHTML='Probit: PEA '+sgn(PEA('probit'),4)+', APE <b>'+sgn(APE('probit'),4)+'</b>. Logit: PEA '+sgn(PEA('logit'),4)+', APE '+sgn(APE('logit'),4)+'.';
+  $('fS').innerHTML=S.x+': logit/LPM = '+fmt(LG.b[j]/LPM.b[j],2)+', probit/LPM = '+fmt(PB.b[j]/LPM.b[j],2)+', logit/probit = '+fmt(LG.b[j]/PB.b[j],2)+' (rule of thumb 4, 2.5, 1.6).';
+  document.querySelectorAll('#segX button').forEach(b=>b.classList.toggle('on',b.dataset.x===S.x));document.querySelectorAll('#segK button').forEach(b=>{b.classList.toggle('on',b.dataset.k===S.k);b.disabled=S.x==='kidslt6';});
+  document.querySelectorAll('#segL button').forEach(b=>b.classList.toggle('on',b.dataset.l===S.lat));table();
+}
+function drawAll(){fill();drawP();drawE();drawZ();}
+function setX(x){S.x=x;const [lo,hi]=RANGE[x];S.x0=Math.round(MEANS[idx(x)]);$('sX0').value=Math.round(1000*(S.x0-lo)/(hi-lo));drawAll();}
+document.querySelectorAll('#segX button').forEach(b=>b.onclick=()=>setX(b.dataset.x));
+document.querySelectorAll('#segK button').forEach(b=>b.onclick=()=>{S.k=b.dataset.k;drawAll();});
+document.querySelectorAll('#segL button').forEach(b=>b.onclick=()=>{S.lat=b.dataset.l;drawAll();});
+$('sX0').addEventListener('input',e=>{const [lo,hi]=RANGE[S.x];let v=lo+(hi-lo)*(+e.target.value)/1000;if(['kidslt6','educ','exper','age'].includes(S.x))v=Math.round(v);S.x0=v;drawAll();});
+setX('kidslt6');
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Quadratics and logs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+[hidden]{display:none!important}
+.grouplab{margin:20px 0 -6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--rule);padding:5px 11px;font-size:.88rem}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--navy);color:var(--panel);box-shadow:none}
+.optrow{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:.92rem;color:var(--muted)}
+.optrow .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.narr{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--navy);border-radius:6px;padding:9px 14px;font-size:.93rem;color:var(--ink)}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:6px}
+.key i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.f .v b{font-weight:500;color:var(--ink)}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Quadratics and logarithms</h1>
+  <p>Two functional forms from lecture 06, both closed form, with the slides' estimates as presets (rounded as the slides round them, so the turning points match slides 403 and 460). A quadratic in x makes the effect of x change with x and gives a turning point. A log makes coefficients read as percentages, but 100·β is an approximation that gets worse as β grows.</p>
+</header>
+<div class="tabs" id="tabs"><button data-p="q" class="on">Quadratic terms and the turning point</button><button data-p="l">Logs: approximate against exact percentages</button></div>
+<ol class="steps" data-p="q"><li>Pick a preset. The curve is the part of ŷ that depends on x, with the turning point x* = |β̂₁/(2β̂₂)| marked.</li><li>Move x₀: the tangent and the second panel give the slope β̂₁ + 2β̂₂x₀ there. In the slides' wage example it falls from 12.3% for the first year to 4.7% at ten years.</li><li>Try the four sign cases: only when β̂₁ and β̂₂ have opposite signs is the turning point at a positive x.</li></ol>
+<ol class="steps" data-p="l" hidden><li>Move β̂ and watch 100·β̂ (dashed) and the exact 100·(e<sup>β̂</sup> − 1) separate as |β̂| grows.</li><li>The presets are the slides' coefficients: one more room (.306) is worth 35.8%, not 30.6%.</li><li>The second panel is the other direction: a log difference is close to the percentage change only for small changes (unem from 8 to 9 is 12.5%, the log difference .118).</li></ol>
+<div class="main"><div class="col">
+<div data-p="q">
+<div class="buttons" id="presQ" style="margin-top:14px"></div>
+<section class="controls">
+  <div class="slider"><label for="sB1">β̂₁ (coefficient on x) <b id="vB1"></b></label><input id="sB1" type="range" min="0" max="1000" value="500"></div>
+  <div class="slider"><label for="sB2">β̂₂ (coefficient on x²) <b id="vB2"></b></label><input id="sB2" type="range" min="0" max="1000" value="500"></div>
+  <div class="slider"><label for="sX0">x₀, where to read the slope <b id="vX0"></b></label><input id="sX0" type="range" min="0" max="1000" value="500"></div>
+</section>
+</div>
+<div data-p="l" hidden>
+<div class="buttons" id="presL" style="margin-top:14px"></div>
+<section class="controls">
+  <div class="slider"><label for="sLb">β̂ on a regressor in a log(y) model <b id="vLb"></b></label><input id="sLb" type="range" min="-1" max="1" step="0.001" value="0.306"></div>
+  <div class="slider"><label for="sLd">Change in that regressor Δx <b id="vLd"></b></label><input id="sLd" type="range" min="0.5" max="5" step="0.5" value="1"></div>
+  <div class="slider"><label for="sR">x₁ / x₀ (second panel) <b id="vR"></b></label><input id="sR" type="range" min="0.3" max="2.5" step="0.005" value="1.125"></div>
+</section>
+</div>
+<div class="stats" data-p="q">
+  <div class="stat"><span class="small">Turning point x*</span><span class="big" id="rX"></span></div>
+  <div class="stat"><span class="small">Slope at x₀</span><span class="big" id="rS"></span></div>
+  <div class="stat"><span class="small">Exact change from x₀ to x₀ + 1</span><span class="big" id="rE"></span></div>
+  <div class="stat"><span class="small">Shape</span><span class="big long" id="rC"></span></div>
+</div>
+<div class="stats" data-p="l" hidden>
+  <div class="stat"><span class="small">Approximation 100·β̂·Δx</span><span class="big" id="lA"></span></div>
+  <div class="stat"><span class="small">Exact 100·(e^(β̂Δx) − 1)</span><span class="big" id="lE"></span></div>
+  <div class="stat"><span class="small">Error of the approximation</span><span class="big" id="lErr"></span></div>
+  <div class="stat"><span class="small">Log difference vs % change</span><span class="big" id="lD"></span></div>
+</div>
+<div class="panels">
+  <figure data-p="q"><canvas id="cQ"></canvas>
+    <figcaption><strong>The quadratic.</strong> β̂₁x + β̂₂x² over the range of the preset's data (the constant and the other regressors only shift it). The dashed vertical line is the turning point, the orange line the tangent at x₀, and the orange step the exact change from x₀ to x₀ + 1.</figcaption></figure>
+  <figure data-p="q"><canvas id="cM"></canvas>
+    <figcaption><strong>The marginal effect β̂₁ + 2β̂₂x.</strong> A straight line, so the effect of x changes by the same amount 2β̂₂ for every unit of x. It crosses zero at the turning point: beyond it, the estimated effect has the opposite sign. Whether that part of the range has data is the question slide 399 asks.</figcaption></figure>
+  <figure data-p="l" hidden><canvas id="cL"></canvas>
+    <figcaption><strong>Approximate against exact.</strong> Dashed: 100·β̂Δx, what we usually say. Solid: 100·(e<sup>β̂Δx</sup> − 1), the exact percentage change in ŷ. They agree near 0. Above it the approximation understates the change, below it it overstates it in absolute value. The dots are the slides' coefficients.</figcaption></figure>
+  <figure data-p="l" hidden><canvas id="cD"></canvas>
+    <figcaption><strong>Log differences against percentage changes.</strong> 100·log(x₁/x₀) against 100·(x₁ − x₀)/x₀. The 45° line is where they would be equal. Unemployment going from 8% to 9% (slide 392) is a 12.5% increase but a log change of 11.8.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f" data-p="q"><div class="n"><b>The model</b></div><div class="k" data-tex='\hat y=\hat\beta_0+\hat\beta_1 x+\hat\beta_2 x^2'></div><span class="v" id="fM"></span></div>
+<div class="f" data-p="q"><div class="n"><b>Marginal effect</b></div><div class="k" data-tex='\frac{\Delta\hat y}{\Delta x}\approx\hat\beta_1+2\hat\beta_2 x'></div><span class="v" id="fE"></span></div>
+<div class="f" data-p="q"><div class="n"><b>Turning point</b></div><div class="k" data-tex='x^*=\left|\frac{\hat\beta_1}{2\hat\beta_2}\right|'></div><span class="v" id="fT"></span></div>
+<div class="f" data-p="l" hidden><div class="n"><b>Exact percentage change</b> (slide 387)</div><div class="k" data-tex='\%\Delta\hat y=100\,[\exp(\hat\beta_2\,\Delta x_2)-1]'></div><span class="v" id="fX"></span></div>
+<div class="f" data-p="l" hidden><div class="n"><b>Log difference</b></div><div class="k" data-tex='100\,[\log(x_1)-\log(x_0)]\approx 100\,\frac{x_1-x_0}{x_0}'></div><span class="v" id="fLd"></span></div>
+</aside>
+<div class="note">
+  <p>In a quadratic the coefficient on x is not "the effect of x": it is the slope at x = 0. The slides' wage equation (WAGE2, 759 men) has lwage = −.192 + .136 educ + .123 exper − .0038 exper², so the first year of experience is worth about 12.3%, the eleventh about 4.7% by the derivative (4.3% exactly), and the return turns negative after 16.2 years. Slide 403 contrasts it with the textbook's 24.4 years, which is the WAGE1 equation for the wage level without education (wage = 3.73 + .298 exper − .0061 exper²), available as a preset. With a turning point near the edge of the data, "the effect becomes negative" may say more about the functional form than about workers.</p>
+  <p>For logs, 100·β̂ is fine for coefficients up to about .1 in absolute value. Beyond that, report 100·(e<sup>β̂</sup> − 1): the female coefficient −.2202 of slide 381 is a gap of 19.8%, not 22%, and the married men coefficient .213 of slide 429 is 23.7%, not 21.3%.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+/* econlib: distributions, OLS, binary MLE and drawing helpers shared by the Econometrics graphs */
+
+/* ---------- special functions ---------- */
+function lgam(x){const g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(x<0.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*x)))-lgam(1-x);
+  x-=1;let a=c[0];const t=x+g+0.5;for(let i=1;i<9;i++)a+=c[i]/(x+i);return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);}
+function betacf(a,b,x){const MAXIT=300,EPS=3e-14,FPMIN=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;
+  for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+/* regularized incomplete beta I_x(a,b) */
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+/* regularized incomplete gamma: gser for the series side, gcf for the continued fraction (upper tail) */
+function gser(a,x){let ap=a,s=1/a,d=s;for(let n=0;n<500;n++){ap+=1;d*=x/ap;s+=d;if(Math.abs(d)<Math.abs(s)*1e-16)break;}return s*Math.exp(-x+a*Math.log(x)-lgam(a));}
+function gcf(a,x){let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-16)break;}return Math.exp(-x+a*Math.log(x)-lgam(a))*h;}
+function gammp(a,x){if(x<=0)return 0;return x<a+1?gser(a,x):1-gcf(a,x);}
+function gammq(a,x){if(x<=0)return 1;return x<a+1?1-gser(a,x):gcf(a,x);}
+
+/* ---------- distributions ---------- */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function Phi(x){const t=Math.abs(x)/Math.SQRT2;const p=0.5*ibetaErfc(t);return x>=0?1-p:p;}
+function ibetaErfc(z){/* erfc(z) = Q(1/2, z^2) */return z<0?2-ibetaErfc(-z):gammq(0.5,z*z);}
+function zq(p){const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],
+  b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],
+  c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],
+  d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];const pl=0.02425;let q,r,x;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));x=(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));x=-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else{q=p-0.5;r=q*q;x=(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  const e=Phi(x)-p,u=e*Math.sqrt(2*Math.PI)*Math.exp(x*x/2);return x-u/(1+x*u/2);}
+function tpdf(t,v){return Math.exp(lgam((v+1)/2)-lgam(v/2)-0.5*Math.log(v*Math.PI)-(v+1)/2*Math.log(1+t*t/v));}
+function tcdf(t,v){const x=v/(v+t*t),p=0.5*ibeta(x,v/2,0.5);return t>=0?1-p:p;}
+function tq(p,v){if(v>1e6)return zq(p);let lo=-1e3,hi=1e3,x=zq(p);for(let i=0;i<60;i++){const f=tcdf(x,v)-p;if(Math.abs(f)<1e-13)break;const d=tpdf(x,v);let nx=x-f/d;if(f>0)hi=Math.min(hi,x);else lo=Math.max(lo,x);if(!(nx>lo&&nx<hi))nx=(lo+hi)/2;x=nx;}return x;}
+function fpdf(x,a,b){if(x<=0)return 0;return Math.exp(0.5*(a*Math.log(a)+b*Math.log(b))+(a/2-1)*Math.log(x)-(a+b)/2*Math.log(b+a*x)-(lgam(a/2)+lgam(b/2)-lgam((a+b)/2)));}
+function fcdf(x,a,b){if(x<=0)return 0;return ibeta(a*x/(a*x+b),a/2,b/2);}
+function fq(p,a,b){let lo=0,hi=1;while(fcdf(hi,a,b)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(fcdf(m,a,b)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+function chi2pdf(x,k){if(x<=0)return 0;return Math.exp((k/2-1)*Math.log(x)-x/2-k/2*Math.log(2)-lgam(k/2));}
+function chi2cdf(x,k){return gammp(k/2,x/2);}
+function chi2sf(x,k){return gammq(k/2,x/2);}
+function chi2q(p,k){let lo=0,hi=1;while(chi2cdf(hi,k)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(chi2cdf(m,k)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+const lgt=z=>1/(1+Math.exp(-z));
+const lpdf=z=>{const e=Math.exp(-Math.abs(z));return e/((1+e)*(1+e));};
+
+/* ---------- matrices ---------- */
+function inv(A){const n=A.length,M=A.map((r,i)=>{const o=new Float64Array(2*n);for(let j=0;j<n;j++)o[j]=r[j];o[n+i]=1;return o;});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];const d=M[c][c];if(Math.abs(d)<1e-300)return null;
+    for(let k=0;k<2*n;k++)M[c][k]/=d;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c];if(f)for(let k=0;k<2*n;k++)M[r][k]-=f*M[c][k];}}
+  return M.map(r=>Array.from(r.slice(n)));}
+function xtx(X,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p));for(const [i,r] of X.entries()){const wi=w?w[i]:1;for(let j=0;j<p;j++){const rj=r[j]*wi;if(!rj)continue;for(let k=j;k<p;k++)A[j][k]+=rj*r[k];}}
+  for(let j=0;j<p;j++)for(let k=0;k<j;k++)A[j][k]=A[k][j];return A.map(r=>Array.from(r));}
+const mv=(M,v)=>M.map(r=>r.reduce((s,x,j)=>s+x*v[j],0));
+
+/* ---------- OLS ----------
+   X rows (include the column of ones yourself), y. opts.cluster: array of cluster ids.
+   Returns b, se (usual), seR (HC1, Stata robust), seC (Stata cluster), resid, fit, SSR, SST, SSE, R2, R2a */
+function ols(X,y,opts){opts=opts||{};const n=X.length,k=X[0].length,A=xtx(X),Ai=inv(A);if(!Ai)return null;
+  const Xy=new Float64Array(k);for(let i=0;i<n;i++)for(let j=0;j<k;j++)Xy[j]+=X[i][j]*y[i];const b=mv(Ai,Xy);
+  const fit=X.map(r=>r.reduce((s,x,j)=>s+x*b[j],0)),resid=y.map((v,i)=>v-fit[i]);
+  const SSR=resid.reduce((s,u)=>s+u*u,0),ym=mean(y),SST=y.reduce((s,v)=>s+(v-ym)**2,0),df=n-k,s2=SSR/df;
+  const se=Ai.map((r,j)=>Math.sqrt(s2*r[j]));
+  const out={b,se,resid,fit,SSR,SST,SSE:SST-SSR,R2:1-SSR/SST,R2a:1-(SSR/df)/(SST/(n-1)),n,k,df,s2,Ai};
+  if(opts.robust){const M=Array.from({length:k},()=>new Float64Array(k));for(let i=0;i<n;i++){const u2=resid[i]*resid[i],r=X[i];for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=u2*r[j]*r[l];}
+    const V=sandwich(Ai,M);out.Vr=V.map(r=>r.map(v=>v*n/df));out.seR=out.Vr.map((r,j)=>Math.sqrt(r[j]));}
+  if(opts.cluster){const g=new Map();for(let i=0;i<n;i++){const id=opts.cluster[i];if(!g.has(id))g.set(id,new Float64Array(k));const s=g.get(id);for(let j=0;j<k;j++)s[j]+=X[i][j]*resid[i];}
+    const M=Array.from({length:k},()=>new Float64Array(k));for(const s of g.values())for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=s[j]*s[l];
+    const G=g.size,c=opts.cadj!==undefined?opts.cadj:(G/(G-1))*((n-1)/(n-k));const V=sandwich(Ai,M);out.Vc=V.map(r=>r.map(v=>v*c));out.seC=out.Vc.map((r,j)=>Math.sqrt(Math.max(r[j],0)));out.G=G;}
+  return out;}
+function sandwich(Ai,M){const k=Ai.length,T=Ai.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*M[j][l],0)));return T.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*Ai[j][l],0)));}
+/* simple regression in closed form */
+function slr(x,y){const n=x.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=x[i];my+=y[i];}mx/=n;my/=n;let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;}
+  const b1=sxy/sxx,b0=my-b1*mx;let ssr=0;for(let i=0;i<n;i++){const u=y[i]-b0-b1*x[i];ssr+=u*u;}const s2=ssr/(n-2);return{b0,b1,se1:Math.sqrt(s2/sxx),sxx,ssr,s2,mx,my};}
+
+/* ---------- binary response by Newton-Raphson ---------- */
+function binfit(X,y,link,b0){const n=X.length,k=X[0].length;let b=b0?b0.slice():new Array(k).fill(0);const G=link==='logit'?lgt:Phi,g=link==='logit'?lpdf:npdf;const log=[];
+  const ll=bb=>{let s=0;for(let i=0;i<n;i++){const z=X[i].reduce((a,x,j)=>a+x*bb[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;};
+  let L=ll(b);log.push(L);let H=null;
+  for(let it=0;it<60;it++){const gr=new Float64Array(k),Hm=Array.from({length:k},()=>new Float64Array(k));
+    for(let i=0;i<n;i++){const r=X[i],z=r.reduce((a,x,j)=>a+x*b[j],0);let s,w;
+      if(link==='logit'){const p=lgt(z);s=y[i]-p;w=p*(1-p);}
+      else{const P=Math.min(Math.max(Phi(z),1e-15),1-1e-15),f=npdf(z);s=y[i]?f/P:-f/(1-P);w=y[i]?s*(s+z):s*(s+z);}
+      for(let j=0;j<k;j++){gr[j]+=s*r[j];for(let l=0;l<k;l++)Hm[j][l]+=w*r[j]*r[l];}}
+    H=Hm.map(r=>Array.from(r));const Hi=inv(H);if(!Hi)break;const step=mv(Hi,Array.from(gr));let t=1,nb,nL;
+    for(let h=0;h<30;h++){nb=b.map((v,j)=>v+t*step[j]);nL=ll(nb);if(nL>=L-1e-12)break;t/=2;}
+    b=nb;const done=Math.abs(nL-L)<1e-11;L=nL;log.push(L);if(done&&it>1)break;}
+  const Hi=inv(H);const se=Hi?Hi.map((r,j)=>Math.sqrt(r[j])):null;return{b,se,logL:L,log,V:Hi};}
+function binLL(X,y,b,link){const G=link==='logit'?lgt:Phi;let s=0;for(let i=0;i<X.length;i++){const z=X[i].reduce((a,x,j)=>a+x*b[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;}
+
+/* ---------- small helpers ---------- */
+function hist(v,lo,hi,nb){const c=new Array(nb).fill(0),w=(hi-lo)/nb;for(const x of v){const i=Math.floor((x-lo)/w);if(i>=0&&i<nb)c[i]++;}return{c,w,lo,hi,nb};}
+function drawHist(ctx,A,H,color,alpha,total){const s=total||H.c.reduce((a,b)=>a+b,0)||1;ctx.save();ctx.globalAlpha=alpha??0.55;ctx.fillStyle=color;
+  H.c.forEach((c,i)=>{if(!c)return;const x0=A.px(H.lo+i*H.w),x1=A.px(H.lo+(i+1)*H.w),y=A.py(c/(s*H.w));ctx.fillRect(x0+0.5,y,Math.max(x1-x0-1,1),A.py(0)-y);});ctx.restore();}
+function curve(ctx,A,f,lo,hi,color,w,dash,n){const p=[];n=n||200;for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n,y=f(x);if(isFinite(y))p.push([A.px(x),A.py(y)]);}line(ctx,p,color,w,dash);}
+function fillUnder(ctx,A,f,lo,hi,color,alpha){if(hi<=lo)return;ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(A.px(lo),A.py(0));for(let i=0;i<=120;i++){const x=lo+(hi-lo)*i/120;ctx.lineTo(A.px(x),A.py(f(x)));}ctx.lineTo(A.px(hi),A.py(0));ctx.closePath();ctx.fill();ctx.restore();}
+function niceTicks(lo,hi,n){const span=hi-lo,raw=span/(n||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,st=(f<1.5?1:f<3?2:f<7?5:10)*mag;const t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9*st;v+=st)t.push(Math.abs(v)<st*1e-9?0:v);return t;}
+function tickFmt(st){const d=Math.max(0,-Math.floor(Math.log10(st)+1e-9));return v=>fmt(v,Math.min(d,6));}
+function quantile(a,p){const s=a.slice().sort((x,y)=>x-y),i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+const sd=a=>Math.sqrt(svar(a));
+const fmtp=p=>p<0.0001?'< 0.0001':fmt(p,4);
+const sgn=(v,d)=>(v<0?'−':'')+fmt(Math.abs(v),d);
+function bindSlider(id,key,S,f,after){const el=$(id);el.addEventListener('input',()=>{S[key]=+el.value;if(after)after();});return el;}
+/* colour mixing for value-coded points (tokens are hex) */
+function hexRGB(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
+/* pills: elements carry data-p="a b"; tabs are buttons with data-p inside #tabs */
+function showPill(p){document.querySelectorAll('[data-p]').forEach(e=>{if(e.closest('#tabs'))return;e.hidden=!e.dataset.p.split(' ').includes(p);});
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));}
+function hookTabs(fn){document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{stopAnim();fn(b.dataset.p);}));const h=location.hash.slice(1);const t=[...document.querySelectorAll('#tabs button')].find(b=>b.dataset.p===h);return t?h:null;}
+
+/* Quadratics and logs */
+const PQ=[
+ {id:'w2',lab:'lwage on exper, WAGE2 (slides 400-403)',b1:0.123,b2:-0.0038,x:[0,20],x0:10,unit:'log wage',pct:true},
+ {id:'w1',lab:'wage on exper, WAGE1 (textbook, 24.4)',b1:0.298,b2:-0.0061,x:[0,51],x0:10,unit:'wage, $',pct:false},
+ {id:'mroz',lab:'LPM inlf on exper, MROZ (slide 460)',b1:0.039,b2:-0.0006,x:[0,45],x0:10,unit:'P(inlf = 1)',pct:false},
+ {id:'c2',lab:'β₁ < 0, β₂ > 0: U shape',b1:-0.2,b2:0.01,x:[0,30],x0:5,unit:'ŷ',pct:false},
+ {id:'c3',lab:'β₁ > 0, β₂ > 0',b1:0.1,b2:0.005,x:[0,30],x0:10,unit:'ŷ',pct:false},
+ {id:'c4',lab:'β₁ < 0, β₂ < 0',b1:-0.1,b2:-0.004,x:[0,30],x0:10,unit:'ŷ',pct:false}];
+const PL=[{lab:'rooms .306 (HPRICE2, slide 389)',b:0.3059183},{lab:'female −.2202 (COLLEGE, slide 381)',b:-0.2202328},{lab:'marrmale .213 (WAGE1, slide 429)',b:0.2126757},{lab:'educ .0827 (WAGE1)',b:0.0827444},{lab:'kidslt6 in a log model? no: LPM',b:null}].filter(p=>p.b!==null);
+const S={pill:'q',p:PQ[0],b1:0,b2:0,x0:10,R:null,lb:0.306,ld:1,r:1.125};
+function setQ(P){S.p=P;S.b1=P.b1;S.b2=P.b2;S.x0=P.x0;const m1=Math.max(Math.abs(P.b1)*2.2,1e-3),m2=Math.max(Math.abs(P.b2)*2.2,1e-5);S.R={b1:[-m1,m1],b2:[-m2,m2]};syncQ();}
+const toS=(v,r)=>Math.round(1000*(v-r[0])/(r[1]-r[0])),fromS=(s,r)=>r[0]+(r[1]-r[0])*s/1000;
+function syncQ(){$('sB1').value=toS(S.b1,S.R.b1);$('sB2').value=toS(S.b2,S.R.b2);$('sX0').value=toS(S.x0,S.p.x);document.querySelectorAll('#presQ button').forEach(b=>b.classList.toggle('on',b.dataset.id===S.p.id));}
+const q=x=>S.b1*x+S.b2*x*x,me=x=>S.b1+2*S.b2*x,xs=()=>S.b2!==0?-S.b1/(2*S.b2):Infinity;
+const dg=v=>{const a=Math.abs(v);return a>=10?2:a>=1?3:a>=0.1?4:a>=0.01?5:6;};
+function drawQ(){
+  const c=$('cQ'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const [lo,hi]=S.p.x;let ys=[];for(let i=0;i<=100;i++)ys.push(q(lo+(hi-lo)*i/100));
+  const yl=Math.min(...ys),yh=Math.max(...ys),pad=(yh-yl)*0.12||0.1;const yt=niceTicks(yl-pad,yh+pad,5);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[yl-pad,yh+pad],xt:niceTicks(lo,hi,6),yt,yf:tickFmt(yt[1]-yt[0]),xl:'x',yl:'β̂₁x + β̂₂x²  ('+S.p.unit+')',L:56});
+  A.clip();curve(ctx,A,q,lo,hi,css('--navy'),2.6);const x0=S.x0,t=me(x0);
+  line(ctx,[[A.px(x0-(hi-lo)*0.2),A.py(q(x0)-t*(hi-lo)*0.2)],[A.px(x0+(hi-lo)*0.2),A.py(q(x0)+t*(hi-lo)*0.2)]],css('--orange'),1.8);
+  line(ctx,[[A.px(x0),A.py(q(x0))],[A.px(x0+1),A.py(q(x0))],[A.px(x0+1),A.py(q(x0+1))]],css('--orange'),2.2);
+  dot(ctx,A.px(x0),A.py(q(x0)),5,css('--orange'),css('--panel'));
+  const X=xs();if(isFinite(X)&&X>lo&&X<hi){line(ctx,[[A.px(X),A.T],[A.px(X),A.T+A.ph]],css('--red'),1.4,[5,4]);}A.unclip();
+  if(isFinite(X)&&X>lo&&X<hi)label(ctx,'x* = '+fmt(X,1),A.px(X)+5,A.T+13,css('--red'));else label(ctx,'x* = '+(isFinite(X)?fmt(X,1):'∞')+(isFinite(X)&&X<=lo?' (left of the data)':' (right of the data)'),A.L+6,A.T+13,css('--red'));
+}
+function drawM(){
+  const c=$('cM'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const [lo,hi]=S.p.x;const a=me(lo),b=me(hi),yl=Math.min(a,b,0),yh=Math.max(a,b,0),pad=(yh-yl)*0.12||0.01;const yt=niceTicks(yl-pad,yh+pad,5);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[yl-pad,yh+pad],xt:niceTicks(lo,hi,6),yt,yf:tickFmt(yt[1]-yt[0]),xl:'x',yl:'β̂₁ + 2β̂₂x',L:56});
+  A.clip();line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--ink'),1);line(ctx,[[A.px(lo),A.py(a)],[A.px(hi),A.py(b)]],css('--navy'),2.6);
+  dot(ctx,A.px(S.x0),A.py(me(S.x0)),6,css('--orange'),css('--panel'));const X=xs();if(isFinite(X)&&X>lo&&X<hi)dot(ctx,A.px(X),A.py(0),5,css('--red'));A.unclip();
+  label(ctx,(S.p.pct?fmt(100*me(S.x0),1)+'% per unit':sgn(me(S.x0),dg(me(S.x0))))+' at x₀ = '+fmt(S.x0,1),Math.min(A.px(S.x0)+8,A.L+A.pw-170),A.py(me(S.x0))-10,css('--orange'));
+}
+function drawL(){
+  const c=$('cL'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const A=axes(ctx,w,h,{xlim:[-1,1],ylim:[-70,175],xt:[-1,-0.5,0,0.5,1],xf:v=>fmt(v,1),yt:[-50,0,50,100,150],yf:v=>v+'%',xl:'β̂·Δx',yl:'% change in ŷ'});
+  A.clip();line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);line(ctx,[[A.px(0),A.T],[A.px(0),A.T+A.ph]],css('--rule'),1);
+  curve(ctx,A,x=>100*x,-1,1,css('--grey'),1.6,[5,4]);curve(ctx,A,x=>100*(Math.exp(x)-1),-1,1,css('--navy'),2.6);
+  PL.forEach(p=>dot(ctx,A.px(p.b),A.py(100*(Math.exp(p.b)-1)),3.5,css('--point')));
+  const z=S.lb*S.ld;if(Math.abs(z)<=1){line(ctx,[[A.px(z),A.py(100*z)],[A.px(z),A.py(100*(Math.exp(z)-1))]],css('--orange'),2.6);dot(ctx,A.px(z),A.py(100*(Math.exp(z)-1)),6,css('--orange'),css('--panel'));}A.unclip();
+  label(ctx,'exact',A.px(0.75),A.py(100*(Math.exp(0.75)-1))-8,css('--navy'),'right');label(ctx,'100·β̂Δx',A.px(0.85),A.py(85)+16,css('--grey'),'left');
+}
+function drawD(){
+  const c=$('cD'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const A=axes(ctx,w,h,{xlim:[-70,150],ylim:[-120,95],xt:[-50,0,50,100,150],xf:v=>v+'%',yt:[-100,-50,0,50],yf:v=>fmt(v,0),xl:'percentage change 100·(x₁ − x₀)/x₀',yl:'100·log(x₁/x₀)'});
+  A.clip();line(ctx,[[A.px(-70),A.py(-70)],[A.px(95),A.py(95)]],css('--grey'),1.4,[5,4]);curve(ctx,A,p=>100*Math.log(1+p/100),-69.9,150,css('--navy'),2.6);
+  const p=100*(S.r-1),l=100*Math.log(S.r);line(ctx,[[A.px(p),A.py(p)],[A.px(p),A.py(l)]],css('--orange'),2.4);dot(ctx,A.px(p),A.py(l),6,css('--orange'),css('--panel'));A.unclip();
+  label(ctx,'45°',A.px(60),A.py(60)-8,css('--grey'));
+}
+function fill(){
+  const X=xs();$('vB1').textContent=sgn(S.b1,dg(S.b1));$('vB2').textContent=sgn(S.b2,dg(S.b2));$('vX0').textContent=fmt(S.x0,1);
+  $('rX').textContent=isFinite(X)?fmt(Math.abs(X),1)+(X<0?' (negative x)':''):'none';
+  const sl=me(S.x0),ex=q(S.x0+1)-q(S.x0);$('rS').textContent=S.p.pct?fmt(100*sl,1)+'%':sgn(sl,dg(sl));$('rE').textContent=S.p.pct?fmt(100*ex,1)+'%':sgn(ex,dg(ex));
+  $('rC').textContent=S.b2===0?'a line':(S.b1>0&&S.b2<0)?'hump, maximum at x*':(S.b1<0&&S.b2>0)?'U, minimum at x*':S.b1>=0&&S.b2>0?'always rising, steeper':'always falling, steeper';
+  $('fM').innerHTML='β̂₁ = '+sgn(S.b1,dg(S.b1))+', β̂₂ = '+sgn(S.b2,dg(S.b2))+' ('+S.p.lab+').';
+  $('fE').innerHTML=sgn(S.b1,dg(S.b1))+' + 2 × ('+sgn(S.b2,dg(S.b2))+') × '+fmt(S.x0,1)+' = <b>'+sgn(sl,dg(sl))+'</b>; exact change to x₀ + 1: '+sgn(ex,dg(ex))+'.';
+  $('fT').innerHTML=isFinite(X)?'|'+sgn(S.b1,dg(S.b1))+' / (2 × '+sgn(S.b2,dg(S.b2))+')| = <b>'+fmt(Math.abs(X),2)+'</b>'+(X<0?', but at a negative x: outside any sensible range.':'.'):'β̂₂ = 0: no turning point.';
+  const z=S.lb*S.ld,ap=100*z,exl=100*(Math.exp(z)-1);$('vLb').textContent=sgn(S.lb,3);$('vLd').textContent=fmt(S.ld,1);$('vR').textContent=fmt(S.r,3);
+  $('lA').textContent=sgn(ap,1)+'%';$('lE').textContent=sgn(exl,1)+'%';$('lErr').textContent=sgn(ap-exl,1)+' points';$('lD').textContent=fmt(100*Math.log(S.r),1)+' vs '+fmt(100*(S.r-1),1)+'%';
+  $('fX').innerHTML='100 × [exp('+sgn(S.lb,4)+' × '+fmt(S.ld,1)+') − 1] = <b>'+sgn(exl,2)+'%</b>, against '+sgn(ap,2)+'%.';
+  $('fLd').innerHTML='x₁/x₀ = '+fmt(S.r,3)+': 100·log = <b>'+fmt(100*Math.log(S.r),2)+'</b>, 100·Δx/x₀ = '+fmt(100*(S.r-1),2)+'.';
+}
+function drawAll(){fill();if(S.pill==='q'){drawQ();drawM();}else{drawL();drawD();}}
+PQ.forEach(P=>{const b=document.createElement('button');b.textContent=P.lab;b.dataset.id=P.id;b.onclick=()=>{setQ(P);drawAll();};$('presQ').appendChild(b);});
+PL.forEach(P=>{const b=document.createElement('button');b.textContent=P.lab;b.onclick=()=>{S.lb=P.b;S.ld=1;$('sLb').value=P.b;$('sLd').value=1;drawAll();};$('presL').appendChild(b);});
+{const b=document.createElement('button');b.textContent='unem 8% → 9% (slide 392)';b.onclick=()=>{S.r=9/8;$('sR').value=S.r;drawAll();};$('presL').appendChild(b);}
+$('sB1').addEventListener('input',e=>{S.b1=fromS(+e.target.value,S.R.b1);drawAll();});
+$('sB2').addEventListener('input',e=>{S.b2=fromS(+e.target.value,S.R.b2);drawAll();});
+$('sX0').addEventListener('input',e=>{S.x0=fromS(+e.target.value,S.p.x);drawAll();});
+$('sLb').addEventListener('input',e=>{S.lb=+e.target.value;drawAll();});$('sLd').addEventListener('input',e=>{S.ld=+e.target.value;drawAll();});$('sR').addEventListener('input',e=>{S.r=+e.target.value;drawAll();});
+setQ(PQ[0]);
+const start=hookTabs(p=>{S.pill=p;showPill(p);drawAll();});if(start)S.pill=start;showPill(S.pill);
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

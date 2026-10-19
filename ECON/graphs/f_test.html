@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>F test and adjusted R²</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+[hidden]{display:none!important}
+.grouplab{margin:20px 0 -6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--rule);padding:5px 11px;font-size:.88rem}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--navy);color:var(--panel);box-shadow:none}
+.optrow{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:.92rem;color:var(--muted)}
+.optrow .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.narr{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--navy);border-radius:6px;padding:9px 14px;font-size:.93rem;color:var(--ink)}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:6px}
+.key i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.f .v b{font-weight:500;color:var(--ink)}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Joint hypotheses: the F test and the adjusted R²</h1>
+  <p>Wooldridge's <code>MLB1</code> data on major league baseball salaries, the example of slides 311-325. Do batting average, home runs and runs batted in matter for salary once experience and games played are held fixed? None of the three is significant on its own, yet together they are. Every number here comes from regressions run live on the 353 players. The slides' copy of the file has 330 players and gives F = 8.34; the textbook's 353 give 9.55.</p>
+</header>
+<div class="tabs" id="tabs"><button data-p="f" class="on">The F test</button><button data-p="adj">R² against the adjusted R²</button></div>
+<ol class="steps" data-p="f"><li>The ticked variables are the restrictions in H₀. The first panel compares the SSR with and without them: dropping them always raises the SSR, the question is by how much.</li><li>The second panel turns that increase into F and compares it with the F distribution. The third shows the individual t statistics: all small.</li><li>The fourth panel explains the paradox: hrunsyr and rbisyr are correlated at .89, so the joint confidence region is a thin ellipse that excludes (0, 0) while each interval includes 0.</li></ol>
+<ol class="steps" data-p="adj" hidden><li>Tick variables in and out of the model. The R² can only go up when a variable is added; the adjusted R² can go either way.</li><li>Three of the candidates are pure noise, drawn at random. They raise R² a little every time, and with the default seed one of them even raises the adjusted R².</li><li>The table shows, for every variable not in the model, its |t| if it were added: the adjusted R² rises exactly when that |t| is above 1.</li></ol>
+<div class="main"><div class="col">
+<div class="optrow" data-p="f"><span class="lab">H₀: these coefficients are 0</span><span id="chkH"></span></div>
+<div class="optrow" data-p="f"><span class="lab">α</span><span class="seg" id="segAl"><button data-v="0.1">10%</button><button data-v="0.05" class="on">5%</button><button data-v="0.01">1%</button></span></div>
+<div class="optrow" data-p="adj" hidden><span class="lab">In the model</span><span id="chkM"></span></div>
+<section class="controls" data-p="adj" hidden>
+  <div class="slider"><label for="sSeed">Seed of the noise variables <b id="vSeed"></b></label><input id="sSeed" type="range" min="1" max="50" step="1" value="5"></div>
+</section>
+<div class="stats" data-p="f">
+  <div class="stat"><span class="small">F statistic</span><span class="big" id="rF"></span></div>
+  <div class="stat"><span class="small">Critical value</span><span class="big" id="rC"></span></div>
+  <div class="stat"><span class="small">p-value</span><span class="big" id="rP"></span></div>
+  <div class="stat"><span class="small">Largest individual |t| in H₀</span><span class="big" id="rTm"></span></div>
+</div>
+<div class="stats" data-p="adj" hidden>
+  <div class="stat"><span class="small">R²</span><span class="big" id="aR"></span></div>
+  <div class="stat"><span class="small">Adjusted R²</span><span class="big" id="aA"></span></div>
+  <div class="stat"><span class="small">Regressors k</span><span class="big" id="aK"></span></div>
+  <div class="stat"><span class="small">Best model by adjusted R²</span><span class="big long" id="aB"></span></div>
+</div>
+<div class="buttons" data-p="f">
+  <button class="primary" id="bSl">The slides' test (three performance variables)</button>
+  <button id="bOne">Only rbisyr: F = t²</button>
+  <button id="bAll">All five (overall F)</button>
+</div>
+<div class="buttons" data-p="adj" hidden>
+  <button id="bBase">Experience and games only</button>
+  <button id="bJunk">Add the three noise variables</button>
+  <button class="primary" id="bGreedy">Add one at a time, best first</button>
+  <button id="bStop">Stop</button>
+</div>
+<div class="panels">
+  <figure data-p="f"><canvas id="cS"></canvas>
+    <figcaption><strong>Restricted against unrestricted.</strong> Left: the SSR of the model with all five regressors. Right: the SSR once the restrictions in H₀ are imposed (the ticked variables dropped). The orange part is the increase SSR<sub>r</sub> − SSR<sub>ur</sub>, the numerator of F before dividing by q. The R² of each model is written above its bar.</figcaption></figure>
+  <figure data-p="f"><canvas id="cF"></canvas>
+    <figcaption><strong>The F distribution under H₀</strong> with q and n − k − 1 degrees of freedom. Red: the rejection region at α. Navy: the observed F. When F is off the right edge, the arrow says so and the p-value is essentially 0.</figcaption></figure>
+  <figure data-p="f"><canvas id="cT"></canvas>
+    <figcaption><strong>The individual t statistics</strong> in the unrestricted model. The dashed lines are the two-sided critical values at α. The coefficients in H₀ are coloured: each one alone looks insignificant, which is what the F test overrules.</figcaption></figure>
+  <figure data-p="f"><canvas id="cE"></canvas>
+    <figcaption><strong>The joint confidence region for hrunsyr and rbisyr</strong> at 1 − α (the ellipse), against the box built from the two separate intervals. The cross is (0, 0), the null that both are zero. The ellipse is narrow and tilted because the two estimates are strongly negatively correlated (home runs and runs batted in move together).</figcaption></figure>
+  <figure data-p="adj" hidden><canvas id="cR"></canvas>
+    <figcaption><strong>The path of R² and adjusted R²</strong> as variables go in and out of the model (latest on the right). R² (grey) never falls when a variable is added. The adjusted R² (navy) penalises each extra regressor through (n − 1)/(n − k − 1).</figcaption></figure>
+  <figure data-p="adj" hidden><div style="padding:6px 4px 0"><table class="data" id="tAdd"></table></div>
+    <figcaption style="margin-top:10px"><strong>What adding each variable would do.</strong> |t| is the t statistic the variable would get if added to the current model, ΔR̄² the change in the adjusted R². The sign of ΔR̄² flips exactly at |t| = 1 (slide 409), which is a much lower bar than significance.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f" data-p="f"><div class="n"><b>The F statistic</b></div><div class="k" data-tex='F=\frac{(SSR_r-SSR_{ur})/q}{SSR_{ur}/(n-k-1)}\sim F_{q,\,n-k-1}'></div><span class="v" id="fF"></span></div>
+<div class="f" data-p="f"><div class="n"><b>R-squared form</b></div><div class="k" data-tex='F=\frac{(R^2_{ur}-R^2_r)/q}{(1-R^2_{ur})/(n-k-1)}'></div><span class="v" id="fR"></span></div>
+<div class="f" data-p="f"><div class="n"><b>One restriction</b></div><div class="k" data-tex='q=1:\quad F=t^2'></div><span class="v" id="fQ"></span></div>
+<div class="f" data-p="adj" hidden><div class="n"><b>Adjusted R²</b></div><div class="k" data-tex='\bar R^2=1-\frac{SSR/(n-k-1)}{SST/(n-1)}=1-(1-R^2)\frac{n-1}{n-k-1}'></div><span class="v" id="fA"></span></div>
+<div class="f" data-p="adj" hidden><div class="n"><b>When it rises</b> (slide 409)</div><div class="k" data-tex='\bar R^2\uparrow\iff |t_{new}|>1\quad(\text{or } F>1 \text{ for a group})'></div><span class="v" id="fU"></span></div>
+</aside>
+<div class="note">
+  <p>The F test compares two fits. Imposing H₀ can only make the fit worse, so F ≥ 0, and it is large when the restricted model loses much more than chance would explain. Here dropping the three performance measures raises the SSR from 183.19 to 198.31: F = ((198.31 − 183.19)/3)/(183.19/347) = 9.55, far beyond the 1% critical value of about 3.8. The individual t tests miss this because hrunsyr and rbisyr measure almost the same thing, so each one's separate contribution is imprecise; their joint contribution is not. The F test cannot say which of the three matters.</p>
+  <p>The adjusted R² is not a test but a fit measure with a penalty. Its rule (rise iff |t| &gt; 1) shows how weak that penalty is compared with a 5% test, which needs |t| above about 1.97. It is useful for comparing models that are not nested; for nested ones the F test is the right tool.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+/* econlib: distributions, OLS, binary MLE and drawing helpers shared by the Econometrics graphs */
+
+/* ---------- special functions ---------- */
+function lgam(x){const g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(x<0.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*x)))-lgam(1-x);
+  x-=1;let a=c[0];const t=x+g+0.5;for(let i=1;i<9;i++)a+=c[i]/(x+i);return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);}
+function betacf(a,b,x){const MAXIT=300,EPS=3e-14,FPMIN=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;
+  for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+/* regularized incomplete beta I_x(a,b) */
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+/* regularized incomplete gamma: gser for the series side, gcf for the continued fraction (upper tail) */
+function gser(a,x){let ap=a,s=1/a,d=s;for(let n=0;n<500;n++){ap+=1;d*=x/ap;s+=d;if(Math.abs(d)<Math.abs(s)*1e-16)break;}return s*Math.exp(-x+a*Math.log(x)-lgam(a));}
+function gcf(a,x){let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-16)break;}return Math.exp(-x+a*Math.log(x)-lgam(a))*h;}
+function gammp(a,x){if(x<=0)return 0;return x<a+1?gser(a,x):1-gcf(a,x);}
+function gammq(a,x){if(x<=0)return 1;return x<a+1?1-gser(a,x):gcf(a,x);}
+
+/* ---------- distributions ---------- */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function Phi(x){const t=Math.abs(x)/Math.SQRT2;const p=0.5*ibetaErfc(t);return x>=0?1-p:p;}
+function ibetaErfc(z){/* erfc(z) = Q(1/2, z^2) */return z<0?2-ibetaErfc(-z):gammq(0.5,z*z);}
+function zq(p){const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],
+  b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],
+  c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],
+  d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];const pl=0.02425;let q,r,x;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));x=(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));x=-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else{q=p-0.5;r=q*q;x=(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  const e=Phi(x)-p,u=e*Math.sqrt(2*Math.PI)*Math.exp(x*x/2);return x-u/(1+x*u/2);}
+function tpdf(t,v){return Math.exp(lgam((v+1)/2)-lgam(v/2)-0.5*Math.log(v*Math.PI)-(v+1)/2*Math.log(1+t*t/v));}
+function tcdf(t,v){const x=v/(v+t*t),p=0.5*ibeta(x,v/2,0.5);return t>=0?1-p:p;}
+function tq(p,v){if(v>1e6)return zq(p);let lo=-1e3,hi=1e3,x=zq(p);for(let i=0;i<60;i++){const f=tcdf(x,v)-p;if(Math.abs(f)<1e-13)break;const d=tpdf(x,v);let nx=x-f/d;if(f>0)hi=Math.min(hi,x);else lo=Math.max(lo,x);if(!(nx>lo&&nx<hi))nx=(lo+hi)/2;x=nx;}return x;}
+function fpdf(x,a,b){if(x<=0)return 0;return Math.exp(0.5*(a*Math.log(a)+b*Math.log(b))+(a/2-1)*Math.log(x)-(a+b)/2*Math.log(b+a*x)-(lgam(a/2)+lgam(b/2)-lgam((a+b)/2)));}
+function fcdf(x,a,b){if(x<=0)return 0;return ibeta(a*x/(a*x+b),a/2,b/2);}
+function fq(p,a,b){let lo=0,hi=1;while(fcdf(hi,a,b)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(fcdf(m,a,b)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+function chi2pdf(x,k){if(x<=0)return 0;return Math.exp((k/2-1)*Math.log(x)-x/2-k/2*Math.log(2)-lgam(k/2));}
+function chi2cdf(x,k){return gammp(k/2,x/2);}
+function chi2sf(x,k){return gammq(k/2,x/2);}
+function chi2q(p,k){let lo=0,hi=1;while(chi2cdf(hi,k)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(chi2cdf(m,k)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+const lgt=z=>1/(1+Math.exp(-z));
+const lpdf=z=>{const e=Math.exp(-Math.abs(z));return e/((1+e)*(1+e));};
+
+/* ---------- matrices ---------- */
+function inv(A){const n=A.length,M=A.map((r,i)=>{const o=new Float64Array(2*n);for(let j=0;j<n;j++)o[j]=r[j];o[n+i]=1;return o;});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];const d=M[c][c];if(Math.abs(d)<1e-300)return null;
+    for(let k=0;k<2*n;k++)M[c][k]/=d;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c];if(f)for(let k=0;k<2*n;k++)M[r][k]-=f*M[c][k];}}
+  return M.map(r=>Array.from(r.slice(n)));}
+function xtx(X,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p));for(const [i,r] of X.entries()){const wi=w?w[i]:1;for(let j=0;j<p;j++){const rj=r[j]*wi;if(!rj)continue;for(let k=j;k<p;k++)A[j][k]+=rj*r[k];}}
+  for(let j=0;j<p;j++)for(let k=0;k<j;k++)A[j][k]=A[k][j];return A.map(r=>Array.from(r));}
+const mv=(M,v)=>M.map(r=>r.reduce((s,x,j)=>s+x*v[j],0));
+
+/* ---------- OLS ----------
+   X rows (include the column of ones yourself), y. opts.cluster: array of cluster ids.
+   Returns b, se (usual), seR (HC1, Stata robust), seC (Stata cluster), resid, fit, SSR, SST, SSE, R2, R2a */
+function ols(X,y,opts){opts=opts||{};const n=X.length,k=X[0].length,A=xtx(X),Ai=inv(A);if(!Ai)return null;
+  const Xy=new Float64Array(k);for(let i=0;i<n;i++)for(let j=0;j<k;j++)Xy[j]+=X[i][j]*y[i];const b=mv(Ai,Xy);
+  const fit=X.map(r=>r.reduce((s,x,j)=>s+x*b[j],0)),resid=y.map((v,i)=>v-fit[i]);
+  const SSR=resid.reduce((s,u)=>s+u*u,0),ym=mean(y),SST=y.reduce((s,v)=>s+(v-ym)**2,0),df=n-k,s2=SSR/df;
+  const se=Ai.map((r,j)=>Math.sqrt(s2*r[j]));
+  const out={b,se,resid,fit,SSR,SST,SSE:SST-SSR,R2:1-SSR/SST,R2a:1-(SSR/df)/(SST/(n-1)),n,k,df,s2,Ai};
+  if(opts.robust){const M=Array.from({length:k},()=>new Float64Array(k));for(let i=0;i<n;i++){const u2=resid[i]*resid[i],r=X[i];for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=u2*r[j]*r[l];}
+    const V=sandwich(Ai,M);out.Vr=V.map(r=>r.map(v=>v*n/df));out.seR=out.Vr.map((r,j)=>Math.sqrt(r[j]));}
+  if(opts.cluster){const g=new Map();for(let i=0;i<n;i++){const id=opts.cluster[i];if(!g.has(id))g.set(id,new Float64Array(k));const s=g.get(id);for(let j=0;j<k;j++)s[j]+=X[i][j]*resid[i];}
+    const M=Array.from({length:k},()=>new Float64Array(k));for(const s of g.values())for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=s[j]*s[l];
+    const G=g.size,c=opts.cadj!==undefined?opts.cadj:(G/(G-1))*((n-1)/(n-k));const V=sandwich(Ai,M);out.Vc=V.map(r=>r.map(v=>v*c));out.seC=out.Vc.map((r,j)=>Math.sqrt(Math.max(r[j],0)));out.G=G;}
+  return out;}
+function sandwich(Ai,M){const k=Ai.length,T=Ai.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*M[j][l],0)));return T.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*Ai[j][l],0)));}
+/* simple regression in closed form */
+function slr(x,y){const n=x.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=x[i];my+=y[i];}mx/=n;my/=n;let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;}
+  const b1=sxy/sxx,b0=my-b1*mx;let ssr=0;for(let i=0;i<n;i++){const u=y[i]-b0-b1*x[i];ssr+=u*u;}const s2=ssr/(n-2);return{b0,b1,se1:Math.sqrt(s2/sxx),sxx,ssr,s2,mx,my};}
+
+/* ---------- binary response by Newton-Raphson ---------- */
+function binfit(X,y,link,b0){const n=X.length,k=X[0].length;let b=b0?b0.slice():new Array(k).fill(0);const G=link==='logit'?lgt:Phi,g=link==='logit'?lpdf:npdf;const log=[];
+  const ll=bb=>{let s=0;for(let i=0;i<n;i++){const z=X[i].reduce((a,x,j)=>a+x*bb[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;};
+  let L=ll(b);log.push(L);let H=null;
+  for(let it=0;it<60;it++){const gr=new Float64Array(k),Hm=Array.from({length:k},()=>new Float64Array(k));
+    for(let i=0;i<n;i++){const r=X[i],z=r.reduce((a,x,j)=>a+x*b[j],0);let s,w;
+      if(link==='logit'){const p=lgt(z);s=y[i]-p;w=p*(1-p);}
+      else{const P=Math.min(Math.max(Phi(z),1e-15),1-1e-15),f=npdf(z);s=y[i]?f/P:-f/(1-P);w=y[i]?s*(s+z):s*(s+z);}
+      for(let j=0;j<k;j++){gr[j]+=s*r[j];for(let l=0;l<k;l++)Hm[j][l]+=w*r[j]*r[l];}}
+    H=Hm.map(r=>Array.from(r));const Hi=inv(H);if(!Hi)break;const step=mv(Hi,Array.from(gr));let t=1,nb,nL;
+    for(let h=0;h<30;h++){nb=b.map((v,j)=>v+t*step[j]);nL=ll(nb);if(nL>=L-1e-12)break;t/=2;}
+    b=nb;const done=Math.abs(nL-L)<1e-11;L=nL;log.push(L);if(done&&it>1)break;}
+  const Hi=inv(H);const se=Hi?Hi.map((r,j)=>Math.sqrt(r[j])):null;return{b,se,logL:L,log,V:Hi};}
+function binLL(X,y,b,link){const G=link==='logit'?lgt:Phi;let s=0;for(let i=0;i<X.length;i++){const z=X[i].reduce((a,x,j)=>a+x*b[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;}
+
+/* ---------- small helpers ---------- */
+function hist(v,lo,hi,nb){const c=new Array(nb).fill(0),w=(hi-lo)/nb;for(const x of v){const i=Math.floor((x-lo)/w);if(i>=0&&i<nb)c[i]++;}return{c,w,lo,hi,nb};}
+function drawHist(ctx,A,H,color,alpha,total){const s=total||H.c.reduce((a,b)=>a+b,0)||1;ctx.save();ctx.globalAlpha=alpha??0.55;ctx.fillStyle=color;
+  H.c.forEach((c,i)=>{if(!c)return;const x0=A.px(H.lo+i*H.w),x1=A.px(H.lo+(i+1)*H.w),y=A.py(c/(s*H.w));ctx.fillRect(x0+0.5,y,Math.max(x1-x0-1,1),A.py(0)-y);});ctx.restore();}
+function curve(ctx,A,f,lo,hi,color,w,dash,n){const p=[];n=n||200;for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n,y=f(x);if(isFinite(y))p.push([A.px(x),A.py(y)]);}line(ctx,p,color,w,dash);}
+function fillUnder(ctx,A,f,lo,hi,color,alpha){if(hi<=lo)return;ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(A.px(lo),A.py(0));for(let i=0;i<=120;i++){const x=lo+(hi-lo)*i/120;ctx.lineTo(A.px(x),A.py(f(x)));}ctx.lineTo(A.px(hi),A.py(0));ctx.closePath();ctx.fill();ctx.restore();}
+function niceTicks(lo,hi,n){const span=hi-lo,raw=span/(n||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,st=(f<1.5?1:f<3?2:f<7?5:10)*mag;const t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9*st;v+=st)t.push(Math.abs(v)<st*1e-9?0:v);return t;}
+function tickFmt(st){const d=Math.max(0,-Math.floor(Math.log10(st)+1e-9));return v=>fmt(v,Math.min(d,6));}
+function quantile(a,p){const s=a.slice().sort((x,y)=>x-y),i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+const sd=a=>Math.sqrt(svar(a));
+const fmtp=p=>p<0.0001?'< 0.0001':fmt(p,4);
+const sgn=(v,d)=>(v<0?'−':'')+fmt(Math.abs(v),d);
+function bindSlider(id,key,S,f,after){const el=$(id);el.addEventListener('input',()=>{S[key]=+el.value;if(after)after();});return el;}
+/* colour mixing for value-coded points (tokens are hex) */
+function hexRGB(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
+/* pills: elements carry data-p="a b"; tabs are buttons with data-p inside #tabs */
+function showPill(p){document.querySelectorAll('[data-p]').forEach(e=>{if(e.closest('#tabs'))return;e.hidden=!e.dataset.p.split(' ').includes(p);});
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));}
+function hookTabs(fn){document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{stopAnim();fn(b.dataset.p);}));const h=location.hash.slice(1);const t=[...document.querySelectorAll('#tabs button')].find(b=>b.dataset.p===h);return t?h:null;}
+
+const MLB1={lsalary:[15.6606865,15.0319061,14.9469128,14.8802214,14.3162861,13.4588356,13.4516668,12.5245266,12.367341,12.2666969,12.2666969,12.1007118,15.0392857,14.5086575,14.0386543,13.6231384,13.5278282,12.2060728,12.1547794,11.8350086,11.8204098,11.7360687,11.7199392,11.7199392,14.9141226,14.2456684,14.2209759,12.2548628,12.0435534,11.8670969,11.7479973,11.6741934,11.6526871,15.6400595,15.0319061,14.6538401,14.6484194,14.5809784,13.3847275,13.3613806,13.1223631,13.0710697,12.1807547,11.599103,14.7183781,14.7115984,14.6978998,14.5086575,14.1339645,13.8643007,13.8155107,13.3046846,13.3046846,12.6115379,12.4292164,11.9183903,11.7158661,15.4148979,14.7710218,14.6699257,13.8800497,13.8155107,13.4224682,13.4224682,12.7938595,12.628067,11.6952467,11.6262541,11.599103,11.599103,15.175765,14.7900705,14.7613602,14.53335,13.8402033,13.7816095,13.1388922,12.5776358,12.3238554,12.0725412,12.0435534,11.9829292,15.1238432,14.8504725,14.626441,14.5086575,14.3893108,14.2855139,13.8155107,13.7901926,13.7375488,13.5923672,13.4224682,13.2176733,12.2307653,12.1090107,15.5559769,15.176487,15.1372662,14.9576082,14.9469128,14.0584564,13.9978323,13.4588356,13.0710697,12.8992195,12.2060728,11.6952467,13.9978323,13.493927,13.4444466,13.4150333,13.3046846,13.2176733,12.7656889,12.6443272,12.3238554,12.028739,11.6952467,14.9629126,14.9306526,14.8802214,13.5606184,13.3923903,13.1223631,13.1223631,12.8992195,12.7656889,12.6915808,11.9984331,11.9608116,11.8130302,11.7752895,15.1505117,15.0281954,15.0194836,14.731801,14.2209759,13.8155107,13.7850513,13.7101498,13.3046846,12.9831009,12.6115379,12.0725412,11.7440376,15.2624292,15.2224245,14.9501333,14.3751259,13.5443583,12.6115379,12.4090137,12.0137005,11.9117012,11.599103,15.3736553,15.3008957,14.6538401,14.626441,14.4573641,13.910821,13.5076256,13.1223631,12.6915808,12.6115379,12.0581522,11.9511805,15.4944696,15.1505117,14.9224215,14.4333954,14.3162861,13.910821,12.7656889,12.65236,12.6115379,12.377923,12.1934938,11.6952467,15.3996305,15.0169802,14.9141226,14.6039677,13.8878317,13.5278282,13.4588356,13.4224682,12.8992195,12.736701,12.5061769,12.3883944,12.3104324,12.2060728,11.8130302,14.2855139,14.0778751,13.9978323,13.7901926,13.7642174,13.5278282,13.1223631,12.9598446,12.8992195,12.7656889,12.7218857,12.6915808,12.6115379,11.8670969,15.2505951,15.1679039,15.0490417,15.0194836,14.5414476,14.1519833,13.9552727,13.3847275,13.1223631,12.9598446,12.5245266,12.4292164,12.3883944,12.3458347,14.8087626,14.731801,14.3102064,14.1031923,13.910821,13.8155107,13.5278282,13.493927,12.7656889,12.4292164,11.6952467,11.6784401,11.6082354,15.4348984,15.1592455,15.1557608,14.8802214,14.731801,14.626441,14.2697659,13.8643007,12.7656889,12.6915808,12.4490185,11.9829292,11.9316359,11.9183903,15.5202589,15.3910465,15.0918036,15.0682735,14.5574474,14.2126074,13.5923672,13.1223631,13.1223631,12.5776358,12.1145058,11.6526871,11.6307087,11.599103,15.281848,14.9141226,14.7217512,14.3751259,13.3046846,13.3046846,13.1711531,13.0170031,12.4874849,12.301383,11.9829292,11.6526871,11.6307087,11.6082354,11.599103,15.1102381,15.0682735,14.6338215,14.5086575,14.4960785,14.3751259,14.346139,13.8320398,13.7212,13.7101498,13.3574352,13.1223631,12.5602446,15.2971153,15.1147938,15.1147938,14.9469128,14.690979,14.237505,13.976779,13.9016886,13.0389814,12.8992195,12.8439713,12.4292164,12.3238554,11.6526871,15.4641695,14.9469128,14.9306526,14.8087626,14.690979,13.3046846,13.1223631,12.8992195,12.5245266,12.4435139,12.4292164,12.0552502,15.2505951,15.2018051,14.9941654,14.84513,14.7710218,13.3494987,13.3455067,13.3046846,12.8992195,11.6952467,15.2018051,14.9196634,14.8352604,14.5982695,14.4396648,13.9221201,13.7101498,13.6529913,13.0710697,12.5689783,12.2060728,11.9183903,15.3841267,15.3306379,14.8930693,14.4573641,13.3847275,13.1711531,13.1223631,13.0170031,12.6507587,12.5245266,12.4292164,12.2060728,11.599103],years:[12,8,5,8,12,17,4,10,4,3,2,2,7,2,4,6,7,5,2,3,2,2,1,3,4,3,4,2,4,2,1,2,1,7,16,8,10,11,9,10,7,6,3,1,8,7,9,7,9,7,5,9,3,3,3,4,2,10,7,9,11,15,4,6,10,3,3,2,1,1,15,6,6,9,4,10,3,3,3,3,3,3,6,10,9,6,4,10,4,6,4,11,7,5,2,4,7,6,8,6,5,5,4,10,6,5,2,1,5,5,5,4,8,9,3,6,17,2,2,6,5,4,6,2,11,7,9,4,3,2,2,3,2,10,13,12,6,7,9,6,5,10,2,3,3,1,7,11,5,7,10,13,3,2,5,1,7,7,11,6,7,7,6,6,9,6,3,2,12,9,6,5,10,13,4,3,7,3,2,2,17,8,9,13,7,9,8,12,8,4,2,3,2,3,1,4,5,3,4,6,9,5,2,7,4,11,3,6,2,7,11,16,9,9,16,10,3,14,6,3,7,5,2,19,6,4,11,12,4,4,5,1,14,1,1,1,9,8,11,11,8,10,8,6,8,7,3,2,3,2,10,5,8,15,7,4,10,10,17,3,2,2,2,1,9,12,6,12,8,8,5,4,4,1,4,1,1,1,3,11,14,6,8,12,8,4,7,6,3,3,6,5,7,10,10,20,6,5,6,2,6,10,3,13,3,2,9,12,5,19,13,6,2,9,3,3,11,4,7,7,14,7,12,5,7,7,3,1,4,6,6,11,9,4,9,8,6,3,4,13,8,7,11,8,11,4,11,5,5,2,3,6,1],gamesyr:[142.0833282,114.75,150.1999969,132,99.6666641,119.5294113,98.5,43.2000008,55.75,52,84.5,43.5,112.7142868,22.5,110.5,88,100.1428604,95.5999985,84,36.3333321,43,18.5,32,12.666667,108.25,138.3333282,107.75,65.5,36.25,63,45,17,37,149.4285736,152.75,127.625,132.8000031,116.272728,103.3333359,41.0999985,48.4285698,88.8333359,60,30,116.375,132.8571472,78.4444427,112.5714264,108.8888855,129.1428528,100,77.5555573,94.6666641,83.3333359,65,39.75,27,139,95.5714264,81.7777786,91.272728,98.3333359,91.25,71.8333359,95.1999969,93,12.666667,46,12,10,147.1999969,102.8333359,84.6666641,111.2222214,113.25,97.1999969,99,114.3333359,58,76.6666641,61.3333321,78,116.8333359,86.9000015,137.777771,96.3333359,99,92.5,55.5,63.1666679,82.75,70.6363602,80.2857132,84.5999985,99.5,31.5,119.2857132,106,112.5,106.3333359,123.1999969,77.5999985,101.75,131,92.3333359,71,62.5,34,106,84.8000031,68,76,117.75,98,96.6666641,100.8333359,126.7058792,49,10.5,115.6666641,129,136,106.8333359,159,115.1818161,111.2857132,110.3333359,71.25,90.3333359,65,46.5,48.3333321,41,129.1000061,135.9230804,139.8333282,119.1666641,121.7142868,103.5555573,79.5,109.5999985,104.0999985,81.5,76.6666641,31.333334,21,126.1428604,133,88,124.7142868,97.6999969,110.8461533,58.3333321,39.5,26.2000008,15,146.8571472,144.2857208,132.9090881,113.6666641,140.4285736,119.4285736,52.5,120.3333359,60,62.1666679,65.6666641,53.5,150,109.4444427,97.3333359,109.8000031,115.5,141.8461609,58,89,57.4285698,80.3333359,75,21,135.8823547,103.875,93.5555573,124.9230804,91.1428604,111.5555573,74.375,113.4166641,103.125,84.25,93.5,46.3333321,71,38.6666679,58,86.75,56,142.3333282,69.25,96.3333359,62.6666679,71.8000031,84,73.8571396,55.25,56.8181801,82.6666641,92.5,27.5,99.4285736,117.4545441,130.9375,103.5555573,111.3333359,122.8125,110.5999985,126.3333359,96.5,54.1666679,87.3333359,35,39,80.5,143.6315765,132.8333282,111,129.5454559,138,95.75,92.75,72.5999985,149,93,51,47,22,105.1111145,99.875,129.6363678,147.7272797,95.25,127.6999969,97.75,64.1666641,88.875,74.2857132,108.3333359,101,62.3333321,73.5,134.3999939,152.1999969,115.125,123.7333298,73.8571396,98.5,120.3000031,76.0999985,112.7058792,84,41.5,13,5.5,7,102.3333359,136.9166718,125.5,132.5,60.25,94.75,49.5999985,92.5,48.75,139,29.75,23,47,7,21,135,121.7142868,97.1666641,136.875,142.0833282,102,120,65.5714264,89,126,84.6666641,120.3333359,61.5999985,142.1428528,134.1000061,114,128.1000061,129.8333282,87.8000031,80.6666641,27.5,48.3333321,96,115.6666641,118.1538467,57.3333321,11,153.5555573,128.5833282,117,142.4736786,60.6153831,117,153,116,84,66.6666641,107.6363602,21.75,151.4285736,130.8571472,132.7857208,104.7142868,114.5833359,73.4000015,104,127,89.6666641,24,144.5,86.8333359,81.6666641,135.9090881,79,125.5,86.2222214,91.5,72.3333359,65.3333359,72.75,84,121.5,126.5714264,127.4545441,94.125,68.1818161,86.5,96.727272,88.5999985,87.8000031,105.5,83,111.1666641,12],bavg:[289,259,299,245,258,286,234,239,240,267,248,252,264,182,259,246,292,260,271,215,223,252,293,208,276,272,268,277,237,234,302,181,189,279,290,265,285,252.9999847,278,250,205,271,200,222,285,297,233,255,281,246,281,277,263,257,250,182,209,276,257,269,280,289,230,249,244,260,239,252.9999847,167,571,261,278,255,261,261,263,250.9999847,274,242,270,273,224,259,257,273,262,269,262,245,236,247,223,248,226,246,257,296,299,276,280,273,304,247,260,256,242,264,275,250,254.0000153,237,262,267,250,283,246,266,246,238,256,274,276,250,283,269,260,241,210,247,226,227,207,195,262,259,288,280,244,265,283,279,266,252,241,250.9999847,232,279,327,283,250,254.0000153,259,268,228,242,304,301,275,298,241,258,269,231,252.9999847,233,258,237,216,277,262,259,238,260,286,250,249,229,254.0000153,268,173,282,306,277,267,233,263,235,262,258,285,244,292,269,221,276,260,262,293,245,255,228,265,275,254.0000153,255,260,265,281,259,257,259,274,241,222,286,270,268,268,245,250.9999847,249,205,285,287,268,234,267,248,292,262,262,290,264,232,226,111,284,259,311,338,256,243,234,248,282,250.9999847,236,234,246,256,263,291,254.0000153,303,252,269,229,247,250,261,266,176,250,625,259,252.9999847,299,270,233,246,238,258,234,259,203,177,258,143,170,282,297,273,266,282,247,271,226,249,322,254.0000153,281,246,285,267,249,307,255,287,250.9999847,190,261,246,249,269,239,263,321,286,300,285,295,266,289,235,261,273,252,287,280,247,291,272,262,232,272,290,276,264,301,311,246,262,230,250,263,257,280,244,230,276,266,296,301,254.0000153,269,259,250,240,237,261,213,244,167],hrunsyr:[19.25,9.125,9.1999998,13.375,10.333333,2.3529413,9.25,1.3,.25,3.3333333,7,.5,12.1428576,.5,8.75,1.3333334,3,5.1999998,1.5,2.6666667,2,0,0,0,14.5,7,6,4.5,1,2.5,2,.5,3,19.2857151,25.875,2.25,4.8000002,18.545454,4.1111112,1.2,1.7142857,1.3333334,2.6666667,3,6.5,11.2857141,8.333333,7.5714288,4.1111112,20.8571434,8.1999998,2.7777777,12.666667,1.6666666,8,.5,.5,14.3999996,5.5714288,1.7777778,5.3636365,6,9.25,4.8333335,2.5999999,5.3333335,0,0,0,0,1.4666667,8.666667,2.1666667,1.3333334,8.5,5.1999998,6.6666665,10.666667,7.3333335,4.3333335,4,1,18.5,.6,9.666667,8.166667,17.75,8.1000004,4.25,4.6666665,4,.0909091,2.8571429,2,13,3.25,10,3.3333333,21.375,9.333333,16,5.4000001,8,12.8000002,10.333333,1.6,6.5,0,9.6000004,7.5999999,5.5999999,.75,14.5,7.2222223,0,.5,23.4117641,.5,0,7.3333335,6,4.5,1.5,16.5,9.454545,10.2857141,2.1111112,8.5,7.6666665,2.5,0,3.6666667,0,28.5,15.6923075,3.6666667,2.8333333,18.8571434,20.2222214,1.3333334,1.6,6.3000002,10,.6666667,1,1,27.2857151,5.3636365,10.8000002,4.5714288,7.9000001,5.2307692,6,1,.2,1,23.1428566,25.1428566,5.181818,20.166666,12.1428576,5.5714288,.8333333,8.333333,1.4444444,5.1666665,.6666667,2,22.75,21,10.5,6.1999998,1.7,18.5384617,8,11,.7142857,1.6666666,9,0,23.4705887,10.5,11.4444447,7.3076925,3.4285715,4.6666665,3.875,2.0833333,5.375,4.5,8.5,1.6666666,2,1.6666666,5,17.5,2.4000001,12.666667,9.75,.1666667,1.8888888,3.8,2.5,1,6.75,.4545455,2,4.3333335,2,23,6.181818,13.0625,15.2222223,22.7777786,10.125,6.0999999,16.666666,15,.3333333,2,1.5714285,1.6,3,12.7894735,5.3333335,18,7.6363635,21.25,2,3.5,7.8000002,1,5,4,2,0,19.666666,12,17.454546,7.7272725,14.625,4,3.25,3.3333333,2.875,3.4285715,18.333334,5,4,4,24.2000008,7.8000002,11.625,10.666667,7.2857141,11.75,5.1999998,6.3000002,1.4117647,3.6666667,2.5,0,.5,1,12.666667,19.25,2.1666667,16.416666,1.625,1.25,2.8,3,.75,10,.75,2,1,0,.6666667,22.90909,7.7142859,.6666667,1.25,4.4166665,13.75,11,5.1428571,18.666666,21,3.3333333,15.5,0,17.5714283,19.6000004,6.9000001,14.8999996,1.3333334,6.5999999,7,0,1.8333334,.8,5.6666665,11.3076925,1,1.5,15.7777777,21.5,9.1999998,22.7368412,3.6153846,5.1666665,1.5,13.4444447,2.6666667,6.3333335,8.363636,1,22.2857151,31.4285717,14.2142859,8.7142859,14.333333,1.4,2.4285715,5.4285712,1,3,21.75,7.5,13.5,14.727273,6.5555553,1,4.3333335,1.625,2.5,6.6666665,2.5,.7692308,29.375,13.5714283,7.818182,2,2.090909,18.75,7.6363635,.6,1.2,5.5,13.666667,2.1666667,0],rbisyr:[69.6666641,42.75,71,52.625,45.0833321,33.7647057,35.25,9.5,7.25,19.666666,22,10.5,53.5714302,2,52.25,21.666666,36.2857132,24.6000004,21,11,13.5,5.5,7,1.3333334,53,50.6666679,34,28,10.25,14,8,2,14,85.1428604,97.625,31.875,47.9000015,61.0909081,29.4444447,9.6000004,13.1428576,22.666666,13.666667,10,35.375,63.7142868,34.3333321,36.1428566,28.666666,67.1428604,49,26.333334,43,17.666666,31.666666,5.75,5.5,68.8000031,34.1428566,27,31.90909,33.5999985,38.75,20.5,22.3999996,36.6666679,1.6666666,5.5,2,4,45.4000015,46.6666679,25.166666,24.8888893,48.5,35.7000008,31.666666,55.6666679,21,22,16.666666,18.666666,60.5,12.3000002,70.3333359,34.5,60,41.2999992,14.25,24.333334,26.75,10.272727,18.1428566,16.3999996,45.5,12.75,52.5714302,26.333334,68.5,43,55,30.3999996,43.25,57.4000015,39.3333321,11.3999996,19.5,4,43.7999992,35.2000008,25.2000008,17.5,59,24.8888893,16.333334,18.166666,74.0588226,10,.5,49.1666679,38.4000015,42.75,20.666666,89,46.0909081,47.5714302,24,30.75,41.3333321,18,10.5,16.333334,5.5,85.6999969,69.615387,36.5833321,37.8333321,59.1428566,62.6666679,18.5,26.2000008,31.2999992,44.5,13.333333,6.3333335,7,73.5714264,53.727272,46.5999985,41.7142868,34.7999992,34.3076935,22.666666,8,3.8,5,90.8571396,79.4285736,58.0909081,62.6666679,48.8571434,32.5714302,13.166667,52.8333321,2.1111112,17.666666,11.333333,13,84.5,66,44.5,33.5999985,29.5,82,19.5,36.6666679,14.5714283,18,29,3,83.8235321,61.125,46.8888893,47.2307701,26.7142849,34.5555573,23.125,36.4166679,33,36.5,44.5,13.333333,23,9.666667,25,61.75,21,73.6666641,28.25,18.5,15.1111107,24.2000008,21,14.8571424,21.75,14.272727,18,27.166666,9.5,67.5714264,40.9090919,58.125,45.1111107,59.5555573,54.75,39,71.3333359,50.0714302,8,23,7.4285712,6.4000001,28.5,71.3157883,58.3333321,65,44.636364,71.3333359,37,31.25,28.7999992,47,28.7142849,25,10,1,68.8888855,51.375,83,62.4545441,45.25,35.4000015,21.75,17.333334,25.5,21,46.3333321,25,18.333334,30,87.3000031,60.4000015,45.125,52.6666679,24,45.5,31.3999996,30.8999996,30.8235302,24,13.5,1.5,1,3,48.2222214,72.6666641,40.3333321,68.1666641,11.375,18.375,14.3999996,21.25,11.25,46,6.25,6,12,2,2.6666667,85.272728,46.8571434,29.333334,42.25,45.0833321,45.75,63.5,20.7142849,54.5,85,25,64.5,8.6000004,83.4285736,74.4000015,33.5,76,41.5,42,32.5,3,10,17.8999996,46.3333321,60.4615402,16.666666,2,87.2222214,79.1666641,46,90,24.8461533,41.1666679,53,48.2222214,19.666666,34,36.9090919,5.5,96.1428604,86.8571396,51.7857132,47.1428566,52,13.8000002,31.7142849,48,23,9,86,34,43.5,64.4545441,28.333334,25,21,17.5,22.5,26.666666,17.75,18.4615383,91.75,60.1428566,61.727272,24.875,16.272728,57.5,29,16,16.6000004,32,36.6666679,28,2]};
+
+/* F test and adjusted R² on MLB1 (353 players) */
+const V=['years','gamesyr','bavg','hrunsyr','rbisyr'],N=MLB1.lsalary.length,Y=MLB1.lsalary;
+const JK=['noise1','noise2','noise3'];
+const S={pill:'f',H:{bavg:1,hrunsyr:1,rbisyr:1},al:0.05,seed:5,M:{years:1,gamesyr:1},hist:[]};
+let JUNK={};function makeJunk(){const r=mulberry32(1000+S.seed);JUNK={};JK.forEach(k=>{JUNK[k]=Array.from({length:N},()=>gauss(r));});}
+const col=k=>MLB1[k]||JUNK[k];
+function fit(vars,opt){return ols(Y.map((_,i)=>[1,...vars.map(v=>col(v)[i])]),Y,opt);}
+const UR=fit(V);
+function chk(id,names,obj,cb){const el=$(id);el.innerHTML='';names.forEach(nm=>{const l=document.createElement('label');l.style.marginRight='14px';l.innerHTML='<input type="checkbox"'+(obj[nm]?' checked':'')+'> '+nm;l.querySelector('input').onchange=e=>{if(e.target.checked)obj[nm]=1;else delete obj[nm];cb();};el.appendChild(l);});}
+function Ftest(){const H=V.filter(v=>S.H[v]);const q=H.length;if(!q)return null;const keep=V.filter(v=>!S.H[v]);const R=keep.length?fit(keep):{SSR:UR.SST,R2:0};
+  const F=((R.SSR-UR.SSR)/q)/(UR.SSR/UR.df);return{q,F,R,H,p:1-fcdf(F,q,UR.df),c:fq(1-S.al,q,UR.df)};}
+function drawS(){
+  const c=$('cS'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const T=Ftest();
+  const top=Math.max(T?T.R.SSR:UR.SSR,UR.SSR)*1.12,lo=150,yt=niceTicks(lo,top,5);
+  const A=axes(ctx,w,h,{xlim:[0,2],ylim:[lo,top],xt:[],yt,yl:'SSR (the axis starts at '+lo+')',B:40});
+  const bar=(i,v,col,txt,r2)=>{const x0=A.px(i+0.22),x1=A.px(i+0.78);ctx.fillStyle=css(col);ctx.globalAlpha=0.8;ctx.fillRect(x0,A.py(Math.min(v,top)),x1-x0,A.py(lo)-A.py(Math.min(v,top)));ctx.globalAlpha=1;
+    ctx.fillStyle=css('--muted');ctx.font=FONT;ctx.textAlign='center';ctx.fillText(txt,(x0+x1)/2,A.T+A.ph+15);label(ctx,fmt(v,2)+' (R² '+fmt(r2,4)+')',(x0+x1)/2,A.py(Math.min(v,top))-8,css('--ink'),'center');return[x0,x1];};
+  bar(0,UR.SSR,'--navy','unrestricted',UR.R2);
+  if(T){const [x0,x1]=bar(1,T.R.SSR,'--navy','restricted',T.R.R2);ctx.fillStyle=css('--orange');ctx.globalAlpha=0.9;ctx.fillRect(x0,A.py(Math.min(T.R.SSR,top)),x1-x0,A.py(UR.SSR)-A.py(Math.min(T.R.SSR,top)));ctx.globalAlpha=1;
+    line(ctx,[[A.px(0.78),A.py(UR.SSR)],[A.px(1.22),A.py(UR.SSR)]],css('--muted'),1,[3,3]);
+    label(ctx,'+'+fmt(T.R.SSR-UR.SSR,2),A.px(1.5),(A.py(UR.SSR)+A.py(Math.min(T.R.SSR,top)))/2+4,css('--orange'),'center');}
+}
+function drawF(){
+  const c=$('cF'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const T=Ftest();if(!T)return;
+  const hi=Math.max(T.c*2.2,Math.min(T.F*1.15,T.c*4)),f=x=>fpdf(x,T.q,UR.df);let pk=0;for(let i=1;i<=200;i++)pk=Math.max(pk,f(hi*i/200));
+  const xt=niceTicks(0,hi,6);const A=axes(ctx,w,h,{xlim:[0,hi],ylim:[0,Math.min(pk*1.12,3)],xt,yt:[],xf:tickFmt(xt[1]-xt[0]),xl:'F with q = '+T.q+' and '+UR.df+' df'});
+  A.clip();fillUnder(ctx,A,f,T.c,hi,css('--red'),0.35);if(T.F<hi)fillUnder(ctx,A,f,T.F,hi,css('--orange'),0.4);curve(ctx,A,f,hi/400,hi,css('--ink'),2,null,300);
+  if(T.F<hi)line(ctx,[[A.px(T.F),A.py(0)],[A.px(T.F),A.T+4]],css('--navy'),2.4);A.unclip();
+  label(ctx,'c = '+fmt(T.c,2),A.px(T.c)+4,A.py(f(T.c))-10,css('--red'));
+  if(T.F<hi)label(ctx,'F = '+fmt(T.F,2),A.px(T.F),A.T+13,css('--navy'),'center');else{label(ctx,'F = '+fmt(T.F,2)+' →',A.L+A.pw-6,A.T+13,css('--navy'),'right');}
+}
+function drawT(){
+  const c=$('cT'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const ts=V.map((_,j)=>UR.b[j+1]/UR.se[j+1]),cv=tq(1-S.al/2,UR.df);
+  const top=Math.max(...ts.map(Math.abs),cv)*1.15;const yt=niceTicks(-top,top,6);
+  const A=axes(ctx,w,h,{xlim:[0,V.length],ylim:[-top,top],xt:[],yt,yf:tickFmt(yt[1]-yt[0]),yl:'t statistic',B:40});
+  line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  [cv,-cv].forEach(v=>line(ctx,[[A.L,A.py(v)],[A.L+A.pw,A.py(v)]],css('--red'),1.2,[5,4]));
+  V.forEach((v,j)=>{const x0=A.px(j+0.22),x1=A.px(j+0.78),t=ts[j];ctx.fillStyle=css(S.H[v]?'--orange':'--grey');ctx.globalAlpha=0.85;ctx.fillRect(x0,Math.min(A.py(0),A.py(t)),x1-x0,Math.abs(A.py(t)-A.py(0)));ctx.globalAlpha=1;
+    ctx.fillStyle=css('--muted');ctx.font=FONT;ctx.textAlign='center';ctx.fillText(v,(x0+x1)/2,A.T+A.ph+15);label(ctx,fmt(t,2),(x0+x1)/2,A.py(t)-(t>=0?7:-15),css('--ink'),'center');});
+  label(ctx,'±'+fmt(cv,2),A.L+A.pw-4,A.py(cv)-5,css('--red'),'right');
+}
+function drawE(){
+  const c=$('cE'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const i=4,j=5,b1=UR.b[i],b2=UR.b[j];
+  const v11=UR.s2*UR.Ai[i][i],v22=UR.s2*UR.Ai[j][j],v12=UR.s2*UR.Ai[i][j];const fc=fq(1-S.al,2,UR.df),tc=tq(1-S.al/2,UR.df),r=Math.sqrt(2*fc);
+  const l11=Math.sqrt(v11),l21=v12/l11,l22=Math.sqrt(v22-l21*l21);
+  const pts=[];for(let k=0;k<=200;k++){const a=2*Math.PI*k/200,u=Math.cos(a)*r,v=Math.sin(a)*r;pts.push([b1+l11*u,b2+l21*u+l22*v]);}
+  const xs=pts.map(p=>p[0]).concat([0,b1-tc*Math.sqrt(v11),b1+tc*Math.sqrt(v11)]),ys=pts.map(p=>p[1]).concat([0,b2-tc*Math.sqrt(v22),b2+tc*Math.sqrt(v22)]);
+  const xl=[Math.min(...xs),Math.max(...xs)],yl=[Math.min(...ys),Math.max(...ys)],px=(xl[1]-xl[0])*0.08,py=(yl[1]-yl[0])*0.08;
+  const xt=niceTicks(xl[0]-px,xl[1]+px,5),ytk=niceTicks(yl[0]-py,yl[1]+py,5);
+  const A=axes(ctx,w,h,{xlim:[xl[0]-px,xl[1]+px],ylim:[yl[0]-py,yl[1]+py],xt,yt:ytk,xf:tickFmt(xt[1]-xt[0]),yf:tickFmt(ytk[1]-ytk[0]),xl:'coefficient on hrunsyr',yl:'coefficient on rbisyr',L:54});
+  A.clip();ctx.strokeStyle=css('--grey');ctx.lineWidth=1.4;ctx.setLineDash([5,4]);
+  const x0=b1-tc*Math.sqrt(v11),x1=b1+tc*Math.sqrt(v11),y0=b2-tc*Math.sqrt(v22),y1=b2+tc*Math.sqrt(v22);ctx.strokeRect(A.px(x0),A.py(y1),A.px(x1)-A.px(x0),A.py(y0)-A.py(y1));ctx.setLineDash([]);
+  ctx.beginPath();pts.forEach((p,k)=>k?ctx.lineTo(A.px(p[0]),A.py(p[1])):ctx.moveTo(A.px(p[0]),A.py(p[1])));ctx.closePath();ctx.fillStyle=css('--navy');ctx.globalAlpha=0.15;ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=css('--navy');ctx.lineWidth=2;ctx.stroke();
+  line(ctx,[[A.px(0),A.T],[A.px(0),A.T+A.ph]],css('--rule'),1);line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  const ox=A.px(0),oy=A.py(0);line(ctx,[[ox-7,oy-7],[ox+7,oy+7]],css('--red'),2.4);line(ctx,[[ox-7,oy+7],[ox+7,oy-7]],css('--red'),2.4);
+  dot(ctx,A.px(b1),A.py(b2),4,css('--navy'));A.unclip();
+  const d=[0-b1,0-b2],Vi=inv([[v11,v12],[v12,v22]]),q=d[0]*(Vi[0][0]*d[0]+Vi[0][1]*d[1])+d[1]*(Vi[1][0]*d[0]+Vi[1][1]*d[1]);
+  label(ctx,'(0, 0): '+(q/2>fc?'outside the ellipse':'inside the ellipse')+', '+(0>=x0&&0<=x1&&0>=y0&&0<=y1?'inside the box':'outside the box'),A.L+6,A.T+13,css('--red'));
+  label(ctx,'Corr of the two estimates: '+fmt(v12/Math.sqrt(v11*v22),2),A.L+6,A.T+29,css('--muted'));
+}
+/* adjusted R² pill */
+const CANDS=V.concat(JK);
+function cur(){return CANDS.filter(v=>S.M[v]);}
+function adjInfo(){const vs=cur(),F0=vs.length?fit(vs):{R2:0,R2a:0,SSR:UR.SST};const rows=CANDS.filter(v=>!S.M[v]).map(v=>{const F1=fit(vs.concat([v]));return{v,t:Math.abs(F1.b[F1.b.length-1]/F1.se[F1.se.length-1]),d:F1.R2a-F0.R2a,r2:F1.R2,r2a:F1.R2a};});return{F0,rows,k:vs.length};}
+function pushHist(lab){const I=adjInfo();S.hist.push({lab,r2:I.F0.R2,r2a:I.F0.R2a,k:I.k});if(S.hist.length>14)S.hist.shift();}
+function drawR(){
+  const c=$('cR'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const H=S.hist;if(!H.length)return;
+  const vals=H.flatMap(x=>[x.r2,x.r2a]),lo=Math.max(0,Math.min(...vals)-0.01),hi=Math.max(...vals)+0.01,yt=niceTicks(lo,hi,5);
+  const A=axes(ctx,w,h,{xlim:[-0.5,Math.max(H.length-0.5,3.5)],ylim:[lo,hi],xt:[],yt,yf:tickFmt(yt[1]-yt[0]),yl:'goodness of fit',B:58});
+  line(ctx,H.map((x,i)=>[A.px(i),A.py(x.r2)]),css('--grey'),2);line(ctx,H.map((x,i)=>[A.px(i),A.py(x.r2a)]),css('--navy'),2.4);
+  H.forEach((x,i)=>{dot(ctx,A.px(i),A.py(x.r2),3.5,css('--grey'));dot(ctx,A.px(i),A.py(x.r2a),4,css('--navy'));
+    ctx.save();ctx.translate(A.px(i),A.T+A.ph+8);ctx.rotate(-0.6);ctx.fillStyle=css('--muted');ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign='right';ctx.fillText(x.lab,0,8);ctx.restore();});
+  label(ctx,'R²',A.px(H.length-1)+8,A.py(H[H.length-1].r2)+4,css('--grey'));label(ctx,'adjusted R²',A.px(H.length-1)+8,A.py(H[H.length-1].r2a)+4,css('--navy'));
+}
+function tableAdd(I){const t=$('tAdd');t.innerHTML='<tr><th>if we add</th><th>|t|</th><th>ΔR̄²</th><th></th></tr>'+I.rows.sort((a,b)=>b.t-a.t).map(r=>'<tr><td>'+r.v+'</td><td>'+fmt(r.t,2)+'</td><td>'+(r.d>=0?'+':'−')+fmt(Math.abs(r.d),5)+'</td><td style="color:'+(r.d>=0?css('--green'):css('--red'))+'">'+(r.d>=0?'rises':'falls')+'</td></tr>').join('')+(I.rows.length?'':'<tr><td colspan="4">every candidate is in the model</td></tr>');}
+function bestModel(){let best=null;const n=CANDS.length;for(let m=1;m<(1<<n);m++){const vs=CANDS.filter((_,j)=>m&(1<<j));const F=fit(vs);if(!best||F.R2a>best.r)best={r:F.R2a,vs};}return best;}
+let BEST=null;
+function fill(){
+  const T=Ftest();
+  if(T){$('rF').textContent=fmt(T.F,3);$('rC').textContent=fmt(T.c,3);$('rP').textContent=fmtp(T.p);$('rTm').textContent=fmt(Math.max(...T.H.map(v=>Math.abs(UR.b[V.indexOf(v)+1]/UR.se[V.indexOf(v)+1]))),2);
+    $('fF').innerHTML='(('+fmt(T.R.SSR,3)+' − '+fmt(UR.SSR,3)+') / '+T.q+') / ('+fmt(UR.SSR,3)+' / '+UR.df+') = <b>'+fmt(T.F,3)+'</b>, p = '+fmtp(T.p)+'.';
+    $('fR').innerHTML='(('+fmt(UR.R2,4)+' − '+fmt(T.R.R2,4)+') / '+T.q+') / ((1 − '+fmt(UR.R2,4)+') / '+UR.df+') = '+fmt(((UR.R2-T.R.R2)/T.q)/((1-UR.R2)/UR.df),3)+', the same.';
+    if(T.q===1){const j=V.indexOf(T.H[0])+1,t=UR.b[j]/UR.se[j];$('fQ').innerHTML='t = '+fmt(t,4)+', t² = <b>'+fmt(t*t,3)+'</b> = F.';}else $('fQ').innerHTML='Tick a single variable to see it ('+T.q+' restrictions now).';}
+  else{['rF','rC','rP','rTm'].forEach(id=>$(id).textContent='–');$('fF').textContent='Tick at least one variable.';$('fR').textContent='';$('fQ').textContent='';}
+  document.querySelectorAll('#segAl button').forEach(b=>b.classList.toggle('on',+b.dataset.v===S.al));
+  if(S.pill==='adj'){const I=adjInfo(),n=N;$('aR').textContent=fmt(I.F0.R2,4);$('aA').textContent=fmt(I.F0.R2a,4);$('aK').textContent=I.k;$('vSeed').textContent=S.seed;
+    if(!BEST)BEST=bestModel();$('aB').textContent=BEST.vs.join(', ')+' ('+fmt(BEST.r,4)+')';
+    $('fA').innerHTML='1 − (1 − '+fmt(I.F0.R2,4)+') × '+(n-1)+' / '+(n-I.k-1)+' = <b>'+fmt(I.F0.R2a,4)+'</b>.';
+    const up=I.rows.filter(r=>r.t>1).map(r=>r.v);$('fU').innerHTML=up.length?'Would raise R̄²: '+up.join(', ')+' (|t| &gt; 1).':'No remaining variable has |t| &gt; 1.';tableAdd(I);}
+}
+function drawAll(){fill();if(S.pill==='f'){drawS();drawF();drawT();drawE();}else drawR();}
+function hChk(){chk('chkH',V,S.H,drawAll);}
+function mChk(){chk('chkM',CANDS,S.M,()=>{pushHist('model now k = '+cur().length);drawAll();});}
+document.querySelectorAll('#segAl button').forEach(b=>b.onclick=()=>{S.al=+b.dataset.v;drawAll();});
+$('bSl').onclick=()=>{S.H={bavg:1,hrunsyr:1,rbisyr:1};hChk();drawAll();};
+$('bOne').onclick=()=>{S.H={rbisyr:1};hChk();drawAll();};
+$('bAll').onclick=()=>{S.H={years:1,gamesyr:1,bavg:1,hrunsyr:1,rbisyr:1};hChk();drawAll();};
+$('sSeed').addEventListener('input',e=>{S.seed=+e.target.value;makeJunk();BEST=null;S.hist=[];pushHist('new noise');drawAll();});
+$('bBase').onclick=()=>{stopAnim();S.M={years:1,gamesyr:1};mChk();S.hist=[];pushHist('years, gamesyr');drawAll();};
+$('bJunk').onclick=()=>{stopAnim();JK.forEach(k=>{if(!S.M[k]){S.M[k]=1;pushHist('+ '+k);}});mChk();drawAll();};
+let tmr=null;function stopG(){if(tmr){clearInterval(tmr);tmr=null;}}
+$('bStop').onclick=()=>{stopG();stopAnim();};
+$('bGreedy').onclick=()=>{stopG();S.M={years:1,gamesyr:1};S.hist=[];pushHist('years, gamesyr');mChk();drawAll();
+  tmr=setInterval(()=>{const I=adjInfo();if(!I.rows.length){stopG();return;}const r=I.rows.sort((a,b)=>b.t-a.t)[0];S.M[r.v]=1;pushHist('+ '+r.v+' (|t| '+fmt(r.t,2)+')');mChk();drawAll();},1100);};
+makeJunk();hChk();mChk();pushHist('years, gamesyr');
+const start=hookTabs(p=>{S.pill=p;showPill(p);stopG();drawAll();});if(start)S.pill=start;showPill(S.pill);
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>

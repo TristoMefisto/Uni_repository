@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Omitted variable bias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+.main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:20px;align-items:start;margin-top:18px}
+@media (max-width:980px){.main{grid-template-columns:1fr}}
+.col{min-width:0}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.steps{list-style:none;counter-reset:s;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.steps li{counter-increment:s;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:9px 12px 9px 40px;position:relative;font-size:.9rem;color:var(--muted);line-height:1.4}
+.steps li::before{content:counter(s);position:absolute;left:12px;top:10px;width:20px;height:20px;border-radius:50%;background:var(--navy);color:var(--panel);font-size:.78rem;font-weight:600;display:flex;align-items:center;justify-content:center}
+aside.formulas{position:sticky;top:14px;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px 6px}
+aside.formulas h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+.f{margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid var(--rule)}
+.f:last-child{border-bottom:none}
+.f .n{font-size:.82rem;color:var(--muted);margin-bottom:2px}
+.f .k{overflow-x:auto;overflow-y:hidden;font-size:.9rem;color:var(--ink)}
+.f .k .katex-display{margin:.25em 0}
+.f .v{display:block;font-size:.86rem;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1.35;margin-top:2px}
+.f .v:empty{display:none}
+.stats{margin-top:14px}
+
+:root{
+  --bg:#F6F5F1; --panel:#ffffff; --ink:#16162A; --muted:#6B6A78; --rule:#DFDCD4;
+  --navy:#2A3A8F; --contour:#2A6FD6; --red:#C0392B; --resid:#BDB7AA; --point:#8C5A44;
+  --fill:#EDEAE4; --orange:#9C620C; --blue:#2A6FD6; --green:#2E8B57; --purple:#7D4FA8; --grey:#6B7280;
+  --treat:#7D4FA8; --ctrl:#00838F; --hl:#FBEFC9;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+    --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+    --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+    --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#14141A; --panel:#1D1D24; --ink:#ECEAE4; --muted:#9A98A4; --rule:#33323C;
+  --navy:#8FA0FF; --contour:#6FA3FF; --red:#EF6C6C; --resid:#4A4A52; --point:#E09A88;
+  --fill:#2A2A32; --orange:#f0a83a; --blue:#6fa3ff; --green:#5fc27e; --purple:#b98af0; --grey:#8f94b3;
+  --treat:#B98AF0; --ctrl:#4DD0E1; --hl:#4a4320;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Fira Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 16px 40px}
+header h1{font-size:1.75rem;font-weight:600;margin:0;color:var(--navy);letter-spacing:-.01em}
+header p{margin:.25rem 0 0;color:var(--muted);max-width:72ch}
+.controls{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;align-items:center}
+.slider label{display:flex;justify-content:space-between;font-size:.95rem}
+.slider label b{font-weight:500;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--navy)}
+.readout{display:flex;gap:22px;align-items:baseline;flex-wrap:wrap}
+.big{font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.small{font-size:.9rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.meter{height:6px;background:var(--fill);border-radius:3px;margin-top:6px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--red);width:0}
+.buttons{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+button{font:inherit;font-size:.92rem;padding:7px 13px;border-radius:6px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+button:hover{border-color:var(--navy)}
+button.primary{background:var(--navy);color:var(--panel);border-color:var(--navy)}
+button.on{border-color:var(--navy);box-shadow:inset 0 0 0 1px var(--navy)}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--contour);outline-offset:2px}
+.toggles{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.92rem;color:var(--muted)}
+.toggles label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px;margin-top:22px}
+figure{margin:0;background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 12px 10px;min-width:0}
+figure canvas{display:block;width:100%;aspect-ratio:1/0.92;touch-action:none}
+figcaption{font-size:.88rem;color:var(--muted);margin-top:6px}
+figcaption strong{color:var(--ink);font-weight:500}
+.note{margin-top:22px;max-width:78ch;color:var(--muted);font-size:.95rem}
+.note p{margin:.4rem 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 18px;margin-top:14px}
+.stat .small{display:block}
+.stat .big{font-size:1.45rem}
+table.data{border-collapse:collapse;font-size:.9rem;font-variant-numeric:tabular-nums;width:100%}
+table.data th,table.data td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--rule)}
+table.data th{color:var(--muted);font-weight:500}
+table.data td:first-child,table.data th:first-child{text-align:left}
+table.data tr.t td{background:color-mix(in srgb,var(--treat) 16%,transparent)}
+table.data tr.c td{background:color-mix(in srgb,var(--ctrl) 14%,transparent)}
+table.data td.miss{color:var(--muted)}
+table.data input{width:3.4em;font:inherit;text-align:right;border:1px solid var(--rule);border-radius:4px;background:var(--bg);color:var(--ink);padding:1px 3px}
+.tag{display:inline-block;padding:0 6px;border-radius:4px;font-size:.8rem;color:#fff}
+.tag.t{background:var(--treat)}.tag.c{background:var(--ctrl)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.tabs button{border-radius:20px}
+.stat .big.long{font-size:1.05rem;line-height:1.35;padding-top:.3rem}
+
+
+.cvkey{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-top:4px}
+table.data td.diff{background:var(--hl)}
+.col .panels{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+
+/* wide layout */
+.wrap{max-width:1600px}
+.main{display:block;margin-top:18px}
+.col{min-width:0}
+.panels{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px}
+figure canvas{aspect-ratio:1/0.8}
+.controls{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.stats{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+aside.formulas{position:static;top:auto;margin-top:18px;padding:14px 16px 16px;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;align-items:stretch}
+aside.formulas h2{grid-column:1/-1;margin:0 0 2px}
+.f{margin:0;padding:11px 13px;border:1px solid var(--rule);border-radius:8px;background:var(--bg)}
+.f,.f:last-child{border-bottom:1px solid var(--rule)}
+.f .v{overflow-wrap:normal}
+.note{max-width:none;margin-top:18px;background:var(--panel);border:1px solid var(--rule);
+  border-radius:8px;padding:14px 18px}
+.note p{max-width:none}
+.note p:first-child{margin-top:0}
+.note p:last-child{margin-bottom:0}
+header p{max-width:none}
+@media (max-width:820px){.wrap{max-width:none}}
+
+[hidden]{display:none!important}
+.grouplab{margin:20px 0 -6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.seg button{border:none;border-radius:0;border-right:1px solid var(--rule);padding:5px 11px;font-size:.88rem}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--navy);color:var(--panel);box-shadow:none}
+.optrow{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:12px;font-size:.92rem;color:var(--muted)}
+.optrow .lab{font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.narr{margin-top:14px;background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--navy);border-radius:6px;padding:9px 14px;font-size:.93rem;color:var(--ink)}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:.84rem;color:var(--muted);margin-top:6px}
+.key i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:5px;border-radius:2px}
+.f .v b{font-weight:500;color:var(--ink)}
+
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Omitted variable bias</h1>
+  <p>Leaving x₂ out of the regression changes the coefficient on x₁ by exactly β̂₂·δ̃₁, where δ̃₁ is the slope from regressing x₂ on x₁. The first tab takes the identity apart on the slides' two cases (slides 182-184). The second simulates it, to show what the identity means for the bias and the variance of the short regression as the sample grows.</p>
+</header>
+<div class="tabs" id="tabs"><button data-p="real" class="on">The slides' two cases</button><button data-p="sim">Simulation: bias against variance</button></div>
+<ol class="steps" data-p="real"><li>Pick a case. The first panel splits the short-regression coefficient into the direct effect β̂₁ and the part borrowed from the omitted variable, β̂₂·δ̃₁.</li><li>The second panel draws the same three numbers as paths: x₁ reaches y directly and through x₂.</li><li>The table on the right is the one the slides mark as important for the exam: the signs of β₂ and of Corr(x₁, x₂) give the sign of the bias.</li></ol>
+<ol class="steps" data-p="sim" hidden><li>Set β₂ and the correlation, then Draw: the short estimator (red) is off-centre by β₂·δ₁, the long one (navy) is centred on β₁ = 1 but wider.</li><li>Raise n: both histograms tighten, but the red one tightens around the wrong number. The bias does not shrink with n.</li><li>The second panel shows the trade-off as RMSE against n: the biased short regression wins only in small samples.</li></ol>
+<div class="main"><div class="col">
+<div class="optrow" data-p="real"><span class="lab">Case</span><span class="seg" id="segCase"><button data-c="att" class="on">ATTEND: missed and prior GPA</button><button data-c="w2">WAGE2: education and IQ</button></span></div>
+<section class="controls" data-p="sim" hidden>
+  <div class="slider"><label for="sB2">Effect of the omitted x₂, β₂ <b id="vB2"></b></label><input id="sB2" type="range" min="-2" max="2" step="0.05" value="0.3"></div>
+  <div class="slider"><label for="sR">Corr(x₁, x₂) <b id="vR"></b></label><input id="sR" type="range" min="-0.9" max="0.9" step="0.05" value="0.6"></div>
+  <div class="slider"><label for="sN">Sample size n <b id="vN"></b></label><input id="sN" type="range" min="0" max="100" step="1" value="35"></div>
+  <div class="slider"><label for="sSig">Error SD σ <b id="vSig"></b></label><input id="sSig" type="range" min="0.5" max="4" step="0.1" value="2"></div>
+</section>
+<div class="stats" data-p="real">
+  <div class="stat"><span class="small">Short regression β̃₁</span><span class="big" id="rT"></span></div>
+  <div class="stat"><span class="small">Long regression β̂₁</span><span class="big" id="rH"></span></div>
+  <div class="stat"><span class="small">β̂₂ · δ̃₁</span><span class="big" id="rD"></span></div>
+  <div class="stat"><span class="small">Sign of the bias</span><span class="big long" id="rSg"></span></div>
+</div>
+<div class="stats" data-p="sim" hidden>
+  <div class="stat"><span class="small">Bias of the short regression</span><span class="big" id="sBias"></span></div>
+  <div class="stat"><span class="small">SD short / SD long</span><span class="big" id="sSD"></span></div>
+  <div class="stat"><span class="small">RMSE short / RMSE long</span><span class="big" id="sRM"></span></div>
+  <div class="stat"><span class="small">n above which long wins</span><span class="big" id="sStar"></span></div>
+</div>
+<div class="buttons" data-p="sim" hidden>
+  <button class="primary" id="bDraw">Draw 2,000 samples</button>
+  <button id="bStop">Stop</button>
+  <button id="bTen">n × 10</button>
+  <button id="bZero">β₂ = 0: x₂ is irrelevant</button>
+  <button id="bUnc">Corr = 0: no bias</button>
+</div>
+<div class="panels">
+  <figure data-p="real"><canvas id="cW"></canvas>
+    <figcaption><strong>The identity β̃₁ = β̂₁ + β̂₂·δ̃₁, as bars.</strong> Navy: the coefficient on x₁ in the long regression. Orange: the omitted part, the effect of x₂ times how strongly x₂ moves with x₁. Red: their sum, which is what the short regression reports. The numbers are the slides' Stata output, and they add up exactly.</figcaption></figure>
+  <figure data-p="real"><canvas id="cP"></canvas>
+    <figcaption><strong>Two routes from x₁ to y.</strong> The short regression cannot tell the direct route (β̂₁) from the route through the omitted variable (δ̃₁ then β̂₂), so it adds them up. The thickness of each arrow follows the size of the effect it carries.</figcaption></figure>
+  <figure data-p="real"><div style="padding:6px 4px 0"><table class="data" id="tSign"><tr><th></th><th>Corr(x₁, x₂) &gt; 0</th><th>Corr(x₁, x₂) &lt; 0</th></tr><tr><td>β₂ &gt; 0</td><td id="s11">Positive bias</td><td id="s12">Negative bias</td></tr><tr><td>β₂ &lt; 0</td><td id="s21">Negative bias</td><td id="s22">Positive bias</td></tr></table></div>
+    <figcaption style="margin-top:12px"><strong>The sign table (slide 201).</strong> The highlighted cell is the current case. The same table holds for the inconsistency of β̃₁ in large samples (slide 354), with plim in place of E.</figcaption></figure>
+  <figure data-p="sim" hidden><canvas id="cH"></canvas>
+    <figcaption><strong>Short and long estimators over 2,000 samples.</strong> Red: β̃₁ from regressing y on x₁ alone. Navy: β̂₁ from regressing y on x₁ and x₂. The black line is the true β₁ = 1, the dashed red line β₁ + β₂δ₁, where the short estimator is centred.</figcaption></figure>
+  <figure data-p="sim" hidden><canvas id="cR"></canvas>
+    <figcaption><strong>Root mean squared error against n</strong> (log scale). RMSE² = bias² + variance. The long regression (navy) has no bias, so its RMSE falls like 1/√n. The short one (red) has the smaller variance but keeps its bias, so its RMSE flattens at |β₂δ₁|. The orange marker is the current n.</figcaption></figure>
+  <figure data-p="sim" hidden><div style="padding:6px 4px 0"><table class="data" id="tSign2"><tr><th></th><th>Corr &gt; 0</th><th>Corr &lt; 0</th></tr><tr><td>β₂ &gt; 0</td><td id="t11">Positive bias</td><td id="t12">Negative bias</td></tr><tr><td>β₂ &lt; 0</td><td id="t21">Negative bias</td><td id="t22">Positive bias</td></tr></table></div>
+    <figcaption style="margin-top:12px"><strong>Where the current settings sit in the table.</strong> With β₂ = 0 or Corr = 0 no cell is lit: the short regression is unbiased, and with Corr = 0 it is identical to the long one.</figcaption></figure>
+</div>
+</div>
+<aside class="formulas"><h2>Formulas, with the current numbers</h2>
+<div class="f"><div class="n"><b>Short against long</b> (an identity in the sample)</div><div class="k" data-tex='\tilde\beta_1=\hat\beta_1+\hat\beta_2\,\tilde\delta_1'></div><span class="v" id="fI"></span></div>
+<div class="f"><div class="n"><b>δ̃₁</b>: the slope of x₂ on x₁</div><div class="k" data-tex='x_2=\tilde\delta_0+\tilde\delta_1 x_1+v'></div><span class="v" id="fD"></span></div>
+<div class="f"><div class="n"><b>Bias</b></div><div class="k" data-tex='E(\tilde\beta_1)-\beta_1=\beta_2\,\tilde\delta_1'></div><span class="v" id="fB"></span></div>
+<div class="f"><div class="n"><b>Variances</b> (slide 214)</div><div class="k" data-tex='Var(\tilde\beta_1)=\frac{\sigma^2}{SST_1}\;<\;\frac{\sigma^2}{SST_1(1-R_1^2)}=Var(\hat\beta_1)'></div><span class="v" id="fV"></span></div>
+</aside>
+<div class="note">
+  <p>The identity holds in every sample, whatever the truth: it is algebra of OLS, not an assumption. It becomes a statement about bias once we take expectations, and then only β₂ and the correlation matter. In the education and IQ case both are positive, so the simple regression overstates the return to education (9.9% against 7.3%). In the attendance case prior GPA raises the score but goes with fewer missed lectures, so the short regression makes missing look harmful (−.121) when, holding prior GPA fixed, it is not (+.017).</p>
+  <p>The simulation adds the slides' second point (214-217). The short regression has the smaller variance whenever x₁ and x₂ are correlated, so with β₂ ≠ 0 there is a real trade-off. It is a bad one in practice: the variance falls with n and the bias does not, and the slide's variance comparison holds σ² fixed, while leaving out a relevant x₂ actually raises the error variance (the simulation lets it). With β₂ = 0 there is no trade-off at all: the short regression is unbiased and more precise, so adding an irrelevant but correlated variable only costs precision.</p>
+</div>
+</div>
+
+</div>
+
+<script>
+const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const $=id=>document.getElementById(id);
+const FONT='12px "Fira Sans", system-ui, sans-serif';
+function setupCanvas(c){const r=c.getBoundingClientRect(),dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);const ctx=c.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.font=FONT;return{ctx,w:r.width,h:r.height};}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function gauss(rng){const u=1-rng(),v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+const mean=a=>a.reduce((s,x)=>s+x,0)/a.length;
+const svar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/(a.length-1)};
+const pvar=a=>{const m=mean(a);return a.reduce((s,x)=>s+(x-m)**2,0)/a.length};
+function combos(n,k){const r=[];(function go(s,c){if(c.length===k){r.push(c.slice());return;}for(let i=s;i<n;i++){c.push(i);go(i+1,c);c.pop();}})(0,[]);return r;}
+function choose(n,k){let r=1;for(let i=1;i<=k;i++)r=r*(n-k+i)/i;return Math.round(r);}
+function sampleK(n,k,rng){const a=Array.from({length:n},(_,i)=>i);for(let i=0;i<k;i++){const j=i+Math.floor(rng()*(n-i));[a[i],a[j]]=[a[j],a[i]];}return a.slice(0,k);}
+let raf=null;function stopAnim(){if(raf){cancelAnimationFrame(raf);raf=null;}}
+function animate(fn,dur,done){stopAnim();const t0=performance.now();const step=now=>{const t=(now-t0)/dur;if(t>=1){fn(1);raf=null;if(done)done();return;}fn(t);raf=requestAnimationFrame(step);};raf=requestAnimationFrame(step);}
+// axes: returns mapping functions; opts {L,R,T,B,xlim,ylim,xt,yt,xl,yl}
+function axes(ctx,w,h,o){const L=o.L??46,R=o.R??12,T=o.T??12,B=o.B??36,pw=w-L-R,ph=h-T-B;const px=x=>L+(x-o.xlim[0])/(o.xlim[1]-o.xlim[0])*pw,py=y=>T+ph-(y-o.ylim[0])/(o.ylim[1]-o.ylim[0])*ph;
+ctx.font=FONT;ctx.fillStyle=css('--muted');ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,T,pw,ph);
+ctx.textAlign='center';(o.xt||[]).forEach(v=>{ctx.fillText(o.xf?o.xf(v):v,px(v),T+ph+15);});
+ctx.textAlign='right';(o.yt||[]).forEach(v=>{ctx.fillText(o.yf?o.yf(v):v,L-6,py(v)+4);});
+ctx.textAlign='center';if(o.xl)ctx.fillText(o.xl,L+pw/2,h-3);
+if(o.yl){ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(o.yl,0,0);ctx.restore();}
+return{px,py,L,T,pw,ph,clip(){ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();},unclip(){ctx.restore();}};}
+function dot(ctx,x,y,r,fill,stroke){ctx.beginPath();ctx.arc(x,y,r,0,6.2832);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=1.5;ctx.stroke();}}
+function line(ctx,pts,color,w,dash){ctx.strokeStyle=color;ctx.lineWidth=w||1.5;ctx.setLineDash(dash||[]);ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();ctx.setLineDash([]);}
+function label(ctx,txt,x,y,color,align){ctx.save();ctx.font='11px "Fira Sans", system-ui, sans-serif';ctx.textAlign=align||'left';const tw=ctx.measureText(txt).width;const bx=align==='right'?x-tw:align==='center'?x-tw/2:x;ctx.fillStyle=css('--panel');ctx.globalAlpha=.85;ctx.fillRect(bx-2,y-9,tw+4,13);ctx.globalAlpha=1;ctx.fillStyle=color||css('--ink');ctx.fillText(txt,x,y+1);ctx.restore();}
+const fmt=(v,d=2)=>(Math.round(v*10**d)/10**d).toFixed(d);
+function hookTheme(fn){new ResizeObserver(fn).observe(document.querySelector('.panels'));window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',fn);if(document.fonts)document.fonts.ready.then(fn);}
+// generic weighted least squares: X rows, y, w (optional). Returns beta.
+function wls(X,y,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p)),b=new Float64Array(p);for(let i=0;i<X.length;i++){const wi=w?w[i]:1,r=X[i];for(let j=0;j<p;j++){b[j]+=wi*r[j]*y[i];for(let k=0;k<p;k++)A[j][k]+=wi*r[j]*r[k];}}return solve(A,b);}
+function solve(A,b){const n=b.length;const M=A.map((r,i)=>[...r,b[i]]);for(let c=0;c<n;c++){let piv=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[piv][c]))piv=r;[M[c],M[piv]]=[M[piv],M[c]];const d=M[c][c]||1e-12;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c]/d;for(let k=c;k<=n;k++)M[r][k]-=f*M[c][k];}}return M.map((r,i)=>r[n]/(r[i]||1e-12));}
+// Legendre basis on t in [-1,1], degree d (returns d+1 values)
+function legendre(t,d){const P=[1,t];for(let k=1;k<d;k++)P.push(((2*k+1)*t*P[k]-k*P[k-1])/(k+1));return P.slice(0,d+1);}
+// polynomial least squares of degree d on x in [lo,hi]; returns predictor function and beta
+function polyFit(x,y,d,lo,hi){const sc=v=>2*(v-lo)/(hi-lo)-1;const X=x.map(v=>legendre(sc(v),d));const b=wls(X,y);return{beta:b,f:v=>{const L=legendre(sc(v),d);let s=0;for(let k=0;k<=d;k++)s+=b[k]*L[k];return s;}};}
+// marching squares: field[i][j] on nx x ny grid, iso level; returns segments in grid index coords
+function isolines(field,nx,ny,lv){const segs=[];for(let i=0;i<nx-1;i++)for(let j=0;j<ny-1;j++){const a=field[i][j],b=field[i+1][j],c=field[i+1][j+1],d=field[i][j+1];const pts=[];const e=(v1,v2,x1,y1,x2,y2)=>{if((v1-lv)*(v2-lv)<0){const t=(lv-v1)/(v2-v1);pts.push([x1+t*(x2-x1),y1+t*(y2-y1)]);}};e(a,b,i,j,i+1,j);e(b,c,i+1,j,i+1,j+1);e(c,d,i+1,j+1,i,j+1);e(d,a,i,j+1,i,j);if(pts.length>=2)segs.push([pts[0],pts[1]]);if(pts.length===4)segs.push([pts[2],pts[3]]);}return segs;}
+
+/* econlib: distributions, OLS, binary MLE and drawing helpers shared by the Econometrics graphs */
+
+/* ---------- special functions ---------- */
+function lgam(x){const g=7,c=[0.99999999999980993,676.5203681218851,-1259.1392167224028,771.32342877765313,-176.61502916214059,12.507343278686905,-0.13857109526572012,9.9843695780195716e-6,1.5056327351493116e-7];
+  if(x<0.5)return Math.log(Math.PI/Math.abs(Math.sin(Math.PI*x)))-lgam(1-x);
+  x-=1;let a=c[0];const t=x+g+0.5;for(let i=1;i<9;i++)a+=c[i]/(x+i);return 0.5*Math.log(2*Math.PI)+(x+0.5)*Math.log(t)-t+Math.log(a);}
+function betacf(a,b,x){const MAXIT=300,EPS=3e-14,FPMIN=1e-300;let qab=a+b,qap=a+1,qam=a-1,c=1,d=1-qab*x/qap;if(Math.abs(d)<FPMIN)d=FPMIN;d=1/d;let h=d;
+  for(let m=1;m<=MAXIT;m++){const m2=2*m;let aa=m*(b-m)*x/((qam+m2)*(a+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;h*=d*c;
+    aa=-(a+m)*(qab+m)*x/((a+m2)*(qap+m2));d=1+aa*d;if(Math.abs(d)<FPMIN)d=FPMIN;c=1+aa/c;if(Math.abs(c)<FPMIN)c=FPMIN;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<EPS)break;}return h;}
+/* regularized incomplete beta I_x(a,b) */
+function ibeta(x,a,b){if(x<=0)return 0;if(x>=1)return 1;const bt=Math.exp(lgam(a+b)-lgam(a)-lgam(b)+a*Math.log(x)+b*Math.log(1-x));
+  return x<(a+1)/(a+b+2)?bt*betacf(a,b,x)/a:1-bt*betacf(b,a,1-x)/b;}
+/* regularized incomplete gamma: gser for the series side, gcf for the continued fraction (upper tail) */
+function gser(a,x){let ap=a,s=1/a,d=s;for(let n=0;n<500;n++){ap+=1;d*=x/ap;s+=d;if(Math.abs(d)<Math.abs(s)*1e-16)break;}return s*Math.exp(-x+a*Math.log(x)-lgam(a));}
+function gcf(a,x){let b=x+1-a,c=1e300,d=1/b,h=d;for(let i=1;i<500;i++){const an=-i*(i-a);b+=2;d=an*d+b;if(Math.abs(d)<1e-300)d=1e-300;c=b+an/c;if(Math.abs(c)<1e-300)c=1e-300;d=1/d;const del=d*c;h*=del;if(Math.abs(del-1)<1e-16)break;}return Math.exp(-x+a*Math.log(x)-lgam(a))*h;}
+function gammp(a,x){if(x<=0)return 0;return x<a+1?gser(a,x):1-gcf(a,x);}
+function gammq(a,x){if(x<=0)return 1;return x<a+1?1-gser(a,x):gcf(a,x);}
+
+/* ---------- distributions ---------- */
+const npdf=x=>Math.exp(-x*x/2)/Math.sqrt(2*Math.PI);
+function Phi(x){const t=Math.abs(x)/Math.SQRT2;const p=0.5*ibetaErfc(t);return x>=0?1-p:p;}
+function ibetaErfc(z){/* erfc(z) = Q(1/2, z^2) */return z<0?2-ibetaErfc(-z):gammq(0.5,z*z);}
+function zq(p){const a=[-3.969683028665376e+01,2.209460984245205e+02,-2.759285104469687e+02,1.383577518672690e+02,-3.066479806614716e+01,2.506628277459239e+00],
+  b=[-5.447609879822406e+01,1.615858368580409e+02,-1.556989798598866e+02,6.680131188771972e+01,-1.328068155288572e+01],
+  c=[-7.784894002430293e-03,-3.223964580411365e-01,-2.400758277161838e+00,-2.549732539343734e+00,4.374664141464968e+00,2.938163982698783e+00],
+  d=[7.784695709041462e-03,3.224671290700398e-01,2.445134137142996e+00,3.754408661907416e+00];const pl=0.02425;let q,r,x;
+  if(p<pl){q=Math.sqrt(-2*Math.log(p));x=(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else if(p>1-pl){q=Math.sqrt(-2*Math.log(1-p));x=-(((((c[0]*q+c[1])*q+c[2])*q+c[3])*q+c[4])*q+c[5])/((((d[0]*q+d[1])*q+d[2])*q+d[3])*q+1);}
+  else{q=p-0.5;r=q*q;x=(((((a[0]*r+a[1])*r+a[2])*r+a[3])*r+a[4])*r+a[5])*q/(((((b[0]*r+b[1])*r+b[2])*r+b[3])*r+b[4])*r+1);}
+  const e=Phi(x)-p,u=e*Math.sqrt(2*Math.PI)*Math.exp(x*x/2);return x-u/(1+x*u/2);}
+function tpdf(t,v){return Math.exp(lgam((v+1)/2)-lgam(v/2)-0.5*Math.log(v*Math.PI)-(v+1)/2*Math.log(1+t*t/v));}
+function tcdf(t,v){const x=v/(v+t*t),p=0.5*ibeta(x,v/2,0.5);return t>=0?1-p:p;}
+function tq(p,v){if(v>1e6)return zq(p);let lo=-1e3,hi=1e3,x=zq(p);for(let i=0;i<60;i++){const f=tcdf(x,v)-p;if(Math.abs(f)<1e-13)break;const d=tpdf(x,v);let nx=x-f/d;if(f>0)hi=Math.min(hi,x);else lo=Math.max(lo,x);if(!(nx>lo&&nx<hi))nx=(lo+hi)/2;x=nx;}return x;}
+function fpdf(x,a,b){if(x<=0)return 0;return Math.exp(0.5*(a*Math.log(a)+b*Math.log(b))+(a/2-1)*Math.log(x)-(a+b)/2*Math.log(b+a*x)-(lgam(a/2)+lgam(b/2)-lgam((a+b)/2)));}
+function fcdf(x,a,b){if(x<=0)return 0;return ibeta(a*x/(a*x+b),a/2,b/2);}
+function fq(p,a,b){let lo=0,hi=1;while(fcdf(hi,a,b)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(fcdf(m,a,b)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+function chi2pdf(x,k){if(x<=0)return 0;return Math.exp((k/2-1)*Math.log(x)-x/2-k/2*Math.log(2)-lgam(k/2));}
+function chi2cdf(x,k){return gammp(k/2,x/2);}
+function chi2sf(x,k){return gammq(k/2,x/2);}
+function chi2q(p,k){let lo=0,hi=1;while(chi2cdf(hi,k)<p)hi*=2;for(let i=0;i<100;i++){const m=(lo+hi)/2;if(chi2cdf(m,k)<p)lo=m;else hi=m;}return (lo+hi)/2;}
+const lgt=z=>1/(1+Math.exp(-z));
+const lpdf=z=>{const e=Math.exp(-Math.abs(z));return e/((1+e)*(1+e));};
+
+/* ---------- matrices ---------- */
+function inv(A){const n=A.length,M=A.map((r,i)=>{const o=new Float64Array(2*n);for(let j=0;j<n;j++)o[j]=r[j];o[n+i]=1;return o;});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;[M[c],M[p]]=[M[p],M[c]];const d=M[c][c];if(Math.abs(d)<1e-300)return null;
+    for(let k=0;k<2*n;k++)M[c][k]/=d;for(let r=0;r<n;r++){if(r===c)continue;const f=M[r][c];if(f)for(let k=0;k<2*n;k++)M[r][k]-=f*M[c][k];}}
+  return M.map(r=>Array.from(r.slice(n)));}
+function xtx(X,w){const p=X[0].length,A=Array.from({length:p},()=>new Float64Array(p));for(const [i,r] of X.entries()){const wi=w?w[i]:1;for(let j=0;j<p;j++){const rj=r[j]*wi;if(!rj)continue;for(let k=j;k<p;k++)A[j][k]+=rj*r[k];}}
+  for(let j=0;j<p;j++)for(let k=0;k<j;k++)A[j][k]=A[k][j];return A.map(r=>Array.from(r));}
+const mv=(M,v)=>M.map(r=>r.reduce((s,x,j)=>s+x*v[j],0));
+
+/* ---------- OLS ----------
+   X rows (include the column of ones yourself), y. opts.cluster: array of cluster ids.
+   Returns b, se (usual), seR (HC1, Stata robust), seC (Stata cluster), resid, fit, SSR, SST, SSE, R2, R2a */
+function ols(X,y,opts){opts=opts||{};const n=X.length,k=X[0].length,A=xtx(X),Ai=inv(A);if(!Ai)return null;
+  const Xy=new Float64Array(k);for(let i=0;i<n;i++)for(let j=0;j<k;j++)Xy[j]+=X[i][j]*y[i];const b=mv(Ai,Xy);
+  const fit=X.map(r=>r.reduce((s,x,j)=>s+x*b[j],0)),resid=y.map((v,i)=>v-fit[i]);
+  const SSR=resid.reduce((s,u)=>s+u*u,0),ym=mean(y),SST=y.reduce((s,v)=>s+(v-ym)**2,0),df=n-k,s2=SSR/df;
+  const se=Ai.map((r,j)=>Math.sqrt(s2*r[j]));
+  const out={b,se,resid,fit,SSR,SST,SSE:SST-SSR,R2:1-SSR/SST,R2a:1-(SSR/df)/(SST/(n-1)),n,k,df,s2,Ai};
+  if(opts.robust){const M=Array.from({length:k},()=>new Float64Array(k));for(let i=0;i<n;i++){const u2=resid[i]*resid[i],r=X[i];for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=u2*r[j]*r[l];}
+    const V=sandwich(Ai,M);out.Vr=V.map(r=>r.map(v=>v*n/df));out.seR=out.Vr.map((r,j)=>Math.sqrt(r[j]));}
+  if(opts.cluster){const g=new Map();for(let i=0;i<n;i++){const id=opts.cluster[i];if(!g.has(id))g.set(id,new Float64Array(k));const s=g.get(id);for(let j=0;j<k;j++)s[j]+=X[i][j]*resid[i];}
+    const M=Array.from({length:k},()=>new Float64Array(k));for(const s of g.values())for(let j=0;j<k;j++)for(let l=0;l<k;l++)M[j][l]+=s[j]*s[l];
+    const G=g.size,c=opts.cadj!==undefined?opts.cadj:(G/(G-1))*((n-1)/(n-k));const V=sandwich(Ai,M);out.Vc=V.map(r=>r.map(v=>v*c));out.seC=out.Vc.map((r,j)=>Math.sqrt(Math.max(r[j],0)));out.G=G;}
+  return out;}
+function sandwich(Ai,M){const k=Ai.length,T=Ai.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*M[j][l],0)));return T.map(r=>Array.from({length:k},(_,l)=>r.reduce((s,x,j)=>s+x*Ai[j][l],0)));}
+/* simple regression in closed form */
+function slr(x,y){const n=x.length;let mx=0,my=0;for(let i=0;i<n;i++){mx+=x[i];my+=y[i];}mx/=n;my/=n;let sxy=0,sxx=0;for(let i=0;i<n;i++){sxy+=(x[i]-mx)*(y[i]-my);sxx+=(x[i]-mx)**2;}
+  const b1=sxy/sxx,b0=my-b1*mx;let ssr=0;for(let i=0;i<n;i++){const u=y[i]-b0-b1*x[i];ssr+=u*u;}const s2=ssr/(n-2);return{b0,b1,se1:Math.sqrt(s2/sxx),sxx,ssr,s2,mx,my};}
+
+/* ---------- binary response by Newton-Raphson ---------- */
+function binfit(X,y,link,b0){const n=X.length,k=X[0].length;let b=b0?b0.slice():new Array(k).fill(0);const G=link==='logit'?lgt:Phi,g=link==='logit'?lpdf:npdf;const log=[];
+  const ll=bb=>{let s=0;for(let i=0;i<n;i++){const z=X[i].reduce((a,x,j)=>a+x*bb[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;};
+  let L=ll(b);log.push(L);let H=null;
+  for(let it=0;it<60;it++){const gr=new Float64Array(k),Hm=Array.from({length:k},()=>new Float64Array(k));
+    for(let i=0;i<n;i++){const r=X[i],z=r.reduce((a,x,j)=>a+x*b[j],0);let s,w;
+      if(link==='logit'){const p=lgt(z);s=y[i]-p;w=p*(1-p);}
+      else{const P=Math.min(Math.max(Phi(z),1e-15),1-1e-15),f=npdf(z);s=y[i]?f/P:-f/(1-P);w=y[i]?s*(s+z):s*(s+z);}
+      for(let j=0;j<k;j++){gr[j]+=s*r[j];for(let l=0;l<k;l++)Hm[j][l]+=w*r[j]*r[l];}}
+    H=Hm.map(r=>Array.from(r));const Hi=inv(H);if(!Hi)break;const step=mv(Hi,Array.from(gr));let t=1,nb,nL;
+    for(let h=0;h<30;h++){nb=b.map((v,j)=>v+t*step[j]);nL=ll(nb);if(nL>=L-1e-12)break;t/=2;}
+    b=nb;const done=Math.abs(nL-L)<1e-11;L=nL;log.push(L);if(done&&it>1)break;}
+  const Hi=inv(H);const se=Hi?Hi.map((r,j)=>Math.sqrt(r[j])):null;return{b,se,logL:L,log,V:Hi};}
+function binLL(X,y,b,link){const G=link==='logit'?lgt:Phi;let s=0;for(let i=0;i<X.length;i++){const z=X[i].reduce((a,x,j)=>a+x*b[j],0),p=Math.min(Math.max(G(z),1e-300),1-1e-16);s+=y[i]?Math.log(p):Math.log(1-p);}return s;}
+
+/* ---------- small helpers ---------- */
+function hist(v,lo,hi,nb){const c=new Array(nb).fill(0),w=(hi-lo)/nb;for(const x of v){const i=Math.floor((x-lo)/w);if(i>=0&&i<nb)c[i]++;}return{c,w,lo,hi,nb};}
+function drawHist(ctx,A,H,color,alpha,total){const s=total||H.c.reduce((a,b)=>a+b,0)||1;ctx.save();ctx.globalAlpha=alpha??0.55;ctx.fillStyle=color;
+  H.c.forEach((c,i)=>{if(!c)return;const x0=A.px(H.lo+i*H.w),x1=A.px(H.lo+(i+1)*H.w),y=A.py(c/(s*H.w));ctx.fillRect(x0+0.5,y,Math.max(x1-x0-1,1),A.py(0)-y);});ctx.restore();}
+function curve(ctx,A,f,lo,hi,color,w,dash,n){const p=[];n=n||200;for(let i=0;i<=n;i++){const x=lo+(hi-lo)*i/n,y=f(x);if(isFinite(y))p.push([A.px(x),A.py(y)]);}line(ctx,p,color,w,dash);}
+function fillUnder(ctx,A,f,lo,hi,color,alpha){if(hi<=lo)return;ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(A.px(lo),A.py(0));for(let i=0;i<=120;i++){const x=lo+(hi-lo)*i/120;ctx.lineTo(A.px(x),A.py(f(x)));}ctx.lineTo(A.px(hi),A.py(0));ctx.closePath();ctx.fill();ctx.restore();}
+function niceTicks(lo,hi,n){const span=hi-lo,raw=span/(n||5),mag=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/mag,st=(f<1.5?1:f<3?2:f<7?5:10)*mag;const t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9*st;v+=st)t.push(Math.abs(v)<st*1e-9?0:v);return t;}
+function tickFmt(st){const d=Math.max(0,-Math.floor(Math.log10(st)+1e-9));return v=>fmt(v,Math.min(d,6));}
+function quantile(a,p){const s=a.slice().sort((x,y)=>x-y),i=(s.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);return s[lo]+(s[hi]-s[lo])*(i-lo);}
+const sd=a=>Math.sqrt(svar(a));
+const fmtp=p=>p<0.0001?'< 0.0001':fmt(p,4);
+const sgn=(v,d)=>(v<0?'−':'')+fmt(Math.abs(v),d);
+function bindSlider(id,key,S,f,after){const el=$(id);el.addEventListener('input',()=>{S[key]=+el.value;if(after)after();});return el;}
+/* colour mixing for value-coded points (tokens are hex) */
+function hexRGB(h){h=h.replace('#','');if(h.length===3)h=h.split('').map(c=>c+c).join('');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function mixHex(a,b,t){const A=hexRGB(a),B=hexRGB(b);return 'rgb('+A.map((v,i)=>Math.round(v+(B[i]-v)*t)).join(',')+')';}
+/* pills: elements carry data-p="a b"; tabs are buttons with data-p inside #tabs */
+function showPill(p){document.querySelectorAll('[data-p]').forEach(e=>{if(e.closest('#tabs'))return;e.hidden=!e.dataset.p.split(' ').includes(p);});
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));}
+function hookTabs(fn){document.querySelectorAll('#tabs button').forEach(b=>b.addEventListener('click',()=>{stopAnim();fn(b.dataset.p);}));const h=location.hash.slice(1);const t=[...document.querySelectorAll('#tabs button')].find(b=>b.dataset.p===h);return t?h:null;}
+
+/* Omitted variable bias: the slides' two cases, and a simulation */
+const CASES={
+  att:{x1:'missed',x2:'priGPA',y:'final',bt:-0.1209031,bh:0.0172012,b2:3.237554,d1:-0.042657,src:'ATTEND, n = 680 (slides 167-171, 184)',
+       x1l:'lectures missed',x2l:'prior GPA',yl:'final score'},
+  w2:{x1:'educ',x2:'IQ',y:'lwage',bt:0.0992906,bh:0.0728327,b2:0.0076329,d1:3.466285,src:'WAGE2, n = 759 (slides 172-175, 183)',
+       x1l:'education',x2l:'IQ',yl:'log wage'}
+};
+const S={pill:"real",c:"att",b2:0.3,rho:0.6,nv:35,sig:2};
+const nOf=v=>Math.round(10*Math.pow(200,v/100));
+let rng=mulberry32(7);let SIM={t:[],h:[]};
+
+function caseNow(){return CASES[S.c];}
+function drawW(){
+  const c=$('cW'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const C=caseNow(),ind=C.b2*C.d1;
+  const vals=[0,C.bh,C.bh+ind,C.bt],lo=Math.min(...vals),hi=Math.max(...vals),pad=(hi-lo)*0.18;
+  const yt=niceTicks(lo-pad,hi+pad,5);
+  const A=axes(ctx,w,h,{xlim:[0,3],ylim:[lo-pad,hi+pad],xt:[],yt,yf:tickFmt(yt[1]-yt[0]),L:56,B:40});
+  line(ctx,[[A.L,A.py(0)],[A.L+A.pw,A.py(0)]],css('--rule'),1);
+  const bar=(i,a,b,col,txt,val)=>{const x0=A.px(i+0.2),x1=A.px(i+0.8);ctx.fillStyle=css(col);ctx.globalAlpha=0.85;ctx.fillRect(x0,Math.min(A.py(a),A.py(b)),x1-x0,Math.max(Math.abs(A.py(b)-A.py(a)),1.5));ctx.globalAlpha=1;
+    ctx.fillStyle=css('--muted');ctx.font=FONT;ctx.textAlign='center';ctx.fillText(txt,(x0+x1)/2,A.T+A.ph+15);label(ctx,val,(x0+x1)/2,(b>=a?A.py(Math.max(a,b))-7:A.py(Math.min(a,b))+15),css('--ink'),'center');};
+  bar(0,0,C.bh,'--navy','β̂₁ (long)',sgn(C.bh,4));
+  bar(1,C.bh,C.bh+ind,'--orange','+ β̂₂·δ̃₁',sgn(ind,4));
+  bar(2,0,C.bt,'--red','= β̃₁ (short)',sgn(C.bt,4));
+  line(ctx,[[A.px(0.8),A.py(C.bh)],[A.px(1.2),A.py(C.bh)]],css('--muted'),1,[3,3]);
+  line(ctx,[[A.px(1.8),A.py(C.bh+ind)],[A.px(2.2),A.py(C.bh+ind)]],css('--muted'),1,[3,3]);
+  ctx.fillStyle=css('--muted');ctx.textAlign='left';ctx.fillText(C.src,A.L,h-4);
+}
+function arrow(ctx,x0,y0,x1,y1,col,wd){const a=Math.atan2(y1-y0,x1-x0),hl=10+wd;line(ctx,[[x0,y0],[x1-Math.cos(a)*hl*0.6,y1-Math.sin(a)*hl*0.6]],col,wd);ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x1-hl*Math.cos(a-0.4),y1-hl*Math.sin(a-0.4));ctx.lineTo(x1-hl*Math.cos(a+0.4),y1-hl*Math.sin(a+0.4));ctx.closePath();ctx.fill();}
+function node(ctx,x,y,txt,col){ctx.save();ctx.font='500 13px "Fira Sans", system-ui, sans-serif';const tw=ctx.measureText(txt).width+22;ctx.fillStyle=css('--panel');ctx.strokeStyle=col;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(x-tw/2,y-16,tw,32,8);ctx.fill();ctx.stroke();ctx.fillStyle=css('--ink');ctx.textAlign='center';ctx.fillText(txt,x,y+5);ctx.restore();return tw/2;}
+function drawP(){
+  const c=$('cP'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const C=caseNow();
+  const X1=[w*0.17,h*0.68],X2=[w*0.5,h*0.2],Yy=[w*0.83,h*0.68];
+  const ind=Math.abs(C.b2*C.d1),dir=Math.abs(C.bh),mx=Math.max(ind,dir);const wd=v=>1.5+7*v/mx;
+  arrow(ctx,X1[0]+50,X1[1],Yy[0]-52,Yy[1],css('--navy'),wd(dir));
+  arrow(ctx,X1[0]+18,X1[1]-20,X2[0]-30,X2[1]+16,css('--orange'),3);
+  arrow(ctx,X2[0]+30,X2[1]+16,Yy[0]-18,Yy[1]-20,css('--orange'),3);
+  node(ctx,...X1,'x₁: '+C.x1,css('--navy'));node(ctx,...X2,'x₂: '+C.x2+' (omitted)',css('--orange'));node(ctx,...Yy,'y: '+C.y,css('--ink'));
+  label(ctx,'β̂₁ = '+sgn(C.bh,4),(X1[0]+Yy[0])/2,X1[1]+26,css('--navy'),'center');
+  label(ctx,'δ̃₁ = '+sgn(C.d1,4),(X1[0]+X2[0])/2-14,(X1[1]+X2[1])/2,css('--orange'),'right');
+  label(ctx,'β̂₂ = '+sgn(C.b2,4),(X2[0]+Yy[0])/2+14,(X2[1]+Yy[1])/2,css('--orange'),'left');
+  label(ctx,'through x₂: '+sgn(C.b2,4)+' × '+sgn(C.d1,4)+' = '+sgn(C.b2*C.d1,4),w/2,h-12,css('--orange'),'center');
+}
+function lightTable(pre,b2,cr){['11','12','21','22'].forEach(k=>$(pre+k).classList.remove('diff'));if(!b2||!cr)return;$(pre+(b2>0?'1':'2')+(cr>0?'1':'2')).classList.add('diff');}
+
+/* simulation */
+function simOne(n,b2,rho,sig){let s11=0,s12=0,s22=0,s1y=0,s2y=0,m1=0,m2=0,my=0;const x1=new Float64Array(n),x2=new Float64Array(n),y=new Float64Array(n),c=Math.sqrt(1-rho*rho);
+  for(let i=0;i<n;i++){const a=gauss(rng),e=gauss(rng);x1[i]=a;x2[i]=rho*a+c*e;y[i]=1+x1[i]+b2*x2[i]+sig*gauss(rng);m1+=x1[i];m2+=x2[i];my+=y[i];}
+  m1/=n;m2/=n;my/=n;for(let i=0;i<n;i++){const a=x1[i]-m1,b=x2[i]-m2,d=y[i]-my;s11+=a*a;s12+=a*b;s22+=b*b;s1y+=a*d;s2y+=b*d;}
+  return[s1y/s11,(s22*s1y-s12*s2y)/(s11*s22-s12*s12)];}
+function theo(n){const r=S.rho,bias=S.b2*r,vs=(S.sig*S.sig+S.b2*S.b2*(1-r*r))/(n-3),vl=S.sig*S.sig/((n-3)*(1-r*r));return{bias,vs,vl,rs:Math.sqrt(bias*bias+vs),rl:Math.sqrt(vl)};}
+function nStar(){const r=S.rho,num=S.sig*S.sig*r*r/(1-r*r)-S.b2*S.b2*(1-r*r),b=S.b2*r;if(Math.abs(b)<1e-12)return Infinity;if(num<=0)return 0;return 3+num/(b*b);}
+function drawH(){
+  const c=$('cH'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);const n=nOf(S.nv),T=theo(n);
+  const lo=Math.min(1,1+T.bias)-4.5*Math.sqrt(Math.max(T.vl,T.vs)),hi=Math.max(1,1+T.bias)+4.5*Math.sqrt(Math.max(T.vl,T.vs));
+  const Ht=hist(SIM.t,lo,hi,60),Hh=hist(SIM.h,lo,hi,60),k=Math.max(SIM.t.length,1);
+  const peak=Math.max(npdf(0)/Math.sqrt(Math.min(T.vl,T.vs)),...Ht.c.map(v=>v/(k*Ht.w)),...Hh.c.map(v=>v/(k*Hh.w)))*1.08;
+  const xt=niceTicks(lo,hi,6);
+  const A=axes(ctx,w,h,{xlim:[lo,hi],ylim:[0,peak],xt,yt:[],xf:tickFmt(xt[1]-xt[0]),xl:'estimate of β₁'});
+  A.clip();drawHist(ctx,A,Hh,css('--navy'),0.45,k);drawHist(ctx,A,Ht,css('--red'),0.45,k);
+  curve(ctx,A,x=>npdf((x-1)/Math.sqrt(T.vl))/Math.sqrt(T.vl),lo,hi,css('--navy'),1.6);
+  curve(ctx,A,x=>npdf((x-1-T.bias)/Math.sqrt(T.vs))/Math.sqrt(T.vs),lo,hi,css('--red'),1.6);
+  line(ctx,[[A.px(1),A.py(0)],[A.px(1),A.T]],css('--ink'),1.6);
+  line(ctx,[[A.px(1+T.bias),A.py(0)],[A.px(1+T.bias),A.T]],css('--red'),1.4,[5,4]);
+  A.unclip();
+  label(ctx,'β₁ = 1',A.px(1)+5,A.T+13,css('--ink'));
+  label(ctx,'short: β̃₁',A.L+6,A.T+30,css('--red'));label(ctx,'long: β̂₁',A.L+6,A.T+46,css('--navy'));
+  if(!SIM.t.length)label(ctx,'curves: theory. Press Draw for the histograms',A.L+6,A.T+A.ph-8,css('--muted'));
+}
+function drawR(){
+  const c=$('cR'),{ctx,w,h}=setupCanvas(c);ctx.clearRect(0,0,w,h);
+  const L10=Math.log10,xs=[1,L10(2000)];let ymax=-Infinity,ymin=Infinity;
+  for(let i=0;i<=80;i++){const n=Math.pow(10,xs[0]+(xs[1]-xs[0])*i/80);if(n<10)continue;const T=theo(n);ymax=Math.max(ymax,T.rs,T.rl);ymin=Math.min(ymin,T.rs,T.rl);}
+  const ylo=Math.floor(L10(ymin)*2)/2-0.1,yhi=Math.ceil(L10(ymax)*2)/2;
+  const yt=[];for(let v=Math.ceil(ylo);v<=yhi;v++){yt.push(v);if(v+L10(3)<=yhi)yt.push(v+L10(3));}
+  const A=axes(ctx,w,h,{xlim:[1,xs[1]],ylim:[ylo,yhi],xt:[1,L10(30),2,L10(300),3],xf:v=>Math.round(Math.pow(10,v)),yt,yf:v=>{const x=Math.pow(10,v);return x>=1?fmt(x,0):x>=0.1?fmt(x,1):fmt(x,2);},xl:'sample size n',yl:'RMSE'});
+  A.clip();const cs=[],cl=[];
+  for(let i=0;i<=200;i++){const lx=1+(xs[1]-1)*i/200,n=Math.pow(10,lx),T=theo(n);cs.push([A.px(lx),A.py(L10(T.rs))]);cl.push([A.px(lx),A.py(L10(T.rl))]);}
+  line(ctx,cs,css('--red'),2.4);line(ctx,cl,css('--navy'),2.4);
+  if(Math.abs(S.b2*S.rho)>1e-9)line(ctx,[[A.L,A.py(L10(Math.abs(S.b2*S.rho)))],[A.L+A.pw,A.py(L10(Math.abs(S.b2*S.rho)))]],css('--red'),1,[4,4]);
+  const n=nOf(S.nv),T=theo(n);line(ctx,[[A.px(L10(n)),A.T],[A.px(L10(n)),A.T+A.ph]],css('--orange'),1.5);
+  dot(ctx,A.px(L10(n)),A.py(L10(T.rs)),5,css('--red'),css('--panel'));dot(ctx,A.px(L10(n)),A.py(L10(T.rl)),5,css('--navy'),css('--panel'));
+  const ns=nStar();if(isFinite(ns)&&ns>10&&ns<2000)line(ctx,[[A.px(L10(ns)),A.T],[A.px(L10(ns)),A.T+A.ph]],css('--muted'),1,[3,3]);
+  A.unclip();
+  label(ctx,'short',A.L+A.pw-6,A.py(L10(theo(2000).rs))-7,css('--red'),'right');label(ctx,'long',A.L+A.pw-6,A.py(L10(theo(2000).rl))+15,css('--navy'),'right');
+  if(Math.abs(S.b2*S.rho)>1e-9)label(ctx,'|bias| = '+fmt(Math.abs(S.b2*S.rho),3),A.L+6,A.py(L10(Math.abs(S.b2*S.rho)))-6,css('--red'));
+}
+function fill(){
+  const C=caseNow();
+  $('rT').textContent=sgn(C.bt,4);$('rH').textContent=sgn(C.bh,4);$('rD').textContent=sgn(C.b2*C.d1,4);
+  $('rSg').textContent=(C.b2>0?'β₂ > 0':'β₂ < 0')+', '+(C.d1>0?'Corr > 0':'Corr < 0')+' → '+(C.b2*C.d1>0?'upward':'downward');
+  lightTable('s',C.b2,C.d1);
+  const n=nOf(S.nv),T=theo(n),ns=nStar();
+  $('vB2').textContent=fmt(S.b2,2);$('vR').textContent=fmt(S.rho,2);$('vN').textContent=n;$('vSig').textContent=fmt(S.sig,1);
+  $('sBias').textContent=sgn(T.bias,3)+(SIM.t.length?' (sim '+sgn(mean(SIM.t)-1,3)+')':'');
+  $('sSD').textContent=fmt(Math.sqrt(T.vs),3)+' / '+fmt(Math.sqrt(T.vl),3);
+  $('sRM').textContent=fmt(T.rs,3)+' / '+fmt(T.rl,3);
+  $('sStar').textContent=!isFinite(ns)?'never (no bias)':ns<=10?'always':Math.ceil(ns).toLocaleString('en');
+  lightTable('t',S.b2,S.rho);
+  if(S.pill==='real'){
+    $('fI').innerHTML=sgn(C.bh,4)+' + '+sgn(C.b2,4)+' × '+sgn(C.d1,4)+' = '+sgn(C.bh,4)+' + ('+sgn(C.b2*C.d1,4)+') = <b>'+sgn(C.bh+C.b2*C.d1,4)+'</b>, the short coefficient '+sgn(C.bt,4)+'.';
+    $('fD').innerHTML=C.x2+' on '+C.x1+': δ̃₁ = <b>'+sgn(C.d1,4)+'</b>.';
+    $('fB').innerHTML='The bias has the sign of β₂·δ̃₁: '+(C.b2*C.d1>0?'positive':'negative')+' here.';
+    $('fV').innerHTML='The short regression ignores that '+C.x2+' was doing part of the work, so its error variance is larger: σ² is not the same in the two formulas.';
+  }else{
+    $('fI').innerHTML='Holds sample by sample. With Var(x₁) = 1 the population δ₁ = Corr(x₁, x₂) = '+fmt(S.rho,2)+'.';
+    $('fD').innerHTML='δ₁ = '+fmt(S.rho,2)+', β₂ = '+fmt(S.b2,2)+'.';
+    $('fB').innerHTML='β₂δ₁ = '+fmt(S.b2,2)+' × '+fmt(S.rho,2)+' = <b>'+sgn(T.bias,3)+'</b>, at any n.';
+    $('fV').innerHTML='n = '+n+': SD long √('+fmt(S.sig*S.sig,2)+' / ('+(n-3)+' × '+fmt(1-S.rho*S.rho,2)+')) = '+fmt(Math.sqrt(T.vl),3)+'; SD short '+fmt(Math.sqrt(T.vs),3)+' (its error variance is σ² + β₂²(1 − ρ²) = '+fmt(S.sig*S.sig+S.b2*S.b2*(1-S.rho*S.rho),2)+').';
+  }
+}
+function drawAll(){fill();if(S.pill==='real'){drawW();drawP();}else{drawH();drawR();}}
+function clearSim(){stopAnim();SIM={t:[],h:[]};}
+[['sB2','b2'],['sR','rho'],['sN','nv'],['sSig','sig']].forEach(([id,k])=>$(id).addEventListener('input',e=>{S[k]=+e.target.value;clearSim();drawAll();}));
+document.querySelectorAll('#segCase button').forEach(b=>b.onclick=()=>{S.c=b.dataset.c;document.querySelectorAll('#segCase button').forEach(x=>x.classList.toggle('on',x===b));drawAll();});
+$('bDraw').onclick=()=>{clearSim();const n=nOf(S.nv);let done=0;animate(t=>{const tg=Math.round(2000*t);for(;done<tg;done++){const [a,b]=simOne(n,S.b2,S.rho,S.sig);SIM.t.push(a);SIM.h.push(b);}drawAll();},Math.min(4000,600+n*2));};
+$('bStop').onclick=()=>stopAnim();
+$('bTen').onclick=()=>{const n=Math.min(2000,nOf(S.nv)*10);S.nv=Math.round(100*Math.log(n/10)/Math.log(200));$('sN').value=S.nv;clearSim();drawAll();};
+$('bZero').onclick=()=>{S.b2=0;$('sB2').value=0;clearSim();drawAll();};
+$('bUnc').onclick=()=>{S.rho=0;$('sR').value=0;clearSim();drawAll();};
+const start=hookTabs(p=>{S.pill=p;showPill(p);drawAll();});
+if(start)S.pill=start;showPill(S.pill);
+hookTheme(drawAll);
+drawAll();
+
+
+function renderTex(){document.querySelectorAll('.k[data-tex]').forEach(el=>{try{katex.render(el.dataset.tex,el,{displayMode:true,throwOnError:false});}catch(e){el.textContent=el.dataset.tex;}});}
+if(window.katex)renderTex();else window.addEventListener('load',()=>{if(window.katex)renderTex();});
+
+</script>
+</body>
+</html>
