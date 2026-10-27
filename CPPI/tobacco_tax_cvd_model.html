@@ -73,6 +73,8 @@ button{font:inherit;color:inherit}
 .step{display:grid;grid-template-columns:40px minmax(0,1fr) 250px;gap:16px;align-items:start}
 .step>*{min-width:0}
 .step .num{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-weight:700}
+.step h3 .ref{font-size:13px;font-weight:400;color:var(--muted);white-space:nowrap}
+.step .span{grid-column:2/-1}
 .fx{display:block;font-size:14px;background:var(--page);border:1px solid var(--grid);border-radius:8px;padding:8px 12px;margin:8px 0 10px;overflow-x:auto}
 .fx .tx{padding:2px 0;white-space:normal}
 .fx .katex-display{margin:2px 0}
@@ -112,7 +114,10 @@ th,td{text-align:right;padding:6px 7px;border-bottom:1px solid var(--grid);verti
 th:first-child,td:first-child{text-align:left}
 th{font-weight:600;color:var(--ink2)}
 tr.hl td{background:var(--accent-wash)}
+tr.tot td{font-weight:650;border-top:1px solid var(--axis)}
+td.f{text-align:left;color:var(--ink2)}
 .tscroll{overflow-x:auto}
+.tnote{font-size:12.5px;color:var(--ink2);margin:6px 0 0}
 table.src td,table.src th{text-align:left}
 
 /* limitations */
@@ -131,6 +136,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
   .hero{grid-template-columns:minmax(0,1fr)}
   .step{grid-template-columns:36px minmax(0,1fr)}
   .step .out{grid-column:2}
+  .step .span{grid-column:1/-1}
   .lims{grid-template-columns:minmax(0,1fr)}
 }
 @media (max-width:480px){
@@ -151,17 +157,17 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 <header class="top">
   <div class="wrap">
     <div class="eyebrow">Health-benefit calculator · Italy · Current Public Policy Issues</div>
-    <h1>Raise the cigarette excise: fewer smokers, fewer CVD admissions</h1>
-    <p class="lede">A higher excise raises the price of a pack, and some smokers quit. Since smoking causes a known share of cardiovascular disease (CVD), fewer smokers means fewer CVD hospital admissions and lower costs for the SSN, while the State collects more tax. Move the excise and every number follows; the band shows the range given by the elasticity estimates.</p>
+    <h1>Raise the cigarette excise: fewer smokers, fewer CVD admissions and deaths</h1>
+    <p class="lede">A higher specific excise raises the price of a pack. Following the WHO assumption (Goodchild et al., 2016), half of smokers' response comes from people who quit and half from people who keep smoking but smoke less. Only quitting lowers the risk of cardiovascular disease (CVD), so the health benefits come from the fall in smokers, while both responses lower the packs sold. Move the excise and every number follows (the band shows the range of the price elasticity).</p>
   </div>
 </header>
 
 <div class="bar" role="group" aria-label="Scenario">
   <div class="wrap">
-    <label for="dERange">Excise increase per pack</label>
-    <input type="range" id="dERange" min="0" max="2" step="0.01" value="0.76">
-    <span class="val" id="dEVal">+€0.76</span>
-    <span class="val2" id="dEVal2">pack €6.56</span>
+    <label for="dSRange">Specific excise increase per pack</label>
+    <input type="range" id="dSRange" min="0" max="0.6" step="0.001" value="0.264">
+    <span class="val" id="dSVal">+€0.264</span>
+    <span class="val2" id="dSVal2">pack €6.56</span>
     <button class="chip" id="euBtn" aria-pressed="true">EU average price (€6.56)</button>
   </div>
 </div>
@@ -174,7 +180,7 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <h3>Price and smokers</h3>
       <div class="tiles">
         <div class="tile"><div class="l">Pack price</div><div class="v" id="h_price">–</div><div class="n" id="h_priceN">–</div></div>
-        <div class="tile"><div class="l">Tax per pack (excise + VAT)</div><div class="v" id="h_tax">–</div><div class="n" id="h_taxN">–</div></div>
+        <div class="tile"><div class="l">Specific excise per 1,000 cigarettes</div><div class="v" id="h_spec">–</div><div class="n" id="h_specN">–</div></div>
         <div class="tile"><div class="l">Smoking prevalence, people 11+</div><div class="v" id="h_prev">–</div><div class="n" id="h_prevN">–</div></div>
         <div class="tile"><div class="l">Fewer smokers</div><div class="v" id="h_smk">–</div><div class="n" id="h_smkN">–</div></div>
       </div>
@@ -183,26 +189,28 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
       <h3>Every year</h3>
       <div class="tiles">
         <div class="tile big"><div class="l">CVD hospital admissions avoided</div><div class="v" id="h_adm">–</div><div class="n" id="h_admN">–</div></div>
-        <div class="tile"><div class="l">SSN savings</div><div class="v" id="h_ssn">–</div><div class="n" id="h_ssnN">–</div></div>
-        <div class="tile"><div class="l">Extra tax revenue</div><div class="v" id="h_rev">–</div><div class="n" id="h_revN">–</div></div>
+        <div class="tile"><div class="l">CVD deaths avoided</div><div class="v" id="h_dth">–</div><div class="n" id="h_dthN">–</div></div>
+        <div class="tile"><div class="l">SSN savings (health and social care)</div><div class="v" id="h_ssn">–</div><div class="n" id="h_ssnN">–</div></div>
+        <div class="tile wide"><div class="l">Extra excise revenue</div><div class="v" id="h_rev">–</div><div class="n" id="h_revN">–</div></div>
       </div>
-      <p class="small" style="margin:12px 0 0">Yearly figures once smokers have adjusted to the new price. The range in each note comes from the low and high elasticity.</p>
+      <p class="small" style="margin:12px 0 0">Yearly figures once smokers have adjusted to the new price (within one to three years). The health figures are for the medium run: quitters remove 31% of their extra risk. The range in each note goes from a weak to a strong response of smokers (total elasticity −0.25 and −0.50).</p>
     </div>
   </div>
 </section>
 
 <section>
   <h2>How the gains grow with the excise</h2>
-  <p class="sub">The line is the central case, the band runs from the low to the high elasticity. The solid vertical line is the excise you chose; the dashed one is the rise that brings the average Italian pack to the EU average price. Click the chart to move the excise there.</p>
+  <p class="sub">The line is the central case (total elasticity −0.30) and the band goes from the weak to the strong response (−0.25 to −0.50). The solid vertical line is the excise you chose; the dashed one is the rise that brings the average Italian pack to the EU average price. Click the chart to move the excise there.</p>
   <div class="seg" role="group" aria-label="Measure shown" id="metricSeg">
     <button data-m="adm" aria-pressed="true">Admissions avoided</button>
+    <button data-m="deaths" aria-pressed="false">Deaths avoided</button>
     <button data-m="ssn" aria-pressed="false">SSN savings</button>
     <button data-m="smk" aria-pressed="false">Fewer smokers</button>
-    <button data-m="rev" aria-pressed="false">Tax revenue</button>
+    <button data-m="rev" aria-pressed="false">Excise revenue</button>
   </div>
   <div class="legend" id="legend"></div>
   <div id="chartBox">
-    <svg id="chart" role="img" aria-label="Chart of the modelled effects by size of the excise increase"></svg>
+    <svg id="chart" role="img" aria-label="Chart of the modelled effects by size of the specific excise increase"></svg>
     <div id="tip"></div>
   </div>
   <details>
@@ -213,81 +221,94 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 
 <section>
   <h2>How the numbers are built</h2>
-  <p class="sub">Five steps, each with its formula, its inputs and its result for the excise you chose. All inputs are fixed at the values in the group's parameter sheet; only the excise moves.</p>
+  <p class="sub">Five steps, the same as in the appendix of the brief (Table A2), each with its formula, its inputs and its result for the excise you chose. All inputs are those of Table A1; only the excise moves.</p>
   <div class="steps">
     <div class="card step">
       <div class="num">1</div>
       <div>
-        <h3>From the excise to the pack price</h3>
-        <p class="small">VAT and the retailer's margin are shares of the price (22/122 and 10%), and the manufacturer keeps the same euros per pack. So each euro of extra excise raises the price by about €1.39, and 90% of the price rise goes to the State as excise plus VAT.</p>
-        <div class="fx"><div class="tx" data-tex="\Delta P=\dfrac{\Delta E}{1-v-r}\approx 1.39\,\Delta E,\qquad P_1=P_0+\Delta P">ΔP = ΔE / (1 − v − r)</div><div class="tx" data-tex="T_1=T_0+\Delta E+v\,\Delta P=T_0+0.9\,\Delta P">T₁ = T₀ + 0.9 ΔP</div></div>
+        <h3>From the excise to the pack price <span class="ref">Table A2, steps 1–2</span></h3>
+        <p class="small">We assume that the whole rise is passed on to smokers. The ad valorem excise, VAT and the retailer's margin are shares of the price, while the manufacturer keeps the same euros per pack (€0.59). So each euro of specific excise raises the price by about €4.40, and the State gets 90% of the price rise (72% as excise and 18% as VAT).</p>
+        <div class="fx"><div class="tx" data-tex="\Delta P=\dfrac{\Delta S}{1-a-v-r}\approx 4.40\,\Delta S,\qquad \Delta P\%=\dfrac{\Delta P}{P_0}">ΔP = ΔS / (1 − a − v − r), ΔP% = ΔP / P₀</div><div class="tx" data-tex="E=S+aP,\qquad T=E+vP">E = S + aP, T = E + vP</div></div>
         <ul class="where">
-          <li><span class="sym" data-tex="\Delta E">ΔE</span><span>excise increase per pack (the slider)</span></li>
-          <li><span class="sym" data-tex="v,\ r">v, r</span><span>VAT (22/122 = 18.0%) and retailer's margin (10%), as shares of the price</span></li>
-          <li><span class="sym" data-tex="P_0,\ P_1">P₀, P₁</span><span>pack price today (<b>€5.50</b>) and after the rise</span></li>
-          <li><span class="sym" data-tex="T_0,\ T_1">T₀, T₁</span><span>tax per pack today (<b>€4.34</b>: excise €3.35 + VAT €0.99) and after</span></li>
+          <li><span class="sym" data-tex="\Delta S">ΔS</span><span>specific excise increase per pack (the slider), on today's <b>€0.64</b> (€32 per 1,000 cigarettes)</span></li>
+          <li><span class="sym" data-tex="a,\ v,\ r">a, v, r</span><span>ad valorem excise (<b>49.23%</b>), VAT (22/122 = <b>18.03%</b>) and retailer's margin (<b>10%</b>), as shares of the price</span></li>
+          <li><span class="sym" data-tex="P_0,\ P_1">P₀, P₁</span><span>pack price today (<b>€5.40</b>) and after the rise</span></li>
+          <li><span class="sym" data-tex="E,\ T">E, T</span><span>excise per pack (<b>€3.30</b> today) and excise plus VAT (<b>€4.27</b> today)</span></li>
         </ul>
       </div>
-      <div class="out"><div class="l">New pack price</div><div class="v" id="o1">–</div><div class="n" id="o1n">–</div></div>
+      <div class="out"><div class="l">New pack price</div><div class="v" id="o1">–</div><div class="n" id="o1n">–</div><div class="v2" id="o1b">–</div><div class="n" id="o1c">–</div></div>
     </div>
 
     <div class="card step">
       <div class="num">2</div>
       <div>
-        <h3>From the price to the share of smokers</h3>
-        <p class="small">The prevalence elasticity is the % change in the share of smokers for a 1% rise in the price, held constant over the whole price range.</p>
-        <div class="fx"><div class="tx" data-tex="P_e^{post}=P_e\left(\dfrac{P_1}{P_0}\right)^{\varepsilon_{prev}},\qquad X=P_e-P_e^{post}">Pe(post) = Pe (P₁/P₀)^εprev</div><div class="tx" data-tex="\text{fewer smokers}=X\cdot\dfrac{N_0}{P_e}">fewer smokers = X × population 11+</div></div>
+        <h3>From the price to smokers <span class="ref">Table A2, steps 3–4</span></h3>
+        <p class="small">Goodchild et al. (2016) assume that in high-income countries a 1% rise in price cuts cigarette consumption by 0.3% within one to three years. Half of the cut comes from people who quit and half from people who keep smoking but smoke less. Each change is the elasticity times the price rise (the linear form of their eq. 3).</p>
+        <div class="fx"><div class="tx" data-tex="\varepsilon_{prev}=\varphi\,\varepsilon_{tot},\qquad \varepsilon_{int}=(1-\varphi)\,\varepsilon_{tot}">εprev = φ εtot, εint = (1 − φ) εtot</div><div class="tx" data-tex="N_s^{1}=N_s\,(1+\varepsilon_{prev}\,\Delta P\%),\qquad P_e^{1}=P_e\,(1+\varepsilon_{prev}\,\Delta P\%)">Ns¹ = Ns (1 + εprev ΔP%)</div></div>
         <ul class="where">
-          <li><span class="sym" data-tex="P_e">Pe</span><span>share of smokers today, <b>18.6%</b> of people 11+</span></li>
-          <li><span class="sym" data-tex="\varepsilon_{prev}">εprev</span><span>prevalence elasticity, <b>−0.2</b> (range −0.1 to −0.3)</span></li>
-          <li><span class="sym" data-tex="X">X</span><span>fall in the share of smokers, in points</span></li>
-          <li><span class="sym" data-tex="N_0">N₀</span><span>smokers today, about <b>10.0 million</b></span></li>
+          <li><span class="sym" data-tex="\varepsilon_{tot}">εtot</span><span>total price elasticity, <b>−0.30</b> (range −0.25 to −0.50)</span></li>
+          <li><span class="sym" data-tex="\varphi">φ</span><span>share of the response from quitting, <b>50%</b>, so εprev = εint = −0.15</span></li>
+          <li><span class="sym" data-tex="N_s,\ P_e">Ns, Pe</span><span>smokers today, <b>9,999,000</b> (<b>18.6%</b> of people 11+)</span></li>
         </ul>
       </div>
-      <div class="out"><div class="l">Smoking prevalence</div><div class="v" id="o2">–</div><div class="n" id="o2n">–</div><div class="v2" id="o2b">–</div><div class="n">fewer smokers</div></div>
+      <div class="out"><div class="l">Smoking prevalence</div><div class="v" id="o2">–</div><div class="n" id="o2n">–</div><div class="v2" id="o2b">–</div><div class="n" id="o2c">–</div></div>
     </div>
 
     <div class="card step">
       <div class="num">3</div>
       <div>
-        <h3>CVD admissions caused by smoking, and those avoided</h3>
-        <p class="small">The population attributable fraction (PAF) is the share of CVD admissions that would not happen if no one smoked. When a share X of the population quits, their risk falls from the smokers' level to the level of people who quit less than five years ago, at once.</p>
-        <div class="fx"><div class="tx" data-tex="PAF=\dfrac{P_e(RR_c-1)}{1+P_e(RR_c-1)}">PAF = Pe(RRc − 1) / (1 + Pe(RRc − 1))</div><div class="tx" data-tex="\text{share avoided}=\dfrac{X\,(RR_c-RR_f)}{1+P_e(RR_c-1)},\qquad \Delta H=H\cdot\text{share avoided}">ΔH = H × X (RRc − RRf) / (1 + Pe(RRc − 1))</div></div>
+        <h3>CVD admissions, deaths and costs avoided <span class="ref">Table A2, step 5; Table A4</span></h3>
+        <p class="small">Only quitting lowers the risk of CVD (smoking less does not, Jeong et al., 2021). We take the part of the CVD burden caused by tobacco (18.8%) and reduce it in proportion to the fall in smokers. Quitters do not lose all their extra risk at once: we assume they remove 31% of it, the value for people who quit less than five years before (Mons et al., 2015), so the figures are for the medium run.</p>
+        <div class="fx"><div class="tx" data-tex="\text{avoided}=B\times s_{tob}\times(-\varepsilon_{prev}\,\Delta P\%)\times\rho,\qquad \rho=\dfrac{2.07-1.74}{2.07-1}=31\%">avoided = B × s_tob × (−εprev ΔP%) × ρ</div></div>
         <ul class="where">
-          <li><span class="sym" data-tex="RR_c">RRc</span><span>relative risk of current smokers against never smokers, <b>2.07</b></span></li>
-          <li><span class="sym" data-tex="RR_f">RRf</span><span>relative risk of people who quit less than 5 years ago, <b>1.74</b></span></li>
-          <li><span class="sym" data-tex="H">H</span><span>CVD hospital admissions a year, <b>600,436</b></span></li>
-          <li><span class="sym" data-tex="\Delta H">ΔH</span><span>CVD admissions avoided a year</span></li>
+          <li><span class="sym" data-tex="B">B</span><span>CVD burden in Italy: costs and admissions in 2021, deaths in 2017 (table below)</span></li>
+          <li><span class="sym" data-tex="s_{tob}">s_tob</span><span>share of the CVD burden due to tobacco, <b>18.8%</b> (of DALYs, 2017)</span></li>
+          <li><span class="sym" data-tex="\rho">ρ</span><span>share of the extra risk removed by quitting, <b>31%</b>: CVD mortality risk 2.07 for current smokers and 1.74 for people who quit less than 5 years before, against never smokers</span></li>
         </ul>
       </div>
-      <div class="out"><div class="l">CVD admissions avoided a year</div><div class="v" id="o3">–</div><div class="n" id="o3n">–</div><div class="n" id="o3c" style="margin-top:8px">–</div></div>
+      <div class="out"><div class="l">CVD admissions avoided a year</div><div class="v" id="o3">–</div><div class="n" id="o3n">–</div><div class="v2" id="o3b">–</div><div class="n" id="o3c">–</div><div class="v2" id="o3d">–</div><div class="n" id="o3e">–</div></div>
+      <div class="span">
+        <div class="tscroll"><table id="tblH"></table></div>
+        <p class="tnote">Only the cost items add up: admissions and deaths measure the same effect, and their value is already partly in the costs.</p>
+      </div>
     </div>
 
     <div class="card step">
       <div class="num">4</div>
       <div>
-        <h3>SSN savings</h3>
-        <p class="small">Each admission avoided saves its average cost to the SSN. The cost covers the hospital stay only, so the savings are a lower bound.</p>
-        <div class="fx"><div class="tx" data-tex="\text{SSN savings}=c\cdot\Delta H">SSN savings = c × ΔH</div></div>
+        <h3>Fewer cigarettes per continuing smoker, by type of smoker <span class="ref">Table A2, steps 6–7; Table A5</span></h3>
+        <p class="small">Smokers who keep smoking cut their cigarettes by <span data-tex="\varepsilon_{int}\,\Delta P\%">εint ΔP%</span> on average. Crespi et al. (2021) split Italian smokers into five types that react very differently to the price. We multiply all their elasticities by one factor k, so that their mean weighted by cigarettes equals Goodchild's −0.15. The split changes no total: it shows who cuts and whose excise is not collected. Cutting down brings no CVD benefit, so this step only moves packs and revenue.</p>
+        <div class="fx"><div class="tx" data-tex="q^{1}=q^{0}\,(1+\varepsilon_{int}\,\Delta P\%)">q¹ = q⁰ (1 + εint ΔP%)</div><div class="tx" data-tex="w_q=\dfrac{s_q\,Q_q}{\sum_j s_j\,Q_j},\qquad k=\dfrac{\varepsilon_{int}}{\sum_q w_q\,\eta_q},\qquad \eta_q^{*}=k\,\eta_q">w_q = s_q Q_q / Σ s_j Q_j, k = εint / Σ w_q η_q, η*_q = k η_q</div></div>
         <ul class="where">
-          <li><span class="sym" data-tex="c">c</span><span>average cost of a CVD admission caused by smoking, <b>€7,490</b> (2026 prices)</span></li>
+          <li><span class="sym" data-tex="q^{0}">q⁰</span><span>cigarettes a day per smoker, <b>12.20</b> (the five types weighted by their shares)</span></li>
+          <li><span class="sym" data-tex="s_q,\ Q_q,\ \eta_q">s_q, Q_q, η_q</span><span>share of smokers, cigarettes a day and price elasticity of type q (table below)</span></li>
+          <li><span class="sym" data-tex="w_q">w_q</span><span>share of all cigarettes smoked by type q</span></li>
         </ul>
       </div>
-      <div class="out"><div class="l">SSN savings a year</div><div class="v" id="o4">–</div><div class="n" id="o4n">–</div></div>
+      <div class="out"><div class="l">Cigarettes a day per continuing smoker</div><div class="v" id="o4">–</div><div class="n" id="o4n">–</div><div class="v2" id="o4b">–</div><div class="n">rescaling factor</div></div>
+      <div class="span">
+        <div class="tscroll"><table id="tblT"></table></div>
+        <p class="tnote">Excise not collected by type q: <span data-tex="E_1\,Q_0\,(1+\varepsilon_{prev}\,\Delta P\%)\,w_q\,\eta_q^{*}\,\Delta P\%">E₁ Q₀ (1 + εprev ΔP%) w_q η*_q ΔP%</span>. Quitting is the same for every type (Crespi et al. have no quitting option).</p>
+      </div>
     </div>
 
     <div class="card step">
       <div class="num">5</div>
       <div>
-        <h3>Tax revenue</h3>
-        <p class="small">Revenue is packs sold times tax per pack. Packs sold fall with the price, but by less than the tax rises, so revenue goes up. It is a transfer from smokers to the State, kept apart from the health gains.</p>
-        <div class="fx"><div class="tx" data-tex="Q_1=Q_0\left(\dfrac{P_1}{P_0}\right)^{\varepsilon},\qquad \Delta R=Q_1T_1-Q_0T_0">ΔR = Q₁T₁ − Q₀T₀</div></div>
+        <h3>Packs sold and tax revenue <span class="ref">Table A2, steps 8–9; Table A6</span></h3>
+        <p class="small">Packs are smokers times cigarettes per smoker, so the two responses multiply. Revenue is packs times the tax on each pack. Packs fall by less than the tax rises, so revenue goes up. Revenue is a transfer from smokers to the State, not a saving, so it is kept apart from the health benefits (excise is the main figure, VAT is shown apart).</p>
+        <div class="fx"><div class="tx" data-tex="Q_1=Q_0\,(1+\varepsilon_{prev}\,\Delta P\%)(1+\varepsilon_{int}\,\Delta P\%)">Q₁ = Q₀ (1 + εprev ΔP%)(1 + εint ΔP%)</div><div class="tx" data-tex="\Delta R_E=Q_1E_1-Q_0E_0,\qquad \Delta R_T=Q_1T_1-Q_0T_0">ΔR_E = Q₁E₁ − Q₀E₀, ΔR_T = Q₁T₁ − Q₀T₀</div></div>
         <ul class="where">
-          <li><span class="sym" data-tex="Q_0,\ Q_1">Q₀, Q₁</span><span>packs sold a year, today (<b>2.94 billion</b>) and after</span></li>
-          <li><span class="sym" data-tex="\varepsilon">ε</span><span>price elasticity of cigarette demand, <b>−0.375</b> (range −0.30 to −0.45)</span></li>
+          <li><span class="sym" data-tex="Q_0,\ Q_1">Q₀, Q₁</span><span>packs of cigarettes sold a year, <b>2.936 billion</b> (2024) and after the rise</span></li>
+          <li><span class="sym" data-tex="E,\ T">E, T</span><span>excise, and excise plus VAT, per pack (step 1)</span></li>
+          <li><span class="sym" data-tex="\Delta R_E,\ \Delta R_T">ΔR_E, ΔR_T</span><span>extra excise revenue, and extra excise and VAT revenue</span></li>
         </ul>
       </div>
-      <div class="out"><div class="l">Extra tax revenue a year</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div></div>
+      <div class="out"><div class="l">Extra excise revenue a year</div><div class="v" id="o5">–</div><div class="n" id="o5n">–</div><div class="v2" id="o5b">–</div><div class="n" id="o5c">–</div></div>
+      <div class="span">
+        <div class="tscroll"><table id="tblR"></table></div>
+        <p class="tnote">Check: 2024 packs at 2026 rates give €9,683m of excise (€12,541m with VAT), against €9,672m (€12,532m) collected on cigarettes in 2024 (ADM, Libro Blu 2024, Tab. A.53–A.54).</p>
+      </div>
     </div>
   </div>
 </section>
@@ -298,55 +319,60 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
   <div class="tscroll"><table class="src">
     <thead><tr><th>Step</th><th>Input</th><th>Value</th><th>Source</th><th></th></tr></thead>
     <tbody>
-      <tr><td>1</td><td>Pack price P₀ and tax per pack T₀</td><td>€5.50; €4.34 (excise €3.35 + VAT €0.99)</td><td><a href="https://www.adm.gov.it/portale/documents/20182/1106865/TAB+A+SIGARETTE_01-01-2026.pdf/ef857cb5-6bd6-feae-39fb-8399e1991a31?t=1768549888045">ADM, Tabella A sigarette, 1 January 2026</a> (€275/kg row)</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>1</td><td>EU average price (the marker)</td><td>€6.56</td><td><a href="https://taxfoundation.org/data/all/eu/cigarette-taxes-europe/">Tax Foundation, Cigarette taxes in Europe</a></td><td><span class="tag n">online</span></td></tr>
-      <tr><td>2</td><td>Smoking prevalence Pe, smokers N₀</td><td>18.6% of people 11+; about 10.0 million</td><td>ISTAT (2026), Fattori di rischio per la salute, anno 2025, p. 7</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>2</td><td>Prevalence elasticity εprev</td><td>−0.2 (−0.1 to −0.3)</td><td><a href="https://doi.org/10.1257/jel.20201482">DeCicca, Kenkel, Lovenheim (2022)</a>, Journal of Economic Literature</td><td><span class="tag n">online</span></td></tr>
-      <tr><td>3</td><td>PAF formula</td><td></td><td><a href="https://doi.org/10.1097/01.ede.0000229155.05644.43">Steenland and Armstrong (2006)</a>, Epidemiology, formula (3)</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>3</td><td>Relative risks RRc, RRf</td><td>2.07 (1.82–2.36); 1.74 (1.51–2.01)</td><td><a href="https://doi.org/10.1136/bmj.h1551">Mons et al. (2015)</a>, BMJ, p. 4: CVD mortality, current smokers and people who quit under 5 years ago, against never smokers (60+)</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>3</td><td>CVD admissions H</td><td>600,436 (2018)</td><td><a href="https://doi.org/10.18332/tid/188111">Possenti et al. (2024)</a>, Tobacco Induced Diseases, Table 1: ischaemic heart disease, stroke, arteriosclerosis</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>4</td><td>Cost of a CVD admission c</td><td>€7,490 (2026 prices)</td><td>Possenti et al. (2024), Table 1: €1,063m for 177,409 admissions caused by smoking = €5,992 in 2018, uprated</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>5</td><td>Packs sold Q₀</td><td>2.94 billion (2024)</td><td>ADM, Libro Blu 2024, Appendix, Tab. A.79: 58.71 million conventional kg (1 kg = 1,000 cigarettes)</td><td><span class="tag y">folder</span></td></tr>
-      <tr><td>5</td><td>Price elasticity ε</td><td>−0.375 (−0.30 to −0.45)</td><td><a href="https://doi.org/10.1136/bmjopen-2022-069970">Kohler, Vinci, Mattli (2023)</a>, BMJ Open, panel IV estimates with and without illicit trade</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>1</td><td>Pack price P₀ and EU average price P₁</td><td>€5.40; €6.56 (unweighted mean of the 27 national prices)</td><td><a href="https://taxfoundation.org/data/all/eu/cigarette-taxes-europe/">Tax Foundation Europe (2026)</a>, Cigarette taxes in Europe, rates of 1 January 2026</td><td><span class="tag n">online</span></td></tr>
+      <tr><td>1</td><td>Specific excise S₀, ad valorem excise a, retailer's margin r</td><td>€32 per 1,000 cigarettes (€0.64 a pack); 49.23%; 10% of the price</td><td><a href="https://www.adm.gov.it/portale/documents/20182/1106865/TAB+A+SIGARETTE_01-01-2026.pdf/ef857cb5-6bd6-feae-39fb-8399e1991a31?t=1768549888045">ADM (2026)</a>, Tabella A sigarette, 1 January 2026</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>1</td><td>VAT v</td><td>22/122 = 18.03% of the price</td><td>VAT rate 22%</td><td></td></tr>
+      <tr><td>2</td><td>Smokers Ns and prevalence Pe</td><td>9,999,000; 18.6% of people 11+</td><td><a href="https://www.istat.it/wp-content/uploads/2026/04/Report_Fattori-di-rischio-per-la-salute-peso-sedentarieta-fumo-e-alcol_Anno-2025.pdf">ISTAT (2026)</a>, Fattori di rischio per la salute: peso, sedentarietà, fumo e alcol, anno 2025</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>2</td><td>Total elasticity εtot and share from quitting φ</td><td>−0.30 (−0.25 to −0.50); 50%</td><td><a href="https://doi.org/10.2471/BLT.15.164707">Goodchild, Perucic, Nargis (2016)</a>, Bulletin of the World Health Organization, Table 1</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>3</td><td>CVD costs and admissions B</td><td>€41,978m (€23,747m health and social care); 15 admissions per 1,000 inhabitants (about 888,000), 2021</td><td><a href="https://doi.org/10.1093/eurheartj/ehad583">Luengo-Fernandez et al. (2023)</a>, European Heart Journal, Tables 2 and 3</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>3</td><td>CVD deaths B and share due to tobacco s_tob</td><td>216,600 (2017); 18.8% of CVD DALYs</td><td><a href="https://doi.org/10.1177/2047487320949414">Cortesi et al. (2021)</a>, European Journal of Preventive Cardiology</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>3</td><td>Extra risk removed by quitting ρ</td><td>31% = (2.07 − 1.74)/1.07</td><td><a href="https://doi.org/10.1136/bmj.h1551">Mons et al. (2015)</a>, BMJ: CVD mortality of current smokers and of people who quit less than 5 years before, against never smokers (60+)</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>3</td><td>No CVD gain from cutting down</td><td></td><td><a href="https://doi.org/10.1093/eurheartj/ehab578">Jeong et al. (2021)</a>, European Heart Journal</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>4</td><td>Types of smoker s_q, Q_q, η_q</td><td>five types (shares, cigarettes a day, elasticities)</td><td><a href="https://doi.org/10.1016/j.econmod.2020.04.004">Crespi et al. (2021)</a>, Economic Modelling, Tables 3 and 7</td><td><span class="tag y">folder</span></td></tr>
+      <tr><td>5</td><td>Packs sold Q₀</td><td>2.936 billion (2024)</td><td>ADM (2024), Libro Blu 2024, Appendix, Tab. A.79: 58.71 million conventional kg (1 kg = 1,000 cigarettes)</td><td><span class="tag y">folder</span></td></tr>
     </tbody>
   </table></div>
 </section>
 
 <section>
   <h2>Limitations</h2>
-  <div class="note">The figures are a calibration from published parameters, not a forecast: useful for orders of magnitude and for seeing which input drives the result. This is not a cost-benefit analysis: smokers' and producers' welfare is not counted.</div>
+  <div class="note">The figures are a calibration from published parameters (orders of magnitude, and which input drives the result), so they are not a forecast. Smokers' and producers' welfare is not counted, so this is not a cost-benefit analysis.</div>
   <div class="lims">
     <div class="card">
       <h3>What is left out (so the benefit is understated)</h3>
       <ul>
-        <li>Diseases other than CVD (lung cancer, COPD) and second-hand smoke.</li>
-        <li>Costs outside the hospital stay: drugs, outpatient care, rehabilitation; the €7,490 is a lower bound.</li>
-        <li>Young people who never start.</li>
+        <li>Diseases other than CVD (cancers, COPD) and second-hand smoke</li>
+        <li>Young people who do not start smoking: only today's smokers are counted</li>
+        <li>Gains after the medium run: quitters' risk keeps falling after the first years</li>
+        <li>The non-fiscal measures (plain packaging, outdoor smoking bans), which the brief discusses only in words</li>
       </ul>
     </div>
     <div class="card">
       <h3>What may overstate it</h3>
       <ul>
-        <li>Quitters reach the risk of people who quit five years ago at once; in reality their risk falls over several years.</li>
-        <li>Smokers who move to heated tobacco or e-cigarettes count as quitters.</li>
-        <li>Quitters may turn to other habits (food, alcohol).</li>
+        <li>The 18.8% is a share of DALYs, and it also covers former smokers and second-hand smoke; it is applied to costs, admissions and deaths alike</li>
+        <li>Smokers who quit because of the price tend to be light smokers</li>
+        <li>Smokers who move to roll-your-own, heated tobacco or e-cigarettes count as quitters (the brief raises roll-your-own and heated tobacco by the same 21.5% to prevent this)</li>
+        <li>Savings are gross: quitters live longer and use other services later</li>
       </ul>
     </div>
     <div class="card">
       <h3>Parameters</h3>
       <ul>
-        <li>The relative risks are for CVD deaths among people aged 60+, applied here to admissions at all ages.</li>
-        <li>One elasticity for all smokers and all price levels; illicit and cross-border buying enter only through the range.</li>
-        <li>Packs sold respond with Kohler's elasticity, estimated on packs per smoker; counting the packs quitters stop buying (ε + εprev) would lower the revenue by about a quarter.</li>
+        <li>One short-run elasticity, applied linearly to a 21% rise (a constant-elasticity form gives effects about 10% smaller)</li>
+        <li>The 50% split is a rounding of US data from 1976-1993</li>
+        <li>The 31% is a ratio of CVD deaths among people aged 60+ (mostly from the US), applied to admissions and costs too</li>
+        <li>Crespi's types come from a 2016 survey of 948 smokers, so the split by type is an illustration</li>
+        <li>The data refer to different years: 2017 (deaths and the tobacco share), 2021 (costs and admissions), 2024 (packs), 2025 (smokers)</li>
       </ul>
     </div>
     <div class="card">
       <h3>Policy</h3>
       <ul>
-        <li>The rise must cover all substitutes: heated tobacco pays much less excise than cigarettes at the same price.</li>
-        <li>Cheap brands sit at the minimum tax, which must rise in step.</li>
-        <li>The tax is regressive: it weighs more on poorer smokers.</li>
-        <li>No indexation: inflation would slowly erode the rise.</li>
+        <li>The minimum tax (€216 per 1,000) must rise with the specific excise (to about €266), or cheap brands escape the rise; at €5.40 the average pack sits just below it, so the extra excise may be up to €140m lower</li>
+        <li>Indexation to inflation is proposed but not in the numbers: without it, inflation slowly erodes the rise</li>
+        <li>The target is the unweighted mean of the 27 EU prices, not adjusted for purchasing power</li>
+        <li>The tax is regressive: it weighs more on poorer smokers</li>
       </ul>
     </div>
   </div>
@@ -354,80 +380,146 @@ footer{padding:26px 0 50px;color:var(--ink2);font-size:13.5px;border-top:1px sol
 
 </main>
 <footer>
-  <div class="wrap">CPPI project, Bologna. First version of this page by Alessandro (3 October 2026); rebuilt on 11 October 2026 to follow the group's parameter sheet. Amounts in 2026 euros.</div>
+  <div class="wrap">CPPI project, Bologna. First version of this page by Alessandro (3 October 2026); rebuilt on 11 October 2026 to follow the group's parameter sheet; updated on 27 October 2026 to the model of the final brief. Prices and taxes at the rates of 1 January 2026; CVD costs in 2021 euros.</div>
 </footer>
 
 <script>
 (function(){
 "use strict";
-// ---- inputs (group parameter sheet, 10 October 2026) ----
-var P={P0:5.50, PEU:6.56, T0:4.34, E0:3.35, v:22/122, r:0.10,
-  Pe:0.186, N0:10.0e6, eprev:{c:-0.2,lo:-0.1,hi:-0.3},
-  RRc:2.07, RRf:1.74, H:600436, c:7490,
-  Q0:2.94e9, eps:{c:-0.375,lo:-0.45,hi:-0.30}};
-var K=1/(1-P.v-P.r);                 // euros at the till per euro of excise
-var dE_EU=(P.PEU-P.P0)/K;            // excise increase that reaches the EU average price
-var XMAX=2;
-var S={dE:dE_EU}, METRIC="adm";
+// ---- inputs: the final brief, Table A1 (same as CPPI parameters final.xlsx) ----
+var P={P0:5.40, PEU:6.56, S0:32/1000*20, a:0.4923, v:22/122, r:0.10,
+  Pe:0.186, Ns:9999000, phi:0.5, etot:{c:-0.30,lo:-0.25,hi:-0.50},
+  Q0:58.71e6*1000/20,                         // 58.71m conventional kg, 50 packs a kg
+  HS:23747e6, IC:13734e6, PR:(1212+3285)*1e6, // CVD costs 2021: health and social care, informal care, productivity
+  H:15/1000*(23747e6/401), D:216600,          // CVD admissions 2021 (15 per 1,000 inhabitants), CVD deaths 2017
+  stob:0.188, rho:0.31};
+P.TOT=P.HS+P.IC+P.PR;
+// ---- types of smoker (Crespi et al. 2021, Tables 3 and 7) ----
+var TY=[{n:"Random smokers",s:0.209,q:7.95,eta:-0.78},
+  {n:"Risk-unconcerned smokers",s:0.191,q:10.13,eta:-0.67},
+  {n:"Risk-concerned smokers",s:0.251,q:12.13,eta:-0.26},
+  {n:"Stable smokers",s:0.198,q:14.92,eta:-0.05},
+  {n:"Intensive smokers",s:0.150,q:17.38,eta:-0.39}];
+var q0=0, ETA=0;
+TY.forEach(function(t){q0+=t.s*t.q;});
+TY.forEach(function(t){t.w=t.s*t.q/q0;ETA+=t.w*t.eta;});  // cigarette shares and Crespi's cigarette-weighted mean
+var K=1/(1-P.a-P.v-P.r);             // euros at the till per euro of specific excise
+var dS_EU=(P.PEU-P.P0)/K;            // specific excise rise that takes the pack to the EU average price
+var XMAX=0.6;
+var S={dS:dS_EU}, METRIC="adm";
 var $=function(id){return document.getElementById(id);};
 
 // ---- model ----
-function run(dE,ep,e){
-  var dP=K*dE, P1=P.P0+dP, T1=P.T0+0.9*dP, ratio=P1/P.P0;
-  var post=P.Pe*Math.pow(ratio,ep), X=P.Pe-post;
-  var den=1+P.Pe*(P.RRc-1), paf=P.Pe*(P.RRc-1)/den, share=X*(P.RRc-P.RRf)/den;
-  var adm=P.H*share, Q1=P.Q0*Math.pow(ratio,e);
-  return {dE:dE,dP:dP,P1:P1,T1:T1,post:post,X:X,smk:X*P.N0/P.Pe,paf:paf,attr:paf*P.H,share:share,adm:adm,ssn:adm*P.c,
-    Q1:Q1,rev:Q1*T1-P.Q0*P.T0};
+function run(dS,et){
+  var dP=K*dS, P1=P.P0+dP, dp=dP/P.P0;
+  var ep=P.phi*et, ei=(1-P.phi)*et, A=ep*dp, B=ei*dp;    // % change in smokers and in cigarettes per continuing smoker
+  var E0=P.S0+P.a*P.P0, E1=P.S0+dS+P.a*P1, T0=E0+P.v*P.P0, T1=E1+P.v*P1;
+  var f=P.stob*(-A)*P.rho;                                // share of the CVD burden avoided
+  var Q1=P.Q0*(1+A)*(1+B), k=ei/ETA, base=E1*P.Q0*(1+A);
+  var ty=TY.map(function(t){var es=k*t.eta,cut=es*dp;return {es:es,cut:cut,lost:base*t.w*cut};});
+  return {dS:dS,dP:dP,P1:P1,dp:dp,A:A,B:B,E0:E0,E1:E1,T0:T0,T1:T1,
+    prev:P.Pe*(1+A),X:-P.Pe*A,smk:-P.Ns*A,
+    adm:P.H*f,deaths:P.D*f,ssn:P.HS*f,ic:P.IC*f,pr:P.PR*f,tot:P.TOT*f,
+    q1:q0*(1+B),k:k,ty:ty,Q1:Q1,
+    R0:P.Q0*E0,up:P.Q0*(E1-E0),quit:P.Q0*E1*A,cutdown:base*B,
+    rev:Q1*E1-P.Q0*E0,revT:Q1*T1-P.Q0*T0};
 }
-function all(dE){
-  return {c:run(dE,P.eprev.c,P.eps.c),
-          lo:run(dE,P.eprev.lo,P.eps.lo),   // weakest response: fewest quitters, lowest revenue
-          hi:run(dE,P.eprev.hi,P.eps.hi)};
+function all(dS){
+  return {c:run(dS,P.etot.c),
+          lo:run(dS,P.etot.lo),   // weak response: fewer quitters, more revenue
+          hi:run(dS,P.etot.hi)};  // strong response: more quitters, less revenue
 }
 
 // ---- formatting ----
 var nf0=new Intl.NumberFormat("en-GB",{maximumFractionDigits:0});
 function fix(x,d){return new Intl.NumberFormat("en-GB",{minimumFractionDigits:d,maximumFractionDigits:d}).format(x);}
-function rnd(x){var a=Math.abs(x);var st=a>=100000?1000:a>=10000?100:a>=100?5:1;return Math.round(x/st)*st;}
-function ppl(x){return nf0.format(rnd(x));}
-function eur(x){var a=Math.abs(x),sg=x<0?"−":"";if(a>=1e9)return sg+"€"+fix(a/1e9,2)+"bn";if(a>=1e6)return sg+"€"+fix(a/1e6,a>=1e8?0:1)+"m";if(a>=1e3)return sg+"€"+nf0.format(a/1e3)+"k";return sg+"€"+nf0.format(a);}
+function sg(x){return x<0?"−":"";}
+function num(x,d){return sg(x)+fix(Math.abs(x),d);}
+function sig2(x){if(!x)return 0;var st=Math.pow(10,Math.floor(Math.log10(Math.abs(x)))-1);return Math.round(x/st)*st;}
+function cnt(x){return nf0.format(sig2(x));}                    // admissions and deaths, rounded as in the brief
+function ppl(x){return nf0.format(Math.round(x/100)*100);}      // smokers, to the hundred
+function eur(x){var a=Math.abs(x);if(a<5e3)return "€0";if(a>=1e6)return sg(x)+"€"+nf0.format(a/1e6)+"m";return sg(x)+"€"+fix(a/1e6,2)+"m";}
+function eurM(x){return sg(x)+"€"+nf0.format(Math.abs(x)/1e6)+"m";}
+function eurB(x){var a=Math.abs(x);return a>=1e9?sg(x)+"€"+fix(a/1e9,2)+"bn":eur(x);}
+function plus(x,f){return (x>0?"+":"")+f(x);}
 function money(x){return "€"+fix(x,2);}
-function pctp(x,d){return fix(x*100,d===undefined?1:d)+"%";}
+function pct(x,d){return fix(x*100,d===undefined?1:d)+"%";}
+function spct(x,d){return (x>0?"+":x<0?"−":"")+fix(Math.abs(x)*100,d===undefined?1:d)+"%";}
 function setT(id,t){var e=$(id);if(e)e.textContent=t;}
-function rng(lo,hi,f){var a=Math.min(lo,hi),b=Math.max(lo,hi);return f(a)+" to "+f(b);}
 function lo(o,k){return Math.min(o.lo[k],o.hi[k]);} function hi(o,k){return Math.max(o.lo[k],o.hi[k]);}
+function rng(o,k,f){return f(lo(o,k))+" to "+f(hi(o,k));}
+
+// ---- tables built once, numbers filled in by render() ----
+function buildTables(){
+  var h='<thead><tr><th>Item</th><th>CVD burden, Italy (B)</th><th>Due to tobacco (× 18.8%)</th><th>Avoided a year</th></tr></thead><tbody>';
+  [["Health and social care costs (SSN)",P.HS,"ssn",1],["Informal care costs",P.IC,"ic",1],["Productivity losses",P.PR,"pr",1],
+   ["Total costs",P.TOT,"tot",1],["CVD hospital admissions",P.H,"adm",0],["CVD deaths",P.D,"deaths",0]].forEach(function(r){
+    var money=r[3], b=money?eurM(r[1]):nf0.format(r[2]==="adm"?Math.round(r[1]/1000)*1000:r[1]);
+    var t=money?eurM(r[1]*P.stob):nf0.format(Math.round(r[1]*P.stob/100)*100);
+    h+='<tr'+(r[2]==="tot"?' class="tot"':'')+'><td>'+r[0]+'</td><td>'+b+'</td><td>'+t+'</td><td id="hv_'+r[2]+'">–</td></tr>';});
+  $("tblH").innerHTML=h+'</tbody>';
+  h='<thead><tr><th>Type</th><th>Share of smokers</th><th>Cigarettes a day</th><th>Share of cigarettes</th><th>Crespi η</th><th>Rescaled η*</th><th>Cut per smoker</th><th>Excise not collected</th><th>Share of it</th></tr></thead><tbody>';
+  TY.forEach(function(t,i){h+='<tr><td>'+t.n+'</td><td>'+pct(t.s)+'</td><td>'+fix(t.q,2)+'</td><td>'+pct(t.w)+'</td><td>'+num(t.eta,2)+'</td><td id="te_'+i+'">–</td><td id="tc_'+i+'">–</td><td id="tl_'+i+'">–</td><td id="ts_'+i+'">–</td></tr>';});
+  h+='<tr class="tot"><td>All</td><td>100%</td><td>'+fix(q0,2)+'</td><td>100%</td><td>'+num(ETA,3)+'</td><td id="te_a">–</td><td id="tc_a">–</td><td id="tl_a">–</td><td id="ts_a">–</td></tr>';
+  $("tblT").innerHTML=h+'</tbody>';
+  h='<thead><tr><th>Item</th><th style="text-align:left">Computation</th><th>€ million a year</th></tr></thead><tbody>'+
+    '<tr><td>Excise revenue today</td><td class="f">E₀ Q₀</td><td id="rv_0">–</td></tr>'+
+    '<tr><td>Higher excise on every pack</td><td class="f">(E₁ − E₀) Q₀</td><td id="rv_up">–</td></tr>'+
+    '<tr><td>Fewer smokers</td><td class="f">E₁ Q₀ εprev ΔP%</td><td id="rv_q">–</td></tr>'+
+    '<tr><td>Fewer cigarettes per continuing smoker</td><td class="f">E₁ Q₀ (1 + εprev ΔP%) εint ΔP%</td><td id="rv_c">–</td></tr>'+
+    '<tr class="tot"><td>Extra excise revenue</td><td class="f">Q₁E₁ − Q₀E₀</td><td id="rv_e">–</td></tr>'+
+    '<tr><td>Extra VAT</td><td class="f">ΔR_T − ΔR_E</td><td id="rv_v">–</td></tr>'+
+    '<tr class="tot"><td>Extra excise and VAT revenue</td><td class="f">Q₁T₁ − Q₀T₀</td><td id="rv_t">–</td></tr></tbody>';
+  $("tblR").innerHTML=h;
+}
 
 // ---- render ----
 function render(){
-  var o=all(S.dE), c=o.c, atEU=Math.abs(S.dE-dE_EU)<0.0005;
-  setT("dEVal","+€"+fix(S.dE,2)); setT("dEVal2","pack "+money(c.P1)+" ("+(c.dP>=0?"+":"")+pctp(c.dP/P.P0)+")");
-  $("dERange").value=S.dE; $("euBtn").setAttribute("aria-pressed",String(atEU));
+  var o=all(S.dS), c=o.c, atEU=Math.abs(S.dS-dS_EU)<0.0005;
+  setT("dSVal","+€"+fix(S.dS,3)); setT("dSVal2","pack "+money(c.P1)+" ("+spct(c.dp)+")");
+  $("dSRange").value=S.dS; $("euBtn").setAttribute("aria-pressed",String(atEU));
   // hero
-  setT("h_price",money(c.P1)); setT("h_priceN","from "+money(P.P0)+", "+(c.dP>=0?"+":"")+pctp(c.dP/P.P0));
-  setT("h_tax",money(c.T1)); setT("h_taxN","from "+money(P.T0)+"; excise "+money(P.E0)+" → "+money(P.E0+S.dE));
-  setT("h_prev",pctp(c.post,2)); setT("h_prevN","from 18.6%, −"+fix(c.X*100,2)+" points");
-  setT("h_smk",ppl(c.smk)); setT("h_smkN","range "+rng(lo(o,"smk"),hi(o,"smk"),ppl));
-  setT("h_adm",ppl(c.adm)); setT("h_admN","range "+rng(lo(o,"adm"),hi(o,"adm"),ppl)+", out of about "+ppl(c.attr)+" caused by smoking each year");
-  setT("h_ssn",eur(c.ssn)); setT("h_ssnN","range "+rng(lo(o,"ssn"),hi(o,"ssn"),eur));
-  setT("h_rev",eur(c.rev)); setT("h_revN","range "+rng(lo(o,"rev"),hi(o,"rev"),eur)+"; a transfer, not a gain for society");
-  // steps
-  setT("o1",money(c.P1)); setT("o1n","price "+(c.dP>=0?"+":"")+money(c.dP)+"; tax per pack "+money(c.T1));
-  setT("o2",pctp(c.post,2)); setT("o2n","from 18.6% (X = "+fix(c.X*100,2)+" points)");
-  setT("o2b",ppl(c.smk));
-  setT("o3",ppl(c.adm)); setT("o3n","range "+rng(lo(o,"adm"),hi(o,"adm"),ppl));
-  setT("o3c","PAF = "+pctp(c.paf)+": about "+ppl(c.attr)+" of the "+nf0.format(P.H)+" CVD admissions are caused by smoking; the policy removes "+fix(c.share*100,2)+"% of all CVD admissions.");
-  setT("o4",eur(c.ssn)); setT("o4n","range "+rng(lo(o,"ssn"),hi(o,"ssn"),eur));
-  setT("o5",eur(c.rev)); setT("o5n","packs "+fix(c.Q1/1e9,2)+" bn (from "+fix(P.Q0/1e9,2)+" bn); range "+rng(lo(o,"rev"),hi(o,"rev"),eur));
+  setT("h_price",money(c.P1)); setT("h_priceN","from "+money(P.P0)+", "+spct(c.dp));
+  setT("h_spec","€"+fix((P.S0+S.dS)*50,2)); setT("h_specN","from €32.00, "+spct(S.dS/P.S0)+" (+€"+fix(S.dS,3)+" a pack)");
+  setT("h_prev",pct(c.prev,2)); setT("h_prevN","from 18.6%, −"+fix(c.X*100,2)+" points");
+  setT("h_smk",ppl(c.smk)); setT("h_smkN","range "+rng(o,"smk",ppl));
+  setT("h_adm",cnt(c.adm)); setT("h_admN","range "+rng(o,"adm",cnt)+", out of about 167,000 a year due to tobacco");
+  setT("h_dth",cnt(c.deaths)); setT("h_dthN","range "+rng(o,"deaths",cnt));
+  setT("h_ssn",eur(c.ssn)); setT("h_ssnN","range "+rng(o,"ssn",eur)+"; "+eur(c.tot)+" with informal care and productivity");
+  setT("h_rev",eurB(c.rev)); setT("h_revN",eurB(c.revT)+" with VAT; range "+rng(o,"rev",eurB)+"; a transfer to the State, not a saving");
+  // step 1
+  setT("o1",money(c.P1)); setT("o1n",spct(c.dp,2)+"; specific excise €0.64 → €"+fix(P.S0+S.dS,3)+" a pack (€32.00 → €"+fix((P.S0+S.dS)*50,2)+" per 1,000)");
+  setT("o1b",money(c.T1)); setT("o1c","excise and VAT per pack, from "+money(c.T0)+" (excise "+money(c.E0)+" → "+money(c.E1)+")");
+  // step 2
+  setT("o2",pct(c.prev,2)); setT("o2n","from 18.6% (−"+fix(c.X*100,2)+" points)");
+  setT("o2b",ppl(c.smk)); setT("o2c","fewer smokers ("+spct(c.A,2)+"), range "+rng(o,"smk",ppl));
+  // step 3
+  setT("o3",cnt(c.adm)); setT("o3n","range "+rng(o,"adm",cnt));
+  setT("o3b",cnt(c.deaths)); setT("o3c","CVD deaths avoided, range "+rng(o,"deaths",cnt));
+  setT("o3d",eur(c.ssn)); setT("o3e","SSN savings, range "+rng(o,"ssn",eur)+" ("+eur(c.tot)+" with informal care and productivity)");
+  ["ssn","ic","pr","tot"].forEach(function(k){setT("hv_"+k,eur(c[k]));});
+  setT("hv_adm",cnt(c.adm)); setT("hv_deaths",cnt(c.deaths));
+  // step 4
+  setT("o4",fix(c.q1,2)); setT("o4n","from "+fix(q0,2)+" ("+spct(c.B,2)+"), range "+spct(lo(o,"B"),2)+" to "+spct(hi(o,"B"),2));
+  setT("o4b","k = "+fix(c.k,3));
+  var lost=0;c.ty.forEach(function(t){lost+=t.lost;});
+  c.ty.forEach(function(t,i){setT("te_"+i,num(t.es,3));setT("tc_"+i,spct(t.cut,2));setT("tl_"+i,eurM(t.lost));setT("ts_"+i,lost?pct(t.lost/lost):"–");});
+  setT("te_a",num(c.k*ETA,3)); setT("tc_a",spct(c.B,2)); setT("tl_a",eurM(lost)); setT("ts_a",lost?"100%":"–");
+  // step 5
+  setT("o5",plus(c.rev,eurM)); setT("o5n","range "+rng(o,"rev",eurM)+"; "+spct(c.rev/c.R0)+" on today's excise revenue");
+  setT("o5b",plus(c.revT,eurM)); setT("o5c","with VAT; packs "+fix(P.Q0/1e9,3)+" → "+fix(c.Q1/1e9,3)+" bn ("+spct(c.Q1/P.Q0-1,2)+")");
+  setT("rv_0",eurM(c.R0)); setT("rv_up",plus(c.up,eurM)); setT("rv_q",plus(c.quit,eurM)); setT("rv_c",plus(c.cutdown,eurM));
+  setT("rv_e",plus(c.rev,eurM)+" ("+spct(c.rev/c.R0)+")"); setT("rv_v",plus(c.revT-c.rev,eurM)); setT("rv_t",plus(c.revT,eurM));
   chart(); table();
 }
 
 // ---- chart ----
 var CH={
-  adm:{title:"CVD hospital admissions avoided a year",k:"adm",f:ppl,div:1},
-  ssn:{title:"SSN savings, € million a year",k:"ssn",f:eur,div:1e6},
+  adm:{title:"CVD hospital admissions avoided a year",k:"adm",f:cnt,div:1},
+  deaths:{title:"CVD deaths avoided a year",k:"deaths",f:cnt,div:1},
+  ssn:{title:"SSN savings (health and social care), € million a year",k:"ssn",f:eur,div:1e6},
   smk:{title:"fewer smokers",k:"smk",f:ppl,div:1},
-  rev:{title:"extra tax revenue, € million a year",k:"rev",f:eur,div:1e6}
+  rev:{title:"extra excise revenue, € million a year",k:"rev",f:eurM,div:1e6}
 };
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 var GRID=[];for(var i=0;i<=80;i++)GRID.push(i*XMAX/80);
@@ -435,14 +527,14 @@ var geo=null;
 function chart(){
   var svg=$("chart"), W=svg.clientWidth||900, Hh=svg.clientHeight||360, narrow=W<520;
   var m={l:narrow?46:62,r:narrow?10:16,t:30,b:48}, cm=CH[METRIC];
-  var pts=GRID.map(function(x){var o=all(x);return {x:x,c:o.c[cm.k]/cm.div,lo:Math.min(o.lo[cm.k],o.hi[cm.k])/cm.div,hi:Math.max(o.lo[cm.k],o.hi[cm.k])/cm.div};});
+  var pts=GRID.map(function(x){var o=all(x);return {x:x,c:o.c[cm.k]/cm.div,lo:lo(o,cm.k)/cm.div,hi:hi(o,cm.k)/cm.div};});
   var yMax=Math.max.apply(null,pts.map(function(p){return p.hi;}));
   var tk=ticks(0,yMax||1), y1=tk[tk.length-1];
   var X=function(x){return m.l+x/XMAX*(W-m.l-m.r);}, Y=function(v){return m.t+(y1-v)/y1*(Hh-m.t-m.b);};
   var g='';
   tk.forEach(function(v){g+='<line x1="'+m.l+'" x2="'+(W-m.r)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="'+css("--grid")+'"/>';
     g+='<text x="'+(m.l-8)+'" y="'+(Y(v)+4)+'" text-anchor="end">'+fmtTick(v)+'</text>';});
-  var xs=narrow?[0,0.5,1,1.5,2]:[0,0.25,0.5,0.75,1,1.25,1.5,1.75,2];
+  var xs=narrow?[0,0.15,0.3,0.45,0.6]:[0,0.1,0.2,0.3,0.4,0.5,0.6];
   xs.forEach(function(x){var an=x===XMAX?"end":"middle";
     g+='<line x1="'+X(x)+'" x2="'+X(x)+'" y1="'+(Hh-m.b)+'" y2="'+(Hh-m.b+4)+'" stroke="'+css("--axis")+'"/>';
     g+='<text x="'+X(x)+'" y="'+(Hh-m.b+17)+'" text-anchor="'+an+'">+€'+fix(x,2)+'</text>';
@@ -455,26 +547,25 @@ function chart(){
   var l='';pts.forEach(function(p,i){l+=(i?'L':'M')+X(p.x).toFixed(1)+' '+Y(p.c).toFixed(1);});
   g+='<path d="'+l+'" fill="none" stroke="'+css("--accent")+'" stroke-width="2.2"/>';
   // EU-average marker
-  g+='<line x1="'+X(dE_EU)+'" x2="'+X(dE_EU)+'" y1="'+m.t+'" y2="'+(Hh-m.b)+'" stroke="'+css("--c2")+'" stroke-width="1.6" stroke-dasharray="5 4"/>';
-  g+='<text x="'+(X(dE_EU)+5)+'" y="'+(m.t+12)+'" style="fill:'+css("--c2")+'">EU average price</text>';
+  g+='<line x1="'+X(dS_EU)+'" x2="'+X(dS_EU)+'" y1="'+m.t+'" y2="'+(Hh-m.b)+'" stroke="'+css("--c2")+'" stroke-width="1.6" stroke-dasharray="5 4"/>';
+  g+='<text x="'+(X(dS_EU)+5)+'" y="'+(m.t+12)+'" style="fill:'+css("--c2")+'">EU average price</text>';
   // chosen excise
-  var o=all(S.dE), cv=o.c[cm.k]/cm.div;
-  g+='<line x1="'+X(S.dE)+'" x2="'+X(S.dE)+'" y1="'+m.t+'" y2="'+(Hh-m.b)+'" stroke="'+css("--ink")+'" stroke-width="1.4"/>';
-  g+='<circle cx="'+X(S.dE)+'" cy="'+Y(cv)+'" r="4.5" fill="'+css("--accent")+'" stroke="'+css("--surface")+'" stroke-width="2"/>';
+  var o=all(S.dS), cv=o.c[cm.k]/cm.div;
+  g+='<line x1="'+X(S.dS)+'" x2="'+X(S.dS)+'" y1="'+m.t+'" y2="'+(Hh-m.b)+'" stroke="'+css("--ink")+'" stroke-width="1.4"/>';
+  g+='<circle cx="'+X(S.dS)+'" cy="'+Y(cv)+'" r="4.5" fill="'+css("--accent")+'" stroke="'+css("--surface")+'" stroke-width="2"/>';
   g+='<text x="'+m.l+'" y="14">'+cm.title+'</text>';
   g+='<rect id="hit" x="'+m.l+'" y="'+m.t+'" width="'+(W-m.l-m.r)+'" height="'+(Hh-m.t-m.b)+'" fill="transparent"/>';
   svg.setAttribute("viewBox","0 0 "+W+" "+Hh); svg.innerHTML=g;
   geo={W:W,m:m,X:X};
-  var band=METRIC==="rev"?"price elasticity ε from −0.45 to −0.30":"prevalence elasticity εprev from −0.1 to −0.3";
-  $("legend").innerHTML='<span><i class="ln"></i>central case</span><span><i class="bd"></i>range: '+band+'</span><span><i class="cur"></i>your excise</span><span><i class="eu"></i>EU average price (+€'+fix(dE_EU,2)+')</span>';
+  $("legend").innerHTML='<span><i class="ln"></i>central case (−0.30)</span><span><i class="bd"></i>range: total elasticity from −0.25 to −0.50</span><span><i class="cur"></i>your excise</span><span><i class="eu"></i>EU average price (+€'+fix(dS_EU,3)+')</span>';
 }
 function xAt(e){var svg=$("chart"),bx=svg.getBoundingClientRect(),px=((e.touches?e.touches[0].clientX:e.clientX)-bx.left)*geo.W/bx.width;
-  var x=(px-geo.m.l)/(geo.W-geo.m.l-geo.m.r)*XMAX;return Math.max(0,Math.min(XMAX,Math.round(x*100)/100));}
+  var x=(px-geo.m.l)/(geo.W-geo.m.l-geo.m.r)*XMAX;return Math.max(0,Math.min(XMAX,Math.round(x*1000)/1000));}
 function hover(e){
   if(!geo)return; var x=xAt(e), o=all(x), cm=CH[METRIC], bx=$("chart").getBoundingClientRect(), tip=$("tip");
-  var h='<div class="t">Excise +€'+fix(x,2)+' · pack '+money(o.c.P1)+'</div>'+
-    row("central",cm.f(o.c[cm.k]))+row("range",rng(lo(o,cm.k),hi(o,cm.k),cm.f));
-  tip.innerHTML=h;tip.style.display="block";
+  tip.innerHTML='<div class="t">Specific excise +€'+fix(x,3)+' · pack '+money(o.c.P1)+'</div>'+
+    row("central",cm.f(o.c[cm.k]))+row("range",rng(o,cm.k,cm.f));
+  tip.style.display="block";
   var tx=geo.X(x)*bx.width/geo.W+12;if(tx>bx.width-230)tx-=250;tip.style.left=Math.max(0,tx)+"px";tip.style.top="34px";
 }
 function row(a,b){return '<div class="r"><span>'+a+'</span><b>'+b+'</b></div>';}
@@ -484,26 +575,27 @@ function fmtTick(v){var a=Math.abs(v);if(a>=1e6)return fix(v/1e6,1)+"m";if(a>=1e
 
 // ---- table ----
 function table(){
-  var xs=[0.25,0.5,0.75,1,1.25,1.5,1.75,2,dE_EU].sort(function(a,b){return a-b;});
-  var h='<thead><tr><th>Excise increase</th><th>Pack price</th><th>Prevalence</th><th>Fewer smokers</th><th>Admissions avoided</th><th>SSN savings</th><th>Extra revenue</th></tr></thead><tbody>';
-  xs.forEach(function(x){var o=all(x),c=o.c,eu=x===dE_EU;
-    h+='<tr'+(eu?' class="hl"':'')+'><td>+€'+fix(x,2)+(eu?' (EU average price)':'')+'</td><td>'+money(c.P1)+'</td><td>'+pctp(c.post,2)+'</td><td>'+ppl(c.smk)+'</td><td>'+ppl(c.adm)+' <span class="small">('+rng(lo(o,"adm"),hi(o,"adm"),ppl)+')</span></td><td>'+eur(c.ssn)+'</td><td>'+eur(c.rev)+' <span class="small">('+rng(lo(o,"rev"),hi(o,"rev"),eur)+')</span></td></tr>';});
+  var xs=[0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,dS_EU].sort(function(a,b){return a-b;});
+  var h='<thead><tr><th>Specific excise increase</th><th>Pack price</th><th>Prevalence</th><th>Fewer smokers</th><th>Admissions avoided</th><th>Deaths avoided</th><th>SSN savings</th><th>Extra excise</th><th>Excise and VAT</th></tr></thead><tbody>';
+  xs.forEach(function(x){var o=all(x),c=o.c,eu=x===dS_EU;
+    h+='<tr'+(eu?' class="hl"':'')+'><td>+€'+fix(x,3)+(eu?' (EU average price)':'')+'</td><td>'+money(c.P1)+'</td><td>'+pct(c.prev,2)+'</td><td>'+ppl(c.smk)+'</td><td>'+cnt(c.adm)+' <span class="small">('+rng(o,"adm",cnt)+')</span></td><td>'+cnt(c.deaths)+'</td><td>'+eur(c.ssn)+'</td><td>'+eurM(c.rev)+' <span class="small">('+rng(o,"rev",eurM)+')</span></td><td>'+eurM(c.revT)+'</td></tr>';});
   $("tbl").innerHTML=h+'</tbody>';
 }
 
 // ---- events ----
-$("dERange").addEventListener("input",function(){S.dE=+this.value;render();});
-$("euBtn").addEventListener("click",function(){S.dE=dE_EU;render();});
+$("dSRange").addEventListener("input",function(){S.dS=+this.value;render();});
+$("euBtn").addEventListener("click",function(){S.dS=dS_EU;render();});
 document.querySelectorAll("#metricSeg button").forEach(function(b){b.onclick=function(){METRIC=b.getAttribute("data-m");document.querySelectorAll("#metricSeg button").forEach(function(x){x.setAttribute("aria-pressed",String(x===b));});chart();};});
 var ch=$("chart");
 ch.addEventListener("mousemove",hover);
 ch.addEventListener("mouseleave",function(){$("tip").style.display="none";});
-ch.addEventListener("click",function(e){if(!geo)return;S.dE=xAt(e);render();hover(e);});
+ch.addEventListener("click",function(e){if(!geo)return;S.dS=xAt(e);render();hover(e);});
 var rz;window.addEventListener("resize",function(){clearTimeout(rz);rz=setTimeout(chart,120);});
+buildTables();
 render();
 function renderTex(){if(!window.katex)return;document.querySelectorAll("[data-tex]").forEach(function(el){try{katex.render(el.getAttribute("data-tex"),el,{displayMode:el.classList.contains("tx"),fleqn:true,throwOnError:false});}catch(e){}});}
 if(document.readyState==="complete")renderTex();else window.addEventListener("load",renderTex);
-window.__calc={run:run,all:all,P:P,dE_EU:dE_EU};
+window.__calc={run:run,all:all,P:P,TY:TY,dS_EU:dS_EU};
 })();
 </script>
 </body>
