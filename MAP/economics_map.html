@@ -1,0 +1,3466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Economics map</title>
+<style>
+:root{
+  --bg:#f6f5f1;--surface:#ffffff;--ink:#1d2330;--muted:#667085;--line:#d9d6cd;--hit:#e0a800;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#14161b;--surface:#1e2129;--ink:#e9e7e2;--muted:#9aa3b2;--line:#363a46;--hit:#f2c230;
+  }
+  :root:not([data-theme="light"]) .node,:root:not([data-theme="light"]) .link{--accs:color-mix(in srgb,var(--acc) 60%,#fff)}
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface)}
+header h1{font-size:16px;margin:0;font-weight:650;letter-spacing:-.01em}
+header .meta{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+header .sp{flex:1}
+header input{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);width:210px;max-width:100%}
+header button{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);cursor:pointer}
+header button:hover{border-color:var(--muted)}
+:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+main{flex:1;min-height:0;display:flex}
+#canvas{flex:1;min-width:0;overflow:auto;cursor:grab;position:relative}
+#canvas.drag{cursor:grabbing;user-select:none}
+#stage{position:relative}
+#links{position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.link{fill:none;stroke:var(--accs);stroke-width:1.4;opacity:.5;--accs:var(--acc)}
+.node{--accs:var(--acc);position:absolute;left:0;top:0;height:28px;padding:0 10px;display:flex;align-items:center;gap:8px;
+  border:1px solid color-mix(in srgb,var(--accs) 40%,var(--line));border-radius:8px;
+  background:color-mix(in srgb,var(--acc) 10%,var(--surface));color:var(--ink);
+  font:500 13px/1 system-ui,-apple-system,"Segoe UI",sans-serif;white-space:nowrap;cursor:pointer;will-change:transform}
+.node:hover{border-color:var(--accs)}
+.node.leaf{background:var(--surface);border-left:3px solid var(--accs)}
+.node.L{flex-direction:row-reverse}
+.node.leaf.L{border-left:1px solid color-mix(in srgb,var(--accs) 40%,var(--line));border-right:3px solid var(--accs)}
+.node.d0{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:650;font-size:14px}
+.node.d1{background:var(--surface);border:1.5px solid var(--ink);font-weight:650;font-size:14px}
+.node.d2{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.node.placeholder{background:transparent;border:1.5px dashed var(--muted);color:var(--muted)}
+.node .n{font-size:11px;font-weight:600;min-width:18px;height:18px;line-height:18px;padding:0 5px;border-radius:9px;text-align:center;
+  background:color-mix(in srgb,var(--accs) 20%,transparent);font-variant-numeric:tabular-nums}
+.node.d0 .n,.node.d2 .n{background:rgba(255,255,255,.24)}
+.node.open .n{opacity:.45}
+.node.sel{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+.node.hit{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--hit)}
+#grip{flex:none;width:7px;cursor:col-resize;background:var(--line);opacity:.55;touch-action:none}
+#grip:hover,#grip.on{opacity:1;background:var(--muted)}
+[hidden]{display:none!important}
+header .seg{display:inline-flex}
+header .seg button{border-radius:0;margin-left:-1px}
+header .seg button:first-child{border-radius:8px 0 0 8px;margin-left:0}
+header .seg button:last-child{border-radius:0 8px 8px 0}
+header button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#wheel{flex:1;min-width:0;min-height:0;position:relative;overflow:hidden}
+#wsvg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.arc{cursor:pointer;outline:none}
+.arc path{stroke:var(--bg);stroke-width:1;fill-rule:evenodd}
+.arc:hover path{filter:brightness(1.08)}
+.arc text{font:500 11px system-ui,-apple-system,"Segoe UI",sans-serif;fill:var(--ink);pointer-events:none}
+.arc.on text{fill:#fff;font-weight:600}
+.arc.sel path,.arc:focus-visible path{stroke:var(--ink);stroke-width:2.5}
+.arc.hit path{stroke:var(--hit);stroke-width:3}
+#wcenter{cursor:pointer}
+#wcenter circle{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+#wcenter text{fill:var(--ink);text-anchor:middle;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+#wcenter .t{font-size:14px;font-weight:650}
+#wcenter .s{font-size:11.5px;fill:var(--muted)}
+#panel{width:var(--pw,340px);flex:none;border-left:1px solid var(--line);background:var(--surface);padding:18px 18px 28px;overflow:auto}
+#panel .crumbs{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.6}
+#panel .crumbs button{all:unset;cursor:pointer;color:var(--muted)}
+#panel .crumbs button:hover{color:var(--ink);text-decoration:underline}
+#panel h2{font-size:19px;line-height:1.25;margin:0 0 12px;letter-spacing:-.01em;text-wrap:balance}
+#panel h2::before{content:"";display:block;width:28px;height:4px;border-radius:2px;background:var(--pacc,var(--ink));margin-bottom:10px}
+#panel .jel{display:inline-block;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--muted);border:1px solid var(--line);border-radius:6px;padding:2px 7px;margin:6px 0 2px}
+body.gaps .node:not(.d0){border-style:dashed}
+body.gaps .node.d2{background:transparent;color:var(--ink);border:1.5px dashed var(--acc)}
+#panel .desc{margin:0 0 4px;font-size:14.5px;line-height:1.55}
+#panel ul{margin:0 0 4px;padding-left:18px}
+#panel li{margin:5px 0}
+#panel .lab{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:16px 0 8px;font-weight:600}
+#panel .chips{display:flex;flex-wrap:wrap;gap:6px}
+#panel .chips button{font:inherit;font-size:12.5px;padding:4px 9px;border-radius:7px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer}
+#panel .chips button:hover{border-color:var(--muted)}
+#panel .rel button{border-left:3px solid var(--acc);text-align:left}
+#panel .rel small{color:var(--muted);font-size:11px;margin-left:6px}
+header .zoom{display:inline-flex}
+header .zoom button{border-radius:0;margin-left:-1px;min-width:32px;font-variant-numeric:tabular-nums}
+header .zoom button:first-child{border-radius:8px 0 0 8px;margin-left:0}
+header .zoom button:last-child{border-radius:0 8px 8px 0}
+#panel a{display:block;color:var(--ink);font-size:13px;margin:5px 0;text-underline-offset:3px}
+#panel .empty{color:var(--muted)}
+@media (max-width:760px){
+  main{flex-direction:column}
+  #grip{display:none}
+  #panel{width:auto;border-left:0;border-top:1px solid var(--line);max-height:42%;padding:14px 16px 20px}
+  header input{width:100%;order:5}
+  header .sp{flex-basis:100%;height:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Economics map</h1>
+  <span class="meta" id="meta"></span>
+  <span class="sp"></span>
+  <span class="meta" id="count" aria-live="polite"></span>
+  <span class="seg" role="group" aria-label="Map"><button id="dvault" type="button" aria-pressed="true">In vault</button><button id="dgaps" type="button" aria-pressed="false">Not covered</button></span>
+  <span class="seg" role="group" aria-label="View"><button id="vtree" type="button" aria-pressed="true">Tree</button><button id="vwheel" type="button" aria-pressed="false">Wheel</button></span>
+  <input id="q" type="search" placeholder="Search topics" aria-label="Search topics">
+  <span class="zoom"><button id="zout" type="button" aria-label="Zoom out">−</button><button id="zlabel" type="button" title="Reset zoom to 100%">100%</button><button id="zin" type="button" aria-label="Zoom in">+</button><button id="zfit" type="button" title="Fit the open map in the window">Fit</button></span>
+  <button id="expand" type="button">Expand all</button>
+  <button id="collapse" type="button">Collapse</button>
+</header>
+<main>
+  <div id="canvas"><div id="stage"><svg id="links" aria-hidden="true"></svg></div></div>
+  <div id="wheel" hidden><svg id="wsvg" role="img" aria-label="Wheel view of the map"><defs id="wdefs"></defs><g id="warcs"></g><g id="wcenter" role="button" tabindex="0" aria-label="Go up one level"><circle></circle><rect class="bar" width="28" height="4" rx="2"></rect><g class="lab"></g></g></svg></div>
+  <div id="grip" role="separator" aria-orientation="vertical" aria-label="Resize the side panel" tabindex="0"></div>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+
+<!--
+  The map is the outline below. Two spaces per level.
+  "> text"  is the description shown in the side panel
+  "- text"  adds a key point to the node above
+  "~ Title" links the node to a related one (use "Parent / Title" if the title is not unique); shown in the panel only
+  "@ path"  sets the vault page of the node above (inherited by its children)
+  "! placeholder" marks an empty branch
+-->
+<script type="text/plain" id="outline">
+Economics and econometrics
+  > The whole map: economic theory and policy on the left, the empirical toolbox on the right. Everything here comes from pages in the vault.
+  Economics
+    > The theory and policy side: how markets work, where they fail, what governments do about it, and how economies are measured.
+    Microeconomics
+      > How consumers and firms choose and how their choices meet in a market. It is the benchmark every later field departs from.
+      Supply and demand
+        > The basic market model: two curves, one price. It is the starting point for every partial-equilibrium argument in the map.
+        @ UNITE/Microeconomia/Pages/00. Basi, domanda e offerta
+        Demand and supply curves
+          > Demand relates price to the quantity buyers want, supply to the quantity sellers offer. A price change moves us along a curve, anything else shifts it.
+          - Quantity demanded falls with price, quantity supplied rises
+          - Movement along a curve vs shift of the curve
+        Market equilibrium
+          > The price at which the two quantities coincide. Away from it, shortages or surpluses push the price back.
+          - Price at which quantity demanded = quantity supplied
+          - Excess demand or supply pushes the price back
+      Elasticity
+        > How strongly a quantity reacts to a price, in percentage terms. It decides who bears a tax and how large the distortion is.
+        @ UNITE/Microeconomia/Pages/01. Elasticità
+        @ Concepts/Concept pages/Elasticità · Elasticity
+        Demand elasticity
+          > The percentage fall in quantity demanded after a 1% price rise. It tells us whether raising the price raises or lowers revenue.
+          ~ Partial equilibrium
+          ~ Ramsey rule
+          ~ Monopoly pricing
+          ~ Excess burden
+          ~ Logs
+          - ε = %ΔQ / %ΔP
+          - Elastic if |ε| > 1
+          - Revenue rises with price only if demand is inelastic
+        Supply elasticity
+          > The percentage rise in quantity supplied after a 1% price rise. It is low in the short run and higher once firms can adjust capacity.
+          - % change in quantity supplied / % change in price
+      Consumer theory
+        > The consumer picks the best affordable bundle given preferences and a budget. Demand curves are the result of this choice.
+        @ UNITE/Microeconomia/Pages/02. Preferenze e scelta del consumatore
+        Preferences
+          > Rankings over bundles, drawn as indifference curves. Their slope, the marginal rate of substitution, is the consumer's own trade-off between two goods.
+          - Indifference curves
+          - MRS: how much of one good is given up for another
+        Budget line
+          > All bundles that cost exactly the available income. Its slope is the market's trade-off between two goods, the price ratio.
+          - p1·x1 + p2·x2 = m
+          - Slope −p1 / p2
+        Optimal choice
+          > The bundle where the highest reachable indifference curve touches the budget line, so the personal and the market trade-off coincide.
+          - Tangency: MRS = price ratio
+        Price- and income-consumption curves
+          > We trace the optimal bundle while one price or income changes. The first exercise delivers the demand curve of the good.
+          - Optimal bundles as a price or income changes
+          - The price curve gives the demand curve
+        Normal and inferior goods
+          > A good is normal if we buy more of it when income rises and inferior if we buy less.
+          - Normal: demand rises with income
+          - Inferior: it falls
+        Marshallian vs Hicksian demand
+          > Two demand curves for the same good: one holds income fixed, the other holds utility fixed. Only the second isolates the substitution effect, which is what exact welfare measures need.
+          ~ Marshallian surplus
+          ~ Willingness to pay
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/03. Theoretical tools for CBA
+          - Marshallian: income held fixed
+          - Hicksian: utility held fixed, substitution effect only
+      Production and costs
+        > How firms turn inputs into output and what that costs. The cost curves are what the supply side of the market is built on.
+        @ UNITE/Microeconomia/Pages/03. Produzione e costi
+        Technology
+          > The production function gives the most output obtainable from given inputs. Adding more of one input alone eventually yields less and less.
+          - Production function
+          - Marginal product and diminishing returns
+        Two variable inputs
+          > With labour and capital both adjustable, isoquants show the input mixes for a given output. The firm picks the cheapest mix.
+          - Isoquants
+          - Cost minimisation: MRTS = input price ratio
+        Cost functions
+          > The least cost of producing each output level. Average and marginal cost curves follow from it and drive the supply decision.
+          - Fixed and variable, average and marginal cost
+          - MC crosses AC at its minimum
+      Competitive markets
+        > Many price-taking firms and free entry. The outcome is the efficiency benchmark against which taxes and market power are judged.
+        @ UNITE/Microeconomia/Pages/04. Profitti e mercati concorrenziali
+        Profit maximisation
+          > A price taker produces until the last unit costs exactly the price. This rule turns the marginal cost curve into the supply curve.
+          - Price taker: P = MC
+          - Supply: the MC curve above minimum average variable cost
+        Short and long run
+          > In the short run the number of firms is fixed and profits can be positive. In the long run entry and exit remove them.
+          - Long run: entry drives profits to zero
+          - P = minimum average cost
+        Aggregate surplus
+          > The gains from trade in a market, split between buyers and sellers. Perfect competition makes this sum as large as possible.
+          ~ Social surplus
+          ~ Marshallian surplus
+          - Consumer + producer surplus
+          - Largest at the competitive equilibrium
+        Taxes on goods
+          > A tax separates the price buyers pay from the price sellers keep. Fewer units are traded and part of the surplus is lost.
+          ~ Partial equilibrium
+          ~ Excess burden
+          @ UNITE/Microeconomia/Pages/05. Interventi sul mercato
+          - Wedge between the buyer and the seller price
+          - Deadweight loss
+      Monopoly
+        > A single seller facing the whole demand curve. It sets price above marginal cost, which is the textbook case of market power.
+        @ UNITE/Microeconomia/Pages/06. Monopolio e discriminazione di prezzo
+        Monopoly pricing
+          > The monopolist restricts quantity until marginal revenue equals marginal cost. The less elastic the demand, the higher the markup.
+          ~ Allocative inefficiency
+          ~ Tax incidence / Monopoly
+          ~ Measuring market power
+          ~ Double marginalisation
+          - MR = MC, price above marginal cost
+          - Markup falls as demand gets more elastic
+        Price discrimination
+          > Charging different prices for the same good to capture more surplus: person by person, by quantity bought, or by group.
+          - First, second and third degree
+      Oligopoly
+        > A few firms whose profits depend on each other's choices. The outcome depends on whether they compete in quantities or in prices.
+        @ UNITE/Microeconomia/Pages/07. Teoria dei giochi e oligopolio
+        Cournot
+          > Firms pick quantities at the same time, each taking the rival's output as given. Price ends up between the monopoly and the competitive level.
+          ~ Unilateral effects
+          ~ Nash equilibrium
+          - Firms choose quantities
+          - Outcome between monopoly and competition
+        Bertrand
+          > Firms pick prices instead of quantities. With identical goods, undercutting drives the price down to marginal cost even with two firms.
+          ~ Nash equilibrium
+          ~ Incentive to cheat
+          - Firms choose prices
+          - Homogeneous goods: price falls to marginal cost
+      Welfare economics
+        > The criteria we use to say that one allocation is better than another, and what markets can and cannot guarantee.
+        @ Concepts/Concept pages/Surplus ed efficienza · Welfare, surplus and efficiency
+        Pareto efficiency
+          > An allocation is efficient if nobody can be made better off without hurting someone else. It says nothing about fairness.
+          ~ Prisoner's dilemma
+          ~ Efficiency criterion
+          @ UNIBO/Foundations (PE1)/Pages/01. Competition and efficiency
+          - Nobody can gain without someone losing
+        First welfare theorem
+          > Under perfect competition and no market failures, the market outcome is Pareto efficient. It is the formal version of the invisible hand.
+          ~ Why intervene
+          @ UNIBO/Foundations (PE1)/Pages/01. Competition and efficiency
+          - A competitive equilibrium is Pareto efficient
+          - The invisible hand, absent market failures
+        Second welfare theorem
+          > Any efficient allocation can be reached by the market once initial resources are redistributed with lump-sum transfers. Efficiency and equity can be separated in principle.
+          ~ Lump-sum taxes
+          @ UNITE/Politica Economica/Pages/02. Economia del benessere
+          - Any efficient allocation can be reached with lump-sum transfers
+        Old and new welfare economics
+          > The old school summed utilities across people. The new one refuses interpersonal comparisons and relies on the Pareto principle alone.
+          @ UNITE/Politica Economica/Pages/02. Economia del benessere
+          - Old: cardinal utility, comparable across people
+          - New: ordinal utility and the Pareto principle
+        Arrow's impossibility theorem
+          > There is no rule that turns individual rankings into a social ranking while respecting a short list of reasonable conditions, unless one person decides.
+          ~ Voting theory
+          @ UNITE/Politica Economica/Pages/02. Economia del benessere
+          - No social ordering meets all of Arrow's axioms
+          - Unless one person dictates
+    Game theory and bargaining
+      > Choices when the outcome depends on what others do, and how this helps us read real negotiations.
+      @ Concepts/Concept pages/Teoria dei giochi · Game theory
+      Simultaneous games
+        > Players move without seeing each other's choice. The tool is the best response, the solution is the Nash equilibrium.
+        @ UNIBO/Negotiation And Bargaining/Pages/01. Game theory foundations
+        Nash equilibrium
+          > A profile of strategies from which nobody wants to move alone. A game can have none in pure strategies, one, or several.
+          - Every strategy is a best response to the others
+        Prisoner's dilemma
+          > Each player does better by defecting whatever the other does, so both defect and both lose. Individual rationality defeats the common interest.
+          ~ Incentive to cheat
+          ~ Repeated games
+          - Defecting is dominant
+          - The equilibrium is Pareto inefficient
+        Social dilemmas
+          > The prisoner's dilemma with many players: overuse of a common resource, underfunding of a public good.
+          ~ Private provision
+          ~ Definition
+          - Tragedy of the commons
+          - Public goods and free riding
+        Coordination games
+          > Players want to match each other but there are several ways to do it. Which equilibrium is played depends on expectations and trust.
+          - Several equilibria
+          - Stag hunt: the efficient one is the risky one
+        Anti-coordination games
+          > Each player is better off doing the opposite of the other. The conflict is over who takes which role.
+          - Players gain by choosing different actions
+      Sequential games
+        > Players move in turns and see what came before. We solve them from the end, by backward induction.
+        @ UNIBO/Negotiation And Bargaining/Pages/02. Sequential games and social preferences
+        Ultimatum game
+          > One player proposes a split and the other accepts or refuses. Real responders reject unfair offers, against the standard prediction.
+          - Theory: accept any positive offer
+          - In practice low offers are rejected
+        Structured bargaining
+          > Offers and counter-offers alternate while the amount to share shrinks every round. Delay is costly, so agreement should come immediately.
+          ~ ZOPA
+          - Offers alternate while the endowment erodes
+          - Solved by backward induction
+        Social preferences
+          > People care about fairness and about others' payoffs, not only their own. Adding this to utility explains what we observe in the lab.
+          - Fairness, reciprocity, altruism
+          - Enter the utility function
+      Behavioural insights
+        > Systematic departures from full rationality that matter at the bargaining table.
+        @ UNIBO/Negotiation And Bargaining/Pages/03. Behavioral economics and the psychology of first offers
+        Bounded rationality
+          > We decide with limited information, time and attention, so we use rules of thumb. These work most of the time and fail predictably.
+          ~ Frictions
+          - Limited information, time and computation
+          - Heuristics instead of optimisation
+        First offers and anchoring
+          > The first number on the table becomes the reference for everything that follows. This is why opening first can pay.
+          ~ Reservation and target price
+          - The first number pulls the final outcome
+        Framing
+          > The same deal is judged differently when presented as a gain or as a loss, because losses weigh more.
+          - Same outcome, different choice as a gain or as a loss
+        Endowment effect and status quo bias
+          > We ask more to give something up than we would pay to get it, and we stick to the current situation.
+          @ UNIBO/Negotiation And Bargaining/Pages/04. Distributive bargaining and BATNA
+          - What we own is valued more
+        Cognitive and motivational biases
+          > Two families of errors: mistakes in how we process information, and distortions that come from what we want to believe.
+          @ UNIBO/Negotiation And Bargaining/Pages/05. Cognitive and motivational biases in negotiation
+          - Cognitive: systematic errors in processing information
+          - Motivational: distortions from goals and self-image
+      Negotiation
+        > The practical toolkit: how to prepare, where the room for agreement is, and how to enlarge it.
+        @ UNIBO/Negotiation And Bargaining/Pages/04. Distributive bargaining and BATNA
+        BATNA
+          > What we do if the negotiation fails. The better the alternative, the stronger our position.
+          - Best alternative to a negotiated agreement
+          - Sets the walk-away point
+        Reservation and target price
+          > The reservation price is the limit beyond which we walk away. The target is the ambitious but realistic result we aim for.
+          - Reservation: the worst deal still accepted
+          - Target: the deal aimed for
+        ZOPA
+          > The range of deals both sides prefer to no deal. Bargaining is about where inside this range we end up.
+          - Zone between the two reservation prices
+          - No overlap, no deal
+        Integrative negotiation
+          > Instead of splitting a fixed amount, we look for trades across issues that the parties value differently. Both sides can gain.
+          @ UNIBO/Negotiation And Bargaining/Pages/06. Creating value and integrative negotiation
+          - Interests, not positions
+          - Turn one issue into several, then logroll
+        Multi-party negotiation
+          > With more than two parties, coalitions form and the process itself has to be managed.
+          @ UNIBO/Negotiation And Bargaining/Pages/07. Multi-party negotiations
+          - Coalitions
+          - Managing the group process
+    Household economics
+      > How decisions are taken inside a household and who gets what. It is the framework behind your FEX project.
+      @ UNIBO/Field experiments/FEX project dossier
+      ~ Game theory and bargaining
+      Household models
+        > Three ways to model a household with more than one decision-maker.
+        @ UNIBO/Field experiments/Material/Papers/Companion notes/Baland & Ziparo (2018) Intra-Household Bargaining in Poor Countries
+        Unitary model
+          > The household acts as one person with one set of preferences, so it does not matter who earns the money.
+          - Income pooling: only total income counts
+          - Rejected when money paid to women is spent differently
+        Collective model
+          > Spouses reach an efficient outcome, and bargaining power decides how the gains are shared.
+          - Decisions are Pareto efficient
+          - Weights depend on outside options
+          ~ Pareto efficiency
+        Non-cooperative model
+          > Each spouse chooses separately, taking the other's choices as given, so the outcome can be inefficient.
+          ~ Nash equilibrium
+        Limited commitment
+          > Spouses cannot commit to a deal, so it is renegotiated whenever one of them could do better outside it.
+        Testing efficiency
+          > Checking whether households really reach efficient outcomes, including extended families living with the husband's parents.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Gupta et al. (2021) Intra-household Efficiency in Extended Family Households
+      Bargaining power
+        > What decides whose preferences count more, and how it is measured.
+        Outside options
+          > What each spouse would get without the other. A better outside option means more weight in the household.
+          ~ BATNA
+        Control of resources
+          > Who receives an income shapes how it is spent, against the unitary model.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Tommasi (2019) Control of Resources, Bargaining Power and the Demand of Food
+        Resource shares
+          > The share of household consumption each member gets, estimated from spending data.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Tommasi & Wolf (2018) Estimating household resource shares
+        Decision-making indices
+          > Survey questions on who has a say over spending or work, combined into a standardised index.
+          @ UNIBO/Field experiments/FEX project dossier
+      Information between spouses
+        > Spouses often do not share what they know, and this changes household choices.
+        Hiding income
+          > Given the chance, spouses hide money from each other, a quarter of the time in Castilla's Uttarakhand experiment.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Castilla (2016) What's Yours is Mine, and What's Mine is Mine
+        Observability
+          > Choices change with what the spouse can see, depending on who controls the money.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Ashraf (2009) Spousal Control and Intra-Household Decision Making
+        Knowledge of preferences
+          > Spouses predict each other's preferences poorly.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Tagat et al. (2024) Private lives - Experimental evidence on information completeness in spousal preferences
+        Information pooling
+          > In an efficient household it would not matter which spouse learned something. Experiments find that information is not pooled.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Munro (2025) Intra-Household Experiments
+      Empowerment interventions
+        > Programmes that try to strengthen women's position in the household, and what the experiments found.
+        Cash transfers to women
+          > Money paid to women, to test whether controlling income raises their say.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/De Rock et al. (2022) Household Responses to Cash Transfers
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Kotiswaran (2026) Wages for Housework - India's Experiment with Unconditional Cash Transfers to Women
+          ~ Control of resources
+        Couples' programmes
+          > Joint workshops for husband and wife. In Liberia, couples' financial planning left the woman's say unchanged.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Gupta et al. (2026) Better Together - The Impact of Cash Transfers and Couples' Financial Planning on Household Dynamics and Economic Outcomes
+        Communication training
+          > Training wives to state their preferences so that the husband updates his beliefs. This is the intervention in your FEX design.
+          @ UNIBO/Field experiments/FEX project dossier
+        Experiments on households
+          > How lab and field experiments study household decisions, and what they found.
+          @ UNIBO/Field experiments/Material/Papers/Companion notes/Munro (2025) Intra-Household Experiments
+          ~ Field experiments
+    Competition policy
+      > The rules that stop firms from reducing competition: when market power is a problem, how it is measured, and what the authorities can do. It is applied industrial organisation.
+      @ Concepts/Concept pages/Concorrenza e potere di mercato · Competition and market power
+      Market power and welfare
+        > Why market power is costly for society, and when the market itself keeps it in check.
+        @ UNIBO/Competition policy (PE3)/Pages/02. market power and welfare
+        Allocative inefficiency
+          > A price above marginal cost excludes buyers who value the good more than it costs to make. The lost trades are the deadweight loss.
+          - Price above marginal cost: deadweight loss
+          - Rent-seeking adds to it
+        Productive inefficiency
+          > A firm protected from competition has less reason to keep costs down, so the same output uses more resources.
+          - Less pressure to cut costs
+        Dynamic efficiency
+          > The effect of market power on innovation over time. Some expected profit is needed to invest, too much protection removes the pressure to do so.
+          - Market power and the incentive to innovate
+        Contestable markets
+          > If entry and exit are free, the mere threat of a rival forces even a single firm to price competitively.
+          ~ Countervailing factors
+          - The threat of entry disciplines the incumbent
+          - Needs no sunk costs
+      Market definition
+        > The first step of any case: which products and which areas actually compete with each other.
+        @ UNIBO/Competition policy (PE3)/Pages/03. Market definition and the assessment of market power
+        SSNIP test
+          > We ask whether a hypothetical monopolist over a set of products could profitably raise prices by a small amount. If buyers would switch away, the market is wider.
+          - Would a small, lasting price rise pay for a hypothetical monopolist?
+          - If not, widen the market
+        Geographic market
+          > The area in which the firms compete. The logic of the SSNIP test is applied to locations instead of products.
+          - The same test over areas
+        Measuring market power
+          > Direct measures look at the markup over cost. In practice authorities start from market shares and concentration.
+          - Lerner index
+          - Market shares and HHI
+      Collusion
+        > Firms agreeing, openly or tacitly, to keep prices high. It is the most harmful conduct and the hardest to detect.
+        @ UNIBO/Competition policy (PE3)/Pages/04. Collusion and horizontal agreements
+        Incentive to cheat
+          > Every cartel member would earn more by secretly undercutting the others. This is why cartels are fragile.
+          - Each firm gains by undercutting the cartel
+        Repeated games
+          > When firms meet again and again, cheating today can be punished tomorrow. Collusion is sustainable if the future matters enough.
+          - Collusion holds if firms are patient enough
+          - Gain from deviating vs future punishment
+        Facilitating factors
+          > Market features that make a cartel easier to reach and to police, such as few similar firms and visible prices.
+          - Few, similar firms
+          - Transparent prices, frequent interaction
+        Policies
+          > How authorities fight cartels: heavy fines, and leniency for the first member that reports the others.
+          - Fines
+          - Leniency programmes
+      Horizontal mergers
+        > Mergers between direct competitors. The question is whether lost competition outweighs the cost savings.
+        @ UNIBO/Competition policy (PE3)/Pages/05. Horizontal mergers
+        Unilateral effects
+          > After the merger the new firm finds it profitable to raise prices by itself, because part of the lost sales now stays in-house.
+          - The merged firm raises price on its own
+          - Shares, concentration, closeness of the parties
+        Efficiency gains
+          > Lower costs from the merger can be passed on to consumers. If large enough, they compensate for the weaker competition.
+          ~ Productive inefficiency
+          - Cost savings can offset the price rise
+        Countervailing factors
+          > Elements that limit the harm of a merger: easy entry, strong buyers, or a target that would have exited anyway.
+          - Entry, buyer power, failing firm
+        Coordinated effects
+          > The merger changes the market so that the remaining firms can collude more easily.
+          ~ Facilitating factors
+          - The merger makes collusion easier
+      Vertical restraints
+        > Agreements or mergers between firms at different stages of the chain, such as a producer and its retailer. Often efficient, sometimes exclusionary.
+        @ UNIBO/Competition policy (PE3)/Pages/06. Vertical Mergers
+        Double marginalisation
+          > Producer and retailer each add their own markup, so the final price is higher than a single integrated firm would set.
+          - Two markups along the chain
+          - Integration lowers the final price
+        Free-riding
+          > A retailer can profit from the service another retailer provides without paying for it. Vertical restraints protect the incentive to invest.
+          - Retailers under-invest in services
+          - Restraints restore the incentive
+        Foreclosure
+          > An integrated firm denies rivals access to an input or to customers, or raises their costs.
+          - Rivals cut off from inputs or customers
+      Abuse of dominance
+        > Conduct by a dominant firm that excludes rivals instead of competing on the merits.
+        @ UNIBO/Competition policy (PE3)/Pages/07. Abuse of dominance
+        Predatory pricing
+          > A dominant firm prices below cost to force a rival out, planning to raise prices once it is gone.
+          ~ Foreclosure
+          - Price below cost to push a rival out
+          - Losses recouped later
+        Rebates
+          > Discounts conditional on buying most or all from the dominant firm. They can tie customers and shut rivals out.
+          - Loyalty discounts that can exclude rivals
+        Effects-based approach
+          > The modern standard: a practice is judged by what it does to competition and consumers, not by its legal form.
+          - Conduct judged by its effects, not its form
+      EU competition law
+        > The legal framework in the European Union and who enforces it.
+        @ UNIBO/Competition policy (PE3)/Pages/01. Introduction
+        Objectives
+          > What EU competition policy protects: consumers in the first place, and the integration of national markets.
+          ~ Market integration
+          - Consumer welfare
+          - Market integration
+        Articles 101 and 102
+          > The two pillars of the Treaty: one bans anti-competitive agreements, the other bans the abuse of a dominant position.
+          ~ Collusion
+          ~ Abuse of dominance
+          - 101: agreements between firms
+          - 102: abuse of a dominant position
+        Competition policy vs regulation
+          > Competition policy intervenes after the fact against specific conduct. Regulation sets rules in advance for a whole sector.
+          ~ How to intervene
+          - Ex post enforcement vs ex ante rules
+    Public economics
+      > When and how the government should intervene in markets, and what its taxes and programmes do.
+      Role of government
+        > The four questions of public economics: when to intervene, how, with what effects, and why governments act as they do.
+        @ UNIBO/Foundations (PE1)/Pages/00. Introduction
+        @ Concepts/Concept pages/Fallimenti del mercato · Market failure
+        Why intervene
+          > Two reasons: markets that fail to be efficient, and outcomes that are efficient but too unequal.
+          ~ Policy objectives
+          - Market failures
+          - Redistribution
+        How to intervene
+          > The instruments: changing prices with taxes and subsidies, imposing rules, or providing the good directly.
+          ~ Policy tools
+          - Taxes and subsidies
+          - Regulation, public provision
+        Political economy
+          > Policies are chosen by politicians and voters with their own interests, so actual choices differ from the ideal ones.
+          ~ Public choice
+          - Why governments choose the policies they do
+      Tax incidence
+        > Who really bears a tax. The answer depends on market conditions, not on who writes the cheque.
+        @ UNIBO/Foundations (PE1)/Pages/02. Tax incidence
+        @ Concepts/Concept pages/Imposte e incidenza · Taxation and incidence
+        Partial equilibrium
+          > In a single market the burden is split according to elasticities. The side that reacts less pays more.
+          - The less elastic side bears more of the tax
+          - Who pays by law does not matter
+        Monopoly
+          > With market power the pass-through of a tax to consumers depends on the shape of demand and can even exceed the tax.
+          - Pass-through can be below or above 100%
+        Specific vs ad valorem
+          > A tax per unit and a tax as a share of the price are interchangeable in competitive markets but not when the seller sets the price.
+          - Equivalent under competition, not under monopoly
+        General equilibrium
+          > A tax in one market changes prices and factor incomes in others, so the final burden can fall far from where the tax was levied.
+          - The burden moves across markets and factors
+      Efficiency cost of taxes
+        > Taxes change behaviour, and this costs society more than the money collected.
+        @ UNIBO/Foundations (PE1)/Pages/03. Efficiency cost of taxes
+        Excess burden
+          > The loss from the trades that no longer happen because of the tax. It grows more than proportionally with the tax rate.
+          ~ Social cost of public funds
+          ~ Distortionary taxes
+          ~ Sufficient statistics
+          - Welfare lost beyond the revenue raised
+          - Grows with the square of the tax rate and with elasticity
+        Marshallian surplus
+          > The usual consumer surplus measured on the ordinary demand curve. It is how the welfare loss is drawn in practice.
+          - Area under demand and above the price
+      Optimal taxation
+        > How to raise a given revenue with the smallest welfare loss, and how equity changes the answer.
+        ~ Kinks
+        @ UNIBO/Foundations (PE1)/Pages/04. Optimal taxation
+        Lump-sum taxes
+          > A tax that does not depend on anything we do distorts no decision. It is the efficient benchmark but ignores differences between people.
+          - No distortion, but blind to ability to pay
+        Ramsey rule
+          > To minimise the total distortion, goods whose demand reacts little should carry higher rates.
+          - Tax more the goods with less elastic demand
+        Equity
+          > Goods with inelastic demand are often necessities. Once we care about distribution, the Ramsey prescription is corrected.
+          ~ Inequality measurement
+          - Extended rule: weigh goods by who consumes them
+      Externalities
+        > Effects of one agent's choice on others that pass outside the market. The market then produces too much or too little.
+        @ UNIBO/Foundations (PE1)/Pages/05. Externalities
+        Definition
+          > An externality exists when an action imposes a cost or a benefit on third parties that the decision-maker does not take into account.
+          ~ Spillovers
+          - A cost or benefit on others that is not priced
+          - Private ≠ social marginal cost
+        Private remedies
+          > The parties can bargain to an efficient solution without the state, if rights are clear and bargaining is cheap. With many parties this fails.
+          - Coase: bargaining with clear property rights and low transaction costs
+        Pigouvian tax
+          > A tax equal to the damage caused by the last unit makes the polluter face the full social cost.
+          ~ Climate targets and regional gaps
+          - Tax = marginal external damage
+        Taxes vs standards
+          > The choice between putting a price on the externality and fixing the quantity allowed.
+          - Price vs quantity instruments
+        Cap-and-trade
+          > The state fixes total emissions and lets firms trade the permits. The market price of a permit works like a tax.
+          ~ Climate targets and regional gaps
+          - Cap on total emissions, tradable permits
+          - Abatement happens where it is cheapest
+      Public goods
+        > Goods everyone can use at once and nobody can be excluded from. Markets provide too little of them.
+        @ UNIBO/Foundations (PE1)/Pages/06. Public goods
+        Definitions
+          > The two properties, non-rivalry and non-excludability, and the intermediate cases.
+          - Non-rival and non-excludable
+        Private provision
+          > When contributions are voluntary each person relies on the others, and the total falls short of the efficient level.
+          - Free riding: too little is provided
+        Samuelson rule
+          > The efficient quantity is where the sum of everyone's willingness to pay for one more unit equals its cost.
+          - Sum of the marginal rates of substitution = marginal cost
+        Lindahl prices
+          > Each person pays a price equal to their own valuation of the good. Efficient in theory, but people have no reason to reveal that valuation.
+          - Personalised prices equal to each marginal benefit
+        Distortionary taxes
+          > When the public good is financed with taxes that distort, its true cost is higher and the optimal quantity is lower.
+          - Funding costs more than a euro per euro: provide less
+      Social insurance
+        > Public programmes that insure against risks such as illness or unemployment, and why private markets do not do the job.
+        @ UNIBO/Foundations (PE1)/Pages/07. Social insurance
+        @ Concepts/Concept pages/Stato sociale · Welfare state
+        Why social insurance
+          > Private insurance markets fail for these risks. The state can step in, at the cost of changing behaviour.
+          - Insurance markets fail
+          - Benefit-distortion trade-off
+        Insurance model
+          > The basic model of insurance demand. A risk-averse person offered a fair price chooses to be fully covered.
+          - At a fair price people insure fully
+        Adverse selection
+          > Insurers cannot tell high from low risks. Contracts designed to separate them leave the low risks under-insured, or the market unravels.
+          - Rothschild-Stiglitz: two risk types
+          - Pooling does not survive
+          - Separating: low risks get partial coverage
+        Moral hazard
+          > Once covered, people take less care or stay longer on benefits. More generous insurance means larger distortions.
+          ~ Securitisation
+          ~ Bailouts
+          ~ Sufficient statistics
+          - Insurance weakens the effort to avoid the loss
+          - Optimal benefits trade insurance against incentives
+        Public provision
+          > Cases where a mandate is not enough and the state must insure directly, such as risks that hit everyone at once.
+          - Correlated shocks
+          - Reclassification risk
+    Cost-benefit analysis
+      > The method for deciding whether a project or policy is worth doing: all its effects are valued in money and compared.
+      Foundations
+        > What a cost-benefit analysis is, what it assumes, and where it is criticised.
+        The ten steps
+          > The standard sequence of a cost-benefit analysis, from deciding whose benefits count to recommending an alternative.
+          ~ Evaluation
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/01. Introduction to CBA and illustrative case studies
+          - From standing and alternatives to net present value and sensitivity
+        Willingness to pay
+          > Benefits are measured by what people would pay to obtain an effect, or would accept to bear it.
+          ~ Observed behaviour
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/02. Conceptual foundations and criticism of CBA
+          - WTP and WTA as the money measure of benefits
+          - Depends on income: an equity problem
+        Efficiency criterion
+          > A policy passes if total benefits exceed total costs, even when the losers are not actually compensated.
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/02. Conceptual foundations and criticism of CBA
+          - Positive net benefits: winners could compensate losers
+        Objections
+          > The standard critiques: some things should not be priced, and a euro counts the same for rich and poor.
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/02. Conceptual foundations and criticism of CBA
+          - Not everything can be monetised
+          - Distribution is ignored
+      Tools
+        > The pieces of microeconomic theory that the method relies on.
+        @ UNIBO/Cost-benefit analysis (PE2)/Pages/03. Theoretical tools for CBA
+        Social surplus
+          > The sum of what consumers, producers and the government gain. The change in this sum is the net benefit of a policy.
+          - Consumer + producer surplus + government revenue
+        Social cost of public funds
+          > Raising taxes to pay for a project creates distortions. Public spending must therefore be valued above its face value.
+          ~ Distortionary taxes
+          - A euro of tax revenue costs more than a euro
+      Policy impacts by market
+        > Where the effects of a policy show up and how each is measured.
+        Estimating surplus changes
+          > How to compute gains and losses from the shifts of supply and demand a policy causes.
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/04. Estimating impacts on social surplus
+          - Areas under demand and supply curves
+        Output markets
+          > The market where the policy's good or service is sold. Benefits are measured on its demand curve.
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/05. Policy impacts in output markets
+          - Where the policy's good or service is sold
+        Input markets
+          > The markets for the resources the project uses. The cost that counts is what society gives up, which may differ from the price paid.
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/06. Policy impacts in input markets
+          - Efficient market: opportunity cost = price paid
+          - Distorted market: use the shadow price
+        Secondary markets
+          > Markets for complements and substitutes of the good affected. Their effects are usually already counted in the primary market.
+          @ UNIBO/Cost-benefit analysis (PE2)/Pages/07. Policy impacts in secondary markets
+          - Ignored when prices do not change and there are no distortions
+      Monetizing impacts
+        > Putting a money value on effects that have no market price.
+        @ UNIBO/Cost-benefit analysis (PE2)/Pages/08. Monetizing impacts from observed behavior
+        Observed behaviour
+          > Values are inferred from real choices, for instance how house prices vary with noise, or how far people travel to a park.
+          - Hedonic prices
+          - Travel cost
+      Time and uncertainty
+        > How to compare costs and benefits that arrive at different dates and are not known for sure.
+        @ UNIBO/Cost-benefit analysis (PE2)/Pages/09. Intertemporal impacts, discounting, and uncertainty
+        Discounting and NPV
+          > Future amounts are converted into today's value and summed. A project with a positive total is worth doing.
+          - NPV = Σ (Bt − Ct) / (1 + r)ᵗ
+          - Go ahead if NPV > 0
+        Internal rate of return
+          > The rate of return implicit in the project's flows. It can mislead when comparing projects of different size or timing.
+          - The discount rate at which NPV = 0
+        Uncertainty
+          > Impacts are forecasts. We work with expected values and check how the result changes when the assumptions do.
+          ~ Risk vs uncertainty
+          - Expected values
+          - Sensitivity analysis
+    Economic policy theory
+      > How economic policy is designed in theory, and why real decisions depart from that design.
+      Normative theory
+        > The planner's approach: a model of the economy, objectives to reach, and instruments to reach them.
+        @ UNITE/Politica Economica/Pages/01. Teoria normativa: modelli, obiettivi e strumenti
+        Targets and instruments
+          > To hit a set of independent targets the policymaker needs at least as many independent instruments.
+          ~ Policy mix
+          - Tinbergen: as many instruments as targets
+        Structural and reduced form
+          > Two ways of writing the same model. One describes behaviour, the other links outcomes directly to what the policymaker controls.
+          ~ 2SLS
+          ~ Sufficient statistics
+          - Structural: the behavioural relations
+          - Reduced: endogenous variables as functions of exogenous ones
+        Lucas critique
+          > People change their behaviour when policy changes, so relations estimated under the old policy cannot be used to predict the new one.
+          ~ Expectations-augmented
+          ~ Rules vs discretion
+          - Behavioural parameters change with the policy
+      Policy objectives
+        > What economic policy is for: efficient markets, an acceptable distribution, and macroeconomic stability.
+        @ UNITE/Politica Economica/Pages/04. Obiettivi micro e macroeconomici
+        - Micro: efficiency
+        - Redistribution
+        - Macro: growth, employment, price stability, external balance
+      Collective choice
+        > How individual preferences become public decisions, and what goes wrong on the way.
+        @ UNITE/Politica Economica/Pages/03. Scelte collettive: votazioni e public choice
+        Voting theory
+          > The properties of voting rules. Majority voting can be inconsistent, and under some conditions the middle voter decides.
+          - Condorcet paradox: majorities can cycle
+          - Median voter
+        Public choice
+          > The school that studies politicians, bureaucrats and lobbies as agents who pursue their own interest.
+          - Politicians and bureaucrats as self-interested agents
+      Credibility
+        > A policy works only if people believe it will be carried out.
+        @ UNITE/Politica Economica/Pages/11. Credibilità della politica economica: il modello Barro-Gordon
+        Barro-Gordon
+          > A government tempted to surprise the public with inflation is anticipated. The result is higher inflation and no gain in employment.
+          ~ Expectations-augmented
+          ~ European Central Bank
+          ~ Nash equilibrium
+          - Discretion gives an inflation bias with no output gain
+        Rules vs discretion
+          > Tying one's hands in advance, with a rule or an independent central bank, gives better results than deciding case by case.
+          - Commitment removes the bias
+    Macroeconomics
+      > The economy as a whole: income, prices, employment, and what fiscal and monetary policy can do.
+      IS-LM
+        > The fixed-price model of the short run. Goods and money markets jointly determine income and the interest rate.
+        @ UNITE/Politica Economica/Pages/05. Politica macroeconomica: IS-LM
+        Keynesian multiplier
+          > One euro of extra spending becomes income for someone who spends part of it again. Total income rises by a multiple.
+          ~ Fiscal stimulus
+          - 1 / (1 − c(1 − t))
+          - Spending raises income by more than itself
+        IS curve
+          > Combinations of income and interest rate at which production equals demand. A higher rate lowers investment and therefore income.
+          - Goods market equilibrium
+          - Slopes down in (Y, i)
+        LM curve
+          > Combinations at which money demand equals money supply. Higher income raises money demand and with it the interest rate.
+          - Money market equilibrium
+          - Slopes up
+        Fiscal and monetary policy
+          > The two tools in the model. Public spending raises income but also the interest rate; more money lowers the rate.
+          ~ Fiscal policy
+          ~ Money and monetary policy
+          - Fiscal shifts IS, with crowding out
+          - Monetary shifts LM
+        Policy mix
+          > Using both tools together to reach an income target without the side effects of using one alone.
+          - Both together to hit income and the interest rate
+      Open economy
+        > What changes when goods and capital cross borders.
+        @ UNITE/Politica Economica/Pages/12. Il tasso di cambio e la bilancia dei pagamenti
+        Mundell-Fleming
+          > The IS-LM model for an open economy. Whether fiscal or monetary policy is effective depends on the exchange-rate regime and on capital mobility.
+          ~ Costs and benefits
+          @ UNITE/Politica Economica/Pages/05. Politica macroeconomica: IS-LM
+          - IS-LM plus the BP curve
+          - Which policy works depends on the exchange-rate regime
+        Exchange rate
+          > The price of one currency in terms of another, and the systems countries have used to manage it.
+          ~ Contagion
+          - Nominal and real
+          - Fixed and flexible regimes
+        Purchasing power parity
+          > In the long run exchange rates should move so that a basket of goods costs the same everywhere.
+          ~ International comparisons
+          - The exchange rate equalises price levels
+        Balance of payments
+          > The record of a country's transactions with the rest of the world, and how imbalances are corrected.
+          ~ Three crises
+          - Devaluation helps if the Marshall-Lerner condition holds
+      AD-AS
+        > The model with a variable price level. It adds the supply side to IS-LM.
+        @ UNITE/Politica Economica/Pages/06. Il modello AD-AS
+        Aggregate demand
+          > The level of output demanded at each price level. Lower prices raise real money balances and so demand.
+          - IS-LM equilibrium as the price level varies
+        Aggregate supply
+          > The output firms produce at each price level, given wages and productivity.
+          ~ Expectations-augmented
+          - Output and prices from the supply side
+        Stagflation
+          > Rising prices together with falling output. Demand policies cannot fix both at once.
+          ~ Cost-driven inflation
+          - Adverse supply shock: higher prices, lower output
+      Fiscal policy
+        > Public spending, taxes and debt as instruments of economic policy.
+        @ UNITE/Politica Economica/Pages/07. La politica fiscale
+        Public budget
+          > The government's revenues and expenditures and the balances used to read them.
+          - Deficit, primary balance, debt
+        EU fiscal rules
+          > The limits on deficit and debt that members of the monetary union agreed to respect.
+          ~ Fiscal union
+          ~ Economic and Monetary Union
+          - Maastricht criteria, Stability and Growth Pact
+        Ricardian equivalence
+          > If people see that today's deficit means tomorrow's taxes, they save the tax cut and the stimulus has no effect.
+          ~ Fiscal stimulus
+          - Debt today = taxes tomorrow: demand does not move
+        Debt sustainability
+          > The debt ratio is stable when the primary surplus covers the gap between the interest rate and the growth rate.
+          ~ Euro crisis
+          - Δb = (r − g)·b − primary surplus
+      Money and monetary policy
+        > What money is, how it is created, and how central banks operate.
+        @ UNITE/Politica Economica/Pages/08. Moneta e politica monetaria
+        @ Concepts/Concept pages/Moneta e inflazione · Money and inflation
+        Money
+          > The asset used to pay, to count and to store value, and the aggregates that measure it.
+          - Functions and aggregates
+        Monetary base and multiplier
+          > The central bank creates the base. Commercial banks expand it by lending out deposits.
+          ~ How banks work
+          - Banks turn the base into a multiple of deposits
+        Transmission channels
+          > The routes through which a central bank decision reaches spending and prices.
+          ~ Liquidity trap
+          - From the policy rate to credit, demand and prices
+        ECB governance
+          > How decisions are taken in the Eurosystem and who takes them.
+          ~ European Central Bank
+          - Decision bodies of the Eurosystem
+        Basel accords
+          > The international standards on how much capital banks must hold against their risks.
+          ~ Deregulation
+          ~ Financial services
+          - Capital requirements for banks
+      Inflation
+        > A sustained rise in the general price level: what it costs and what causes it.
+        @ UNITE/Politica Economica/Pages/09. Inflazione
+        Costs
+          > Inflation hurts those on fixed incomes and creditors, and makes prices harder to read.
+          ~ Price indices
+          - Erodes purchasing power
+          - Redistributes between creditors and debtors
+        Quantity theory
+          > With stable velocity and output at capacity, the price level moves in proportion to the money stock.
+          ~ Monetarists
+          - MV = PY: money growth drives prices
+        Keynesian and monetarist views
+          > Two explanations of inflation: too much demand relative to capacity, or too much money.
+          ~ Keynes
+          ~ Monetarists
+          - Excess demand vs money growth (Friedman)
+        Cost-driven inflation
+          > Prices rise because production costs do, starting from wages or imported inputs.
+          - Wages and input prices
+          - Incomes policy as the response
+        Deflation
+          > A falling price level. It raises real debts and makes people postpone spending.
+          ~ Debt deflation
+          - Not the mirror image of inflation
+      Phillips curve
+        > The relation between unemployment and inflation, and the debate on whether policy can exploit it.
+        @ UNITE/Politica Economica/Pages/10. La curva di Phillips e le aspettative
+        Original curve
+          > The empirical finding that wages rose faster in years of low unemployment.
+          - Lower unemployment, faster wage growth
+        Friedman's critique
+          > The trade-off holds only while people are surprised. Once expectations adjust, unemployment returns to its natural rate.
+          ~ Monetarists
+          - No long-run trade-off
+        Expectations-augmented
+          > The curve shifts with expected inflation. Only unexpected inflation moves unemployment.
+          - π = πᵉ − α(u − uₙ)
+    Financial crises
+      > Why financial systems periodically break down and what governments can do about it, read through the 2008 crisis.
+      @ Concepts/Concept pages/Crisi finanziarie · Financial crises
+      Minsky
+        > The economist who argued that financial fragility is produced by the system itself during good times.
+        @ UNITE/Crisis economics/Pages/01. The Minsky moment
+        @ UNITE/Crisis economics/Pages/05. Crisis economists
+        Financial instability hypothesis
+          > Long calm periods encourage more and more borrowing, until many debtors can only repay by borrowing again.
+          ~ Inequality and debt
+          - Stability breeds risk-taking
+          - Hedge, speculative and Ponzi finance
+        Minsky moment
+          > The point at which lenders stop refinancing and borrowers must sell assets, pushing prices down for everyone.
+          - Forced asset sales turn the boom into a crash
+      Banking and finance
+        > How the financial system worked before 2008 and what made it fragile.
+        How banks work
+          > Banks borrow short and lend long with little capital of their own. This makes them profitable and exposed to runs.
+          @ UNITE/Crisis economics/Pages/02. Bankers gone wild
+          - Short-term liabilities, long-term assets
+          - Leverage
+        Deregulation
+          > The removal of the rules that had kept commercial and investment banking separate since the 1930s.
+          @ UNITE/Crisis economics/Pages/02. Bankers gone wild
+          - Glass-Steagall and its repeal
+        Securitisation
+          > Loans are pooled and sold as securities. Whoever grants the loan no longer bears its risk.
+          @ UNITE/Crisis economics/Pages/06. Plate tectonics
+          - Asset-backed securities
+          - Moral hazard for the originator
+        Shadow banking
+          > Institutions that do what banks do without being regulated or protected as banks.
+          @ UNITE/Crisis economics/Pages/06. Plate tectonics
+          - Bank-like activity outside regulation
+          - Cheap money, leverage, margin calls
+      Inequality and debt
+        > Stagnant incomes for most households were compensated by easier credit. This fed the debt build-up.
+        ~ Gini coefficient
+        @ UNITE/Crisis economics/Pages/03. The second gilded age
+        - Rising income inequality
+        - Household debt fills the gap
+      Crisis dynamics
+        > How a crisis unfolds once confidence breaks.
+        @ UNITE/Crisis economics/Pages/07. Things fall apart
+        Illiquid vs insolvent
+          > An illiquid institution has good assets but no cash. An insolvent one has lost more than its capital. In a panic the two are hard to tell apart.
+          - Illiquid: cannot roll over its funding
+          - Insolvent: assets below liabilities
+        Risk vs uncertainty
+          > Risk can be given a probability, uncertainty cannot. Models built on the first fail when the second prevails.
+          - Measurable vs not measurable
+        Contagion
+          > How a crisis born in one market or country spreads to others.
+          @ UNITE/Crisis economics/Pages/08. Global pandemics
+          - Financial, trade, commodity and currency channels
+      Crisis theories
+        > The main schools on why crises happen and how to respond.
+        @ UNITE/Crisis economics/Pages/05. Crisis economists
+        Keynes
+          > Private demand can stay depressed for a long time. Only public spending can replace it.
+          - Demand collapses, the state must fill the gap
+        Monetarists
+          > The Great Depression was deep because the central bank let the money supply collapse.
+          - Crises as failures of monetary policy
+        Debt deflation
+          > When prices fall, debts become heavier in real terms. Debtors sell and cut spending, and prices fall further.
+          @ UNITE/Crisis economics/Pages/09. Last resort
+          - Falling prices raise the real burden of debt (Fisher)
+        Liquidity trap
+          > When interest rates are already at zero, creating more money no longer stimulates spending.
+          @ UNITE/Crisis economics/Pages/09. Last resort
+          - Rates at zero: monetary policy loses grip
+      Policy responses
+        > What central banks and governments did, and the precedents they followed.
+        Lender of last resort
+          > In a panic the central bank must lend freely to stop the run. In 2008 this extended to buying assets directly.
+          ~ ECB response
+          ~ Illiquid vs insolvent
+          @ UNITE/Crisis economics/Pages/09. Last resort
+          - The central bank lends when nobody else does
+          - Quantitative easing as a nuclear option
+        Fiscal stimulus
+          > Public spending and tax cuts to replace missing private demand.
+          ~ Next Generation EU
+          @ UNITE/Crisis economics/Pages/10. Spend more, tax less
+          - The New Deal precedent
+          - Spend more, tax less
+        Bailouts
+          > Public money to save institutions whose failure would bring down others. It stops the panic and rewards the risk-takers.
+          ~ EU response
+          @ UNITE/Crisis economics/Pages/10. Spend more, tax less
+          - Guarantees and recapitalisations
+    European integration
+      > How the European Union works and how its economic policies came about.
+      EU institutions
+        > Who decides in the EU, and the balance between the common and the national level.
+        @ UNIBO/IPEU/Pages/01. Supranational institutions
+        Commission
+          > The executive body. It alone can propose laws and it checks that member states apply them.
+          - Proposes legislation, guards the treaties
+        European Parliament
+          > The directly elected chamber. It adopts laws together with the Council.
+          - Co-legislator
+        Court of Justice
+          > The court that ensures EU law is read and applied the same way in every member state.
+          - Interprets EU law
+        European Council
+          > The summit of national leaders. It gives political direction but does not legislate.
+          @ UNIBO/IPEU/Pages/02. Intergovernmental institutions and policy-making
+          - Heads of state or government set the direction
+        Council of Ministers
+          > National ministers meeting by subject. They adopt laws with the Parliament, after preparation by national diplomats.
+          @ UNIBO/IPEU/Pages/02. Intergovernmental institutions and policy-making
+          - Member states legislate
+          - Coreper prepares the files
+      Single Market
+        > The area where goods, services, capital and people move freely. It is the core of economic integration.
+        @ UNIBO/IPEU/Pages/03. The Single Market
+        Market integration
+          > The strategies used to build the Single Market, from abolishing national barriers to agreeing on common standards.
+          ~ Trade
+          - From removing barriers to common rules
+        Financial services
+          > The integration of banking and capital markets, which advanced slowly and was reshaped by the 2008 crisis.
+          ~ Shadow banking
+          @ UNIBO/IPEU/Pages/04. The Single Market in financial services
+          - Slow start, relaunch in the 2000s
+          - Re-regulation after 2008
+        Geoeconomics
+          > How access to the EU financial market is used as a lever in relations with third countries.
+          @ UNIBO/IPEU/Pages/06. Geoeconomics of the Single Market in finance
+          - Finance as a tool of power
+      Common trade policy
+        > The EU negotiates trade as a single actor. The page covers its instruments, how decisions are taken and the main disputes.
+        ~ Trade
+        @ UNIBO/IPEU/Pages/05. Common trade policy
+        - Instruments of trade policy
+        - TTIP
+      Economic and Monetary Union
+        > The single currency: how it was built, who is in, and what is still missing.
+        @ UNIBO/IPEU/Pages/07. Economic and Monetary Union
+        Costs and benefits
+          > Giving up the national currency removes exchange-rate risk but also an adjustment tool. The balance depends on how similar the members are.
+          - Optimum currency area theory
+        European Central Bank
+          > The institution that runs monetary policy for the euro area.
+          - Single monetary policy for the euro area
+        Fiscal union
+          > The common budget capacity that the monetary union lacks. Each crisis has added a piece.
+          - Still incomplete
+      Euro crisis
+        > The sovereign debt crisis that started in 2010, its causes and the EU's answer.
+        @ UNIBO/IPEU/Pages/08. The euro area sovereign debt crisis
+        Three crises
+          > The euro crisis was a banking, a competitiveness and a public debt crisis at once, each feeding the others.
+          ~ Financial crises
+          - Financial, balance of payments, fiscal
+        EU response
+          > Loans to countries in difficulty in exchange for reforms, and a permanent rescue fund.
+          - European Stability Mechanism
+      Pandemic response
+        > How the EU reacted to the Covid recession, faster and more jointly than in 2010.
+        @ UNIBO/IPEU/Pages/09. EU responses to the pandemic-related economic crisis
+        Next Generation EU
+          > The recovery plan financed by borrowing in common. Money is paid out as countries meet agreed milestones.
+          - RRF funds against national plans
+        ECB response
+          > The emergency asset purchases launched in 2020 to keep borrowing costs low for all members.
+          - PEPP
+    Economic statistics
+      > How the economy is measured: who produces the numbers and how the main aggregates are built.
+      @ Concepts/Concept pages/Contabilità nazionale e numeri indice · National accounts and index numbers
+      Statistical systems
+        > The national and international bodies that produce official statistics and the principles they follow.
+        @ UNIBO/Economic Statistics/Pages/01. Introduction
+        @ UNIBO/Economic Statistics/Pages/02. GSS and Sources of Global Data
+        - Global statistical system
+        - Fundamental principles of official statistics
+      National accounts
+        > The accounting framework that describes a whole economy consistently.
+        @ UNIBO/Economic Statistics/Pages/04. Economic Aggregates and GDP
+        System of national accounts
+          > The international standard. It defines the units, the sectors and what counts as part of a country's economy.
+          @ UNIBO/Economic Statistics/Pages/03. The economic system and the SNA
+          - Institutional sectors
+          - Residency defines "domestic"
+        Supply and use tables
+          > Tables that record, product by product, where goods come from and where they go. They are used to make the accounts consistent.
+          - Supply = use for every product
+        Value added
+          > What a producer adds to the inputs bought from others. Summing it over all producers avoids double counting.
+          - Output − intermediate consumption
+        Basic and market prices
+          > The price the producer receives and the price the buyer pays. The difference is the taxes and subsidies on the product.
+          - They differ by taxes and subsidies on products
+        GDP
+          > The value of everything produced within a country in a period, net of the inputs used up.
+          - Value of total domestic production
+      Derived measures
+        > Aggregates obtained from GDP, and how reliable they are.
+        @ UNIBO/Economic Statistics/Pages/05. Measures derived from GDP and uncertainty
+        Gross national income
+          > The income earned by a country's residents, wherever it was produced.
+          - GDP + net income from abroad
+        Net measures
+          > Aggregates after subtracting the wear of capital. Closer to welfare, harder to measure.
+          - Net of depreciation
+        Statistical uncertainty
+          > GDP figures are estimates. Early releases are revised, and some limits never go away.
+          - Transitory, permanent, conceptual
+      Prices and comparisons
+        > How to compare values across time and across countries.
+        @ UNIBO/Economic Statistics/Pages/06. Price Indices and International Comparisons of GDP
+        Price indices
+          > A single number for how the prices of a basket have changed. The choice of weights matters.
+          - Weighted indices, the CPI
+          - Laspeyres: base-period weights
+        Real vs nominal
+          > Nominal values use the prices of each year. Real values remove price changes to show volumes.
+          - Deflate with a price index
+          - GDP deflator
+        Seasonal adjustment
+          > Removing regular within-year patterns so that consecutive periods can be compared.
+          - Remove the within-year pattern
+        International comparisons
+          > Converting GDP with market exchange rates is misleading. Purchasing power parities correct for different price levels.
+          - Purchasing power parities
+        Time series
+          > How to read a variable observed over time and how index numbers summarise its movements.
+          @ UNITE/Statistica/Pages/11. I numeri indice e le serie storiche
+          - Index numbers and series over time
+      Inequality measurement
+        > The tools to describe how income is distributed.
+        @ UNIBO/Economic Statistics/Pages/07. Economic inequality
+        Lorenz curve
+          > The curve that shows which share of total income goes to the poorest part of the population. The further from the diagonal, the more unequal.
+          - Cumulative income share by population share
+          - Lorenz dominance ranks distributions
+        Gini coefficient
+          > A summary of the Lorenz curve in one number between 0 (everyone equal) and 1 (one person has everything).
+          - Twice the area between the Lorenz curve and the diagonal
+        Equivalised income
+          > Household income adjusted so that families of different size and composition can be compared.
+          - Adjusts for household size
+        Concentration curve
+          > Like the Lorenz curve, but people are ordered by income while another variable, such as taxes paid, is cumulated.
+          - Same construction, ranked by another variable
+      Environmental accounting
+        > Extending the national accounts to natural resources and the environment.
+        @ UNIBO/Economic Statistics/Pages/08. Natural and environmental accounting
+        Natural capital
+          > The stock of natural resources that provides services to the economy, treated as an asset like machines and skills.
+          ~ Environment
+          - One of four capitals: natural, social, human, produced
+        SEEA
+          > The international standard for environmental accounts. It links environmental data to the national accounts.
+          - Central Framework and Ecosystem Accounts
+          - Depletion-adjusted aggregates
+      Labour statistics
+        > How employment and unemployment are defined and measured, with the main short-term indicators of the economy.
+        @ UNITE/Statistica/Pages/13. Indicatori congiunturali e statistiche del lavoro
+        - Short-term indicators and labour market statistics
+    Policy analysis
+      > How public policies are made, designed and judged, and how to communicate an analysis.
+      Policy process
+        > The stages of a policy and the actors involved in each.
+        Problem structuring
+          > Deciding what the problem actually is. A wrong definition leads to a good solution for the wrong question.
+          @ UNITE/Public policy analysis/Pages/01. Intro
+          - Define the problem before the solution
+        Agenda setting
+          > Why some problems get attention and others do not. Change happens when a recognised problem, a ready solution and political will meet.
+          @ UNITE/Public policy analysis/Pages/02. Agenda setting
+          - Kingdon's multiple streams
+        Policy tools
+          > The instruments available to a government, ordered by how much they constrain people.
+          @ UNITE/Public policy analysis/Pages/03. Policy tools
+          - Coercion and its alternatives
+        Policy design
+          > How to build a policy that works in its context, including how far we can copy what worked elsewhere.
+          ~ Field experiments
+          @ UNITE/Public policy analysis/Pages/04. Policy design - what works
+          - Copying, borrowing, adapting a working design
+        Actors analysis
+          > Mapping who takes part in a decision, what they want and what they can bring.
+          @ UNITE/Public policy analysis/Pages/05. Actors analysis
+          - Goals, resources, roles, stake
+        Decisional strategies
+          > The ways a promoter can get a contested decision through.
+          @ UNITE/Public policy analysis/Pages/06. Decisional strategies
+          - Manipulate resources, content, interaction or the network
+        Evaluation
+          > Judging whether a policy achieved what it was meant to, and distinguishing what was produced from what changed because of it.
+          ~ Potential outcomes
+          ~ Cost-benefit analysis
+          @ UNITE/Public policy analysis/Pages/07. Policy evaluation
+          - Theory of change
+          - Output, outcome, impact
+        Indicators
+          > Translating a policy goal into something that can be measured and tracked.
+          @ UNITE/Public policy analysis/Pages/08. Indicators
+          - From a goal to a measurable indicator
+      Policy briefs
+        > The short document that brings analysis to a decision-maker.
+        Policy brief
+          > A short document for a specific reader that states a problem, the evidence and what to do.
+          @ UNIBO/Current PP issues/Pages/01. The policy brief
+          - Audience first
+          - Actionable recommendations
+        Executive summary
+          > The opening section, written for those who will read nothing else.
+          @ UNIBO/Current PP issues/Pages/02. The executive summary
+          - The three C's
+          - Built around two numbers
+        Presenting
+          > How to deliver the brief orally in very little time.
+          @ UNIBO/Current PP issues/Pages/06. Presenting a brief
+          - The two-minute version
+      Current issues
+        > The policy topics treated in the course, each read through recent briefs.
+        Climate targets and regional gaps
+          > The economics of the green transition, and why its costs fall unevenly across regions.
+          @ UNIBO/Current PP issues/Pages/03. Climate targets and regional gaps
+          - Cost of inaction vs cost of transition
+        AI, productivity and inequality
+          > What the evidence says on AI adoption and productivity, and on how the gains are distributed.
+          @ UNIBO/Current PP issues/Pages/04. AI adoption, productivity and inequality
+          - Does AI raise productivity
+          - Who captures the gains
+        Conflict and defence spending
+          > What wars cost the economies involved and their neighbours, and how to read the European rearmament plan.
+          @ UNIBO/Current PP issues/Pages/05. The cost of conflict and defence spending
+          - What a war costs
+          - ReArm Europe
+    Economic geography
+      > How economic activity is distributed over space and why. The content follows the course textbook index.
+      @ UNITE/Geografia Economica/Geografia Economica course page
+      Space and regions
+        > The basic concepts: territory, the types of region, and why location has economic value.
+        @ UNITE/Geografia Economica/Pages/00. Lo spazio geo-economico - territorio, regioni, reti
+        - Formal, functional, hierarchical regions
+        - External economies, land rent
+      World system
+        > The global economy as one system with a centre and a periphery, and how that division has changed.
+        @ UNITE/Geografia Economica/Pages/01. Il sistema mondo
+        - Globalisation
+        - Old and new international division of labour
+        - North-South gaps
+      Environment
+        > The relation between economic activity and the natural environment.
+        @ UNITE/Geografia Economica/Pages/02. Economia e ambiente naturale
+        - Ecological footprint
+        - Sustainable development, green and circular economy
+      Population
+        > How many we are, where, and how people move.
+        ~ Labour statistics
+        @ UNITE/Geografia Economica/Pages/03. Popolazione, lavoro, migrazioni, società, culture
+        - Growth and distribution
+        - Migration
+        - Human development index
+      Sectors
+        > The geography of each economic sector.
+        Agriculture
+          > The main farming systems of the world and how land is owned and used.
+          @ UNITE/Geografia Economica/Pages/04. Gli spazi agricoli
+          - Subsistence, plantation, capitalist, commercial farming
+          - Land grabbing
+        Mining and energy
+          > Where mineral and energy resources are, who controls them, and how their markets work.
+          @ UNITE/Geografia Economica/Pages/05. La produzione mineraria ed energetica
+          - Raw materials, rare earths
+          - Energy policies
+        Industry
+          > Where manufacturing locates, why it has moved, and the role of large firms.
+          @ UNITE/Geografia Economica/Pages/06. Le filiere industriali
+          - Location and decentralisation
+          - Multinationals and FDI
+        Transport
+          > Infrastructure networks and how logistics reorganises territory.
+          @ UNITE/Geografia Economica/Pages/07. Le infrastrutture e le reti dei trasporti
+          - Logistics, hub and spoke
+        Trade
+          > The geography of international trade flows and the rules that govern them.
+          @ UNITE/Geografia Economica/Pages/08. Il commercio internazionale
+          - WTO liberalisation
+          - Regional trade agreements
+        Tourism
+          > A fast-growing global activity and its effects on the places it reaches.
+          @ UNITE/Geografia Economica/Pages/09. Gli spazi del turismo
+          - World flows
+          - Sustainable tourism
+      Cities
+        > Cities as the places where services, decisions and innovation concentrate.
+        @ UNITE/Geografia Economica/Pages/10. Le città, centri dell'economia
+        - Urban functions
+        - Urban multiplier
+        - Urban land value
+      Development policies
+        > What development means, and the policies used to promote it at different scales.
+        @ UNITE/Geografia Economica/Pages/11. Le politiche dello sviluppo economico
+        @ UNITE/Geografia Economica/Pages/12. Marketing territoriale e sistemi territoriali locali
+        - Growth, degrowth, sustainability
+        - Local systems and territorial marketing
+  Econometrics
+    > The empirical side: the statistics behind estimation, the regression model, the designs that identify causal effects, and prediction.
+    Statistical foundations
+      > The probability and statistics that everything else in econometrics relies on.
+      Probability
+        > The language of uncertainty: events, random variables and their averages.
+        @ UNITE/Statistica/Pages/06. La probabilità
+        @ Concepts/Math refresher/06. Probability and expectations
+        Events and conditional probability
+          > How to assign probabilities to events and update them when we learn that another event has happened.
+          - Sample space Ω, events as subsets of it
+          - P(A|B) = P(A∩B) / P(B)
+          - Independence: P(A∩B) = P(A)·P(B)
+        Bayes' theorem
+          > The rule for reversing a conditional probability: from how likely the evidence is under a hypothesis to how likely the hypothesis is given the evidence.
+          ~ Bayes classifier
+          - P(A|B) = P(B|A)·P(A) / P(B)
+          - Turns a prior into a posterior
+        Random variables
+          > Numbers whose value depends on chance, described by a distribution.
+          @ UNITE/Statistica/Pages/07. Variabili casuali e distribuzioni di probabilità
+          - Discrete: probability mass function
+          - Continuous: density, probabilities are areas
+          - Standardised: Z = (X − μ) / σ
+        Expectation and variance
+          > The centre and the spread of a distribution, and the rules for computing them on transformed or summed variables.
+          - E[aX + b] = a·E[X] + b
+          - Var(aX + b) = a²·Var(X)
+          - Var(X + Y) = Var(X) + Var(Y) + 2·Cov(X, Y)
+        Conditional expectation
+          > The average of one variable for a given value of another. Regression is a model of it.
+          ~ Population regression function
+          - E[Y|X]: best predictor of Y given X
+          - Iterated expectations: E[E[Y|X]] = E[Y]
+      Distributions
+        > The standard families used to model data and to run tests.
+        @ UNITE/Statistica/Pages/07. Variabili casuali e distribuzioni di probabilità
+        Bernoulli
+          > The distribution of a single yes/no outcome. Every binary variable in a regression is one.
+          ~ Linear probability model
+          - One trial, P(X = 1) = p
+          - Mean p, variance p(1 − p)
+        Binomial
+          > The number of successes in a fixed number of independent yes/no trials.
+          - Successes in n independent trials
+          - Mean np, variance np(1 − p)
+        Poisson
+          > The distribution for counts of events in an interval, when events are rare and independent.
+          - Counts of rare events
+          - Mean = variance = λ
+        Normal
+          > The bell-shaped distribution. Averages of many independent draws tend to it, which is why it is everywhere in inference.
+          ~ Probit
+          - N(μ, σ²), symmetric bell
+          - Standard normal: Z ~ N(0, 1)
+        Chi-square
+          > The distribution of a sum of squared standard normals. It appears whenever we test variances or compare frequencies.
+          ~ Chi-square independence
+          - Sum of k squared standard normals
+          - Variances and independence tests
+        Student's t
+          > The distribution of a standardised mean when the variance has to be estimated. It is behind every t test.
+          ~ t tests
+          - Heavier tails than the normal
+          - Used when σ is estimated
+          - Tends to the normal as df grow
+      Association
+        > Descriptive measures of how two variables move together.
+        @ UNITE/Statistica/Pages/04. Relazioni statistiche
+        Chi-square independence
+          > A measure of how far a two-way table of frequencies is from what independence would produce.
+          - Observed vs expected frequencies
+          - χ² = 0 under independence
+          - Relative indices rescale it to [0, 1]
+        Covariance
+          > The average product of two variables' deviations from their means. Positive when they move together.
+          ~ OLS derivation
+          - Cov(X, Y) = E[(X − μx)(Y − μy)]
+          - Sign gives direction, size depends on units
+        Pearson correlation
+          > Covariance rescaled to lie between −1 and 1, so that it no longer depends on units.
+          ~ R²
+          - r = Cov(X, Y) / (σx·σy), in [−1, 1]
+          - Linear association only
+        Spearman's rho
+          > A correlation computed on ranks. It is robust to outliers and to non-linear but monotonic relations.
+          - Pearson correlation on ranks
+          - Captures monotonic relations
+      Sampling
+        > How data are drawn from a population and what this implies for what we compute on them.
+        @ UNITE/Statistica/Pages/08. Campionamento e distribuzioni campionarie
+        Sampling designs
+          > The ways of selecting a probability sample. The design determines how precise the estimates are.
+          ~ Clustering
+          ~ Blocking
+          - Simple random
+          - Stratified: sample inside homogeneous strata
+          - Cluster and multi-stage: sample groups, then units
+        Sampling distributions
+          > A statistic computed on a sample is itself random. Its distribution over all possible samples is what inference is based on.
+          - Distribution of a statistic over repeated samples
+          - Sample mean: E[x̄] = μ
+        Standard error
+          > The standard deviation of an estimator across samples. It measures how precise the estimate is.
+          ~ Sampling variance
+          ~ Standard errors
+          - SE(x̄) = σ / √n
+          - Falls with the sample size
+        Central limit theorem
+          > The result that justifies using the normal distribution for sample means even when the data are not normal.
+          ~ Asymptotic normality
+          - x̄ is approximately normal for large n
+          - Whatever the population distribution
+      Estimation
+        > Using a sample to learn about a population parameter.
+        @ UNITE/Statistica/Pages/09. Stima puntuale e intervallare
+        Estimator properties
+          > The criteria for judging an estimator: right on average, close with enough data, and as precise as possible.
+          ~ Unbiasedness
+          ~ Consistency
+          ~ Gauss-Markov
+          - Unbiased: E[θ̂] = θ
+          - Consistent: θ̂ → θ as n grows
+          - Efficient: smallest variance
+        Confidence intervals
+          > A range built so that, over repeated samples, it contains the true parameter with a chosen probability.
+          ~ Inference / Confidence intervals
+          - Estimate ± critical value × SE
+          - σ known: z; σ unknown: t with n − 1 df
+        Sample size
+          > How many observations are needed for a given precision. Halving the margin of error takes four times the sample.
+          ~ Power and MDE
+          - n set by the target margin of error e
+          - n = (z·σ / e)²
+      Hypothesis testing
+        > Deciding whether the data are compatible with a statement about the population.
+        @ UNITE/Statistica/Pages/10. La verifica delle ipotesi
+        @ UNIBO/Econometrics/Pages/04 and 05. Statistical Inference
+        Null and alternative
+          > The statement under test and what we conclude if we reject it. The burden of proof is on the alternative.
+          - H0 against H1, one- or two-sided
+          - Reject when the statistic falls in the rejection region
+        Type I and II errors
+          > The two ways a test can be wrong. Lowering the chance of one raises the other, for a given sample.
+          ~ Power and MDE
+          ~ Multiple testing
+          - Type I: reject a true H0 (probability α)
+          - Type II: keep a false H0 (probability β)
+          - Power = 1 − β
+        p-values
+          > The probability, if the null were true, of data at least as extreme as what we observed. Small values are evidence against the null.
+          ~ Randomization inference
+          - Smallest α at which H0 is rejected
+          - Reject when p < α
+        t test
+          > The test for a single parameter. It measures how many standard errors the estimate is from the hypothesised value.
+          ~ t tests
+          - t = (estimate − hypothesised value) / SE
+        F test
+          > The test for several restrictions at once. It asks whether imposing them worsens the fit by more than chance would.
+          ~ Inference / F test
+          - Joint test of several restrictions
+      Linear algebra tools
+        > The matrix results used in regression and in dimension reduction.
+        @ Concepts/Math refresher/05. Linear algebra
+        @ Concepts/Math refresher/08. Linear algebra beyond the inverse
+        Projection
+          > The geometric view of least squares: fitted values are the closest point to y in the space spanned by the regressors.
+          ~ OLS derivation
+          ~ Frisch-Waugh-Lovell
+          - OLS projects y on the columns of X
+          - β̂ = (X′X)⁻¹X′y
+        Eigenvalues and eigenvectors
+          > The directions a matrix leaves unchanged except for scale. They reveal the structure of a covariance matrix.
+          ~ Principal components
+          ~ PCA
+          - Av = λv: directions that A only stretches
+        Singular value decomposition
+          > A factorisation that exists for any matrix. It gives the best low-rank approximation of the data.
+          ~ PCA
+          ~ Ridge
+          ~ Matrix completion
+          - X = UDV′
+          - Behind PCA and ridge
+    Linear regression
+      > The workhorse model: one outcome explained by a linear combination of regressors, estimated by least squares.
+      Simple regression
+        > One outcome and one regressor. Everything about OLS can be seen here before adding variables.
+        @ UNIBO/Econometrics/Pages/01 and 02. Simple linear regression
+        Population regression function
+          > The model for the average of y given x. The error term contains everything else that affects y.
+          - y = β0 + β1·x + u
+          - E[y|x] is linear in x
+          - u collects the unobserved factors
+        OLS derivation
+          > The line that makes the squared prediction errors as small as possible. The slope is the sample covariance over the variance of x.
+          - Minimises the sum of squared residuals
+          - β̂1 = Cov(x, y) / Var(x)
+          - β̂0 = ȳ − β̂1·x̄
+        Residual properties
+          > Algebraic facts that hold in every OLS fit, by construction, whatever the data.
+          - Residuals sum to zero
+          - Zero sample covariance with x
+          - The line passes through (x̄, ȳ)
+        R²
+          > The fraction of the sample variation in y that the regression accounts for. A low value does not make the estimates wrong.
+          ~ Quality of fit
+          - R² = SSE / SST = 1 − SSR / SST
+          - Share of the variation in y explained
+      Multiple regression
+        > Several regressors at once, so that each coefficient is an effect with the others held fixed.
+        @ UNIBO/Econometrics/Pages/03. Multiple linear regression
+        Ceteris paribus interpretation
+          > A coefficient measures the change in y for a unit change in one regressor when the others do not move.
+          - β̂j: effect of xj holding the other regressors fixed
+        Frisch-Waugh-Lovell
+          > Each coefficient can be obtained by first removing from the regressor what the other regressors explain. This is what "controlling for" means.
+          ~ Within transformation
+          ~ Double machine learning
+          - β̂j from regressing y on xj net of the other regressors
+          - "Partialling out"
+        Collinearity
+          > When regressors are strongly related, their separate effects are hard to pin down. Standard errors grow, estimates stay unbiased.
+          ~ Ridge
+          - Perfect: OLS is not defined (MLR.3)
+          - High: larger variance, no bias
+        Omitted variable bias
+          > Leaving out a variable that matters and is correlated with a regressor makes that regressor's coefficient absorb its effect.
+          ~ Omitted variables
+          ~ Unit effect
+          ~ Double lasso
+          - Bias = effect of the omitted variable × its link with x
+          - The two signs give the direction
+      Finite-sample properties
+        > What we can say about OLS in a sample of any size, under the classical assumptions.
+        @ UNIBO/Econometrics/Pages/03. Multiple linear regression
+        Assumptions MLR.1-6
+          > The classical assumptions. The first four give unbiasedness, the fifth the variance formula, the sixth exact tests.
+          ~ Assumptions FD.1-6
+          - 1-3: linear in parameters, random sampling, no perfect collinearity
+          - 4: zero conditional mean, E[u|x] = 0
+          - 5: homoskedasticity; 6: normality
+        Unbiasedness
+          > Across repeated samples OLS is right on average. The key requirement is that the error is unrelated to the regressors.
+          - E[β̂] = β under MLR.1-4
+        Sampling variance
+          > How much the estimate varies across samples. It falls with more data and more variation in the regressor, and rises with collinearity.
+          - Var(β̂j) = σ² / [SSTj·(1 − Rj²)]
+          - σ̂² = SSR / (n − k − 1)
+        Gauss-Markov
+          > Under the first five assumptions no other linear unbiased estimator is more precise than OLS.
+          ~ Heteroskedasticity
+          ~ GLS
+          - Under MLR.1-5 OLS is BLUE
+      Asymptotics
+        > What happens as the sample grows. It lets us drop the normality assumption.
+        @ UNIBO/Econometrics/Pages/04 and 05. Statistical Inference
+        Consistency
+          > With enough data the estimate gets arbitrarily close to the truth. It requires only that the error and the regressors are uncorrelated.
+          - plim β̂ = β if Cov(x, u) = 0
+          - Weaker than zero conditional mean
+        Asymptotic normality
+          > In large samples the estimator is approximately normal whatever the error distribution, so the usual tests remain valid.
+          - β̂ approximately normal in large samples
+          - Normality of u is no longer needed
+      Inference
+        > Testing hypotheses and building intervals for regression coefficients.
+        @ UNIBO/Econometrics/Pages/04 and 05. Statistical Inference
+        t tests
+          > The standard test on one coefficient, most often of whether it is zero.
+          - t = β̂j / se(β̂j), with n − k − 1 df
+          - One- and two-sided alternatives
+        Confidence intervals
+          > The range of coefficient values that a two-sided test would not reject.
+          - β̂j ± c·se(β̂j)
+        Linear restrictions
+          > Tests that involve more than one coefficient in a single equation, such as whether two effects are equal.
+          - e.g. H0: β1 = β2
+          - t test on the combination, or reparametrise
+        F test
+          > The joint test that a group of coefficients are all zero. It compares the fit with and without them.
+          - F = [(SSRr − SSRur) / q] / [SSRur / (n − k − 1)]
+          - Also in R² form
+      Specification
+        > Choices about how variables enter the model.
+        @ UNIBO/Econometrics/Pages/06. Additional topics
+        Logs
+          > Taking logarithms turns coefficients into percentage effects and often makes relations closer to linear.
+          - Log-lin: 100·β ≈ % change in y per unit of x
+          - Log-log: β is an elasticity
+        Quadratics
+          > Adding the square of a regressor lets its effect rise or fall with its level.
+          ~ Polynomials
+          - Marginal effect depends on x
+          - Turning point: x* = −β̂1 / (2·β̂2)
+        Dummies and interactions
+          > Binary variables let groups have different intercepts. Interacted with a regressor, they let the slope differ too.
+          ~ Regression DiD
+          ~ Treatment heterogeneity
+          - Dummy: shifts the intercept
+          - Interaction: shifts the slope
+          - g categories need g − 1 dummies
+        Adjusted R²
+          > A version of R² that rewards a new regressor only if it improves the fit enough.
+          ~ Cp, AIC, BIC
+          - Penalises extra regressors
+          - Can fall when a variable is added
+        Units of measurement
+          > Changing the units of a variable rescales its coefficient but nothing of substance.
+          @ UNIBO/Econometrics/Pages/01 and 02. Simple linear regression
+          - Rescaling changes coefficients, not fit or t statistics
+      Error structure
+        > What to do when the errors do not have constant variance or are correlated.
+        @ UNIBO/Econometrics/Pages/06. Additional topics
+        Heteroskedasticity
+          > The spread of the error changes with the regressors. Estimates stay valid, the usual standard errors do not.
+          ~ Linear probability model
+          - Var(u|x) is not constant
+          - OLS still unbiased, usual SE wrong
+        Robust (White) SE
+          > Standard errors that remain valid whatever the pattern of error variances. They are the default in applied work.
+          - Valid under any form of heteroskedasticity
+          - Large-sample justification
+        Clustered SE
+          > Standard errors that allow observations in the same group to share shocks. Ignoring this overstates precision.
+          ~ Serial correlation
+          ~ Clustering
+          @ UNIBO/Econometrics/Pages/08 and 09. Panel data methods
+          - Allow correlation inside groups (a unit over time, a village)
+    Estimation beyond OLS
+      > Other estimation principles, for when least squares is not available or not enough.
+      @ Concepts/Math refresher/09. Estimation methods beyond OLS
+      Maximum likelihood
+        > We choose the parameter values that make the observed data most probable under an assumed distribution.
+        ~ Logit
+        ~ Probit
+        - Pick θ that maximises the log-likelihood
+        - Consistent, asymptotically normal and efficient if the model is right
+        - Estimates logit and probit
+      Generalised method of moments
+        > Estimation from conditions that should hold on average in the population. It needs no full distributional assumption.
+        ~ 2SLS
+        - Match sample moments to E[g(θ)] = 0
+        - OLS and IV are special cases
+        - Over-identified: a weighting matrix
+      GLS
+        > Least squares on data transformed so that the errors become well behaved. More efficient than OLS when the error structure is known.
+        ~ GLS estimation
+        @ UNIBO/Econometrics/Pages/08 and 09. Panel data methods
+        - Reweights when errors are not spherical
+        - Used for random effects
+      Penalised regression
+        > Least squares with a cost on large coefficients. It trades a little bias for much less variance.
+        ~ Ridge
+        ~ Lasso
+        - OLS plus a penalty on coefficient size
+        - Ridge (L2) and lasso (L1)
+      Kernel regression
+        > Estimating a relation without assuming its shape, by averaging nearby observations.
+        ~ Local regression
+        ~ Kernel
+        ~ Non-parametric estimation
+        - Local weighted average of y around x
+        - Bandwidth h trades bias for variance
+    Limited dependent variables
+      > Models for outcomes that are binary, categorical or observed only for a selected group.
+      Binary response
+        > Models for a yes/no outcome, where what we estimate is a probability.
+        @ UNIBO/Econometrics/Pages/07. Binary response models
+        Linear probability model
+          > Plain OLS with a binary outcome. Simple to read, and usually fine for average effects.
+          - OLS on a 0/1 outcome, β = change in P(y = 1)
+          - Fitted values can leave [0, 1]
+          - Heteroskedastic by construction
+        Logit
+          > A model that keeps predicted probabilities between 0 and 1 by using the logistic function.
+          ~ Logistic regression
+          ~ Propensity score
+          - P(y = 1|x) = Λ(xβ), logistic cdf
+          - Estimated by maximum likelihood
+        Probit
+          > The same idea as logit with the normal distribution. Results are almost always very close.
+          - P(y = 1|x) = Φ(xβ), normal cdf
+        Latent variable
+          > We imagine an unobserved continuous index and see only whether it crosses a threshold.
+          ~ Endogenous dummy model
+          - y* = xβ + ε, y = 1 if y* > 0
+          - Logit vs probit: the distribution of ε
+        Partial effects
+          > In logit and probit the effect of a regressor on the probability depends on where we evaluate it, so we report an average.
+          - PEA: at the average x
+          - APE: averaged over the observations
+          - APE is what compares with LPM coefficients
+        Goodness of fit
+          > How to judge the fit of a binary model, where the usual R² does not apply.
+          - Percent correctly predicted
+          - Pseudo R²
+      Multinomial logit
+        > The extension of logit to outcomes with several unordered categories.
+        ~ Multinomial logistic
+        ~ Softmax and cross-entropy
+        @ UNIBO/Machine learning/Pages/02. Regression and classification
+        - More than two unordered outcomes
+        - One coefficient vector per class against a baseline
+      Selection models
+        > Models for when the treated, or the observed, are not a random subset because they chose to be there.
+        ~ Naive estimator
+        @ Concepts/Econometrics topics/01. Selection models and the Heckman correction
+        Endogenous dummy model
+          > A treatment indicator that is correlated with the error because people choose treatment on things we do not see.
+          ~ Relevance and exclusion
+          - Treatment dummy correlated with the error
+          - Selection on unobservables
+        Switching regression
+          > Each person has two potential outcome equations, and a third equation decides which one we observe.
+          - Separate outcome equations for treated and untreated
+        Truncated normal
+          > The mean of a normal variable given that it exceeds a threshold. It supplies the correction term in selection models.
+          - E[u | u > c] = σ·λ(·)
+          - λ: the inverse Mills ratio
+        Heckman two-step
+          > We first model who is selected, then add the implied correction term to the outcome regression.
+          ~ Control functions
+          - Step 1: probit for selection
+          - Step 2: outcome regression plus the inverse Mills ratio
+          - Without an exclusion restriction it rests on functional form
+    Panel data
+      > The same units observed over several periods. It lets us remove everything about a unit that does not change.
+      @ UNIBO/Econometrics/Pages/08 and 09. Panel data methods
+      Pooled OLS
+        > Treating all unit-period observations as one cross-section.
+        Unit effect
+          > The unobserved, time-constant part of each unit. If related to the regressors, pooled OLS is biased.
+          - Ignores the unit effect ai
+          - Biased if ai is correlated with x
+        Serial correlation
+          > Observations of the same unit over time are not independent, so standard errors must be adjusted.
+          - Errors of the same unit are correlated over time
+          - Cluster the SE by unit
+      First differences
+        > Estimating on changes between periods instead of levels.
+        FD estimator
+          > Subtracting the previous period removes anything constant within the unit.
+          ~ 2×2
+          ~ DD with a baseline
+          - Δy = Δx·β + Δu removes ai
+          - With T = 2 it equals fixed effects
+        Assumptions FD.1-6
+          > The assumptions under which the first-difference estimator is unbiased and its usual inference valid.
+          - Strict exogeneity (FD.4)
+          - Needs variation in Δx
+      Fixed effects
+        > The estimator that uses only variation within each unit over time.
+        Within transformation
+          > Each variable is measured as a deviation from the unit's own average. The unit effect disappears.
+          ~ Regression DiD
+          - Demean by unit: ai drops out
+          - So do time-constant regressors
+        LSDV
+          > The same fixed-effects estimates obtained by including an indicator for every unit.
+          - One dummy per unit
+          - Same β̂ as the within estimator
+        Strict exogeneity
+          > The assumption that current shocks are unrelated to past, present and future values of the regressors.
+          ~ Parallel trends
+          - u uncorrelated with x in every period
+          - Rules out feedback from y to future x
+      Random effects
+        > An estimator that also uses the variation between units, valid under a stronger assumption.
+        RE assumption
+          > The unit effect must be unrelated to the regressors. If so, we need not throw away the between variation.
+          - ai uncorrelated with x
+          - More efficient than FE if it holds
+        GLS estimation
+          > Random effects subtracts only a fraction of the unit mean, the fraction depending on how important the unit effect is.
+          - Quasi-demeaning
+          - Keeps time-constant regressors
+      Hausman test
+        > A comparison of fixed and random effects estimates. If they differ systematically, the random effects assumption fails.
+        - H0: RE and FE are both consistent
+        - Rejection: use FE
+    Causal inference
+      > Methods for estimating the effect of a policy or treatment, as opposed to a correlation.
+      Potential outcomes
+        > The framework that defines a causal effect as the difference between what happens with and without treatment.
+        @ UNIBO/Econometric methods for policy evaluation/Pages/01. The problem of causality
+        @ UNIBO/Field experiments/Pages/01. Identification and estimation of the ATE
+        Fundamental problem
+          > We never see the same unit both treated and untreated. Every method is a way of filling in the missing outcome.
+          - Only one of Y(1), Y(0) is observed per unit
+          - Causal inference as a missing data problem
+        ATE, ATT, ATU
+          > Average effects over different groups: everyone, those who got the treatment, those who did not.
+          ~ LATE
+          ~ Heterogeneous effects
+          - ATE = E[Y(1) − Y(0)]
+          - ATT: on the treated; ATU: on the untreated
+        Naive estimator
+          > Comparing treated and untreated as they are. It mixes the effect with the pre-existing differences between the groups.
+          ~ Difference in means
+          - Difference in observed means
+          - = ATT + selection bias
+        SUTVA
+          > The assumption that one unit's outcome does not depend on who else is treated.
+          ~ Spillovers
+          - No interference between units
+          - One version of the treatment
+        Independence
+          > Treatment is unrelated to potential outcomes. When it holds, a simple comparison gives the causal effect.
+          ~ Unconfoundedness
+          ~ Field experiments
+          - (Y(1), Y(0)) ⊥ D
+          - Guaranteed by random assignment
+      Endogeneity
+        > The reasons a regressor can be correlated with the error, so that OLS does not give a causal effect.
+        @ UNIBO/Econometric methods for policy evaluation/Pages/02 & 03. Causality and quasi-randomization
+        Omitted variables
+          > A third factor drives both the treatment and the outcome.
+          - A confounder moves both x and y
+        Reverse causality
+          > The outcome affects the treatment as well as the other way round.
+          - y also causes x
+        Measurement error
+          > A regressor recorded with noise makes its estimated effect smaller than the true one.
+          - Classical error in x: attenuation toward zero
+        Bad controls
+          > Controls that are themselves outcomes of the treatment. Including them biases the estimate.
+          ~ Covariates and precision
+          @ UNIBO/Field experiments/Pages/03. Covariates and multiple treatments
+          - Variables affected by the treatment
+          - Controlling for them undoes randomization
+      Randomized experiments
+        > The researcher assigns treatment by chance, which makes the groups comparable by construction.
+        @ UNIBO/Field experiments/Field experiments course page
+        Types
+          > The spectrum from experiments provided by nature to those run in the lab.
+          @ UNIBO/Field experiments/Pages/00. What is a field experiment
+          Natural experiments
+            > Situations where some event or rule assigned treatment in a way that is as good as random.
+            ~ Quasi-randomization
+            - Assignment by nature or policy, as good as random
+          Lab experiments
+            > Experiments in a controlled environment. Clean, but behaviour may differ from real life.
+            - Full control, low realism
+          Field experiments
+            > Randomized trials run with real people in their usual setting.
+            - Randomization in a real setting
+        Estimation
+          > How to compute the treatment effect once the experiment has been run.
+          Difference in means
+            > The basic estimator of an experiment: average outcome of the treated minus that of the controls.
+            @ UNIBO/Field experiments/Pages/01. Identification and estimation of the ATE
+            - ȳT − ȳC
+            - Unbiased for the ATE under random assignment
+            - Same as OLS on a treatment dummy
+          Covariates and precision
+            > Adding pre-treatment variables does not change what we estimate but makes the estimate more precise.
+            @ UNIBO/Field experiments/Pages/03. Covariates and multiple treatments
+            - Baseline covariates cut residual variance
+            - The estimand does not change
+          Treatment heterogeneity
+            > Whether the effect differs across groups defined before treatment.
+            @ UNIBO/Field experiments/Pages/03. Covariates and multiple treatments
+            - Treatment × baseline covariate interactions
+          DD with a baseline
+            > Comparing changes from the baseline instead of final levels.
+            ~ 2×2
+            @ UNIBO/Field experiments/Pages/04. Multiple periods
+            - Change in treated − change in controls
+            - Pays off only with high autocorrelation
+          ANCOVA
+            > Regressing the final outcome on treatment and the baseline outcome. Usually the most precise of the three estimators.
+            @ UNIBO/Field experiments/Pages/04. Multiple periods
+            - Controls for the baseline outcome
+            - More power than DD when autocorrelation is low
+        Inference
+          > How to quantify uncertainty in an experiment.
+          @ UNIBO/Field experiments/Pages/02. Statistical inference
+          Standard errors
+            > The precision of the difference in means and why the usual formula errs on the safe side.
+            - SE of the difference in means
+            - Conservative SE: the covariance of potential outcomes is never observed
+          Randomization inference
+            > A test built only on the random assignment, with no distributional assumptions.
+            - Sharp null: no effect for any unit
+            - Re-draw the assignment many times
+            - p-value: share of draws at least as extreme
+          Multiple testing
+            > Testing many outcomes makes false discoveries likely. The p-values need to be adjusted.
+            @ UNIBO/Field experiments/Pages/03. Covariates and multiple treatments
+            - Many outcomes inflate false positives
+            - Bonferroni and FWER
+            - FDR: Anderson's sharpened q-values
+        Design
+          > Choices made before running the experiment.
+          Blocking
+            > Units are grouped by characteristics first and randomized within each group.
+            @ UNIBO/Field experiments/Pages/02. Statistical inference
+            - Randomize inside strata
+            - Better balance and precision
+          Clustering
+            > Whole groups, such as villages or schools, are assigned together.
+            @ UNIBO/Field experiments/Pages/02. Statistical inference
+            - Randomize groups, not individuals
+            - Intra-cluster correlation cuts the effective sample
+          Balance tests
+            > Checks that treatment and control groups look alike before treatment.
+            ~ Validity checks
+            ~ Propensity score
+            @ UNIBO/Field experiments/Pages/03. Covariates and multiple treatments
+            - Normalized differences
+            - Joint orthogonality test
+            - Kolmogorov-Smirnov
+          Multiple treatments
+            > Experiments with more than one treatment arm, including combinations.
+            @ UNIBO/Field experiments/Pages/03. Covariates and multiple treatments
+            - Factorial designs
+            - Long model with the interaction
+          Power and MDE
+            > The probability of detecting an effect of a given size, and the smallest effect a design can detect.
+            @ UNIBO/Field experiments/Pages/05. Power and design
+            - MDE = (t α/2 + t 1−κ) · SE(β̂)
+            - Falls with N, rises with outcome variance
+            - Clustering, noncompliance and attrition raise it
+        Noncompliance
+          > Not everyone assigned to treatment takes it, and some controls get it.
+          @ UNIBO/Field experiments/Pages/06. Noncompliance
+          Intention to treat
+            > The effect of being assigned, whatever people then do. Always identified by the randomization.
+            ~ 2SLS
+            - ITT: effect of assignment Z on Y
+            - ITT_D: effect of Z on take-up
+          LATE
+            > The average effect for those who take the treatment only because they were assigned to it.
+            ~ LATE and heterogeneous effects
+            ~ Fuzzy
+            - LATE = ITT / ITT_D
+            - Effect on compliers only
+          Excludability
+            > Assignment must have no effect on the outcome other than through treatment.
+            ~ Relevance and exclusion
+            - Z affects Y only through D
+          Monotonicity
+            > Nobody does the opposite of what they are assigned.
+            - No defiers
+          One- and two-sided
+            > Whether only the treatment group can deviate from assignment, or both groups can.
+            ~ Partially fuzzy
+            - One-sided: compliers and never-takers, LATE = ATT
+            - Two-sided: adds always-takers and defiers
+          Encouragement design
+            > When treatment cannot be imposed or denied, we randomize a nudge towards it.
+            ~ Instrumental variables
+            - Randomize an incentive to take up, not the treatment
+        Interference
+          > The treatment of some units affects others.
+          @ UNIBO/Field experiments/Pages/07. Interference
+          Spillovers
+            > Effects of the programme on people who did not receive it.
+            - SUTVA fails
+            - Deworming, Progresa, job-search displacement
+          Three estimands
+            > The total, the direct and the indirect effect of a programme, and how they add up.
+            - TATE = E[Y(1,1) − Y(0,0)]
+            - NATE = E[Y(1,1) − Y(1,0)]
+            - IATE = E[Y(1,0) − Y(0,0)]
+            - TATE = NATE + IATE
+          Double randomization
+            > Randomizing first how much of each area is treated, then who.
+            - First areas (and intensity), then individuals
+            - Separates direct and indirect effects
+      Selection on observables
+        > Methods that assume all relevant differences between treated and untreated are in the data.
+        @ Concepts/Econometrics topics/04. Selection on observables and the propensity score
+        Unconfoundedness
+          > Among units with the same observed characteristics, who gets treated is as good as random.
+          - (Y(0), Y(1)) ⊥ D | X
+          - Plus common support
+        Propensity score
+          > The probability of being treated given the covariates. Comparing units with the same score removes the bias from observables.
+          ~ Double machine learning
+          - p(X) = P(D = 1 | X)
+          - Conditioning on p(X) is enough: solves dimensionality
+          - Logit or probit, then balance checks
+        Matching estimators
+          > Each treated unit is compared with untreated units that look like it.
+          @ Concepts/Econometrics topics/05. Propensity score matching estimators
+          Stratification
+            > Units are grouped into intervals of the propensity score and compared within each.
+            ~ Blocking
+            - Blocks of the score, average the within-block differences
+          Nearest neighbour
+            > Each treated unit is paired with the control whose score is closest.
+            ~ K-nearest neighbours
+            - Closest control for each treated unit
+          Radius
+            > Each treated unit is compared with all controls whose score lies within a set distance.
+            - All controls within a caliper
+          Kernel
+            > Every control contributes to the comparison, with more weight the closer its score.
+            - Weighted average of all controls
+        Sensitivity
+          > How much the conclusions depend on choices and on the untestable assumption.
+          @ Concepts/Econometrics topics/05. Propensity score matching estimators
+          - Results move with the score specification
+          - Nothing protects against unobservables
+      Instrumental variables
+        > A variable that moves the treatment but affects the outcome in no other way lets us isolate causal variation.
+        @ UNIBO/Econometric methods for policy evaluation/Pages/04. Instrumental variables
+        Relevance and exclusion
+          > The two requirements for an instrument: it must shift the treatment, and it must matter for the outcome only through it.
+          - Relevance: Cov(z, x) ≠ 0, testable
+          - Exclusion: Cov(z, u) = 0, not testable
+        2SLS
+          > The standard IV estimator. We keep only the part of the regressor explained by the instrument and use that.
+          - First stage: x on z
+          - Reduced form: y on z
+          - β IV = reduced form / first stage
+        LATE and heterogeneous effects
+          > When effects differ across people, IV recovers the effect only for those whose treatment responds to the instrument.
+          @ UNIBO/Econometric methods for policy evaluation/Pages/04.5 Heterogenous treatment effects
+          - Compliers, always-takers, never-takers, defiers
+          - IV gives the effect on compliers
+          - Limits external validity
+        Control functions
+          > Instead of replacing the endogenous regressor, we add a term that absorbs the part of the error correlated with it.
+          @ Concepts/Econometrics topics/02. Control functions
+          - Add a term for the selection part of the error as a regressor
+          - More structure than IV, more efficiency if it holds
+        Quasi-randomization
+          > Using observational settings where some source of variation in treatment is plausibly unrelated to everything else.
+          @ UNIBO/Econometric methods for policy evaluation/Pages/02 & 03. Causality and quasi-randomization
+          - As-good-as-random variation in observational data
+      Regression discontinuity
+        > Treatment is assigned by a cutoff on a score. Units just either side are comparable.
+        @ UNIBO/Econometric methods for policy evaluation/Pages/05. Regression discontinuity design (RDD)
+        Sharp
+          > Everyone above the cutoff is treated and nobody below.
+          - Treatment jumps from 0 to 1 at the cutoff
+          - Effect = jump in E[Y|S] at the cutoff
+          - Local to the threshold
+        Fuzzy
+          > Crossing the cutoff raises the chance of treatment without determining it.
+          ~ 2SLS
+          - The probability of treatment jumps
+          - Jump in Y / jump in D: a local IV
+        Partially fuzzy
+          > Only those above the cutoff are eligible, and some of them decline.
+          @ Concepts/Econometrics topics/03. RDD identification and partially fuzzy designs
+          - Eligible above the cutoff may opt out
+          - Nobody below can participate
+          - Gives the effect on participants at the threshold
+        Non-parametric estimation
+          > Using only observations close to the cutoff, with a flexible fit on each side.
+          - Local regression inside a bandwidth
+          - Bandwidth trades bias for variance
+        Validity checks
+          > Evidence that units could not sort around the cutoff and that nothing else changes there.
+          - Covariate balance at the cutoff
+          - Placebo tests
+          - No self-selection around the threshold
+          - Robust to functional form
+      Difference-in-differences
+        > Compare the change over time in a treated group with the change in an untreated one.
+        @ UNIBO/Econometric methods for policy evaluation/Pages/06. Difference-in-differences (DiD)
+        2×2
+          > The basic case: two groups, two periods. The control group's change stands in for what the treated would have done.
+          - (ȳ T,post − ȳ T,pre) − (ȳ C,post − ȳ C,pre)
+          - Identifies the ATT
+        Parallel trends
+          > Without treatment, the two groups would have followed the same path.
+          - Untreated outcomes would have moved alike
+          - Pre-trends can be tested, the assumption cannot
+        Regression DiD
+          > The same comparison as a regression, which extends to more groups, more periods and controls.
+          - Treat × Post with group and time effects
+          - Generalises to many groups and periods
+        Event studies
+          > Separate effects for each period before and after treatment.
+          - Leads test pre-trends
+          - Lags trace the dynamics
+        Staggered adoption
+          > Different units start treatment at different times.
+          @ Concepts/Econometrics topics/06. Modern difference-in-differences and synthetic control
+          - Units treated at different dates
+          - Building block: ATT(g, t) by cohort and period
+        Why TWFE fails
+          > With staggered timing and effects that vary, the standard two-way fixed effects regression makes comparisons that can give the wrong sign.
+          @ Concepts/Econometrics topics/06. Modern difference-in-differences and synthetic control
+          - Already-treated units serve as controls
+          - Negative weights with heterogeneous effects
+        Robust estimators
+          > The recent estimators that use only clean comparisons with not-yet or never treated units.
+          ~ DML with DiD
+          @ Concepts/Econometrics topics/06. Modern difference-in-differences and synthetic control
+          - Callaway and Sant'Anna
+          - Sun and Abraham
+          - Imputation (Borusyak, Jaravel, Spiess)
+          - de Chaisemartin and D'Haultfœuille
+          - Stacked
+        Doubtful parallel trends
+          > Instead of assuming parallel trends exactly, we ask how large a violation would overturn the result.
+          @ Concepts/Econometrics topics/06. Modern difference-in-differences and synthetic control
+          - Rambachan and Roth: bound the violation
+          - Report the breakdown value M̄
+      Synthetic control
+        > For a single treated unit, the comparison is a weighted combination of untreated units.
+        @ UNIBO/Econometric methods for policy evaluation/Pages/07. Synthetic control method (SCM)
+        Weights and model
+          > The weights are chosen so that the combination tracks the treated unit before treatment.
+          ~ Matching estimators
+          - Weighted average of donor units
+          - Weights ≥ 0, summing to 1
+          - Chosen to match the pre-treatment path
+        Goodness of fit
+          > How closely the synthetic unit follows the treated one before treatment. A poor fit undermines the whole exercise.
+          - Pre-treatment RMSPE
+        Placebo inference
+          > We pretend each untreated unit was treated and see whether the real effect stands out.
+          ~ Randomization inference
+          - Assign the treatment to each donor in turn
+          - Rank the post / pre RMSPE ratios
+        Synthetic DiD
+          > A hybrid that reweights both units and periods and then takes a difference-in-differences.
+          @ Concepts/Econometrics topics/06. Modern difference-in-differences and synthetic control
+          - Unit and time weights inside a DiD
+      Bunching
+        > Using the excess of people located exactly at a tax threshold to measure how they respond to incentives.
+        @ Concepts/Econometrics topics/07. Bunching and sufficient statistics
+        Kinks
+          > A point where the marginal tax rate jumps. People who would have been just above move to it.
+          - Change in the marginal rate
+          - Excess mass at the kink gives the elasticity
+        Notches
+          > A point where the tax bill itself jumps. Being just above is worse than being at it, so a hole appears.
+          - Jump in the average rate
+          - Excess mass below, missing mass above
+        Frictions
+          > Real-world obstacles to adjusting. They make observed bunching understate the true response.
+          - Adjustment costs and inattention mute bunching
+        Estimation
+          > How the amount of bunching is measured from the observed distribution.
+          - Polynomial counterfactual density, bunching window excluded
+          - Excess mass b
+        Sufficient statistics
+          > An approach that expresses the welfare effect of a policy in terms of a few estimable responses.
+          - Welfare effects from a few elasticities
+          - No full structural model
+          - Income taxation, social insurance
+      Causal machine learning
+        > Using prediction algorithms inside causal estimation without letting their errors contaminate the result.
+        @ Concepts/Econometrics topics/08. Causal machine learning
+        @ UNIBO/Machine learning/Pages/11. Applications and causal ML
+        Double lasso
+          > Lasso selects controls twice, as predictors of the outcome and of the treatment, so no important confounder is dropped.
+          ~ Lasso
+          - Lasso for the outcome and for the treatment
+          - Keep the union of the selected controls
+        Neyman orthogonality
+          > A property of the estimating equation that makes the result robust to imperfect machine-learning predictions.
+          - Score insensitive to small errors in the nuisance functions
+        Double machine learning
+          > The general recipe: predict outcome and treatment flexibly, on separate folds, and estimate the effect from what is left.
+          - Residualise Y and D with ML, with cross-fitting
+          - Regress residual on residual
+          - Partially linear model, or the doubly robust score for the ATE
+        Heterogeneous effects
+          > Estimating how the treatment effect varies with observed characteristics.
+          ~ Treatment heterogeneity
+          ~ Random forests
+          - CATE: τ(x)
+          - Causal forests
+        Meta-learners
+          > Generic recipes that turn any prediction algorithm into an estimator of individual-level effects.
+          - S, T, X, DR and R learners
+          - Chosen by out-of-sample loss
+        Sensitivity
+          > How strong an unobserved confounder would have to be to explain the estimate away.
+          ~ Selection on observables / Sensitivity
+          - How strong must a hidden confounder be
+        DML with DiD
+          > Combining flexible covariate adjustment with a difference-in-differences design.
+          - Doubly robust DiD with ML nuisances
+    Machine learning
+      > Methods built to predict well on new data. The course follows the statistical-learning textbook.
+      @ UNIBO/Machine learning/Machine learning course page
+      Foundations
+        > What it means to learn a relation from data and how we judge the result.
+        @ UNIBO/Machine learning/Pages/01. Introduction to statistical learning
+        Prediction vs inference
+          > Two different goals. For prediction only accuracy matters; for inference we need to understand the relation.
+          ~ Prediction vs causal inference
+          - Prediction: accuracy of ŷ, f as a black box
+          - Inference: how x moves y
+        Quality of fit
+          > Performance must be judged on data the model has not seen.
+          - Training vs test MSE
+          - Training MSE always falls with flexibility
+        Bias-variance trade-off
+          > Flexible models follow the data closely but change a lot from sample to sample. The best model balances the two.
+          ~ Tuning parameter
+          - Test MSE = variance + bias² + irreducible error
+          - U-shape in flexibility
+        Bayes classifier
+          > The ideal classifier that knows the true probabilities. Every real method tries to approximate it.
+          - Assign the most probable class given x
+          - Bayes error rate: the floor
+      Regression and classification
+        > The baseline methods for predicting a number or a category.
+        @ UNIBO/Machine learning/Pages/02. Regression and classification
+        Linear regression
+          > The starting point for prediction. Often hard to beat when data are few or noisy.
+          ~ Multiple regression
+          - The benchmark: interpretable, low variance
+        K-nearest neighbours
+          > Predict using the observations that are closest. No model is assumed, but it degrades quickly with many predictors.
+          - Average or vote of the K nearest points
+          - Small K: low bias, high variance
+        Logistic regression
+          > The standard linear method for a two-class outcome.
+          - Log-odds linear in x
+        Multinomial logistic
+          > Logistic regression extended to more than two classes.
+          - More than two classes
+        Assessing a classifier
+          > Overall accuracy hides the kinds of error. We look at each type and at how they trade off as the threshold moves.
+          - Confusion matrix: sensitivity, specificity
+          - ROC curve and AUC
+      Resampling
+        > Reusing the sample to estimate test error and uncertainty.
+        @ UNIBO/Machine learning/Pages/03. Resampling methods
+        Validation set
+          > Hold out part of the data to test on. Simple, but the answer depends on the split.
+          - One random split
+          - Variable, overestimates the test error
+        LOOCV
+          > Each observation in turn serves as the test set.
+          - n fits, each leaving one observation out
+        k-fold cross-validation
+          > The data are split into k parts and each serves once as test set. The standard way to estimate test error.
+          ~ Tuning parameter
+          ~ Pruning
+          ~ Double machine learning
+          - k = 5 or 10
+          - Compromise between bias and variance
+        Bootstrap
+          > Drawing repeated samples from the data to see how much an estimate varies.
+          ~ Bagging
+          - Resample with replacement
+          - SE of any statistic
+      Subset selection
+        > Choosing which predictors to keep in a linear model.
+        @ UNIBO/Machine learning/Pages/04. Subset selection
+        Best subset
+          > Fit every possible combination of predictors and keep the best of each size.
+          - All 2ᵖ models
+          - Infeasible for large p
+        Stepwise
+          > Add or remove one predictor at a time. Much cheaper than best subset, not guaranteed to find the best model.
+          - Forward, backward, hybrid
+        Cp, AIC, BIC
+          > Criteria that estimate test error from training error by penalising the number of predictors.
+          - Adjust the training error for model size
+          - BIC penalises more
+      Shrinkage
+        > Keep all predictors but pull their coefficients towards zero.
+        @ UNIBO/Machine learning/Pages/05. Shrinkage methods
+        Ridge
+          > Shrinks all coefficients smoothly. Helps most when many predictors each matter a little.
+          - Penalty λ·Σβ²
+          - Shrinks, never exactly to zero
+          - Standardise the predictors first
+        Lasso
+          > Shrinks and selects at the same time. Helps most when only a few predictors matter.
+          ~ Best subset
+          - Penalty λ·Σ|β|
+          - Sets some coefficients to zero: selection
+        Tuning parameter
+          > The strength of the penalty, which governs the bias-variance trade-off.
+          - λ chosen by cross-validation
+      Dimension reduction
+        > Replace many predictors with a few combinations of them.
+        @ UNIBO/Machine learning/Pages/06. Dimension reduction and high dimensions
+        Principal components
+          > The combinations of the predictors that capture most of their variation.
+          ~ PCA
+          - Directions of largest variance
+        Principal components regression
+          > Regress the outcome on a few principal components instead of on all predictors.
+          - Regress y on the first M components
+          - Components built without y
+        Partial least squares
+          > Like principal components regression, but the combinations are chosen to be related to the outcome.
+          - Components built using y
+        High dimensions
+          > When predictors outnumber observations, classical methods overfit completely.
+          - p > n: perfect training fit, useless
+          - Read results with care
+      Beyond linearity
+        > Ways to let the relation between a predictor and the outcome bend.
+        @ UNIBO/Machine learning/Pages/07. Moving beyond linearity
+        Polynomials
+          > The simplest extension. Flexible, but badly behaved at the edges of the data.
+          - Powers of x as regressors
+        Step functions
+          > A piecewise-constant fit. It imposes no shape but misses trends within bins.
+          - Cut x into bins, a constant in each
+        Regression splines
+          > Polynomials fitted on separate intervals and joined so that the curve is smooth.
+          - Piecewise polynomials, smooth at the knots
+        Smoothing splines
+          > A curve chosen to fit the data closely while staying smooth, with one parameter controlling the balance.
+          - Penalty on roughness
+          - Effective degrees of freedom
+        Local regression
+          > A separate weighted fit at each point, using only nearby observations.
+          - Weighted fit around each point
+        Generalized additive models
+          > Each predictor gets its own flexible curve and the curves are added. Flexible and still readable.
+          - Sum of smooth functions, one per predictor
+      Tree-based methods
+        > Methods that split the predictor space into regions, alone or combined in large numbers.
+        @ UNIBO/Machine learning/Pages/08. Tree-based methods
+        Regression and classification trees
+          > The data are split repeatedly on one variable at a time. Easy to read, unstable by themselves.
+          - Recursive binary splitting
+          - Predict the region mean or majority class
+        Pruning
+          > A full tree overfits. We cut it back to the size that predicts best.
+          - Grow a large tree, then cost-complexity pruning
+          - α by cross-validation
+        Bagging
+          > Many trees fitted on resampled data and averaged.
+          - Average trees over bootstrap samples
+          - Averaging reduces variance
+        Random forests
+          > Bagging with a twist: each split may use only a random few predictors, so the trees differ more.
+          - Random subset of predictors at each split
+          - Decorrelates the trees
+        Boosting
+          > Small trees added one after another, each correcting the errors of the current model.
+          - Trees grown in sequence on the residuals
+          - Tuning: number of trees, shrinkage, depth
+        OOB error and variable importance
+          > Two by-products of bagging: a free estimate of test error, and a ranking of predictors.
+          - Out-of-bag observations as a test set
+          - Importance: total drop in RSS or Gini
+      Deep learning
+        > Neural networks with many layers, for images, text and other complex inputs.
+        @ UNIBO/Machine learning/Pages/09. Deep learning
+        Neural networks
+          > Models that build new features as non-linear combinations of the inputs, layer after layer.
+          - Hidden units: activations of linear combinations
+          - Single layer, then multilayer
+        Activation functions
+          > The non-linear transformation applied in each unit. Without it the network would be a linear model.
+          - ReLU, sigmoid
+        Softmax and cross-entropy
+          > How a network outputs class probabilities and how its errors are scored.
+          - Class probabilities at the output
+        Convolutional networks
+          > Networks that look for local patterns anywhere in an image and combine them.
+          - Convolution filters plus pooling
+          - Images
+        Recurrent networks
+          > Networks that process a sequence in order and carry information forward.
+          - Sequences: text, time series
+        Word embeddings
+          > A representation of words in which similar words are close to each other.
+          ~ New data
+          - Words as dense vectors
+        Fitting
+          > How the weights are found, and how overfitting is kept under control.
+          - Gradient descent with backpropagation
+          - SGD, dropout, regularisation
+      Unsupervised learning
+        > Finding structure in data when there is no outcome to predict.
+        @ UNIBO/Machine learning/Pages/10. Unsupervised learning
+        PCA
+          > A few new variables that summarise most of the variation in many. Used to visualise and to compress.
+          - Loadings, scores, biplot
+          - Proportion of variance explained
+          - Scale the variables first
+        Matrix completion
+          > Filling the missing cells of a data matrix by exploiting its low-dimensional structure.
+          - Fill missing entries with a low-rank fit
+          - Recommender systems
+        K-means
+          > Splits observations into a chosen number of groups so that members of a group are close.
+          - Minimise within-cluster variation
+          - K fixed in advance
+          - Local optima: several starts
+        Hierarchical clustering
+          > Builds a tree of nested groups, so the number of clusters need not be fixed in advance.
+          - Dendrogram, cut at a height
+          - Linkage: complete, average, single
+      ML in economics
+        > Where prediction methods are useful to economists.
+        @ UNIBO/Machine learning/Pages/11. Applications and causal ML
+        Prediction policy problems
+          > Decisions where what is needed is a good forecast, such as whom to inspect or whom to release.
+          - Decisions that hinge on a prediction, not a causal effect
+        New data
+          > Machine learning turns unstructured sources into variables economists can use.
+          - Text, satellite images, phone metadata
+        Testing theories
+          > Machine learning shows how much of the predictable variation a theory captures.
+          - Compare a theory's fit with an ML benchmark
+        Prediction vs causal inference
+          > Predicting an outcome and estimating an effect are different tasks. The first can serve the second.
+          ~ Causal machine learning
+          - ŷ problems vs β̂ problems
+          - Prediction in the service of estimation
+    Software
+      > Where the methods are implemented in the vault.
+      Stata
+        > The Stata cookbook: one page per method, syntax first, all code run on the vault datasets.
+        @ Concepts/Stata hub
+        Basics
+          > Cookbook page on loading, inspecting and preparing data.
+          @ Concepts/Stata/01. Stata basics
+        Regression
+          > Cookbook page on OLS, robust standard errors and tests.
+          ~ Econometrics / Linear regression
+          @ Concepts/Stata/02. Regression in Stata
+        Binary response
+          > Cookbook page on the linear probability model, logit, probit and marginal effects.
+          ~ Limited dependent variables / Binary response
+          @ Concepts/Stata/03. Binary response in Stata
+        Panel data
+          > Cookbook page on declaring a panel and on fixed and random effects.
+          ~ Econometrics / Panel data
+          @ Concepts/Stata/04. Panel data in Stata
+        Experiments
+          > Cookbook page on analysing randomized trials.
+          ~ Randomized experiments
+          @ Concepts/Stata/05. Experiments in Stata
+        Power
+          > Cookbook page on power and sample size calculations.
+          ~ Power and MDE
+          @ Concepts/Stata/06. Power in Stata
+        IV
+          > Cookbook page on instrumental variables estimation.
+          ~ Instrumental variables
+          @ Concepts/Stata/07. IV in Stata
+        DiD
+          > Cookbook page on difference-in-differences, including the recent estimators.
+          ~ Difference-in-differences
+          @ Concepts/Stata/08. DiD in Stata
+        RDD
+          > Cookbook page on regression discontinuity.
+          ~ Regression discontinuity
+          @ Concepts/Stata/09. RDD in Stata
+        Synthetic control
+          > Cookbook page on the synthetic control method.
+          ~ Causal inference / Synthetic control
+          @ Concepts/Stata/10. Synthetic control in Stata
+        Selection and matching
+          > Cookbook page on selection models and propensity score matching.
+          ~ Selection models
+          ~ Matching estimators
+          @ Concepts/Stata/11. Selection and matching in Stata
+      R
+        > A single page with all the R lab sessions of the machine learning course.
+        ~ Machine learning
+        @ UNIBO/Machine learning/Pages/R lab
+        - Labs of the machine learning course
+      Python
+        > The Python for economists page that covers data handling and basic econometrics.
+        ~ Econometrics / Linear regression
+        @ UNIBO/Python for economists/Pages/03. Pandas, APIs & Econometrics
+        - pandas for data handling
+        - statsmodels for OLS
+        - linearmodels for panel fixed effects
+</script>
+
+<!-- The "not covered" map: same syntax, plus "= CODE" for the JEL classification code. "@" here means a vault page it builds on. -->
+<script type="text/plain" id="outline-gaps">
+Economics and econometrics
+  > Fields and methods of the discipline that the vault does not cover yet, organised with the JEL classification used by economics journals. Where a page already touches the topic, it is listed under "Builds on".
+  Economics
+    > The fields of economics with no course page in the vault yet.
+    Microeconomic theory
+      > The theory beyond the intermediate course: general equilibrium, uncertainty, information and the design of rules.
+      = D
+      General equilibrium
+        > All markets clear at once. The questions are existence, uniqueness and stability of the equilibrium, and the welfare theorems in full generality.
+        = D5
+        @ UNIBO/Foundations (PE1)/Pages/01. Competition and efficiency
+      Choice under uncertainty
+        > Expected utility, measures of risk aversion and how to rank risky prospects.
+        = D81
+        @ UNIBO/Foundations (PE1)/Pages/07. Social insurance
+      Information economics
+        > What happens when one side knows more. Signalling, screening and the principal-agent problem in contracts.
+        = D82
+        @ UNIBO/Foundations (PE1)/Pages/07. Social insurance
+        Signalling
+          > The informed side takes a costly action to reveal its type, as in education as a signal of ability.
+          = D82
+        Screening
+          > The uninformed side offers a menu of contracts so that types sort themselves.
+          = D82
+        Principal-agent and incentive contracts
+          > How to pay someone whose effort cannot be observed, trading insurance against incentives.
+          = D86
+      Mechanism design and auctions
+        > Designing rules so that self-interested agents reveal what they know. Auctions are the main application.
+        = D44
+      Matching markets
+        > Markets without prices, such as school choice or kidney exchange, and the algorithms that clear them.
+        = C78
+    Behavioural economics
+      > Systematic departures from the standard model of choice and what they mean for welfare and policy.
+      = D9
+      @ UNIBO/Negotiation And Bargaining/Pages/03. Behavioral economics and the psychology of first offers
+      Prospect theory and reference dependence
+        > Outcomes are judged as gains and losses from a reference point, and losses weigh more.
+        = D91
+      Present bias and self-control
+        > People overweight the present, so plans made today are not followed tomorrow.
+        = D15
+      Limited attention and salience
+        > People respond to what they notice, so the way a price or tax is shown changes behaviour.
+        = D91
+      Nudges and choice architecture
+        > Changing how options are presented, without changing incentives, to steer choices.
+        = D91
+        @ UNITE/Public policy analysis/Pages/03. Policy tools
+      Behavioural welfare economics
+        > If choices are biased, they no longer reveal wellbeing. How to evaluate policy then.
+        = D60
+    Macroeconomic theory
+      > Modern macroeconomics built on optimising households and firms, beyond the IS-LM and AD-AS models in the vault.
+      = E
+      @ UNITE/Politica Economica/Pages/06. Il modello AD-AS
+      Consumption and saving
+        > Households smooth consumption over their lifetime, so it depends on permanent rather than current income.
+        = E21
+      Investment
+        > Firms invest when the market value of capital exceeds its replacement cost.
+        = E22
+      Real business cycles
+        > Fluctuations as efficient responses to technology shocks, in a model with flexible prices.
+        = E32
+      New Keynesian model
+        > Sticky prices give monetary policy real effects. The Phillips curve becomes forward-looking and policy follows an interest-rate rule.
+        = E12
+        @ UNITE/Politica Economica/Pages/10. La curva di Phillips e le aspettative
+        Sticky prices
+          > Firms change prices only from time to time, so the price level adjusts slowly.
+          = E31
+        Taylor rule
+          > The central bank sets the interest rate in response to inflation and the output gap.
+          = E52
+      DSGE models
+        > Dynamic, stochastic general-equilibrium models estimated on data and used by central banks for policy analysis.
+        = E37
+      Search and unemployment
+        > Unemployment as the result of the time it takes workers and vacancies to meet.
+        = E24
+    Growth and development
+      > Why some countries are rich and others poor, and what can change it.
+      = O
+      @ UNITE/Geografia Economica/Pages/11. Le politiche dello sviluppo economico
+      Solow model
+        > Growth from capital accumulation runs out; in the long run only technology raises income per head.
+        = O41
+      Endogenous growth
+        > Models in which ideas, research and human capital make growth itself an outcome of the economy.
+        = O31
+      Institutions and growth
+        > Rules, property rights and political systems as deep causes of long-run prosperity.
+        = O43
+      Development economics
+        > The economics of low-income countries: credit, insurance, labour and public services when markets are missing.
+        = O1
+        @ UNIBO/Field experiments/Field experiments course page
+        Poverty traps
+          > Situations where being poor makes it hard to stop being poor.
+          = O15
+        Microfinance and credit
+          > Lending to the poor without collateral, and what the experiments found.
+          = O16
+    International economics
+      > Trade between countries and the international monetary system.
+      = F
+      @ UNITE/Geografia Economica/Pages/08. Il commercio internazionale
+      Trade theory
+        > Why countries trade: different technologies, different endowments, or economies of scale.
+        = F11
+        Comparative advantage
+          > Ricardo: countries gain by specialising in what they make relatively cheaply.
+          = F11
+        Heckscher-Ohlin
+          > Countries export goods that use their abundant factor intensively. Trade changes factor incomes.
+          = F11
+        New trade theory
+          > Scale economies and product variety explain trade between similar countries.
+          = F12
+      Gravity model
+        > Trade between two countries grows with their size and falls with distance. The workhorse of empirical trade.
+        = F14
+      Trade policy
+        > The welfare effects of tariffs, quotas and trade agreements, and who wins and loses.
+        = F13
+        @ UNIBO/IPEU/Pages/05. Common trade policy
+      International finance
+        > How exchange rates are determined, why capital flows reverse, and how currency crises happen.
+        = F31
+        @ UNITE/Politica Economica/Pages/12. Il tasso di cambio e la bilancia dei pagamenti
+      Multinationals and FDI
+        > Why firms produce abroad and what foreign investment does to host countries.
+        = F23
+        @ UNITE/Geografia Economica/Pages/06. Le filiere industriali
+    Financial economics
+      > How assets are priced, how firms are financed and how banks work, in theory.
+      = G
+      Asset pricing
+        > Expected returns compensate for risk that cannot be diversified away.
+        = G12
+        CAPM and factor models
+          > Returns explained by exposure to the market, or to a few factors.
+          = G12
+        Market efficiency
+          > Prices reflect available information, so beating the market consistently is hard.
+          = G14
+      Corporate finance
+        > How firms choose between debt and equity, and when that choice matters.
+        = G32
+      Banking theory
+        > Why banks exist and why they are exposed to runs.
+        = G21
+        @ UNITE/Crisis economics/Pages/02. Bankers gone wild
+    Labour economics
+      > How labour markets work: supply, wages, skills and discrimination.
+      = J
+      Labour supply
+        > How hours and participation respond to wages, taxes and benefits.
+        = J22
+        @ Concepts/Econometrics topics/07. Bunching and sufficient statistics
+      Human capital
+        > Education and training as an investment, and how to measure its return.
+        = J24
+        Returns to schooling
+          > How much an extra year of school raises earnings, and why the simple estimate is biased.
+          = I26
+          @ UNIBO/Econometric methods for policy evaluation/Material/Class papers/Companion notes/Angrist & Krueger (1991) Does Compulsory School Attendance Affect Schooling and Earnings
+      Wages and minimum wages
+        > How wages are set, and what a minimum wage does to employment in competitive and monopsony markets.
+        = J31
+        @ UNIBO/Econometric methods for policy evaluation/Material/Class papers/Companion notes/Card & Krueger (1994) Minimum Wages and Employment
+      Discrimination
+        > Differences in outcomes not explained by productivity, from prejudice or from statistical inference.
+        = J71
+        @ UNIBO/Field experiments/Material/Papers/Companion notes/Bertrand & Duflo (2017) Field Experiments on Discrimination
+      Migration
+        > Why people move and what migration does to wages at origin and destination.
+        = J61
+        @ UNITE/Geografia Economica/Pages/03. Popolazione, lavoro, migrazioni, società, culture
+    Public economics beyond the course
+      > Topics of public finance not covered by the PE courses.
+      = H
+      @ UNIBO/Foundations (PE1)/Pages/00. Introduction
+      Optimal income taxation
+        > Mirrlees: the trade-off between redistribution and work incentives in the shape of the income tax.
+        = H21
+        @ UNIBO/Foundations (PE1)/Pages/04. Optimal taxation
+      Fiscal federalism
+        > Which level of government should do what, and how to finance it.
+        = H77
+      Tax evasion and enforcement
+        > Why people pay taxes at all, and how audits, penalties and third-party reporting work.
+        = H26
+      Pensions
+        > Pay-as-you-go and funded systems, and how they respond to population ageing.
+        = H55
+    Health, education and welfare
+      > Applied fields on the welfare state's main programmes.
+      = I
+      Health economics
+        > Demand for health care, insurance markets and how health systems are organised.
+        = I1
+      Economics of education
+        > How schools produce learning and which policies improve it.
+        = I2
+      Poverty and inequality measurement
+        > Poverty lines, equivalence scales and inequality indices beyond the Gini, with their ethical assumptions. Your Inequality and poverty course will cover this.
+        = I32
+        @ UNIBO/Economic Statistics/Pages/07. Economic inequality
+    Industrial organisation theory
+      > The theory of imperfect competition beyond monopoly and Cournot.
+      = L
+      @ UNITE/Microeconomia/Pages/07. Teoria dei giochi e oligopolio
+      Product differentiation
+        > Firms compete by locating their products apart, as in Hotelling's model of the beach.
+        = L13
+      Entry and entry deterrence
+        > How incumbents can make entry unprofitable, and when the threat is credible.
+        = L12
+      Regulation of natural monopolies
+        > Pricing rules for industries where one firm is cheapest, such as networks and utilities.
+        = L51
+      Platforms and network effects
+        > Markets where the value of a product grows with the number of users on the same or the other side.
+        = L86
+    Environmental and resource economics
+      > The economics of natural resources and environmental policy beyond externalities.
+      = Q
+      @ UNIBO/Foundations (PE1)/Pages/05. Externalities
+      Non-renewable resources
+        > Hotelling's rule: the price of an exhaustible resource rises with the interest rate.
+        = Q32
+      Environmental valuation
+        > Methods to put a value on clean air or biodiversity, including stated-preference surveys.
+        = Q51
+        @ UNIBO/Cost-benefit analysis (PE2)/Pages/08. Monetizing impacts from observed behavior
+      Climate economics
+        > The social cost of carbon, discounting over centuries, and integrated assessment models.
+        = Q54
+        @ UNIBO/Current PP issues/Pages/03. Climate targets and regional gaps
+    Urban and regional economics
+      > Why activity concentrates in cities and regions.
+      = R
+      @ UNITE/Geografia Economica/Pages/10. Le città, centri dell'economia
+      Urban land use
+        > Rents fall with distance from the centre because commuting costs rise.
+        = R14
+      Agglomeration economies
+        > Firms and workers are more productive near each other, through sharing, matching and learning.
+        = R12
+      New economic geography
+        > Krugman: scale economies and transport costs make activity cluster in a core.
+        = R12
+    Law and economics
+      > The economic analysis of legal rules.
+      = K
+      Property rights and contracts
+        > How legal rules on ownership and breach of contract shape incentives.
+        = K11
+      Economics of crime
+        > Crime as a choice that responds to the probability and severity of punishment.
+        = K42
+    Political economy
+      > How political institutions shape economic outcomes and policy choices.
+      = D7
+      @ UNITE/Politica Economica/Pages/03. Scelte collettive: votazioni e public choice
+      Political business cycles
+        > Governments time expansions around elections.
+        = D72
+      Comparative economic systems
+        > Varieties of capitalism and how institutions differ across countries.
+        = P5
+        @ UNITE/Sociologia Economica/Pages/05. Nuova sociologia economica e globalizzazione
+    Economic history and thought
+      > How economies developed over time and how economic ideas changed.
+      = N
+      Economic history
+        > Long-run development, industrialisation and past crises, studied with economic tools.
+        = N
+      History of economic thought
+        > The development of economic ideas from the classical economists onwards.
+        = B
+        @ UNITE/Sociologia Economica/Pages/01. Economia moderna e scuola classica
+  Econometrics
+    > The econometric methods with no course page in the vault yet.
+    Time series
+      > Data on the same variable over time, where observations depend on their own past.
+      = C22
+      @ UNITE/Statistica/Pages/11. I numeri indice e le serie storiche
+      Stationarity and ARMA models
+        > A stationary series has a stable mean and correlation over time. ARMA models describe how it depends on its past values and past shocks.
+        = C22
+      Unit roots and spurious regression
+        > Many economic series wander without returning to a mean. Regressing one such series on another can show a relation that is not there.
+        = C22
+      Cointegration and error correction
+        > Non-stationary series that move together in the long run, with deviations that get corrected over time.
+        = C32
+        ~ Unit roots and spurious regression
+      Vector autoregressions
+        > Several series modelled jointly, each depending on the past of all. The main tool of empirical macroeconomics.
+        = C32
+        Impulse responses
+          > How the system reacts over time to a one-off shock in one variable.
+          = C32
+        Identification of structural shocks
+          > Extra assumptions needed to give the shocks an economic meaning, such as a monetary policy surprise.
+          = C32
+      Volatility models
+        > Models in which the variance of shocks changes over time, as in financial returns.
+        = C58
+      Forecasting
+        > Building and evaluating forecasts, and combining them.
+        = C53
+      Structural breaks
+        > Testing whether a relation changed at some date.
+        = C22
+    Microeconometric models
+      > Models for outcomes that are not continuous and unrestricted.
+      = C2
+      @ UNIBO/Econometrics/Pages/07. Binary response models
+      Censored and truncated outcomes
+        > Tobit and related models, for outcomes piled up at a limit such as zero hours worked.
+        = C24
+        @ Concepts/Math refresher/09. Estimation methods beyond OLS
+      Count data
+        > Poisson and negative binomial models for outcomes that are counts.
+        = C25
+      Duration models
+        > How long until something happens, such as leaving unemployment, with hazard rates.
+        = C41
+      Ordered response
+        > Outcomes with ordered categories, such as satisfaction scales.
+        = C25
+      Quantile regression
+        > Effects on different points of the outcome distribution, not only the mean.
+        = C21
+      Discrete choice demand
+        > Demand estimated from choices among many products, as in nested logit and BLP.
+        = C25
+        @ UNIBO/Machine learning/Pages/02. Regression and classification
+    Advanced panel data
+      > Panel methods beyond fixed and random effects.
+      = C23
+      @ UNIBO/Econometrics/Pages/08 and 09. Panel data methods
+      Dynamic panels
+        > Models with the lagged outcome as a regressor, which fixed effects cannot handle. Arellano-Bond uses earlier lags as instruments.
+        = C23
+      Nonlinear panel models
+        > Logit, probit and count models with unit effects, and the incidental parameters problem.
+        = C23
+      Interactive fixed effects
+        > Unit effects that load on common time factors, so trends can differ across units.
+        = C23
+    IV beyond the course
+      > Instrumental-variable topics that the vault only mentions.
+      = C26
+      @ UNIBO/Econometric methods for policy evaluation/Pages/04. Instrumental variables
+      Weak instruments
+        > When the first stage is weak, 2SLS is biased towards OLS and its tests mislead.
+        = C26
+      Shift-share instruments
+        > Local exposure to national shocks as an instrument, and when it is valid.
+        = C26
+      Judge designs
+        > Random assignment to decision-makers of different strictness used as an instrument.
+        = C26
+      Overidentification tests
+        > With more instruments than regressors, we can test whether they agree.
+        = C26
+    Structural estimation
+      > Estimating the parameters of an economic model, so that counterfactual policies can be simulated.
+      = C51
+      Simulation-based estimation
+        > Simulated method of moments and indirect inference, when the likelihood cannot be written down.
+        = C15
+      Dynamic discrete choice
+        > Agents choosing today with the future in mind, such as when to retire.
+        = C61
+    Bayesian econometrics
+      > Inference that combines a prior with the data to give a posterior distribution.
+      = C11
+      Priors and posteriors
+        > How beliefs are updated with data, and what the posterior summarises.
+        = C11
+      MCMC
+        > Simulation methods that draw from the posterior when it has no closed form.
+        = C11
+      Bayesian VARs
+        > VARs with priors that shrink the many coefficients, used in forecasting.
+        = C32
+        ~ Vector autoregressions
+    Nonparametric and semiparametric methods
+      > Estimating relations without assuming their functional form, or only part of it.
+      = C14
+      @ Concepts/Math refresher/09. Estimation methods beyond OLS
+      Series and sieve estimators
+        > Approximating an unknown function with a growing number of basis terms.
+        = C14
+      Semiparametric models
+        > Models with a parametric part of interest and an unrestricted nuisance part.
+        = C14
+    Spatial econometrics
+      > Models in which outcomes depend on neighbouring units.
+      = C21
+      Spatial weights
+        > The matrix that defines who is a neighbour of whom.
+        = C21
+      Spatial lag and error models
+        > Outcomes that depend on neighbours' outcomes, or errors that are correlated across space.
+        = C21
+    Survey data and measurement
+      > Working with survey data and imperfect measures.
+      = C8
+      @ UNITE/Statistica/Pages/08. Campionamento e distribuzioni campionarie
+      Survey weights and complex designs
+        > Using sampling weights, strata and clusters correctly in estimation.
+        = C83
+      Missing data and imputation
+        > What missing values do to estimates and how to fill them in.
+        = C81
+</script>
+
+<script>
+(function(){
+'use strict';
+var VAULT='University';
+var PALETTE=['#2a62c9','#0c7f76','#2f7d32','#9a6700','#c2541d','#c0364a','#7a48c7','#55637a','#b02a78','#0a7ea4','#6b7a12','#8a5a2b','#9c3c9c'];
+var ROW=34,H=28,GAPX=46,PAD=24,SVGNS='http://www.w3.org/2000/svg';
+var canvas=document.getElementById('canvas'),stage=document.getElementById('stage'),
+    svg=document.getElementById('links'),panel=document.getElementById('panel'),
+    q=document.getElementById('q'),count=document.getElementById('count');
+var reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+var root=null,all=[],byTitle={};
+function save(k,v){try{localStorage.setItem('econmap.'+k,v);}catch(e){}}
+function load(k){try{return localStorage.getItem('econmap.'+k);}catch(e){return null;}}
+
+var DATA=location.hash==='#gaps'?'gaps':(location.hash==='#vault'?'vault':(load('data')==='gaps'?'gaps':'vault'));
+function outlineText(){return document.getElementById(DATA==='gaps'?'outline-gaps':'outline').textContent;}
+function parseAndBuild(text){
+/* ---- parse the outline ---- */
+var stack=[];root=null;all=[];
+text.split('\n').forEach(function(raw){
+  if(!raw.trim())return;
+  var ind=raw.match(/^ */)[0].length/2,s=raw.trim();
+  if(s.indexOf('- ')===0){stack[ind-1].bullets.push(s.slice(2));return;}
+  if(s.indexOf('@ ')===0){stack[ind-1].own.push(s.slice(2));return;}
+  if(s.indexOf('! ')===0){stack[ind-1].flag=s.slice(2);return;}
+  if(s.indexOf('> ')===0){var o=stack[ind-1];o.desc=(o.desc?o.desc+' ':'')+s.slice(2);return;}
+  if(s.indexOf('= ')===0){stack[ind-1].jel=s.slice(2);return;}
+  if(s.indexOf('~ ')===0){stack[ind-1].rel.push(s.slice(2));return;}
+  var n={title:s,depth:ind,children:[],bullets:[],own:[],desc:'',jel:'',rel:[],links:[],flag:'',parent:ind?stack[ind-1]:null,open:false,vis:false,cx:0,cy:0,tx:0,ty:0};
+  if(n.parent)n.parent.children.push(n);else root=n;
+  stack[ind]=n;stack.length=ind+1;all.push(n);
+});
+var leaves=0;
+all.forEach(function(n){
+  n.src=n.own.length?n.own:(n.parent?n.parent.src:[]);
+  if(n.depth<2)n.acc=n.flag?'#8a8f99':'#1d2330';
+  else if(n.depth===2)n.acc=n.parent.flag?'#8a8f99':PALETTE[n.parent.children.indexOf(n)%PALETTE.length];
+  else n.acc=n.parent.acc;
+  if(n.parent&&n.parent.flag&&!n.flag)n.flag=n.parent.flag;
+  /* the root's children alternate left (-1) and right (+1); a branch keeps its side */
+  n.side=n.depth===0?0:(n.depth===1?(n.parent.children.indexOf(n)%2?1:-1):n.parent.side);
+  if(!n.children.length&&!n.flag)leaves++;
+});
+document.getElementById('meta').textContent=leaves+(DATA==='gaps'?' topics not covered':' topics');
+/* related entries: "~ Title" or "~ Parent / Title", made symmetric */
+byTitle={};
+all.forEach(function(n){(byTitle[n.title]=byTitle[n.title]||[]).push(n);});
+function findNode(key){
+  var i=key.indexOf(' / ');
+  if(i>0){var pt=key.slice(0,i),t=key.slice(i+3),c=(byTitle[t]||[]).filter(function(n){return n.parent&&n.parent.title===pt;});if(c.length===1)return c[0];}
+  var c2=byTitle[key]||[];return c2.length===1?c2[0]:null;
+}
+all.forEach(function(n){n.rel.forEach(function(k){
+  var m=findNode(k);
+  if(!m){if(window.console)console.warn('Economics map: unresolved link',n.title,'~',k);return;}
+  if(n.links.indexOf(m)<0)n.links.push(m);if(m.links.indexOf(n)<0)m.links.push(n);
+});});
+/* ---- build elements once ---- */
+all.forEach(function(n){
+  var b=document.createElement('button');b.type='button';
+  b.className='node d'+Math.min(n.depth,3)+(n.children.length?' parent':' leaf')+(n.flag?' '+n.flag:'')+(n.side<0?' L':'');
+  b.style.setProperty('--acc',n.acc);
+  var t=document.createElement('span');t.textContent=n.title;b.appendChild(t);
+  if(n.children.length){var c=document.createElement('span');c.className='n';c.textContent=n.children.length;b.appendChild(c);b.setAttribute('aria-expanded','false');}
+  b.addEventListener('click',function(){onClick(n);});
+  stage.appendChild(b);n.el=b;
+  if(n.parent){var p=document.createElementNS(SVGNS,'path');p.setAttribute('class','link');p.style.setProperty('--acc',n.acc);svg.appendChild(p);n.path=p;}
+});
+all.forEach(function(n){n.w=n.el.offsetWidth;});
+all.forEach(function(n){n.el.style.display='none';if(n.path)n.path.style.display='none';});
+}
+parseAndBuild(outlineText());
+
+/* ---- layout ---- */
+function kids(n){return n.open?n.children:[];}
+/* The root sits in the middle; each half is a tidy tree growing away from it. */
+function layout(){
+  root.tx=-root.w/2;root.ty=0;
+  var placed=[root],minX=root.tx,maxX=root.w/2,minY=0,maxY=H;
+  [-1,1].forEach(function(side){
+    var tops=kids(root).filter(function(c){return c.side===side;});
+    if(!tops.length)return;
+    var colW=[];
+    tops.forEach(function walk(n){colW[n.depth]=Math.max(colW[n.depth]||0,n.w);kids(n).forEach(walk);});
+    var colX=[],x=root.w/2+GAPX;
+    for(var d=1;d<colW.length;d++){colX[d]=x;x+=colW[d]+GAPX;}
+    var y=0,mine=[];
+    function place(n){
+      mine.push(n);
+      n.tx=side>0?colX[n.depth]:-colX[n.depth]-n.w;
+      var ch=kids(n);
+      if(!ch.length){n.ty=y;y+=ROW;}
+      else{ch.forEach(place);n.ty=(ch[0].ty+ch[ch.length-1].ty)/2;y+=8;}
+    }
+    tops.forEach(place);
+    var mid=(tops[0].ty+tops[tops.length-1].ty)/2;
+    mine.forEach(function(n){
+      n.ty-=mid;placed.push(n);
+      minX=Math.min(minX,n.tx);maxX=Math.max(maxX,n.tx+n.w);
+      minY=Math.min(minY,n.ty);maxY=Math.max(maxY,n.ty+H);
+    });
+  });
+  var cw=maxX-minX,ch=maxY-minY;
+  var ox=Math.max(PAD,(canvas.clientWidth/Z-cw)/2)-minX,oy=Math.max(PAD,(canvas.clientHeight/Z-ch)/2)-minY;
+  placed.forEach(function(n){n.tx+=ox;n.ty+=oy;});
+  return {w:cw+2*PAD,h:ch+2*PAD};
+}
+var size={w:0,h:0},raf=0,guard=0,selected=null,Z=1;
+function setStage(w,h){stage.style.width=Math.max(w,canvas.clientWidth/Z)+'px';stage.style.height=Math.max(h,canvas.clientHeight/Z)+'px';}
+function draw(list){
+  for(var i=0;i<list.length;i++){
+    var n=list[i];
+    n.el.style.transform='translate('+n.cx.toFixed(1)+'px,'+n.cy.toFixed(1)+'px)';
+    if(n.path){
+      var p=n.parent,r=n.side>0,x1=r?p.cx+p.w:p.cx,y1=p.cy+H/2,x2=r?n.cx:n.cx+n.w,y2=n.cy+H/2,m=(x1+x2)/2;
+      n.path.setAttribute('d','M'+x1.toFixed(1)+' '+y1.toFixed(1)+'C'+m.toFixed(1)+' '+y1.toFixed(1)+' '+m.toFixed(1)+' '+y2.toFixed(1)+' '+x2.toFixed(1)+' '+y2.toFixed(1));
+    }
+  }
+}
+function update(anchor,focus,instant){
+  cancelAnimationFrame(raf);
+  var list=[];
+  (function walk(n,shown){
+    if(shown){
+      if(!n.vis){n.vis=true;n.el.style.display='';if(n.path)n.path.style.display='';
+        if(n.parent){n.cx=n.side>0?n.parent.cx:n.parent.cx+n.parent.w-n.w;n.cy=n.parent.cy;}}
+      list.push(n);
+    }else if(n.vis){n.vis=false;n.el.style.display='none';if(n.path)n.path.style.display='none';}
+    n.el.classList.toggle('open',n.open&&n.children.length>0);
+    if(n.children.length)n.el.setAttribute('aria-expanded',n.open?'true':'false');
+    n.children.forEach(function(c){walk(c,shown&&n.open);});
+  })(root,true);
+  var next=layout();
+  setStage(Math.max(size.w,next.w),Math.max(size.h,next.h));
+  var start=list.map(function(n){return [n.cx,n.cy];});
+  var ax=anchor?anchor.cx:0,ay=anchor?anchor.cy:0,sl=canvas.scrollLeft,st=canvas.scrollTop;
+  var dur=(instant||reduce||document.hidden)?0:260,t0=performance.now();
+  function frame(now){
+    var k=dur?Math.min(1,(now-t0)/dur):1,e=1-Math.pow(1-k,3);
+    for(var i=0;i<list.length;i++){var n=list[i];n.cx=start[i][0]+(n.tx-start[i][0])*e;n.cy=start[i][1]+(n.ty-start[i][1])*e;}
+    draw(list);
+    if(anchor){canvas.scrollLeft=sl+(anchor.cx-ax)*Z;canvas.scrollTop=st+(anchor.cy-ay)*Z;}
+    if(k<1){raf=requestAnimationFrame(frame);return;}
+    clearTimeout(guard);
+    size=next;setStage(next.w,next.h);
+    var beh=dur?'smooth':'auto';
+    if(focus)canvas.scrollTo({left:Math.max(0,(focus.tx+focus.w/2)*Z-canvas.clientWidth/2),top:Math.max(0,(focus.ty+H/2)*Z-canvas.clientHeight/2),behavior:beh});
+    else if(anchor&&anchor.side&&anchor.open&&anchor.children.length){
+      /* bring the newly opened column into view, without losing the clicked node */
+      var want;
+      if(anchor.side>0){
+        var right=0;anchor.children.forEach(function(c){right=Math.max(right,c.tx+c.w+PAD);});
+        want=Math.min(right*Z-canvas.clientWidth,(anchor.tx-PAD)*Z);
+        if(want>canvas.scrollLeft)canvas.scrollTo({left:want,behavior:beh});
+      }else{
+        var left=Infinity;anchor.children.forEach(function(c){left=Math.min(left,c.tx-PAD);});
+        want=Math.max(0,left*Z,(anchor.tx+anchor.w+PAD)*Z-canvas.clientWidth);
+        if(want<canvas.scrollLeft)canvas.scrollTo({left:want,behavior:beh});
+      }
+    }
+  }
+  /* if frames are throttled (hidden pane or iframe), jump to the final layout */
+  clearTimeout(guard);
+  if(dur)guard=setTimeout(function(){cancelAnimationFrame(raf);dur=0;frame(0);},600);
+  frame(t0);
+}
+
+/* ---- interaction ---- */
+function select(n){
+  if(selected)selected.el.classList.remove('sel');
+  selected=n;if(n)n.el.classList.add('sel');
+  renderPanel();
+  if(view==='wheel')wheelPaint();
+}
+function onClick(n){
+  if(n.children.length)n.open=!n.open;
+  select(n);update(n);
+}
+function reveal(n){
+  for(var p=n.parent;p;p=p.parent)p.open=true;
+  if(view==='wheel'){select(n);wheelFocus(n.children.length?n:(n.parent||root));return;}
+  select(n);update(null,n);
+}
+function el(tag,cls,text){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;}
+function renderPanel(){
+  panel.textContent='';
+  var n=selected;
+  if(!n){
+    panel.appendChild(el('p','empty',DATA==='gaps'?'Fields and methods not covered in the vault yet, with their JEL code. Click a branch to open it.':'Click a branch to open it. Each topic shows its key points and the vault page it comes from.'));
+    return;
+  }
+  panel.style.setProperty('--pacc',n.acc);
+  var path=[];for(var p=n.parent;p;p=p.parent)path.unshift(p);
+  if(path.length){
+    var cr=el('div','crumbs');
+    path.forEach(function(a,i){
+      var b=el('button',null,a.title);b.type='button';b.addEventListener('click',function(){reveal(a);});
+      cr.appendChild(b);if(i<path.length-1)cr.appendChild(document.createTextNode(' › '));
+    });
+    panel.appendChild(cr);
+  }
+  panel.appendChild(el('h2',null,n.title));
+  if(n.desc)panel.appendChild(el('p','desc',n.desc));
+  if(n.jel)panel.appendChild(el('div','jel','JEL '+n.jel));
+  if(n.bullets.length){panel.appendChild(el('div','lab','Key points'));var ul=el('ul');n.bullets.forEach(function(b){ul.appendChild(el('li',null,b));});panel.appendChild(ul);}
+  if(n.children.length){
+    panel.appendChild(el('div','lab','Contains'));
+    var ch=el('div','chips');
+    n.children.forEach(function(c){var b=el('button',null,c.title);b.type='button';b.addEventListener('click',function(){reveal(c);});ch.appendChild(b);});
+    panel.appendChild(ch);
+  }
+  if(n.links.length){
+    panel.appendChild(el('div','lab','Related'));
+    var rl=el('div','chips rel');
+    n.links.forEach(function(c){
+      var b=el('button',null,c.title);b.type='button';b.style.setProperty('--acc',c.acc);
+      if(c.parent)b.appendChild(el('small',null,c.parent.title));
+      b.addEventListener('click',function(){reveal(c);});rl.appendChild(b);
+    });
+    panel.appendChild(rl);
+  }
+  if(n.src.length){
+    panel.appendChild(el('div','lab',DATA==='gaps'?'Builds on, in your vault':'In the vault'));
+    n.src.forEach(function(s){
+      var a=el('a',null,s.split('/').pop());
+      a.href='obsidian://open?vault='+encodeURIComponent(VAULT)+'&file='+encodeURIComponent(s);
+      panel.appendChild(a);
+    });
+  }
+}
+q.addEventListener('input',function(){
+  var s=q.value.trim().toLowerCase();
+  all.forEach(function(n){n.el.classList.remove('hit');n.hit=false;});
+  if(view==='wheel')wheelPaint();
+  if(s.length<2){count.textContent='';return;}
+  var hits=all.filter(function(n){
+    return n.title.toLowerCase().indexOf(s)>=0||n.desc.toLowerCase().indexOf(s)>=0||n.bullets.some(function(b){return b.toLowerCase().indexOf(s)>=0;});
+  });
+  count.textContent=hits.length+(hits.length===1?' match':' matches');
+  if(!hits.length)return;
+  all.forEach(function(n){n.open=false;});
+  hits.forEach(function(n){n.el.classList.add('hit');for(var p=n.parent;p;p=p.parent)p.open=true;});
+  hits.forEach(function(n){n.hit=true;});
+  if(view==='wheel'){wheelPaint();wheelFocus(lca(hits));}else update(null,hits[0]);
+});
+document.getElementById('expand').addEventListener('click',function(){
+  all.forEach(function(n){n.open=n.children.length>0;});update(root);
+});
+function home(){
+  all.forEach(function(n){n.open=n.depth===0||(n.depth===1&&!n.flag);});
+}
+document.getElementById('collapse').addEventListener('click',function(){
+  home();update(null,root);if(view==='wheel')wheelFocus(root);
+});
+var rz=0;
+window.addEventListener('resize',function(){cancelAnimationFrame(rz);rz=requestAnimationFrame(function(){update(selected&&selected.vis?selected:root);});});
+/* drag to pan */
+var drag=null;
+canvas.addEventListener('pointerdown',function(e){
+  if(e.target.closest('.node')||e.pointerType==='touch')return;
+  drag={x:e.clientX,y:e.clientY,l:canvas.scrollLeft,t:canvas.scrollTop};
+  canvas.classList.add('drag');canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',function(e){
+  if(!drag)return;canvas.scrollLeft=drag.l-(e.clientX-drag.x);canvas.scrollTop=drag.t-(e.clientY-drag.y);
+});
+['pointerup','pointercancel'].forEach(function(t){canvas.addEventListener(t,function(){drag=null;canvas.classList.remove('drag');});});
+
+/* zoom: buttons, ctrl/cmd + wheel, trackpad pinch */
+var zl=document.getElementById('zlabel');
+function setZoom(z,px,py){
+  z=Math.min(2,Math.max(0.3,z));
+  var r=canvas.getBoundingClientRect();
+  if(px==null){px=r.left+canvas.clientWidth/2;py=r.top+canvas.clientHeight/2;}
+  var dx=px-r.left,dy=py-r.top;
+  var rx=(canvas.scrollLeft+dx)/Z-root.cx,ry=(canvas.scrollTop+dy)/Z-root.cy;
+  Z=z;stage.style.zoom=Z;
+  update(null,null,true);
+  canvas.scrollLeft=(root.cx+rx)*Z-dx;canvas.scrollTop=(root.cy+ry)*Z-dy;
+  zl.textContent=Math.round(Z*100)+'%';save('zoom',Z);
+}
+document.getElementById('zin').addEventListener('click',function(){setZoom(Z*1.2);});
+document.getElementById('zout').addEventListener('click',function(){setZoom(Z/1.2);});
+zl.addEventListener('click',function(){setZoom(1);});
+document.getElementById('zfit').addEventListener('click',function(){
+  setZoom(Math.min(1.5,canvas.clientWidth/size.w,canvas.clientHeight/size.h));
+  canvas.scrollLeft=(size.w*Z-canvas.clientWidth)/2;canvas.scrollTop=(size.h*Z-canvas.clientHeight)/2;
+});
+canvas.addEventListener('wheel',function(e){
+  if(!(e.ctrlKey||e.metaKey))return;
+  e.preventDefault();setZoom(Z*Math.exp(-e.deltaY*0.01),e.clientX,e.clientY);
+},{passive:false});
+/* side panel width: drag the divider, or arrow keys when it is focused */
+var grip=document.getElementById('grip'),gd=false;
+function setPanel(w){
+  w=Math.round(Math.min(Math.max(w,240),Math.max(240,window.innerWidth-280)));
+  document.documentElement.style.setProperty('--pw',w+'px');return w;
+}
+function relayout(){update(selected&&selected.vis?selected:root,null,true);}
+grip.addEventListener('pointerdown',function(e){gd=true;grip.classList.add('on');grip.setPointerCapture(e.pointerId);e.preventDefault();});
+grip.addEventListener('pointermove',function(e){if(gd)save('panel',setPanel(window.innerWidth-e.clientX));});
+['pointerup','pointercancel'].forEach(function(t){grip.addEventListener(t,function(){if(!gd)return;gd=false;grip.classList.remove('on');relayout();});});
+grip.addEventListener('keydown',function(e){
+  if(e.key!=='ArrowLeft'&&e.key!=='ArrowRight')return;
+  e.preventDefault();save('panel',setPanel(panel.offsetWidth+(e.key==='ArrowLeft'?24:-24)));relayout();
+});
+var pw0=parseFloat(load('panel'));if(pw0)setPanel(pw0);
+var z0=parseFloat(load('zoom'));if(z0>=0.3&&z0<=2){Z=z0;stage.style.zoom=Z;zl.textContent=Math.round(Z*100)+'%';}
+
+/* ===== Wheel view: zoomable sunburst. Centre = current focus, 3 rings outwards, sector size = number of topics. ===== */
+var view='tree',RINGS=3,TAU=Math.PI*2,SVGN=SVGNS;
+var wheel=document.getElementById('wheel'),wsvg=document.getElementById('wsvg'),wdefs=document.getElementById('wdefs'),
+    warcs=document.getElementById('warcs'),wc=document.getElementById('wcenter');
+var W={focus:root,cx:0,cy:0,R:0,r0:0,rw:0,raf:0};
+var mctx=document.createElement('canvas').getContext('2d');
+function tw(t,bold){mctx.font=(bold?'600':'500')+' 11px system-ui,-apple-system,"Segoe UI",sans-serif';return mctx.measureText(t).width;}
+function buildWheel(){
+(function cnt(n){n.leafN=n.children.length?n.children.reduce(function(a,c){return a+cnt(c);},0):1;return n.leafN;})(root);
+(function pos(n,x0){n.x0=x0;n.x1=x0+n.leafN/root.leafN;var x=x0;n.children.forEach(function(c){pos(c,x);x=c.x1;});})(root,0);
+all.forEach(function(n,i){
+  if(!n.depth)return;
+  var g=document.createElementNS(SVGN,'g');g.setAttribute('class','arc');g.setAttribute('tabindex','0');g.setAttribute('role','button');
+  g.setAttribute('aria-label',n.title);
+  var path=document.createElementNS(SVGN,'path'),tt=document.createElementNS(SVGN,'title');tt.textContent=n.title;path.appendChild(tt);
+  var lp=document.createElementNS(SVGN,'path');lp.id='wl'+i;wdefs.appendChild(lp);
+  var tx=document.createElementNS(SVGN,'text'),tp=document.createElementNS(SVGN,'textPath');
+  tp.setAttribute('href','#wl'+i);tp.setAttribute('startOffset','50%');tp.setAttribute('text-anchor','middle');tx.setAttribute('dy','0.35em');
+  var rt=document.createElementNS(SVGN,'text');rt.setAttribute('text-anchor','middle');rt.setAttribute('dy','0.35em');
+  tx.appendChild(tp);g.appendChild(path);g.appendChild(tx);g.appendChild(rt);warcs.appendChild(g);
+  n.wg=g;n.wp=path;n.wlp=lp;n.wtx=tx;n.wtp=tp;n.wrt=rt;n.tw=[tw(n.title,false),tw(n.title,true)];
+  function act(){select(n);if(n.children.length&&n!==W.focus)wheelFocus(n);}
+  g.addEventListener('click',act);
+  g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();act();}});
+});
+}
+buildWheel();
+function goUp(){if(W.focus.parent){var p=W.focus.parent;select(p);wheelFocus(p);}}
+wc.addEventListener('click',goUp);
+wc.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();goUp();}});
+function lca(list){
+  var a=list[0];
+  list.forEach(function(n){var anc=[];for(var p=n;p;p=p.parent)anc.push(p);while(anc.indexOf(a)<0)a=a.parent;});
+  return a.children.length?a:(a.parent||root);
+}
+function targets(p){
+  var sp=p.x1-p.x0;
+  all.forEach(function(n){
+    n.ta0=Math.min(1,Math.max(0,(n.x0-p.x0)/sp));n.ta1=Math.min(1,Math.max(0,(n.x1-p.x0)/sp));n.td=n.depth-p.depth;
+  });
+}
+function wheelSize(){
+  var w=wheel.clientWidth,h=wheel.clientHeight;if(!w||!h)return false;
+  wsvg.setAttribute('viewBox','0 0 '+w+' '+h);
+  W.cx=w/2;W.cy=h/2;W.R=Math.max(90,Math.min(w,h)/2-10);W.r0=Math.max(52,W.R*0.22);W.rw=(W.R-W.r0)/RINGS;
+  var c=wc.querySelector('circle');c.setAttribute('cx',W.cx);c.setAttribute('cy',W.cy);c.setAttribute('r',W.r0-2);
+  centreLabel();return true;
+}
+function pt(r,t){return (W.cx+r*Math.sin(t)).toFixed(1)+' '+(W.cy-r*Math.cos(t)).toFixed(1);}
+function ring(r){return 'M'+pt(r,0)+'A'+r+' '+r+' 0 1 1 '+pt(r,Math.PI)+'A'+r+' '+r+' 0 1 1 '+pt(r,0);}
+function sector(t0,t1,ri,ro){
+  if(t1-t0>TAU-1e-6)return ring(ro)+ring(ri)+'Z';
+  var L=t1-t0>Math.PI?1:0;
+  return 'M'+pt(ro,t0)+'A'+ro+' '+ro+' 0 '+L+' 1 '+pt(ro,t1)+'L'+pt(ri,t1)+'A'+ri+' '+ri+' 0 '+L+' 0 '+pt(ri,t0)+'Z';
+}
+function cut(n,bold,avail){
+  var w=n.tw[bold?1:0];if(w<=avail)return n.title;
+  var k=Math.floor(n.title.length*avail/w)-1;return k<3?'':n.title.slice(0,k).replace(/\s+$/,'')+'…';
+}
+function drawWheel(){
+  all.forEach(function(n){
+    if(!n.wg)return;
+    var d=n.wd,a0=n.wa0,a1=n.wa1;
+    if(!(a1-a0>1e-4&&d>0.5&&d<RINGS+0.5)){if(n.wshow!==false){n.wg.style.display='none';n.wshow=false;}return;}
+    var ri=Math.max(W.r0,W.r0+(d-1)*W.rw),ro=Math.min(W.R,W.r0+d*W.rw);
+    if(ro-ri<1){n.wg.style.display='none';n.wshow=false;return;}
+    if(n.wshow!==true){n.wg.style.display='';n.wshow=true;}
+    var t0=a0*TAU,t1=a1*TAU,rel=Math.round(d),solid=n.depth<=2||rel===1;
+    n.wp.setAttribute('d',sector(t0,t1,ri,ro));
+    n.wp.style.fill=solid?n.acc:'color-mix(in srgb,'+n.acc+' '+(rel===2?40:22)+'%,var(--surface))';
+    n.wg.classList.toggle('on',solid);
+    /* label: along the arc when there is room, otherwise along the radius */
+    var rm=(ri+ro)/2,len=(t1-t0)*rm,mid=(t0+t1)/2,deg=mid*180/Math.PI,along=len-10,radial=ro-ri-10;
+    var tang='',rad='';
+    if(ro-ri>=15){
+      if(along>=radial&&along>20)tang=cut(n,solid,along);
+      else if(len>=13)rad=cut(n,solid,radial);
+    }
+    if(tang){
+      var bottom=deg>90&&deg<270,e=Math.min(t1-t0,TAU-1e-3);
+      var s0=mid-e/2,s1=mid+e/2,L=e>Math.PI?1:0;
+      n.wlp.setAttribute('d',bottom?'M'+pt(rm,s1)+'A'+rm+' '+rm+' 0 '+L+' 0 '+pt(rm,s0):'M'+pt(rm,s0)+'A'+rm+' '+rm+' 0 '+L+' 1 '+pt(rm,s1));
+    }
+    if(n.wtp.textContent!==tang)n.wtp.textContent=tang;
+    if(n.wrt.textContent!==rad)n.wrt.textContent=rad;
+    if(rad)n.wrt.setAttribute('transform','translate('+W.cx+' '+W.cy+') rotate('+(deg-90).toFixed(2)+') translate('+rm.toFixed(1)+' 0) rotate('+(deg<180?0:180)+')');
+  });
+}
+function centreLabel(){
+  var p=W.focus,g=wc.querySelector('.lab');g.textContent='';
+  var bar=wc.querySelector('.bar');bar.setAttribute('x',W.cx-14);bar.style.fill=p.acc;
+  var maxw=W.r0*1.55,words=p.title.split(' '),lines=[],cur='';
+  mctx.font='650 14px system-ui,-apple-system,"Segoe UI",sans-serif';
+  words.forEach(function(w){var t=cur?cur+' '+w:w;if(mctx.measureText(t).width>maxw&&cur){lines.push(cur);cur=w;}else cur=t;});
+  lines.push(cur);lines=lines.slice(0,3);
+  var sub=p.parent?'↑ back to '+p.parent.title:p.leafN+' topics';
+  mctx.font='11.5px system-ui';if(mctx.measureText(sub).width>maxw)sub=p.parent?'↑ back':sub;
+  var y0=W.cy-(lines.length*17)/2+4;
+  bar.setAttribute('y',y0-22);
+  lines.forEach(function(l,i){var t=document.createElementNS(SVGN,'text');t.setAttribute('class','t');t.setAttribute('x',W.cx);t.setAttribute('y',y0+i*17);t.textContent=l;g.appendChild(t);});
+  var t=document.createElementNS(SVGN,'text');t.setAttribute('class','s');t.setAttribute('x',W.cx);t.setAttribute('y',y0+lines.length*17+4);t.textContent=sub;g.appendChild(t);
+  wc.setAttribute('aria-label',p.parent?'Go up to '+p.parent.title:p.title);
+}
+function wheelPaint(){
+  all.forEach(function(n){if(!n.wg)return;n.wg.classList.toggle('sel',n===selected);n.wg.classList.toggle('hit',!!n.hit);});
+  all.forEach(function(n){if(n.wg&&n.hit)warcs.appendChild(n.wg);});
+  if(selected&&selected.wg)warcs.appendChild(selected.wg);
+}
+function wheelFocus(p,instant){
+  cancelAnimationFrame(W.raf);
+  targets(p);W.focus=p;centreLabel();
+  var st=all.map(function(n){return [n.wa0,n.wa1,n.wd];});
+  var dur=(instant||reduce||document.hidden)?0:450,t0=performance.now();
+  function frame(now){
+    var k=dur?Math.min(1,(now-t0)/dur):1,e=k<.5?4*k*k*k:1-Math.pow(-2*k+2,3)/2;
+    all.forEach(function(n,i){
+      var s=st[i];if(s[0]==null){n.wa0=n.ta0;n.wa1=n.ta1;n.wd=n.td;return;}
+      n.wa0=s[0]+(n.ta0-s[0])*e;n.wa1=s[1]+(n.ta1-s[1])*e;n.wd=s[2]+(n.td-s[2])*e;
+    });
+    drawWheel();
+    if(k<1)W.raf=requestAnimationFrame(frame);
+  }
+  frame(t0);
+}
+if(window.ResizeObserver)new ResizeObserver(function(){if(view==='wheel'&&wheelSize())drawWheel();}).observe(wheel);
+var vt=document.getElementById('vtree'),vw=document.getElementById('vwheel');
+function setView(v){
+  view=v;save('view',v);
+  canvas.hidden=v!=='tree';wheel.hidden=v!=='wheel';
+  document.querySelector('header .zoom').hidden=v!=='tree';document.getElementById('expand').hidden=v!=='tree';
+  vt.setAttribute('aria-pressed',v==='tree');vw.setAttribute('aria-pressed',v==='wheel');
+  if(v==='wheel'){
+    wheelSize();
+    var f=selected?(selected.children.length?selected:(selected.parent||root)):W.focus;
+    wheelFocus(f,true);wheelPaint();
+  }else{
+    /* a map built while the tree was hidden has no widths yet */
+    if(all.some(function(n){return !n.w;})){
+      all.forEach(function(n){n.el.style.display='';});
+      all.forEach(function(n){n.w=n.el.offsetWidth;});
+      all.forEach(function(n){n.el.style.display=n.vis?'':'none';});
+    }
+    if(selected)for(var p=selected.parent;p;p=p.parent)p.open=true;
+    update(null,selected||root,true);
+  }
+}
+vt.addEventListener('click',function(){if(view!=='tree')setView('tree');});
+var dv=document.getElementById('dvault'),dg=document.getElementById('dgaps');
+function markData(){dv.setAttribute('aria-pressed',DATA==='vault');dg.setAttribute('aria-pressed',DATA==='gaps');document.body.classList.toggle('gaps',DATA==='gaps');}
+function switchData(d){
+  if(d===DATA)return;
+  DATA=d;save('data',d);markData();
+  cancelAnimationFrame(raf);cancelAnimationFrame(W.raf);clearTimeout(guard);
+  Array.prototype.slice.call(stage.querySelectorAll('.node')).forEach(function(e){e.remove();});
+  svg.textContent='';warcs.textContent='';wdefs.textContent='';
+  parseAndBuild(outlineText());buildWheel();
+  selected=null;q.value='';count.textContent='';size={w:0,h:0};W.focus=root;
+  home();renderPanel();
+  if(view==='wheel'){wheelSize();wheelFocus(root,true);wheelPaint();}
+  else{update(null,null,true);canvas.scrollLeft=(root.tx+root.w/2)*Z-canvas.clientWidth/2;canvas.scrollTop=(root.ty+H/2)*Z-canvas.clientHeight/2;}
+}
+dv.addEventListener('click',function(){switchData('vault');});
+dg.addEventListener('click',function(){switchData('gaps');});
+markData();
+vw.addEventListener('click',function(){if(view!=='wheel')setView('wheel');});
+
+home();renderPanel();update(null,null,true);
+canvas.scrollLeft=(root.tx+root.w/2)*Z-canvas.clientWidth/2;canvas.scrollTop=(root.ty+H/2)*Z-canvas.clientHeight/2;
+if(load('view')==='wheel')setView('wheel');
+})();
+</script>
+</body>
+</html>
