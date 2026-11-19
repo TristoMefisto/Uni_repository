@@ -60,7 +60,7 @@ li:hover,li.on{background:var(--hover)}
 <div class="wrap">
 <aside>
   <h1>Case a Louvain-la-Neuve</h1>
-  <p class="sub">Feb-lug 2027. Minuti a piedi fino a ESPO / ESL (Place Montesquieu), calcolati su OpenStreetMap. Fonte: lista UCL dei privati per soggiorni brevi (ago 2026).</p>
+  <p class="sub">Feb-lug 2027. Minuti a piedi fino a ESPO / ESL (Place Montesquieu), calcolati su OpenStreetMap. Fonti: lista UCL dei privati per soggiorni brevi (ago 2026) e annunci skot.be (nov 2026).</p>
   <div class="filters">
     <div class="row">
       <label><input type="checkbox" id="fStanza" checked> Stanza</label>
@@ -97,7 +97,12 @@ const HOUSES=[
  {a:"Avenue des Musiciens 23/b",q:"Biéreau",t:"Monolocale",m2:23,p:650,w:12,ll:[50.660781,4.612777],ok:true,d:"Angolo cottura e bagno privati. 550 + 100 spese."},
  {a:"Avenue de la Résistance 17, Ottignies",q:"Ottignies",t:"Monolocale",m2:15,p:480,w:50,ll:[50.670677,4.558061],ok:true,out:true,d:"Cucina privata, lavatrice. 13 min a piedi dalla stazione di Ottignies, poi treno per LLN."},
  {a:"Rue Demaret 39, Limal",q:"Limal",t:"Monolocale",m2:20,p:450,w:98,ll:[50.697598,4.550587],ok:true,out:true,d:"Con scrivania, contratti da 3, 6, 10 o 12 mesi. Circa 20 min di treno da LLN."},
- {a:"Quai du Trompette 27, Wavre",q:"Wavre",t:"Monolocale",m2:25,p:500,w:82,ll:[50.716509,4.613228],ok:true,out:true,d:"Cucina e bagno privati, spese incluse. Bus per LLN."}
+ {a:"Quai du Trompette 27, Wavre",q:"Wavre",t:"Monolocale",m2:25,p:500,w:82,ll:[50.716509,4.613228],ok:true,out:true,d:"Cucina e bagno privati, spese incluse. Bus per LLN."},
+ {a:"Rue des Wallons",q:"Centro",t:"Monolocale",m2:null,p:575,w:7,ll:[50.668955,4.616638],ok:false,d:"Annuncio su skot.be."},
+ {a:"Scavée du Biéreau 5",q:"Biéreau",t:"Monolocale",m2:null,p:625,w:8,ll:[50.664805,4.618323],ok:true,d:"Annuncio su skot.be."},
+ {a:"Avenue du Tienne 13, Ottignies",q:"Ottignies",t:"Stanza",m2:null,p:525,w:35,ll:[50.667158,4.574681],ok:true,out:true,d:"Annuncio su skot.be."},
+ {a:"Venelle des Préas, Wavre",q:"Wavre",t:"Stanza",m2:null,p:465,w:46,ll:[50.686997,4.626116],ok:false,out:true,d:"Annuncio su skot.be."},
+ {a:"Rue de la Chapelle, Ottignies",q:"Ottignies",t:"Stanza",m2:null,p:560,w:32,ll:[50.666993,4.578774],ok:false,out:true,d:"Annuncio su skot.be."}
 ];
 const UCL=[
  {n:"ESPO / ESL (Dupriez, Leclercq)",ll:ESPO},
