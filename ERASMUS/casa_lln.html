@@ -45,6 +45,8 @@ li:hover,li.on{background:var(--hover)}
 .note{font-size:12px;color:var(--muted);margin-top:14px;line-height:1.45}
 #map{height:100%;width:100%}
 .ucl-label{background:var(--ucl);color:var(--panel);font:600 11px "Fira Sans",sans-serif;padding:3px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.ucl-icon{background:none;border:0}
+.tiles-dark{filter:invert(1) hue-rotate(180deg) brightness(.9) contrast(.9)}
 .leaflet-popup-content{font-family:"Fira Sans",sans-serif;font-size:13px;line-height:1.45}
 .leaflet-popup-content b{font-size:14px}
 @media (max-width:760px){
@@ -107,10 +109,10 @@ const UCL=[
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const dark=matchMedia('(prefers-color-scheme: dark)').matches;
 const map=L.map('map',{zoomControl:true}).setView([50.6685,4.6135],15);
-L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark?'dark_all':'rastertiles/voyager'}/{z}/{x}/{y}{r}.png`,{
-  maxZoom:19,subdomains:'abcd',attribution:'&copy; OpenStreetMap contributors &copy; CARTO'}).addTo(map);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19,attribution:'&copy; OpenStreetMap contributors',className:dark?'tiles-dark':''}).addTo(map);
 [500,1000].forEach(r=>L.circle(ESPO,{radius:r,color:css('--navy'),weight:1,opacity:.5,fill:false,dashArray:'2 6'}).addTo(map));
-UCL.forEach(u=>L.marker(u.ll,{icon:L.divIcon({className:'',html:`<div class="ucl-label">${u.n}</div>`,iconAnchor:[0,10]})}).addTo(map));
+UCL.forEach(u=>L.marker(u.ll,{icon:L.divIcon({className:'ucl-icon',html:`<div class="ucl-label">${u.n}</div>`,iconSize:null,iconAnchor:[0,10]})}).addTo(map));
 const eur=n=>n.toLocaleString('it-IT');
 const markers=HOUSES.map(h=>{
   const c=h.t==='Stanza'?css('--room'):css('--studio');
