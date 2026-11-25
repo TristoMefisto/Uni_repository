@@ -67,8 +67,8 @@ li:hover,li.on{background:var(--hover)}
       <label><input type="checkbox" id="fMono" checked> Monolocale</label>
       <label><input type="checkbox" id="fFuori" checked> Fuori LLN</label>
     </div>
-    <label for="fPrezzo">Prezzo massimo: <b id="vPrezzo">700</b> €/mese</label>
-    <input type="range" id="fPrezzo" min="350" max="700" step="10" value="700">
+    <label for="fPrezzo">Prezzo massimo: <b id="vPrezzo">800</b> €/mese</label>
+    <input type="range" id="fPrezzo" min="350" max="800" step="10" value="800">
   </div>
   <div class="legend">
     <span><span class="dot" style="background:var(--room)"></span>Stanza</span>
@@ -106,7 +106,12 @@ const HOUSES=[
  {a:"Avenue Molière, Wavre",q:"Wavre",t:"Stanza",m2:null,p:625,w:93,ll:[50.711758,4.634559],ok:false,out:true,d:"Annuncio su student.be."},
  {a:"L'Hocaille",q:"Hocaille",t:"Monolocale",m2:18,p:585,w:5,ll:[50.669653,4.608978],ok:false,d:"Annuncio su skot.be."},
  {a:"Genval",q:"Genval",t:"Monolocale",m2:48,p:700,w:152,ll:[50.725486,4.514981],ok:false,out:true,d:"Annuncio su skot.be."},
- {a:"Rue du Bois des Rêves, Céroux-Mousty",q:"Ottignies",t:"Stanza",m2:12,p:600,w:37,ll:[50.656783,4.584452],ok:false,out:true,d:"Annuncio su student.be."}
+ {a:"Rue du Bois des Rêves, Céroux-Mousty",q:"Ottignies",t:"Stanza",m2:12,p:600,w:37,ll:[50.656783,4.584452],ok:false,out:true,d:"Annuncio su student.be."},
+ {a:"Boucle Jean de Nivelles 4",q:"Lauzelle",t:"Monolocale",m2:25,p:600,w:8,ll:[50.672521,4.611636],ok:false,d:"Annuncio su Facebook."},
+ {a:"Rue Rabelais",q:"Centro",t:"Monolocale",m2:null,p:null,w:3,ll:[50.669364,4.613206],ok:false,d:"Annuncio su Facebook. Prezzo da chiedere."},
+ {a:"Bruyères (vicino a EPHEC)",q:"Bruyères",t:"Stanza",m2:null,p:527,w:6,ll:[50.665865,4.612696],ok:false,d:"Annuncio su Facebook."},
+ {a:"Quartiere Courbevoie",q:"Courbevoie",t:"Stanza",m2:null,p:625,w:16,ll:[50.674283,4.621314],ok:false,d:"Annuncio su Facebook."},
+ {a:"Chemin des Sages 16",q:"Lauzelle",t:"Monolocale",m2:null,p:750,w:6,ll:[50.671076,4.611063],ok:true,d:"Annuncio su Facebook."}
 ];
 const UCL=[
  {n:"ESPO / ESL (Dupriez, Leclercq)",ll:ESPO},
@@ -122,7 +127,7 @@ L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
   maxZoom:19,attribution:'&copy; OpenStreetMap contributors',className:dark?'tiles-dark':''}).addTo(map);
 [500,1000].forEach(r=>L.circle(ESPO,{radius:r,color:css('--navy'),weight:1,opacity:.5,fill:false,dashArray:'2 6'}).addTo(map));
 UCL.forEach(u=>L.marker(u.ll,{icon:L.divIcon({className:'ucl-icon',html:`<div class="ucl-label">${u.n}</div>`,iconSize:null,iconAnchor:[0,10]})}).addTo(map));
-const eur=n=>n.toLocaleString('it-IT');
+const eur=n=>n==null?'?':n.toLocaleString('it-IT');
 const markers=HOUSES.map(h=>{
   const c=h.t==='Stanza'?css('--room'):css('--studio');
   const mk=L.circleMarker(h.ll,{radius:9,color:c,weight:h.ok?2:2.5,fillColor:c,fillOpacity:h.ok?.75:.25,dashArray:h.ok?null:'3 3'});
@@ -135,7 +140,7 @@ function render(){
   vPrezzo.textContent=mx;
   list.innerHTML='';
   HOUSES.map((h,i)=>({h,i})).sort((x,y)=>x.h.w-y.h.w).forEach(({h,i})=>{
-    const show=((h.t==='Stanza'&&st)||(h.t==='Monolocale'&&mo))&&(fu||!h.out)&&h.p<=mx;
+    const show=((h.t==='Stanza'&&st)||(h.t==='Monolocale'&&mo))&&(fu||!h.out)&&(h.p==null||h.p<=mx);
     if(show) markers[i].addTo(map); else markers[i].remove();
     if(!show) return;
     const li=document.createElement('li');
