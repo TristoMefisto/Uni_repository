@@ -64,7 +64,7 @@ li:hover,li.on{background:var(--hover)}
 <div class="wrap">
 <aside>
   <h1>Case a Louvain-la-Neuve</h1>
-  <p class="sub">Feb-lug 2027. Minuti a piedi fino a ESPO / ESL (Place Montesquieu), calcolati su OpenStreetMap. Fonti: lista UCL dei privati per soggiorni brevi (ago 2026) e annunci skot.be (nov 2026).</p>
+  <p class="sub">Feb-lug 2027. Minuti a piedi fino a ESPO / ESL (Place Montesquieu) e alla stazione di Louvain-la-Neuve-Université, calcolati su OpenStreetMap. Fonti: lista UCL dei privati per soggiorni brevi (ago 2026) e annunci skot.be (nov 2026).</p>
   <div class="filters">
     <div class="row">
       <label><input type="checkbox" id="fStanza" checked> Stanza</label>
@@ -89,25 +89,26 @@ li:hover,li.on{background:var(--hover)}
 <script>
 const ESPO=[50.667937,4.611546];
 const HOUSES=[
- {a:"Cours de Valduc 14",s:"Contattato",q:"Lauzelle",t:"Stanza",m2:9,p:375,w:14,ll:[50.674884,4.612839],ok:true,d:"Cucina e bagno condivisi, giardino. Spese incluse."},
- {a:"Rue du Rondia 6",s:"Contattato",q:"Bruyères",t:"Stanza",m2:10,p:395,w:8,ll:[50.664884,4.605956],ok:true,d:"Letto a soppalco, doccia privata, angolo cottura, WC condiviso. 375 + 20 spese."},
- {a:"Rue du Prieuré 4",s:"Contattato",q:"Lauzelle",t:"Monolocale",m2:20,p:600,w:16,ll:[50.675395,4.62008],ok:false,d:"Angolo cottura e bagno privati, giardino."},
- {a:"Cours de Troisfontaines 18",s:"Visita",q:"Lauzelle",t:"Monolocale",m2:null,p:620,w:18,ll:[50.676518,4.620359],ok:true,d:"Due locali, bagno e angolo cottura privati, pulizie 1 volta a settimana."},
- {a:"Sentier des Aquarelles 1",s:"Contattato",q:"Bruyères",t:"Monolocale",m2:25,p:600,w:7,ll:[50.665734,4.606141],ok:true,d:"Ristrutturato, cucina privata, ingresso separato, sul lago."},
- {a:"Avenue des Musiciens 23/b",s:"Contattato",q:"Biéreau",t:"Monolocale",m2:23,p:650,w:12,ll:[50.660781,4.612777],ok:true,d:"Angolo cottura e bagno privati. 550 + 100 spese."},
- {a:"Rue des Wallons 15",s:"Contattato",q:"Centro",t:"Monolocale",m2:25,p:575,w:7,ll:[50.668955,4.616638],ok:false,d:"Annuncio su skot.be e student.be."},
- {a:"Rue du Bois des Rêves, Céroux-Mousty",s:"Da contattare",q:"Ottignies",t:"Stanza",m2:12,p:600,w:37,ll:[50.656783,4.584452],ok:false,out:true,d:"Annuncio su student.be."},
- {a:"Boucle Jean de Nivelles 4",s:"Contattato",q:"Lauzelle",t:"Monolocale",m2:25,p:600,w:8,ll:[50.672521,4.611636],ok:false,d:"Annuncio su Facebook."},
- {a:"Bruyères (vicino a EPHEC)",s:"Contattato",q:"Bruyères",t:"Stanza",m2:null,p:527,w:6,ll:[50.665865,4.612696],ok:false,d:"Annuncio su Facebook."},
- {a:"Quartiere Courbevoie",s:"Contattato",q:"Courbevoie",t:"Stanza",m2:null,p:625,w:16,ll:[50.674283,4.621314],ok:false,d:"Annuncio su Facebook."},
- {a:"Chemin des Sages 16",s:"Da contattare",q:"Lauzelle",t:"Monolocale",m2:null,p:750,w:6,ll:[50.671076,4.611063],ok:true,d:"Annuncio su Facebook."}
+ {a:"Cours de Valduc 14",s:"Contattato",q:"Lauzelle",t:"Stanza",m2:9,p:375,w:14,ws:11,ll:[50.674884,4.612839],ok:true,d:"Cucina e bagno condivisi, giardino. Spese incluse."},
+ {a:"Rue du Rondia 6",s:"Contattato",q:"Bruyères",t:"Stanza",m2:10,p:395,w:8,ws:14,ll:[50.664884,4.605956],ok:true,d:"Letto a soppalco, doccia privata, angolo cottura, WC condiviso. 375 + 20 spese."},
+ {a:"Rue du Prieuré 4",s:"Contattato",q:"Lauzelle",t:"Monolocale",m2:20,p:600,w:16,ws:11,ll:[50.675395,4.62008],ok:false,d:"Angolo cottura e bagno privati, giardino."},
+ {a:"Cours de Troisfontaines 18",s:"Visita",q:"Lauzelle",t:"Monolocale",m2:null,p:620,w:18,ws:14,ll:[50.676518,4.620359],ok:true,d:"Due locali, bagno e angolo cottura privati, pulizie 1 volta a settimana."},
+ {a:"Sentier des Aquarelles 1",s:"Contattato",q:"Bruyères",t:"Monolocale",m2:25,p:600,w:7,ws:14,ll:[50.665734,4.606141],ok:true,d:"Ristrutturato, cucina privata, ingresso separato, sul lago."},
+ {a:"Avenue des Musiciens 23/b",s:"Contattato",q:"Biéreau",t:"Monolocale",m2:23,p:650,w:12,ws:16,ll:[50.660781,4.612777],ok:true,d:"Angolo cottura e bagno privati. 550 + 100 spese."},
+ {a:"Rue des Wallons 15",s:"Contattato",q:"Centro",t:"Monolocale",m2:25,p:575,w:7,ws:2,ll:[50.668955,4.616638],ok:false,d:"Annuncio su skot.be e student.be."},
+ {a:"Rue du Bois des Rêves, Céroux-Mousty",s:"Da contattare",q:"Ottignies",t:"Stanza",m2:12,p:600,w:37,ws:43,ll:[50.656783,4.584452],ok:false,out:true,d:"Annuncio su student.be."},
+ {a:"Boucle Jean de Nivelles 4",s:"Contattato",q:"Lauzelle",t:"Monolocale",m2:25,p:600,w:8,ws:8,ll:[50.672521,4.611636],ok:false,d:"Annuncio su Facebook."},
+ {a:"Bruyères (vicino a EPHEC)",s:"Contattato",q:"Bruyères",t:"Stanza",m2:null,p:527,w:6,ws:10,ll:[50.665865,4.612696],ok:false,d:"Annuncio su Facebook."},
+ {a:"Quartiere Courbevoie",s:"Contattato",q:"Courbevoie",t:"Stanza",m2:null,p:625,w:16,ws:9,ll:[50.674283,4.621314],ok:false,d:"Annuncio su Facebook."},
+ {a:"Chemin des Sages 16",s:"Da contattare",q:"Lauzelle",t:"Monolocale",m2:null,p:750,w:6,ws:7,ll:[50.671076,4.611063],ok:true,d:"Annuncio su Facebook."}
 ];
 const UCL=[
  {n:"ESPO / ESL (Dupriez, Leclercq)",ll:ESPO},
  {n:"LSM (Place des Doyens)",ll:[50.668348,4.612556]},
  {n:"ILV, corsi di francese",ll:[50.668914,4.614795]},
  {n:"Service Logement",ll:[50.671245,4.615565]},
- {n:"Grand-Place",ll:[50.669421,4.611571]}
+ {n:"Grand-Place",ll:[50.669421,4.611571]},
+ {n:"Stazione LLN",ll:[50.669984,4.616385]}
 ];
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const dark=matchMedia('(prefers-color-scheme: dark)').matches;
@@ -122,7 +123,7 @@ const eur=n=>n==null?'?':n.toLocaleString('it-IT');
 const markers=HOUSES.map(h=>{
   const c=h.t==='Stanza'?css('--room'):css('--studio');
   const mk=L.circleMarker(h.ll,{radius:9,color:c,weight:h.ok?2:2.5,fillColor:c,fillOpacity:h.ok?.75:.25,dashArray:h.ok?null:'3 3'});
-  mk.bindPopup(`<b>${h.a}</b>${stTag(h)}<br>${h.t}${h.m2?' · '+h.m2+' m²':''} · ${h.q}<br><b>${eur(h.p)} €/mese</b> · ${h.w} min a piedi da ESPO<br>${h.d}${h.ok?'':'<br><i>Posizione indicativa (solo la via).</i>'}`);
+  mk.bindPopup(`<b>${h.a}</b>${stTag(h)}<br>${h.t}${h.m2?' · '+h.m2+' m²':''} · ${h.q}<br><b>${eur(h.p)} €/mese</b> · ${h.w} min a piedi da ESPO · ${h.ws} dalla stazione<br>${h.d}${h.ok?'':'<br><i>Posizione indicativa (solo la via).</i>'}`);
   mk.addTo(map); return mk;
 });
 const list=document.getElementById('list');
@@ -136,7 +137,7 @@ function render(){
     if(!show) return;
     const li=document.createElement('li');
     const c=h.t==='Stanza'?'var(--room)':'var(--studio)';
-    li.innerHTML=`<span class="price">${eur(h.p)} €</span><div class="t">${h.a}<span class="tag" style="background:${c}">${h.t}</span>${stTag(h)}</div><div class="m">${h.q}${h.m2?' · '+h.m2+' m²':''} · ${h.w} min a piedi${h.ok?'':' · posizione indicativa'}</div>`;
+    li.innerHTML=`<span class="price">${eur(h.p)} €</span><div class="t">${h.a}<span class="tag" style="background:${c}">${h.t}</span>${stTag(h)}</div><div class="m">${h.q}${h.m2?' · '+h.m2+' m²':''} · ${h.w} min a piedi da ESPO, ${h.ws} dalla stazione${h.ok?'':' · posizione indicativa'}</div>`;
     li.onclick=()=>{document.querySelectorAll('li.on').forEach(x=>x.classList.remove('on'));li.classList.add('on');map.flyTo(h.ll,h.out?14:17,{duration:.6});markers[i].openPopup();};
     list.appendChild(li);
   });
